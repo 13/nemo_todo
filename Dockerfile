@@ -32,9 +32,11 @@ RUN tool/fetch_web_assets.sh \
 # native library next to the executable.
 FROM dart:3.13.2-sdk AS server-build
 WORKDIR /src
-COPY pubspec.yaml pubspec.lock ./
+# A workspace root listing the Flutter app would make `dart pub get` refuse
+# to run, so this stage declares a root with only the two packages it
+# builds. The app is resolved by the Flutter stage instead.
+RUN printf 'name: nemo_server_workspace\npublish_to: none\nenvironment:\n  sdk: ^3.13.0\nworkspace:\n  - packages/nemo_core\n  - server\n' > pubspec.yaml
 COPY packages/nemo_core/pubspec.yaml packages/nemo_core/
-COPY app/pubspec.yaml app/
 COPY server/pubspec.yaml server/
 RUN dart pub get
 COPY packages ./packages

@@ -24,6 +24,7 @@ dependencies:
   go_router: ^18.0.1
   intl: ^0.20.2
   json_annotation: ^4.12.0
+  meta: ^1.16.0
   nemo_core:
     path: ../packages/nemo_core
   path_provider: ^2.1.5

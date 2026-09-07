@@ -133,8 +133,8 @@ void main() {
       expect((await tasks.search('milk').first).length, 1);
       expect((await tasks.search('oat').first).length, 1);
       expect((await tasks.search('home').first).length, 1);
-      expect((await tasks.search('  ').first), isEmpty);
-      expect((await tasks.allTags()), ['home']);
+      expect(await tasks.search('  ').first, isEmpty);
+      expect(await tasks.allTags(), ['home']);
     },
   );
 

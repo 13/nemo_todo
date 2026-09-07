@@ -15,6 +15,7 @@ class AppBootstrap {
     required this.themeMode,
     this.serverUrl,
     this.username,
+    this.lastSyncAt,
   });
 
   final String nodeId;
@@ -22,6 +23,9 @@ class AppBootstrap {
   final ThemeMode themeMode;
   final String? serverUrl;
   final String? username;
+
+  /// Epoch milliseconds of the last successful sync.
+  final int? lastSyncAt;
 
   static Future<AppBootstrap> load(AppDatabase db) async {
     final kv = KvStore(db);
@@ -32,12 +36,14 @@ class AppBootstrap {
     }
     final last = await kv.get(KvKeys.hlcLast);
     final theme = await kv.get(KvKeys.themeMode);
+    final lastSync = await kv.get(KvKeys.lastSyncAt);
     return AppBootstrap(
       nodeId: nodeId,
       hlcLast: last == null ? null : Hlc.parse(last),
       themeMode: ThemeMode.values.asNameMap()[theme] ?? ThemeMode.system,
       serverUrl: await kv.get(KvKeys.serverUrl),
       username: await kv.get(KvKeys.username),
+      lastSyncAt: lastSync == null ? null : int.tryParse(lastSync),
     );
   }
 }

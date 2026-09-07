@@ -1,0 +1,226 @@
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/db/sync_writes.dart';
+import 'package:nemo/core/providers.dart';
+import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/sync/data/sse_client.dart';
+import 'package:nemo/features/sync/data/sync_client.dart';
+import 'package:nemo/features/sync/ui/sync_state.dart';
+import 'package:nemo_core/nemo_core.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'sync_engine.g.dart';
+
+/// Drives synchronisation with the server.
+///
+/// One run at a time: a request arriving mid-run sets a flag and the loop
+/// goes round again, so a burst of edits costs one round trip. Everything
+/// the server sends is applied with the same last-write-wins rule the
+/// server used, so both sides converge.
+@Riverpod(keepAlive: true)
+class SyncEngine extends _$SyncEngine {
+  Timer? _debounce;
+  SseClient? _sse;
+  var _running = false;
+  var _again = false;
+
+  @override
+  SyncState build() {
+    final auth = ref.watch(authControllerProvider);
+    ref.onDispose(() {
+      _debounce?.cancel();
+      _sse?.stop();
+    });
+    // Any local change schedules a push shortly afterwards. Not fired
+    // immediately: the notifier has no state to update until build returns.
+    ref.listen(pendingChangesProvider, (_, next) {
+      final count = next.value ?? 0;
+      state = state.copyWith(pending: count);
+      if (count > 0) requestSync();
+    });
+
+    if (!auth.connected) {
+      _sse?.stop();
+      _sse = null;
+      return const SyncState();
+    }
+    _startEvents(auth);
+    return SyncState(
+      status: SyncStatus.idle,
+      lastSyncAt: _storedLastSync(),
+      pending: ref.read(pendingChangesProvider).value ?? 0,
+    );
+  }
+
+  DateTime? _storedLastSync() {
+    final raw = ref.read(bootstrapProvider).lastSyncAt;
+    return raw == null ? null : DateTime.fromMillisecondsSinceEpoch(raw);
+  }
+
+  void _startEvents(AuthState auth) {
+    _sse?.stop();
+    _sse = SseClient(
+      ref.read(dioProvider),
+      baseUrl: auth.serverUrl!,
+      token: auth.token!,
+      onChanged: requestSync,
+    )..start();
+  }
+
+  SyncClient? _client() {
+    final auth = ref.read(authControllerProvider);
+    if (!auth.connected) return null;
+    return SyncClient(
+      ref.read(dioProvider),
+      baseUrl: auth.serverUrl!,
+      token: auth.token!,
+    );
+  }
+
+  /// Asks for a sync soon, coalescing bursts of edits.
+  void requestSync({Duration delay = const Duration(seconds: 2)}) {
+    if (!ref.read(authControllerProvider).connected) return;
+    _debounce?.cancel();
+    _debounce = Timer(delay, () => unawaited(syncNow()));
+  }
+
+  /// Uploads queued changes and applies everything new from the server.
+  Future<void> syncNow() async {
+    if (_running) {
+      _again = true;
+      return;
+    }
+    final client = _client();
+    if (client == null) return;
+    _running = true;
+    state = state.copyWith(status: SyncStatus.syncing, clearError: true);
+    try {
+      do {
+        _again = false;
+        await _runOnce(client);
+      } while (_again);
+      state = state.copyWith(status: SyncStatus.idle);
+    } on ApiError catch (e) {
+      if (e.isUnauthorized) {
+        await ref.read(authControllerProvider.notifier).sessionExpired();
+        state = state.copyWith(status: SyncStatus.signedOut);
+      } else {
+        state = state.copyWith(
+          status: e.isOffline ? SyncStatus.offline : SyncStatus.error,
+          error: e.code,
+        );
+      }
+    } finally {
+      _running = false;
+      state = state.copyWith(
+        pending: await ref.read(appDatabaseProvider).outboxCount(),
+      );
+    }
+  }
+
+  Future<void> _runOnce(SyncClient client) async {
+    final db = ref.read(appDatabaseProvider);
+    final kv = ref.read(kvStoreProvider);
+    final clock = ref.read(hlcClockProvider);
+    final reminders = ref.read(reminderSchedulerProvider);
+    var hasMore = true;
+    var pushed = false;
+    while (hasMore) {
+      final cursor = int.tryParse(await kv.get(KvKeys.cursor) ?? '0') ?? 0;
+      // Only the first request of a round carries the queue; later pages
+      // are pure pulls.
+      final changes = pushed ? <SyncChange>[] : await db.outboxChanges();
+      final response = await client.sync(
+        SyncRequest(cursor: cursor, changes: changes),
+      );
+      pushed = true;
+      await db.ackOutbox(changes);
+      for (final rejected in response.rejected) {
+        await db.dropOutbox(rejected.entity, rejected.rowId);
+      }
+      if (response.rejected.isNotEmpty) {
+        state = state.copyWith(
+          discarded: state.discarded + response.rejected.length,
+        );
+      }
+      for (final change in response.changes) {
+        final task = await db.applyRemote(change);
+        if (task != null) await reminders.sync(task);
+      }
+      await db.setListMeta(
+        response.members,
+        ref.read(authControllerProvider).username ?? '',
+      );
+      clock.receive(Hlc.parse(response.serverHlc));
+      await kv.set(KvKeys.hlcLast, clock.last.toString());
+      await kv.set(KvKeys.cursor, '${response.cursor}');
+      hasMore = response.hasMore;
+    }
+    final now = ref.read(nowProvider)();
+    await kv.set(KvKeys.lastSyncAt, '${now.millisecondsSinceEpoch}');
+    state = state.copyWith(lastSyncAt: now);
+  }
+
+  /// After connecting an account, every local row is offered to the server.
+  Future<void> onSignedIn() async {
+    await ref.read(appDatabaseProvider).enqueueAll();
+    await syncNow();
+  }
+
+  Future<void> onSignedOut() async {
+    _debounce?.cancel();
+    _sse?.stop();
+    _sse = null;
+    await ref.read(appDatabaseProvider).clearListMeta();
+    state = const SyncState();
+  }
+
+  /// The user has seen the "changes were rejected" notice.
+  void clearDiscarded() => state = state.copyWith(discarded: 0);
+}
+
+/// Number of local changes waiting to reach the server.
+@Riverpod(keepAlive: true)
+Stream<int> pendingChanges(Ref ref) =>
+    ref.watch(appDatabaseProvider).watchOutboxCount();
+
+/// Syncs when the app comes back to the foreground.
+class SyncLifecycleObserver extends ConsumerStatefulWidget {
+  const SyncLifecycleObserver({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  ConsumerState<SyncLifecycleObserver> createState() =>
+      _SyncLifecycleObserverState();
+}
+
+class _SyncLifecycleObserverState extends ConsumerState<SyncLifecycleObserver>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref
+          .read(syncEngineProvider.notifier)
+          .requestSync(delay: const Duration(milliseconds: 200));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}

@@ -122,5 +122,7 @@
   "membersErrorUnknownUser": "Nessun utente con questo nome.",
   "remindersChannelName": "Promemoria",
   "remindersChannelDescription": "Notifiche quando un'attività è in scadenza",
-  "remindersDueNow": "In scadenza ora"
+  "remindersDueNow": "In scadenza ora",
+  "startupErrorTitle": "nemo non riesce ad aprire il suo database",
+  "startupErrorBody": "Le tue attività sono salvate su questo dispositivo. Se usi una finestra privata o hai bloccato i dati del sito per questa pagina, consentili e ricarica."
 }

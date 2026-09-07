@@ -456,4 +456,11 @@ class LIt extends L {
 
   @override
   String get remindersDueNow => 'In scadenza ora';
+
+  @override
+  String get startupErrorTitle => 'nemo non riesce ad aprire il suo database';
+
+  @override
+  String get startupErrorBody =>
+      'Le tue attività sono salvate su questo dispositivo. Se usi una finestra privata o hai bloccato i dati del sito per questa pagina, consentili e ricarica.';
 }

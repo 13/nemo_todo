@@ -453,4 +453,11 @@ class LEn extends L {
 
   @override
   String get remindersDueNow => 'Due now';
+
+  @override
+  String get startupErrorTitle => 'nemo cannot open its database';
+
+  @override
+  String get startupErrorBody =>
+      'Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.';
 }

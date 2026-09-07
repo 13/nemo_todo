@@ -836,6 +836,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Due now'**
   String get remindersDueNow;
+
+  /// No description provided for @startupErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'nemo cannot open its database'**
+  String get startupErrorTitle;
+
+  /// No description provided for @startupErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.'**
+  String get startupErrorBody;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

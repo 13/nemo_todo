@@ -122,5 +122,7 @@
   "membersErrorUnknownUser": "Kein Benutzer mit diesem Namen.",
   "remindersChannelName": "Erinnerungen",
   "remindersChannelDescription": "Benachrichtigungen, wenn eine Aufgabe fällig ist",
-  "remindersDueNow": "Jetzt fällig"
+  "remindersDueNow": "Jetzt fällig",
+  "startupErrorTitle": "nemo kann seine Datenbank nicht öffnen",
+  "startupErrorBody": "Deine Aufgaben liegen auf diesem Gerät. Wenn du ein privates Fenster nutzt oder Websitedaten für diese Seite blockierst, erlaube sie und lade neu."
 }

@@ -457,4 +457,11 @@ class LDe extends L {
 
   @override
   String get remindersDueNow => 'Jetzt fällig';
+
+  @override
+  String get startupErrorTitle => 'nemo kann seine Datenbank nicht öffnen';
+
+  @override
+  String get startupErrorBody =>
+      'Deine Aufgaben liegen auf diesem Gerät. Wenn du ein privates Fenster nutzt oder Websitedaten für diese Seite blockierst, erlaube sie und lade neu.';
 }

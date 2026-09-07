@@ -9,28 +9,49 @@ import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/screens/startup_error_screen.dart';
 import 'package:nemo_core/nemo_core.dart';
 import 'package:uuid/uuid.dart';
+
+/// How long the database gets to open before the app gives up on it.
+///
+/// The web build stores data through a browser worker, and a browser that
+/// refuses to start one leaves the open call waiting rather than failing.
+/// Without this the app would show nothing at all, for ever.
+const startupTimeout = Duration(seconds: 15);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase.open();
-  final boot = await AppBootstrap.load(db);
-  final clock = HlcClock(node: boot.nodeId, last: boot.hlcLast);
-  // The Inbox exists before the first frame, so every screen can rely on it.
-  await ListsRepository(db, clock, const Uuid().v4).ensureInbox();
-  final reminders = await _openReminders();
+  try {
+    final boot = await _prepare(db).timeout(startupTimeout);
+    runApp(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          bootstrapProvider.overrideWithValue(boot.bootstrap),
+          reminderSchedulerProvider.overrideWithValue(boot.reminders),
+        ],
+        child: const NemoApp(),
+      ),
+    );
+  } on Object catch (error) {
+    runApp(StartupErrorApp(error: error));
+  }
+}
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-        bootstrapProvider.overrideWithValue(boot),
-        reminderSchedulerProvider.overrideWithValue(reminders),
-      ],
-      child: const NemoApp(),
-    ),
-  );
+/// Everything that has to exist before the first frame.
+Future<({AppBootstrap bootstrap, ReminderScheduler reminders})> _prepare(
+  AppDatabase db,
+) async {
+  final boot = await AppBootstrap.load(db);
+  // The Inbox exists before the first frame, so every screen can rely on it.
+  await ListsRepository(
+    db,
+    HlcClock(node: boot.nodeId, last: boot.hlcLast),
+    const Uuid().v4,
+  ).ensureInbox();
+  return (bootstrap: boot, reminders: await _openReminders());
 }
 
 /// Local notifications on Android; nothing to schedule elsewhere.

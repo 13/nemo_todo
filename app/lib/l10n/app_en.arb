@@ -29,17 +29,35 @@
   "listsColor": "Colour",
   "listsIcon": "Icon",
   "listsDeleteConfirm": "Delete \"{name}\" and all its tasks?",
-  "@listsDeleteConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "@listsDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "listsDeleted": "List deleted",
   "listsShared": "Shared",
   "listsMembers": "Members",
   "listsOpenCount": "{count, plural, =0{No open tasks} =1{1 open task} other{{count} open tasks}}",
-  "@listsOpenCount": {"placeholders": {"count": {"type": "int"}}},
+  "@listsOpenCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "listsEmpty": "Create a list to group your tasks.",
   "tasksAddHint": "Add a task",
   "tasksOpen": "Open",
   "tasksCompleted": "{count, plural, =1{1 completed} other{{count} completed}}",
-  "@tasksCompleted": {"placeholders": {"count": {"type": "int"}}},
+  "@tasksCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tasksEmptyList": "No tasks yet. Add one below.",
   "tasksTitleHint": "Title",
   "tasksNotesHint": "Notes",
@@ -68,13 +86,31 @@
   "dateTomorrow": "Tomorrow",
   "dateYesterday": "Yesterday",
   "dateInDays": "{count, plural, =1{In 1 day} other{In {count} days}}",
-  "@dateInDays": {"placeholders": {"count": {"type": "int"}}},
+  "@dateInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dateDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
-  "@dateDaysAgo": {"placeholders": {"count": {"type": "int"}}},
+  "@dateDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "searchHint": "Search tasks, notes and tags",
   "searchEmpty": "Type to search across all lists.",
   "searchNoResults": "No tasks match \"{query}\".",
-  "@searchNoResults": {"placeholders": {"query": {"type": "String"}}},
+  "@searchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Settings",
   "settingsAppearance": "Appearance",
   "settingsTheme": "Theme",
@@ -85,26 +121,65 @@
   "settingsNotConnected": "Not connected. Your data stays on this device.",
   "settingsConnect": "Connect to a server",
   "settingsConnectedAs": "Signed in as {username} on {server}",
-  "@settingsConnectedAs": {"placeholders": {"username": {"type": "String"}, "server": {"type": "String"}}},
+  "@settingsConnectedAs": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "server": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSignOut": "Sign out",
   "settingsSignOutConfirm": "Sign out? Your tasks stay on this device and stop syncing.",
   "settingsSync": "Sync",
   "settingsSyncNow": "Sync now",
   "settingsLastSync": "Last synced {time}",
-  "@settingsLastSync": {"placeholders": {"time": {"type": "String"}}},
+  "@settingsLastSync": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "settingsNeverSynced": "Not synced yet",
   "settingsPending": "{count, plural, =0{Everything is synced} =1{1 change waiting} other{{count} changes waiting}}",
-  "@settingsPending": {"placeholders": {"count": {"type": "int"}}},
+  "@settingsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsSyncing": "Syncing…",
   "settingsSyncError": "Sync failed: {error}",
-  "@settingsSyncError": {"placeholders": {"error": {"type": "String"}}},
+  "@settingsSyncError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsOffline": "Offline. Changes will sync when you are back online.",
   "settingsSignedOutRemotely": "Your session expired. Sign in again to keep syncing.",
   "settingsDiscarded": "{count, plural, =1{1 change was rejected by the server and reverted.} other{{count} changes were rejected by the server and reverted.}}",
-  "@settingsDiscarded": {"placeholders": {"count": {"type": "int"}}},
+  "@settingsDiscarded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsAbout": "About",
   "settingsVersion": "Version {version}",
-  "@settingsVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@settingsVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "accountTitle": "Connect",
   "accountServer": "Server address",
   "accountServerHint": "https://nemo.example.com",
@@ -121,14 +196,26 @@
   "accountErrorNetwork": "Could not reach the server.",
   "accountErrorTooMany": "Too many attempts. Try again in a minute.",
   "accountErrorGeneric": "Something went wrong ({code}).",
-  "@accountErrorGeneric": {"placeholders": {"code": {"type": "String"}}},
+  "@accountErrorGeneric": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "accountInvalidUrl": "Enter a valid http(s) address.",
   "membersTitle": "Members",
   "membersAddHint": "Username",
   "membersOwner": "Owner",
   "membersEditor": "Editor",
   "membersRemoveConfirm": "Remove {name} from this list?",
-  "@membersRemoveConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "@membersRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "membersOfflineNotice": "Sharing needs a connection to your server.",
   "membersNotConnected": "Connect to a server to share lists.",
   "membersOnlyOwner": "Only the owner can change members.",
@@ -136,5 +223,7 @@
   "membersErrorUnknownUser": "No user with that name.",
   "remindersChannelName": "Reminders",
   "remindersChannelDescription": "Notifications when a task is due",
-  "remindersDueNow": "Due now"
+  "remindersDueNow": "Due now",
+  "startupErrorTitle": "nemo cannot open its database",
+  "startupErrorBody": "Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload."
 }

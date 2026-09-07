@@ -1,7 +1,6 @@
 .git
 **/.dart_tool
 **/build
-**/.dart_tool
 **/coverage
 app/android
 app/web/sqlite3.wasm

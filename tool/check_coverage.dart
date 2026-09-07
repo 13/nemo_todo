@@ -15,11 +15,7 @@ import 'dart:io';
 /// zero and named in the list below.
 ///
 /// Usage: dart run tool/check_coverage.dart [minimum-percent]
-const _generated = [
-  '.g.dart',
-  '.freezed.dart',
-  'lib/l10n/app_localizations',
-];
+const _generated = ['.g.dart', '.freezed.dart', 'lib/l10n/app_localizations'];
 
 void main(List<String> args) {
   final minimum = args.isEmpty ? 60.0 : double.parse(args.first);

@@ -19,7 +19,7 @@ class Device {
   final tasks = <String, Task>{};
   final subtasks = <String, Subtask>{};
   final outbox = <String, SyncChange>{};
-  var cursor = 0;
+  int cursor = 0;
   Map<String, List<ListMember>> members = const {};
   final rejected = <RejectedChange>[];
 
@@ -89,9 +89,7 @@ class Device {
         outbox.remove('${change.entity.name}:${change.rowId}');
       }
       rejected.addAll(response.rejected);
-      for (final change in response.changes) {
-        _apply(change);
-      }
+      response.changes.forEach(_apply);
       members = response.members;
       clock.receive(Hlc.parse(response.serverHlc));
       cursor = response.cursor;
@@ -270,8 +268,7 @@ void main() {
 
   test('a client whose clock runs fast is refused', () async {
     final token = await server.signup('ben');
-    final device = Device(server, 'fast', token);
-    device.newList('l1', 'Fine');
+    final device = Device(server, 'fast', token)..newList('l1', 'Fine');
     await device.sync();
 
     // Two hours ahead of the server: beyond the one-hour tolerance.

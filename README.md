@@ -56,6 +56,10 @@ Code generation (drift, freezed, riverpod) runs per package with
 `dart run build_runner build`; generated files are committed and CI fails if
 they are stale.
 
+The server is compiled with `dart build cli`, not `dart compile exe`: the
+sqlite3 package ships a build hook, and only `dart build` runs hooks and
+places the native library next to the executable.
+
 To run the app against a server on your machine, start the server with
 `NEMO_CORS_ORIGINS` naming the dev origin, then enter its address on the
 Connect screen in Settings.

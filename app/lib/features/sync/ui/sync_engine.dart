@@ -14,6 +14,32 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sync_engine.g.dart';
 
+/// Builds the client that talks to the server. Replaced in tests.
+typedef SyncClientFactory = SyncClient Function(String baseUrl, String token);
+
+/// Builds the live-update stream, or null where there should not be one.
+typedef SseClientFactory = SseClient? Function(
+  String baseUrl,
+  String token,
+  void Function() onChanged,
+);
+
+final syncClientFactoryProvider = Provider<SyncClientFactory>(
+  (ref) =>
+      (baseUrl, token) =>
+          SyncClient(ref.read(dioProvider), baseUrl: baseUrl, token: token),
+);
+
+final sseClientFactoryProvider = Provider<SseClientFactory>(
+  (ref) =>
+      (baseUrl, token, onChanged) => SseClient(
+        ref.read(dioProvider),
+        baseUrl: baseUrl,
+        token: token,
+        onChanged: onChanged,
+      ),
+);
+
 /// Drives synchronisation with the server.
 ///
 /// One run at a time: a request arriving mid-run sets a flag and the loop
@@ -62,22 +88,17 @@ class SyncEngine extends _$SyncEngine {
 
   void _startEvents(AuthState auth) {
     _sse?.stop();
-    _sse = SseClient(
-      ref.read(dioProvider),
-      baseUrl: auth.serverUrl!,
-      token: auth.token!,
-      onChanged: requestSync,
-    )..start();
+    _sse = ref.read(sseClientFactoryProvider)(
+      auth.serverUrl!,
+      auth.token!,
+      requestSync,
+    )?..start();
   }
 
   SyncClient? _client() {
     final auth = ref.read(authControllerProvider);
     if (!auth.connected) return null;
-    return SyncClient(
-      ref.read(dioProvider),
-      baseUrl: auth.serverUrl!,
-      token: auth.token!,
-    );
+    return ref.read(syncClientFactoryProvider)(auth.serverUrl!, auth.token!);
   }
 
   /// Asks for a sync soon, coalescing bursts of edits.

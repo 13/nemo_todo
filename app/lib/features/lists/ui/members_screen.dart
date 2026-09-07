@@ -35,11 +35,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   SyncClient? _client() {
     final auth = ref.read(authControllerProvider);
     if (!auth.connected) return null;
-    return SyncClient(
-      ref.read(dioProvider),
-      baseUrl: auth.serverUrl!,
-      token: auth.token!,
-    );
+    return ref.read(syncClientFactoryProvider)(auth.serverUrl!, auth.token!);
   }
 
   Future<void> _run(Future<void> Function(SyncClient client) action) async {

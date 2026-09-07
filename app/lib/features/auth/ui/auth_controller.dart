@@ -32,6 +32,19 @@ final dioProvider = Provider<Dio>(
 
 final authStorageProvider = Provider<AuthStorage>((_) => SecureAuthStorage());
 
+/// Exchanges credentials for a session. Replaced in tests.
+typedef Authenticate = Future<({String token, String username})> Function(
+  Dio dio, {
+  required String baseUrl,
+  required String username,
+  required String password,
+  required bool signUp,
+});
+
+final authenticateProvider = Provider<Authenticate>(
+  (_) => SyncClient.authenticate,
+);
+
 /// Signing in, signing up and signing out.
 ///
 /// Signing in never destroys local data: the rows already on the device are
@@ -64,7 +77,7 @@ class AuthController extends _$AuthController {
     bool signUp = false,
   }) async {
     final url = SyncClient.normaliseBaseUrl(serverUrl);
-    final session = await SyncClient.authenticate(
+    final session = await ref.read(authenticateProvider)(
       ref.read(dioProvider),
       baseUrl: url,
       username: username.trim().toLowerCase(),

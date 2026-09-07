@@ -6,6 +6,7 @@ import 'package:meta/meta.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_theme.dart';
+import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -19,21 +20,30 @@ import 'test_db.dart';
 /// Closing a drift stream schedules a zero-duration timer, and the tree
 /// that flutter_test disposes on its own is torn down too late for that
 /// timer to run before the framework checks that none are pending. Pumping
-/// an empty tree here, then one more frame, keeps that check honest.
+/// an empty tree here, then two more frames, keeps that check honest.
 @isTest
 void appTest(String description, Future<void> Function(WidgetTester) body) {
   testWidgets(description, (tester) async {
     await body(tester);
     await tester.pumpWidget(const SizedBox.shrink());
-    // Two frames with time on the clock: the first unmounts the provider
-    // scope, the second lets the timers that unmount scheduled expire.
     await tester.pump(const Duration(milliseconds: 10));
     await tester.pump(const Duration(milliseconds: 10));
   });
 }
 
+typedef TestApp = ({
+  AppDatabase db,
+  GoRouter router,
+  TaskList inbox,
+  ProviderContainer container,
+});
+
 /// The app over a fresh in-memory database, routed to [initialLocation].
-Future<({AppDatabase db, GoRouter router, TaskList inbox})> pumpApp(
+///
+/// Mirrors `main.dart` and `NemoApp`: the inbox exists before the first
+/// frame, settings come from the database, and a stored session is
+/// restored once the tree is up.
+Future<TestApp> pumpApp(
   WidgetTester tester, {
   String initialLocation = Routes.today,
   // Riverpod does not export the type of its overrides, so the element
@@ -41,6 +51,9 @@ Future<({AppDatabase db, GoRouter router, TaskList inbox})> pumpApp(
   List<Object> overrides = const [],
   Size size = const Size(400, 800),
   Future<void> Function(AppDatabase db, TaskList inbox)? seed,
+  // Screens showing sync status animate a progress indicator, which never
+  // lets `pumpAndSettle` return. Those tests pump a fixed number of frames.
+  bool settle = true,
 }) async {
   final db = testDatabase();
   addTearDown(db.close);
@@ -54,24 +67,24 @@ Future<({AppDatabase db, GoRouter router, TaskList inbox})> pumpApp(
     sequentialIds('l'),
   ).ensureInbox();
   await seed?.call(db, inbox);
+  final boot = await AppBootstrap.load(db);
+
+  final container = ProviderContainer(
+    overrides: [
+      appDatabaseProvider.overrideWithValue(db),
+      bootstrapProvider.overrideWithValue(boot),
+      nowProvider.overrideWithValue(() => testNow),
+      idGeneratorProvider.overrideWithValue(sequentialIds()),
+      ...overrides.cast(),
+    ],
+  );
+  addTearDown(container.dispose);
 
   final router = AppRouter.router(initialLocation: initialLocation);
   addTearDown(router.dispose);
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-        bootstrapProvider.overrideWithValue(
-          const AppBootstrap(
-            nodeId: 'test',
-            hlcLast: null,
-            themeMode: ThemeMode.light,
-          ),
-        ),
-        nowProvider.overrideWithValue(() => testNow),
-        idGeneratorProvider.overrideWithValue(sequentialIds()),
-        ...overrides.cast(),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: Consumer(
         builder: (context, ref, _) => MaterialApp.router(
           theme: AppTheme.light(),
@@ -84,8 +97,22 @@ Future<({AppDatabase db, GoRouter router, TaskList inbox})> pumpApp(
       ),
     ),
   );
-  await tester.pumpAndSettle();
-  return (db: db, router: router, inbox: inbox);
+  await container.read(authControllerProvider.notifier).restore();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await settleSync(tester);
+  }
+  return (db: db, router: router, inbox: inbox, container: container);
+}
+
+/// Advances past the sync debounce and lets a round trip finish, without
+/// waiting for animations that never end.
+Future<void> settleSync(WidgetTester tester) async {
+  await tester.pump(const Duration(seconds: 3));
+  for (var i = 0; i < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 /// Types into the quick-add field and submits it.

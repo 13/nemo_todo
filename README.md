@@ -74,6 +74,7 @@ edited in one place:
 
 ```bash
 tool/generate_icons.sh    # needs rsvg-convert (librsvg)
+tool/check_icons.sh       # fails if one is missing or still Flutter's own
 ```
 
 In the app the mark is painted rather than loaded, so it stays sharp at any

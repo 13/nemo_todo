@@ -90,6 +90,18 @@ jobs:
       - name: Fetch web database assets
         run: tool/fetch_web_assets.sh
 
+      # The launcher and web icons are generated from assets/logo, and a
+      # stale one ships the wrong brand without failing anything else.
+      - name: Verify icons match the logo sources
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends librsvg2-bin
+          tool/generate_icons.sh
+          if ! git diff --quiet; then
+            echo "::error::Icons are out of date. Run tool/generate_icons.sh and commit:"
+            git diff --name-only | sed 's/^/  /'
+            exit 1
+          fi
+
       - name: Build web
         run: flutter build web --release --no-web-resources-cdn
         working-directory: app
@@ -121,13 +133,16 @@ jobs:
           PROPS
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi
         working-directory: app
 
+      # These carry the app name and version; Flutter's own copies under
+      # flutter-apk keep the generic names its tooling looks for.
       - uses: actions/upload-artifact@v5
         with:
           name: nemo-apk
-          path: app/build/app/outputs/flutter-apk/app-release.apk
+          path: app/build/app/outputs/release/*.apk
+          if-no-files-found: error
 
       - name: Build the server image
         run: docker build -t nemo:${{ github.sha }} .

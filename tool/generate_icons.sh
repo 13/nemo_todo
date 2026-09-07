@@ -31,6 +31,16 @@ for entry in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
     "$RES/mipmap-$density/ic_launcher_foreground.png"
 done
 
+# The status bar draws a notification icon as a silhouette from its alpha
+# channel, so this one is the bare white mark on transparency. Pointing it
+# at the launcher icon instead would show a filled square.
+for entry in mdpi:24 hdpi:36 xhdpi:48 xxhdpi:72 xxxhdpi:96; do
+  density=${entry%%:*}; size=${entry##*:}
+  mkdir -p "$RES/drawable-$density"
+  render "$LOGO/nemo-notification.svg" "$size" \
+    "$RES/drawable-$density/ic_notification.png"
+done
+
 # Web: favicon plus the manifest icons, maskable ones with more padding.
 render "$LOGO/nemo-icon.svg" 32 "$WEB/favicon.png"
 mkdir -p "$WEB/icons"

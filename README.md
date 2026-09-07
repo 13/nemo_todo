@@ -80,6 +80,13 @@ In the app the mark is painted rather than loaded, so it stays sharp at any
 size and takes its colour from the theme (`NemoMark`, `NemoLogoTile`). Its
 geometry mirrors `assets/logo/nemo-mark.svg`; change the two together.
 
+The mark also serves as the Android launcher icon (adaptive, with a
+monochrome layer for themed launchers), the splash screen on every Android
+version, the status bar icon reminders post with, the favicon and the
+installed web app's icon. The notification icon is a separate white
+silhouette: Android draws small icons from their alpha channel, so the
+coloured tile would arrive as a filled square.
+
 Code generation (drift, freezed, riverpod) runs per package with
 `dart run build_runner build`; generated files are committed and CI fails if
 they are stale.
@@ -141,3 +148,18 @@ docker compose exec nemo nemo_server reset-password <username>
 `minSdk` is 26. Reminders use inexact alarms, so Android may shift them by a
 few minutes to save battery; they survive a reboot. The web build has no
 reminders.
+
+```bash
+(cd app && flutter build apk --release --split-per-abi)
+```
+
+Alongside the files Flutter names for its own tooling, the build writes
+`app/build/app/outputs/release/nemo-<version>-<abi>.apk`, so a file that
+leaves the machine says which app and which version it is. That folder
+mirrors the last build rather than collecting older ones.
+
+Release builds are signed with the debug key unless `app/android/key.properties`
+names a keystore (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`).
+CI writes that file from repository secrets. A published build must never
+carry the debug key: it ships with every Android SDK, so anyone could
+replace the app in place.

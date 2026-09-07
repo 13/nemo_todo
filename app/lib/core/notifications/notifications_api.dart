@@ -29,7 +29,10 @@ class LocalNotificationsApi implements NotificationsApi {
     tzdata.initializeTimeZones();
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // The status bar draws this as a silhouette from its alpha channel,
+        // so it has to be the bare mark. The launcher icon would arrive as
+        // a filled white square.
+        android: AndroidInitializationSettings('@drawable/ic_notification'),
       ),
     );
   }

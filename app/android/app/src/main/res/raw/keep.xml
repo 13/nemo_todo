@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The notification icon is named from Dart, so the resource shrinker that
+     release builds run cannot see that it is used and strips it. Without
+     this the app has no small icon to post a reminder with. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification" />

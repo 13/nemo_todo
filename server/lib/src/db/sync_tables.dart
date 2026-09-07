@@ -1,21 +1,10 @@
-import 'dart:convert';
-
+// The synced tables. The app defines the identical three tables: drift's
+// generator cannot analyse table classes that live in another package, so
+// they cannot be shared through nemo_core. The row classes, and therefore
+// the column names and types, are shared: drift refuses to generate a
+// database whose columns do not match the row class constructor.
 import 'package:drift/drift.dart';
-import 'package:nemo_core/src/model/subtask.dart';
-import 'package:nemo_core/src/model/task.dart';
-import 'package:nemo_core/src/model/task_list.dart';
-
-/// Stores a list of strings as a JSON array in a text column.
-class StringListConverter extends TypeConverter<List<String>, String> {
-  const StringListConverter();
-
-  @override
-  List<String> fromSql(String fromDb) =>
-      (jsonDecode(fromDb) as List<dynamic>).cast<String>();
-
-  @override
-  String toSql(List<String> value) => jsonEncode(value);
-}
+import 'package:nemo_core/nemo_core.dart';
 
 @UseRowClass(TaskList, generateInsertable: true)
 class Lists extends Table {

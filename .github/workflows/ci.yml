@@ -97,14 +97,21 @@ jobs:
       # Signed with the release keystore when the secrets are present, and
       # with the debug key otherwise, which is fine for a CI artefact but
       # never for a release: the release job below requires the keystore.
+      # The `secrets` context cannot be read from a step's `if`, so the
+      # keystore is mapped into the environment and tested from there.
+      # Without it the APK is signed with the debug key, which is fine for
+      # a CI artefact and never for a release.
       - name: Configure signing
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "no keystore secret; the APK will use the debug key"
+            exit 0
+          fi
           echo "$KEYSTORE" | base64 -d > app/android/nemo.jks
           cat > app/android/key.properties <<PROPS
           storeFile=nemo.jks

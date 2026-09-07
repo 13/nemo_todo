@@ -20,6 +20,7 @@ class Sessions extends Table {
   Set<Column<Object>> get primaryKey => {tokenHash};
 }
 
+@DataClassName('ListMemberRow')
 class ListMembers extends Table {
   TextColumn get listId => text()();
   TextColumn get userId => text()();
@@ -33,6 +34,7 @@ class ListMembers extends Table {
 /// that remembers the last `seq` it saw can ask for everything after it.
 @TableIndex(name: 'sync_log_list_id', columns: {#listId})
 @TableIndex(name: 'sync_log_for_user_id', columns: {#forUserId})
+@DataClassName('SyncLogEntry')
 class SyncLog extends Table {
   IntColumn get seq => integer().autoIncrement()();
   TextColumn get entity => text()();

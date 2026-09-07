@@ -1969,7 +1969,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
 }
 
 class $ListMembersTable extends ListMembers
-    with TableInfo<$ListMembersTable, ListMember> {
+    with TableInfo<$ListMembersTable, ListMemberRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2010,7 +2010,7 @@ class $ListMembersTable extends ListMembers
   static const String $name = 'list_members';
   @override
   VerificationContext validateIntegrity(
-    Insertable<ListMember> instance, {
+    Insertable<ListMemberRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2045,9 +2045,9 @@ class $ListMembersTable extends ListMembers
   @override
   Set<GeneratedColumn> get $primaryKey => {listId, userId};
   @override
-  ListMember map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ListMemberRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ListMember(
+    return ListMemberRow(
       listId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}list_id'],
@@ -2069,11 +2069,11 @@ class $ListMembersTable extends ListMembers
   }
 }
 
-class ListMember extends DataClass implements Insertable<ListMember> {
+class ListMemberRow extends DataClass implements Insertable<ListMemberRow> {
   final String listId;
   final String userId;
   final String role;
-  const ListMember({
+  const ListMemberRow({
     required this.listId,
     required this.userId,
     required this.role,
@@ -2095,12 +2095,12 @@ class ListMember extends DataClass implements Insertable<ListMember> {
     );
   }
 
-  factory ListMember.fromJson(
+  factory ListMemberRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ListMember(
+    return ListMemberRow(
       listId: serializer.fromJson<String>(json['listId']),
       userId: serializer.fromJson<String>(json['userId']),
       role: serializer.fromJson<String>(json['role']),
@@ -2116,14 +2116,14 @@ class ListMember extends DataClass implements Insertable<ListMember> {
     };
   }
 
-  ListMember copyWith({String? listId, String? userId, String? role}) =>
-      ListMember(
+  ListMemberRow copyWith({String? listId, String? userId, String? role}) =>
+      ListMemberRow(
         listId: listId ?? this.listId,
         userId: userId ?? this.userId,
         role: role ?? this.role,
       );
-  ListMember copyWithCompanion(ListMembersCompanion data) {
-    return ListMember(
+  ListMemberRow copyWithCompanion(ListMembersCompanion data) {
+    return ListMemberRow(
       listId: data.listId.present ? data.listId.value : this.listId,
       userId: data.userId.present ? data.userId.value : this.userId,
       role: data.role.present ? data.role.value : this.role,
@@ -2132,7 +2132,7 @@ class ListMember extends DataClass implements Insertable<ListMember> {
 
   @override
   String toString() {
-    return (StringBuffer('ListMember(')
+    return (StringBuffer('ListMemberRow(')
           ..write('listId: $listId, ')
           ..write('userId: $userId, ')
           ..write('role: $role')
@@ -2145,13 +2145,13 @@ class ListMember extends DataClass implements Insertable<ListMember> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ListMember &&
+      (other is ListMemberRow &&
           other.listId == this.listId &&
           other.userId == this.userId &&
           other.role == this.role);
 }
 
-class ListMembersCompanion extends UpdateCompanion<ListMember> {
+class ListMembersCompanion extends UpdateCompanion<ListMemberRow> {
   final Value<String> listId;
   final Value<String> userId;
   final Value<String> role;
@@ -2170,7 +2170,7 @@ class ListMembersCompanion extends UpdateCompanion<ListMember> {
   }) : listId = Value(listId),
        userId = Value(userId),
        role = Value(role);
-  static Insertable<ListMember> custom({
+  static Insertable<ListMemberRow> custom({
     Expression<String>? listId,
     Expression<String>? userId,
     Expression<String>? role,
@@ -2228,7 +2228,8 @@ class ListMembersCompanion extends UpdateCompanion<ListMember> {
   }
 }
 
-class $SyncLogTable extends SyncLog with TableInfo<$SyncLogTable, SyncLogData> {
+class $SyncLogTable extends SyncLog
+    with TableInfo<$SyncLogTable, SyncLogEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2309,7 +2310,7 @@ class $SyncLogTable extends SyncLog with TableInfo<$SyncLogTable, SyncLogData> {
   static const String $name = 'sync_log';
   @override
   VerificationContext validateIntegrity(
-    Insertable<SyncLogData> instance, {
+    Insertable<SyncLogEntry> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2361,9 +2362,9 @@ class $SyncLogTable extends SyncLog with TableInfo<$SyncLogTable, SyncLogData> {
   @override
   Set<GeneratedColumn> get $primaryKey => {seq};
   @override
-  SyncLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  SyncLogEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SyncLogData(
+    return SyncLogEntry(
       seq: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}seq'],
@@ -2397,14 +2398,14 @@ class $SyncLogTable extends SyncLog with TableInfo<$SyncLogTable, SyncLogData> {
   }
 }
 
-class SyncLogData extends DataClass implements Insertable<SyncLogData> {
+class SyncLogEntry extends DataClass implements Insertable<SyncLogEntry> {
   final int seq;
   final String entity;
   final String rowId;
   final String listId;
   final String? forUserId;
   final String op;
-  const SyncLogData({
+  const SyncLogEntry({
     required this.seq,
     required this.entity,
     required this.rowId,
@@ -2439,12 +2440,12 @@ class SyncLogData extends DataClass implements Insertable<SyncLogData> {
     );
   }
 
-  factory SyncLogData.fromJson(
+  factory SyncLogEntry.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SyncLogData(
+    return SyncLogEntry(
       seq: serializer.fromJson<int>(json['seq']),
       entity: serializer.fromJson<String>(json['entity']),
       rowId: serializer.fromJson<String>(json['rowId']),
@@ -2466,14 +2467,14 @@ class SyncLogData extends DataClass implements Insertable<SyncLogData> {
     };
   }
 
-  SyncLogData copyWith({
+  SyncLogEntry copyWith({
     int? seq,
     String? entity,
     String? rowId,
     String? listId,
     Value<String?> forUserId = const Value.absent(),
     String? op,
-  }) => SyncLogData(
+  }) => SyncLogEntry(
     seq: seq ?? this.seq,
     entity: entity ?? this.entity,
     rowId: rowId ?? this.rowId,
@@ -2481,8 +2482,8 @@ class SyncLogData extends DataClass implements Insertable<SyncLogData> {
     forUserId: forUserId.present ? forUserId.value : this.forUserId,
     op: op ?? this.op,
   );
-  SyncLogData copyWithCompanion(SyncLogCompanion data) {
-    return SyncLogData(
+  SyncLogEntry copyWithCompanion(SyncLogCompanion data) {
+    return SyncLogEntry(
       seq: data.seq.present ? data.seq.value : this.seq,
       entity: data.entity.present ? data.entity.value : this.entity,
       rowId: data.rowId.present ? data.rowId.value : this.rowId,
@@ -2494,7 +2495,7 @@ class SyncLogData extends DataClass implements Insertable<SyncLogData> {
 
   @override
   String toString() {
-    return (StringBuffer('SyncLogData(')
+    return (StringBuffer('SyncLogEntry(')
           ..write('seq: $seq, ')
           ..write('entity: $entity, ')
           ..write('rowId: $rowId, ')
@@ -2510,7 +2511,7 @@ class SyncLogData extends DataClass implements Insertable<SyncLogData> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SyncLogData &&
+      (other is SyncLogEntry &&
           other.seq == this.seq &&
           other.entity == this.entity &&
           other.rowId == this.rowId &&
@@ -2519,7 +2520,7 @@ class SyncLogData extends DataClass implements Insertable<SyncLogData> {
           other.op == this.op);
 }
 
-class SyncLogCompanion extends UpdateCompanion<SyncLogData> {
+class SyncLogCompanion extends UpdateCompanion<SyncLogEntry> {
   final Value<int> seq;
   final Value<String> entity;
   final Value<String> rowId;
@@ -2545,7 +2546,7 @@ class SyncLogCompanion extends UpdateCompanion<SyncLogData> {
        rowId = Value(rowId),
        listId = Value(listId),
        op = Value(op);
-  static Insertable<SyncLogData> custom({
+  static Insertable<SyncLogEntry> custom({
     Expression<int>? seq,
     Expression<String>? entity,
     Expression<String>? rowId,
@@ -4010,17 +4011,17 @@ class $$ListMembersTableTableManager
         RootTableManager<
           _$ServerDatabase,
           $ListMembersTable,
-          ListMember,
+          ListMemberRow,
           $$ListMembersTableFilterComposer,
           $$ListMembersTableOrderingComposer,
           $$ListMembersTableAnnotationComposer,
           $$ListMembersTableCreateCompanionBuilder,
           $$ListMembersTableUpdateCompanionBuilder,
           (
-            ListMember,
-            BaseReferences<_$ServerDatabase, $ListMembersTable, ListMember>,
+            ListMemberRow,
+            BaseReferences<_$ServerDatabase, $ListMembersTable, ListMemberRow>,
           ),
-          ListMember,
+          ListMemberRow,
           PrefetchHooks Function()
         > {
   $$ListMembersTableTableManager(_$ServerDatabase db, $ListMembersTable table)
@@ -4061,11 +4062,11 @@ class $$ListMembersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$ListMembersTable, ListMember>(table),
+                  e.readTable<$ListMembersTable, ListMemberRow>(table),
                   BaseReferences<
                     _$ServerDatabase,
                     $ListMembersTable,
-                    ListMember
+                    ListMemberRow
                   >(db, table, e),
                 ),
               )
@@ -4079,17 +4080,17 @@ typedef $$ListMembersTableProcessedTableManager =
     ProcessedTableManager<
       _$ServerDatabase,
       $ListMembersTable,
-      ListMember,
+      ListMemberRow,
       $$ListMembersTableFilterComposer,
       $$ListMembersTableOrderingComposer,
       $$ListMembersTableAnnotationComposer,
       $$ListMembersTableCreateCompanionBuilder,
       $$ListMembersTableUpdateCompanionBuilder,
       (
-        ListMember,
-        BaseReferences<_$ServerDatabase, $ListMembersTable, ListMember>,
+        ListMemberRow,
+        BaseReferences<_$ServerDatabase, $ListMembersTable, ListMemberRow>,
       ),
-      ListMember,
+      ListMemberRow,
       PrefetchHooks Function()
     >;
 typedef $$SyncLogTableCreateCompanionBuilder = SyncLogCompanion Function({
@@ -4222,17 +4223,17 @@ class $$SyncLogTableTableManager
         RootTableManager<
           _$ServerDatabase,
           $SyncLogTable,
-          SyncLogData,
+          SyncLogEntry,
           $$SyncLogTableFilterComposer,
           $$SyncLogTableOrderingComposer,
           $$SyncLogTableAnnotationComposer,
           $$SyncLogTableCreateCompanionBuilder,
           $$SyncLogTableUpdateCompanionBuilder,
           (
-            SyncLogData,
-            BaseReferences<_$ServerDatabase, $SyncLogTable, SyncLogData>,
+            SyncLogEntry,
+            BaseReferences<_$ServerDatabase, $SyncLogTable, SyncLogEntry>,
           ),
-          SyncLogData,
+          SyncLogEntry,
           PrefetchHooks Function()
         > {
   $$SyncLogTableTableManager(_$ServerDatabase db, $SyncLogTable table)
@@ -4281,8 +4282,8 @@ class $$SyncLogTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$SyncLogTable, SyncLogData>(table),
-                  BaseReferences<_$ServerDatabase, $SyncLogTable, SyncLogData>(
+                  e.readTable<$SyncLogTable, SyncLogEntry>(table),
+                  BaseReferences<_$ServerDatabase, $SyncLogTable, SyncLogEntry>(
                     db,
                     table,
                     e,
@@ -4299,17 +4300,17 @@ typedef $$SyncLogTableProcessedTableManager =
     ProcessedTableManager<
       _$ServerDatabase,
       $SyncLogTable,
-      SyncLogData,
+      SyncLogEntry,
       $$SyncLogTableFilterComposer,
       $$SyncLogTableOrderingComposer,
       $$SyncLogTableAnnotationComposer,
       $$SyncLogTableCreateCompanionBuilder,
       $$SyncLogTableUpdateCompanionBuilder,
       (
-        SyncLogData,
-        BaseReferences<_$ServerDatabase, $SyncLogTable, SyncLogData>,
+        SyncLogEntry,
+        BaseReferences<_$ServerDatabase, $SyncLogTable, SyncLogEntry>,
       ),
-      SyncLogData,
+      SyncLogEntry,
       PrefetchHooks Function()
     >;
 

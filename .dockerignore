@@ -1,0 +1,11 @@
+.git
+**/.dart_tool
+**/build
+**/coverage
+app/android
+app/web/sqlite3.wasm
+app/web/drift_worker.js
+docs
+.github
+data
+.env

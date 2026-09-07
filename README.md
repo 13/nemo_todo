@@ -1,5 +1,7 @@
 # nemo
 
+[![CI](https://github.com/13/nemo_todo/actions/workflows/ci.yml/badge.svg)](https://github.com/13/nemo_todo/actions/workflows/ci.yml)
+
 A local-first todo app for Android and the web, with a small sync server you
 host yourself.
 
@@ -82,7 +84,13 @@ docker compose up --build -d
 ```
 
 The container serves the API and the web app on port 8080 and keeps its
-SQLite database in the `nemo_data` volume. Put your own TLS reverse proxy in
+SQLite database in the `nemo_data` volume, which survives a restart. It
+runs as a non-root user and reports its own health, so `docker compose ps`
+shows `healthy` once it is serving.
+
+The first account you create is also the last one the server accepts while
+`NEMO_ALLOW_SIGNUP` is empty, so sign up before pointing the address at the
+open internet. Put your own TLS reverse proxy in
 front of it; nothing in the container terminates TLS.
 
 | Variable | Meaning |

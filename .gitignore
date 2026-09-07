@@ -25,4 +25,6 @@ app/web/drift_worker.js
 
 # Runtime
 .env
-data/
+# Anchored: an unanchored `data/` also swallowed every feature's data
+# directory, and those source files silently never reached the repository.
+/data/

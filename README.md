@@ -52,6 +52,16 @@ tool/fetch_web_assets.sh                     # sqlite3.wasm + drift worker
 (cd app && flutter run -d chrome)            # the app against a dev server
 ```
 
+To look at the design without a device, render every screen to
+`app/build/screens/*.png`:
+
+```bash
+(cd app && flutter test test/design --update-goldens)
+```
+
+Those images are build output rather than stored golden assertions, so the
+normal test run skips them (`--exclude-tags design`).
+
 Code generation (drift, freezed, riverpod) runs per package with
 `dart run build_runner build`; generated files are committed and CI fails if
 they are stale.

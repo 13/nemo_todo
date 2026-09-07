@@ -1,0 +1,8 @@
+tags:
+  # Renders each screen to build/screens/*.png for a look at the design.
+  # Excluded from the normal run: the images are build output, not stored
+  # golden assertions, so there is nothing to compare against on a fresh
+  # checkout. Refresh them with:
+  #   flutter test test/design --update-goldens
+  design:
+    skip: false

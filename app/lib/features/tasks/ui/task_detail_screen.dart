@@ -312,35 +312,41 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             ),
             const SizedBox(height: 8),
             _Label(l.tasksPriority),
-            SegmentedButton<int>(
+            // Chips rather than a segmented button: four labels with flags
+            // do not fit across a phone, and a wrapped label reads badly.
+            Wrap(
               key: const Key('task-priority'),
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(value: 0, label: Text(l.priorityNone)),
-                ButtonSegment(
-                  value: 1,
-                  label: Text(l.priorityLow),
-                  icon: Icon(Icons.flag_rounded, color: nemo.priorityLow),
-                ),
-                ButtonSegment(
-                  value: 2,
-                  label: Text(l.priorityMedium),
-                  icon: Icon(Icons.flag_rounded, color: nemo.priorityMedium),
-                ),
-                ButtonSegment(
-                  value: 3,
-                  label: Text(l.priorityHigh),
-                  icon: Icon(Icons.flag_rounded, color: nemo.priorityHigh),
-                ),
+              spacing: 8,
+              children: [
+                for (final (value, label) in [
+                  (0, l.priorityNone),
+                  (1, l.priorityLow),
+                  (2, l.priorityMedium),
+                  (3, l.priorityHigh),
+                ])
+                  ChoiceChip(
+                    key: Key('priority-$value'),
+                    selected: task.priority == value,
+                    showCheckmark: false,
+                    avatar: value == 0
+                        ? null
+                        : Icon(
+                            Icons.flag_rounded,
+                            size: 18,
+                            color: nemo.priority(value),
+                          ),
+                    label: Text(label),
+                    onSelected: (_) => _save(task.copyWith(priority: value)),
+                  ),
               ],
-              selected: {task.priority},
-              onSelectionChanged: (s) =>
-                  _save(task.copyWith(priority: s.first)),
             ),
             const SizedBox(height: 20),
             _Label(l.tasksList),
             DropdownMenu<String>(
-              key: const Key('task-list'),
+              // Rebuilt when the lists arrive: a DropdownMenu resolves
+              // `initialSelection` against the entries it was created with,
+              // and the first build happens before the stream has emitted.
+              key: Key('task-list-${lists.length}-${task.listId}'),
               initialSelection: task.listId,
               expandedInsets: EdgeInsets.zero,
               leadingIcon: Icon(

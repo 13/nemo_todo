@@ -3,10 +3,10 @@
     "short_name": "nemo",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#F5F8F8",
+    "theme_color": "#0E7C86",
+    "description": "A local-first todo app that syncs with your own server.",
+    
     "prefer_related_applications": false,
     "icons": [
         {

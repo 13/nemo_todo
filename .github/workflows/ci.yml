@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # Pinned so a Flutter release cannot break the build with no change on
+  # our side. Bump deliberately, together with the Dockerfile.
+  FLUTTER_VERSION: '3.47.2'
+
+jobs:
+  test:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Generated sources are committed and nothing else here regenerates
+      # them, so a stale .g.dart would otherwise sail through every check.
+      - name: Verify generated code is current
+        run: |
+          (cd app && flutter gen-l10n)
+          (cd packages/nemo_core && dart run build_runner build)
+          (cd server && dart run build_runner build)
+          (cd app && dart run build_runner build)
+          if ! git diff --quiet; then
+            echo "::error::Generated files are out of date. Regenerate and commit:"
+            git diff --name-only | sed 's/^/  /'
+            exit 1
+          fi
+
+      - name: Verify formatting
+        run: |
+          dart format --output=none --set-exit-if-changed \
+            packages/nemo_core/lib packages/nemo_core/test \
+            server/lib server/bin server/test \
+            app/lib app/test tool
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test nemo_core
+        run: dart test
+        working-directory: packages/nemo_core
+
+      - name: Test server
+        run: dart test
+        working-directory: server
+
+      - name: Test app
+        run: flutter test --coverage
+        working-directory: app
+
+      - name: Check coverage floor
+        run: dart run ../tool/check_coverage.dart 80
+        working-directory: app
+
+  build:
+    name: Build web, APK and image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - run: flutter pub get
+
+      - name: Fetch web database assets
+        run: tool/fetch_web_assets.sh
+
+      - name: Build web
+        run: flutter build web --release --no-web-resources-cdn
+        working-directory: app
+
+      # Signed with the release keystore when the secrets are present, and
+      # with the debug key otherwise, which is fine for a CI artefact but
+      # never for a release: the release job below requires the keystore.
+      - name: Configure signing
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE" | base64 -d > app/android/nemo.jks
+          cat > app/android/key.properties <<PROPS
+          storeFile=nemo.jks
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+
+      - name: Build APK
+        run: flutter build apk --release
+        working-directory: app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nemo-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Build the server image
+        run: docker build -t nemo:${{ github.sha }} .

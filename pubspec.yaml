@@ -1,0 +1,11 @@
+name: nemo_workspace
+description: nemo monorepo (core package, Flutter app, Dart server).
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+workspace:
+  - packages/nemo_core
+  - app
+  - server

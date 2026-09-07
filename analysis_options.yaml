@@ -13,3 +13,6 @@ linter:
   rules:
     public_member_api_docs: false
     lines_longer_than_80_chars: false
+    # freezed and drift require named factory constructors and private
+    # constructors that this lint flags.
+    unnecessary_type_name_in_constructor: false

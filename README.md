@@ -20,7 +20,7 @@ flutter pub get                       # whole workspace
 (cd app && flutter run -d chrome)     # web dev build
 ```
 
-Code generation (drift, freezed, riverpod): `dart run build_runner build --delete-conflicting-outputs` inside the package that changed. Generated files are committed.
+Code generation (drift, freezed, riverpod): `dart run build_runner build` inside the package that changed. Generated files are committed.
 
 ## Deployment
 

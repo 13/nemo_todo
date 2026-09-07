@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
+import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 
@@ -72,7 +73,7 @@ class ShellScreen extends StatelessWidget {
               groupAlignment: -0.9,
               leading: const Padding(
                 padding: EdgeInsets.only(top: 8, bottom: 16),
-                child: _Logo(),
+                child: NemoLogoTile(),
               ),
               trailing: Expanded(
                 child: Align(
@@ -117,24 +118,6 @@ class ShellScreen extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-class _Logo extends StatelessWidget {
-  const _Logo();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(Icons.check_rounded, color: scheme.onPrimary),
     );
   }
 }

@@ -1,4 +1,4 @@
-# nemo
+<img src="assets/logo/nemo-wordmark.svg" alt="nemo" height="76">
 
 [![CI](https://github.com/13/nemo_todo/actions/workflows/ci.yml/badge.svg)](https://github.com/13/nemo_todo/actions/workflows/ci.yml)
 
@@ -22,6 +22,7 @@ host yourself.
 | `server/` | The Dart server: sync API, accounts, sharing, and hosting of the web app |
 | `packages/nemo_core/` | Models, sync protocol and merge rules shared by both |
 | `docs/superpowers/` | Design spec and implementation plans |
+| `assets/logo/` | The mark, the wordmark and the icon sources |
 
 ## How syncing works
 
@@ -63,6 +64,21 @@ To look at the design without a device, render every screen to
 
 Those images are build output rather than stored golden assertions, so the
 normal test run skips them (`--exclude-tags design`).
+
+## The logo
+
+The mark is a lowercase **n** whose right leg flicks up into a check: the
+app's initial and what the app is for, in one stroke. `assets/logo` holds the
+sources; every launcher and web icon is rendered from them, so the mark is
+edited in one place:
+
+```bash
+tool/generate_icons.sh    # needs rsvg-convert (librsvg)
+```
+
+In the app the mark is painted rather than loaded, so it stays sharp at any
+size and takes its colour from the theme (`NemoMark`, `NemoLogoTile`). Its
+geometry mirrors `assets/logo/nemo-mark.svg`; change the two together.
 
 Code generation (drift, freezed, riverpod) runs per package with
 `dart run build_runner build`; generated files are committed and CI fails if

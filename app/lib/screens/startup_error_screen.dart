@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nemo/core/theme/app_theme.dart';
+import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/l10n/locale_resolution.dart';
 
@@ -41,12 +42,8 @@ class StartupErrorScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.storage_rounded,
-                size: 56,
-                color: scheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: 20),
+              const NemoLogoTile(size: 64),
+              const SizedBox(height: 24),
               Text(
                 l.startupErrorTitle,
                 style: Theme.of(context).textTheme.headlineSmall,

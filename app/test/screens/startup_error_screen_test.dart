@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/screens/startup_error_screen.dart';
 
 void main() {
@@ -13,6 +13,6 @@ void main() {
     expect(find.textContaining('allow it and reload'), findsOneWidget);
     // The cause is shown too: without it there is nothing to report.
     expect(find.textContaining('TimeoutException'), findsOneWidget);
-    expect(find.byIcon(Icons.storage_rounded), findsOneWidget);
+    expect(find.byType(NemoLogoTile), findsOneWidget);
   });
 }

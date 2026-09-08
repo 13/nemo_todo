@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
@@ -25,20 +26,39 @@ class SseClient {
   final Duration initialBackoff;
   final Duration maxBackoff;
 
-  StreamSubscription<List<int>>? _subscription;
+  StreamSubscription<String>? _subscription;
   Timer? _retry;
   Duration _backoff = Duration.zero;
   var _stopped = true;
 
+  /// The tail of the last chunk, when it ended mid-frame.
+  var _pending = '';
+
+  /// Ceiling on that tail. The server sends three short frames and nothing
+  /// else, so a stream that never completes one is not a stream of ours,
+  /// and holding on to it would be holding on to memory for ever.
+  static const int _maxPending = 64 * 1024;
+
   bool get connected => _subscription != null;
 
-  /// Splits an SSE chunk into complete frames and reports the event names.
-  static Iterable<String> eventsIn(String chunk) sync* {
-    for (final frame in chunk.split('\n\n')) {
-      for (final line in frame.split('\n')) {
-        if (line.startsWith('event:')) yield line.substring(6).trim();
-      }
-    }
+  /// Splits [chunk] into complete frames, reports the event names in them,
+  /// and hands back whatever followed the last blank line.
+  ///
+  /// A frame ends at a blank line, and nothing says one arrives whole: a
+  /// `changed` frame can be split across two reads, and reading each read
+  /// on its own would drop it. So the tail comes back to be prepended to
+  /// the next chunk rather than parsed here.
+  static ({List<String> events, String rest}) eventsIn(String chunk) {
+    final frames = chunk.split('\n\n');
+    final rest = frames.removeLast();
+    return (
+      events: [
+        for (final frame in frames)
+          for (final line in frame.split('\n'))
+            if (line.startsWith('event:')) line.substring(6).trim(),
+      ],
+      rest: rest,
+    );
   }
 
   void start() {
@@ -54,6 +74,7 @@ class SseClient {
     _retry = null;
     unawaited(_subscription?.cancel());
     _subscription = null;
+    _pending = '';
   }
 
   Future<void> _connect() async {
@@ -68,17 +89,24 @@ class SseClient {
       );
       if (_stopped) return;
       _backoff = initialBackoff;
+      _pending = '';
       // A reconnect may have missed events; sync once on connect.
       onChanged();
-      _subscription = response.data!.stream.listen(
-        (bytes) {
-          final chunk = String.fromCharCodes(bytes);
-          if (eventsIn(chunk).contains('changed')) onChanged();
-        },
-        onDone: _scheduleRetry,
-        onError: (Object _) => _scheduleRetry(),
-        cancelOnError: true,
-      );
+      // Decoded by the stream rather than per chunk: a character can be
+      // split across two reads just as a frame can, and decoding each read
+      // on its own would mangle it.
+      _subscription = utf8.decoder
+          .bind(response.data!.stream)
+          .listen(
+            (text) {
+              final parsed = eventsIn(_pending + text);
+              _pending = parsed.rest.length > _maxPending ? '' : parsed.rest;
+              if (parsed.events.contains('changed')) onChanged();
+            },
+            onDone: _scheduleRetry,
+            onError: (Object _) => _scheduleRetry(),
+            cancelOnError: true,
+          );
     } on Object {
       _scheduleRetry();
     }

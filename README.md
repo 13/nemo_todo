@@ -162,6 +162,21 @@ Forgotten password:
 docker compose exec nemo nemo_server reset-password <username>
 ```
 
+### Housekeeping
+
+Deleting a task leaves a tombstone: the row stays, empty of nothing but its
+own text, because it is what tells other devices the task is gone. `purge`
+clears out the ones old enough that everyone has heard:
+
+```bash
+docker compose exec nemo nemo_server purge --dry-run      # what would go
+docker compose exec nemo nemo_server purge --days 30      # and go it does
+```
+
+It is safe to run on a schedule. A device that was offline for the whole
+window is still told to drop the row -- the purge leaves the instruction
+behind, just not the data -- so nothing it holds comes back to life.
+
 ### Backups
 
 The database is one SQLite file in the `nemo_data` volume, and copying it

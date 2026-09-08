@@ -15,11 +15,6 @@ yearly has to be re-created by hand.
 rule name, and a picker to match. The column already carries text it does
 not interpret, so an older app passes a new rule through untouched.
 
-## Purge of old tombstones
-**What.** Server maintenance command deleting rows tombstoned for more than 30 days and their children.
-**Cost of leaving it.** Database and initial pulls grow slowly with deleted data.
-**What closing it takes.** A `nemo_server purge` subcommand and a note in the README.
-
 ## Master-detail layout on wide screens
 **What.** Task list on the left, task detail on the right above 1200 dp.
 **Cost of leaving it.** Desktop users open tasks as full pages.

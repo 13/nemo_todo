@@ -19,6 +19,7 @@ Future<void> main(List<String> args) async {
     ..addCommand(_ServeCommand())
     ..addCommand(_ResetPasswordCommand())
     ..addCommand(_BackupCommand())
+    ..addCommand(_PurgeCommand())
     ..addCommand(_HealthcheckCommand());
   try {
     exitCode = await runner.run(args.isEmpty ? const ['serve'] : args) ?? 0;
@@ -155,6 +156,60 @@ class _BackupCommand extends Command<int> {
     } on Object catch (e) {
       stderr.writeln('backup failed: $e');
       return 1;
+    } finally {
+      await db.close();
+    }
+  }
+}
+
+class _PurgeCommand extends Command<int> {
+  _PurgeCommand() {
+    argParser
+      ..addOption(
+        'days',
+        help: 'Delete rows tombstoned longer ago than this.',
+        defaultsTo: '${PurgeService.defaultRetention.inDays}',
+      )
+      ..addFlag(
+        'dry-run',
+        help: 'Report what would go and change nothing.',
+        negatable: false,
+      );
+  }
+
+  @override
+  String get name => 'purge';
+
+  @override
+  String get description =>
+      'Delete old tombstoned rows and their children. Devices are still '
+      'told to drop them, so one that has been offline throughout catches '
+      'up rather than resurrecting them.';
+
+  @override
+  Future<int> run() async {
+    final days = int.tryParse(argResults?['days'] as String? ?? '');
+    if (days == null || days < 1) {
+      usageException('--days must be a day or more');
+    }
+    final dryRun = argResults?['dry-run'] as bool? ?? false;
+    final config = Config.fromEnv(Platform.environment);
+    if (!File(config.dbPath).existsSync()) {
+      stderr.writeln('no database at ${config.dbPath}');
+      return 1;
+    }
+    final db = _openDatabase(config);
+    try {
+      final report = await PurgeService(db).purge(
+        retention: Duration(days: days),
+        dryRun: dryRun,
+      );
+      stdout.writeln(
+        report.total == 0
+            ? 'nothing tombstoned longer than $days day(s)'
+            : '${dryRun ? "would remove" : "removed"} $report',
+      );
+      return 0;
     } finally {
       await db.close();
     }

@@ -193,3 +193,11 @@ names a keystore (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`).
 CI writes that file from repository secrets. A published build must never
 carry the debug key: it ships with every Android SDK, so anyone could
 replace the app in place.
+
+## License
+
+MIT, in `LICENSE`. The bundled Manrope typeface is not ours and is not
+covered by it: it is licensed under the SIL Open Font License 1.1, whose
+text ships beside the fonts in `app/assets/fonts/OFL.txt`.
+
+`CHANGELOG.md` is what every release says it changed.

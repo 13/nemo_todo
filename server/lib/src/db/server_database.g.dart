@@ -2638,6 +2638,10 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     'subtasks_task_id',
     'CREATE INDEX subtasks_task_id ON subtasks (task_id)',
   );
+  late final Index listMembersUserId = Index(
+    'list_members_user_id',
+    'CREATE INDEX list_members_user_id ON list_members (user_id)',
+  );
   late final Index syncLogListId = Index(
     'sync_log_list_id',
     'CREATE INDEX sync_log_list_id ON sync_log (list_id)',
@@ -2645,6 +2649,10 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
   late final Index syncLogForUserId = Index(
     'sync_log_for_user_id',
     'CREATE INDEX sync_log_for_user_id ON sync_log (for_user_id)',
+  );
+  late final Index syncLogRow = Index(
+    'sync_log_row',
+    'CREATE INDEX sync_log_row ON sync_log (row_id, entity, op)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -2660,8 +2668,10 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     syncLog,
     tasksListId,
     subtasksTaskId,
+    listMembersUserId,
     syncLogListId,
     syncLogForUserId,
+    syncLogRow,
   ];
 }
 

@@ -32,5 +32,19 @@ class ServerDatabase extends _$ServerDatabase {
       );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // Indexes are created one by one rather than with createAll(): drift
+      // emits index DDL without `if not exists`, so createAll() throws on a
+      // database that already holds the tables.
+      if (from < 2) {
+        await m.create(listMembersUserId);
+        await m.create(syncLogRow);
+      }
+    },
+  );
 }

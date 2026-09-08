@@ -55,6 +55,37 @@ void main() {
     expect((await db.select(db.listMembers).getSingle()).role, 'owner');
   });
 
+  test('the lookups on every sync are index-backed', () async {
+    Future<String> plan(String sql, List<Variable<Object>> args) async {
+      final rows = await db
+          .customSelect('explain query plan $sql', variables: args)
+          .get();
+      return rows.map((r) => r.read<String>('detail')).join(' | ');
+    }
+
+    // rolesOf() runs on every sync request; the (list_id, user_id) primary
+    // key cannot serve a lookup that only knows the user.
+    expect(
+      await plan('select * from list_members where user_id = ?', [
+        const Variable('u'),
+      ]),
+      contains('list_members_user_id'),
+    );
+
+    // logUpsert() deletes by row before re-inserting, once per pushed row.
+    expect(
+      await plan(
+        'select * from sync_log where entity = ? and row_id = ? and op = ?',
+        [
+          const Variable('task'),
+          const Variable('t1'),
+          const Variable('upsert'),
+        ],
+      ),
+      contains('sync_log_row'),
+    );
+  });
+
   test('sync_log seq auto increments', () async {
     for (final id in ['a', 'b']) {
       await db

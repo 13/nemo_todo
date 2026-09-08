@@ -30,12 +30,21 @@ jobs:
 
       # Generated sources are committed and nothing else here regenerates
       # them, so a stale .g.dart would otherwise sail through every check.
+      # The schema snapshots are held to the same rule: they are what the
+      # next migration gets written against, so a schema edit that does not
+      # re-dump them has to fail here rather than at someone's first upgrade.
       - name: Verify generated code is current
         run: |
           (cd app && flutter gen-l10n)
           (cd packages/nemo_core && dart run build_runner build)
           (cd server && dart run build_runner build)
           (cd app && dart run build_runner build)
+          (cd server && dart run drift_dev schema dump \
+            lib/src/db/server_database.dart drift_schemas/)
+          (cd server && dart run drift_dev schema generate \
+            drift_schemas/ test/generated/)
+          (cd app && dart run drift_dev schema dump \
+            lib/core/db/app_database.dart drift_schemas/)
           if ! git diff --quiet; then
             echo "::error::Generated files are out of date. Regenerate and commit:"
             git diff --name-only | sed 's/^/  /'

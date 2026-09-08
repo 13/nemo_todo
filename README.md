@@ -194,6 +194,32 @@ CI writes that file from repository secrets. A published build must never
 carry the debug key: it ships with every Android SDK, so anyone could
 replace the app in place.
 
+## Releases
+
+Pushing a `v*` tag publishes a GitHub release. The tag has to match the
+version in `app/pubspec.yaml`, and `CHANGELOG.md` has to have a section for
+it; both are checked before anything is built, because a release that lies
+about its version makes the app offer an update it has already installed.
+
+```bash
+# 1. Set the version and write what changed.
+$EDITOR app/pubspec.yaml CHANGELOG.md    # e.g. version: 0.2.0+2, ## 0.2.0 - <date>
+git commit -am "chore: release 0.2.0"
+
+# 2. Tag it. The workflow does the rest.
+git tag v0.2.0 && git push origin main v0.2.0
+```
+
+The release job runs the whole CI workflow first, then builds the four APKs
+(one per ABI plus a universal fallback), refuses to continue if any of them
+carries the debug key, and attaches them with the CHANGELOG section as the
+notes. It needs `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` as repository secrets: unlike
+CI, it will not fall back to the debug key.
+
+A version with a hyphen in it (`v0.3.0-beta.1`) is published as a
+pre-release.
+
 ## License
 
 MIT, in `LICENSE`. The bundled Manrope typeface is not ours and is not

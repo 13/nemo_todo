@@ -3,10 +3,12 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
+  # Tags do not run this directly. release.yml calls it, so a release runs
+  # exactly the checks a push runs and then publishes on top of them.
+  workflow_call:
 
 env:
   # Pinned so a Flutter release cannot break the build with no change on

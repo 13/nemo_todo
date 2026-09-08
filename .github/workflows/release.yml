@@ -101,10 +101,11 @@ jobs:
           keyPassword=$KEY_PASSWORD
           PROPS
 
-      # The gradle task that gives the APKs their real names mirrors the
-      # last build rather than collecting them, so the per-ABI files are
-      # carried out of the way before the universal build overwrites them.
-      # The universal one is the fallback for a device whose ABI is not
+      # Two builds, and each one's output is carried aside as it lands
+      # rather than trusting them to pile up: the task that gives the APKs
+      # their real names mirrors a directory instead of accumulating, so
+      # what survives the second build is gradle's business, not ours.
+      # The universal APK is the fallback for a device whose ABI is not
       # among the three, and for anyone downloading by hand.
       - name: Build the per-ABI APKs
         run: |

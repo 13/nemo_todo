@@ -60,7 +60,7 @@ void main() {
 
   test('the 29th of February falls back to the 28th', () {
     expect(
-      next(at(2024, 2, 29), RepeatRule.yearly, DateTime(2024, 3, 1)),
+      next(at(2024, 2, 29), RepeatRule.yearly, DateTime(2024, 3, 1, 12)),
       DateTime(2025, 2, 28, 9),
     );
   });

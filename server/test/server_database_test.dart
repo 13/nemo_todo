@@ -128,7 +128,7 @@ void main() {
     // Read back with plain sqlite3 rather than another drift database:
     // the point of the copy is that it is a database on its own terms.
     final restored = sqlite3.open(path, mode: OpenMode.readOnly);
-    addTearDown(restored.dispose);
+    addTearDown(restored.close);
     expect(
       restored.select('select username from users').single['username'],
       'ben',

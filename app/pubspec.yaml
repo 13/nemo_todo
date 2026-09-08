@@ -9,6 +9,8 @@ environment:
 
 dependencies:
   collection: ^1.19.0
+  crypto: ^3.0.7
+  device_info_plus: ^13.2.0
   dio: ^5.11.1
   drift: ^2.34.4
   drift_flutter: ^0.3.1
@@ -28,6 +30,8 @@ dependencies:
   meta: ^1.16.0
   nemo_core:
     path: ../packages/nemo_core
+  open_filex: ^4.7.0
+  package_info_plus: ^10.2.1
   path_provider: ^2.1.5
   riverpod_annotation: ^4.0.7
   timezone: ^0.11.1

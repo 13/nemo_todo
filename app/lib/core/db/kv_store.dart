@@ -10,6 +10,8 @@ abstract final class KvKeys {
   static const username = 'username';
   static const lastSyncAt = 'last_sync_at';
   static const discarded = 'sync_discarded';
+  static const lastUpdateCheck = 'last_update_check';
+  static const dismissedUpdate = 'dismissed_update';
 }
 
 /// Typed access to the `kv` table.

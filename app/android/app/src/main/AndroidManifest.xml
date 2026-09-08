@@ -3,6 +3,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Hands a downloaded APK to the system installer. Android still
+         asks the user to allow installs from nemo the first time, and
+         refuses any package not signed with nemo's key. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <application
         android:label="nemo"
         android:usesCleartextTraffic="false"

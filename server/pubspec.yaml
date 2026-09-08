@@ -23,6 +23,7 @@ dependencies:
   uuid: ^4.6.0
 
 dev_dependencies:
+  coverage: ^1.15.0
   build_runner: ^2.16.1
   drift_dev: ^2.34.4
   http: ^1.2.0

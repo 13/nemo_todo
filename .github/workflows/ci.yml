@@ -66,12 +66,25 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      # dart test writes its own JSON hit map rather than lcov, so each
+      # pure-Dart package is converted before the shared checker reads it.
+      # The floors sit just under what each package measures today; the
+      # server holds the authorisation rules, so it is the last place that
+      # should be able to lose tests unnoticed.
       - name: Test nemo_core
-        run: dart test
+        run: |
+          dart test --coverage=coverage
+          dart run coverage:format_coverage --lcov --in=coverage \
+            --out=coverage/lcov.info --report-on=lib --base-directory=.
+          dart run ../../tool/check_coverage.dart 90
         working-directory: packages/nemo_core
 
       - name: Test server
-        run: dart test
+        run: |
+          dart test --coverage=coverage
+          dart run coverage:format_coverage --lcov --in=coverage \
+            --out=coverage/lcov.info --report-on=lib --base-directory=.
+          dart run ../tool/check_coverage.dart 85
         working-directory: server
 
       - name: Test app

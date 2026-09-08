@@ -41,7 +41,7 @@ HLC format: `"{wall ms, 13 digits}-{counter, 4 hex digits}-{node id}"`. Comparis
 
 ## Components
 
-- **`packages/nemo_core`** (pure Dart): `Hlc` (now, receive, parse, compare), `SortKey` (`first`, `last`, `between`), freezed models `TaskList`, `Task`, `Subtask` with JSON, drift `Table` classes with `@UseRowClass` so both databases share the schema, `merge(local, incoming)` for each entity, sync DTOs `SyncRequest`, `SyncResponse`, `SyncChange`, `RejectedChange`, `ListMember`.
+- **`packages/nemo_core`** (pure Dart): `Hlc` (now, receive, parse, compare), `SortKey` (`first`, `last`, `between`), freezed models `TaskList`, `Task`, `Subtask` with JSON, `merge(local, incoming)` for each entity, sync DTOs `SyncRequest`, `SyncResponse`, `SyncChange`, `RejectedChange`, `ListMember`. The drift `Table` classes are declared once per side (`server/lib/src/db/sync_tables.dart` and `app/lib/core/db/sync_tables.dart`) with `@UseRowClass` pointing at these models, so the two databases share the row classes rather than the table code.
 - **`server`**: `Config` from environment, `ServerDatabase` (drift `NativeDatabase`, WAL), `AuthService` (bcrypt cost 12, opaque 32-byte tokens hashed with SHA-256, 30-day expiry with rotation after half the lifetime, per-IP rate limit on `/auth/*`, `NEMO_ALLOW_SIGNUP`), `SyncService` (authorise, merge, log, paginate), `MembersService` (share, unshare, fan-out, revoke), `EventHub` (SSE per user, 25 s heartbeat), static hosting of the built web app with SPA fallback and security headers, `GET /healthz`, CLI `reset-password <username>`.
 - **`app`**: `AppDatabase` (drift_flutter; wasm worker on web), repositories over DAOs exposing `watch*` streams and writing the outbox in the same transaction, `@riverpod` controllers, `SyncEngine` (keepAlive; single in-flight run with a rerun flag), `SseClient`, `ReminderScheduler` with Android and no-op implementations, theme (`AppTheme`, `NemoColors` extension), shell, router, screens: Today, Upcoming, Lists, List detail, Task detail, Search, Settings, Account, Members.
 
@@ -58,7 +58,7 @@ HLC format: `"{wall ms, 13 digits}-{counter, 4 hex digits}-{node id}"`. Comparis
 ## Error handling
 
 - Network failures leave the outbox untouched; the next trigger retries. Sync status in Settings shows last success and pending count.
-- Rejected changes are reverted by the server row in the same response; the user sees a single snackbar per round.
+- Rejected changes are dropped from the outbox and the user sees a single notice per round. A change that is accepted but loses to a newer row is answered with the winning row in the same response, and the losing device drops its queued copy when it applies it, so a loss corrects itself rather than sitting in the queue.
 - SSE reconnects with exponential backoff (1 s → 60 s); a reconnect triggers a sync.
 - Server returns JSON `{error}` bodies; 401 clears the token client-side and shows "signed out" in Settings; 429 on auth endpoints shows "too many attempts".
 - Tombstoned lists hide their tasks; nothing cascades, so an offline undo of a list deletion restores its tasks. A server maintenance command may purge rows tombstoned for over 30 days (backlog).

@@ -52,6 +52,12 @@ tool/fetch_web_assets.sh                     # sqlite3.wasm + drift worker
 (cd server && dart test)
 (cd app && flutter test --coverage && dart run ../tool/check_coverage.dart 80)
 
+# with the coverage floors CI applies (90 core, 85 server, 80 app)
+(cd server && dart test --coverage=coverage \
+  && dart run coverage:format_coverage --lcov --in=coverage \
+       --out=coverage/lcov.info --report-on=lib --base-directory=. \
+  && dart run ../tool/check_coverage.dart 85)
+
 (cd app && flutter run -d chrome)            # the app against a dev server
 ```
 

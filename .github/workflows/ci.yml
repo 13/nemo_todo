@@ -130,6 +130,15 @@ jobs:
       # keystore is mapped into the environment and tested from there.
       # Without it the APK is signed with the debug key, which is fine for
       # a CI artefact and never for a release.
+      # flutter_secure_storage 11 compiles against API 37, so the app does
+      # too, and a runner image ships whichever platforms it shipped with.
+      # Installing it here costs seconds; finding out it is missing costs a
+      # failed build, or a failed release.
+      - name: Install the Android platform the build compiles against
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            'platforms;android-37.0' > /dev/null
+
       - name: Configure signing
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}

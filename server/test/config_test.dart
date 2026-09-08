@@ -10,6 +10,7 @@ void main() {
     expect(c.webDir, '/app/web');
     expect(c.corsOrigins, isEmpty);
     expect(c.nodeId, 'server');
+    expect(c.trustedProxyHops, 0, reason: 'no proxy is assumed in front');
   });
 
   test('reads every variable', () {
@@ -20,6 +21,7 @@ void main() {
       'NEMO_WEB_DIR': '/srv/web',
       'NEMO_CORS_ORIGINS': 'http://localhost:5000, http://a.test ,',
       'NEMO_NODE_ID': 'srv1',
+      'NEMO_TRUSTED_PROXY_HOPS': '1',
     });
     expect(c.port, 9000);
     expect(c.dbPath, '/tmp/x.db');
@@ -27,11 +29,16 @@ void main() {
     expect(c.webDir, '/srv/web');
     expect(c.corsOrigins, ['http://localhost:5000', 'http://a.test']);
     expect(c.nodeId, 'srv1');
+    expect(c.trustedProxyHops, 1);
     expect(Config.fromEnv({'NEMO_ALLOW_SIGNUP': 'TRUE'}).allowSignup, isTrue);
     expect(Config.fromEnv({'NEMO_ALLOW_SIGNUP': 'maybe'}).allowSignup, isNull);
   });
 
   test('invalid port throws', () {
     expect(() => Config.fromEnv({'NEMO_PORT': 'x'}), throwsFormatException);
+    expect(
+      () => Config.fromEnv({'NEMO_TRUSTED_PROXY_HOPS': 'x'}),
+      throwsFormatException,
+    );
   });
 }

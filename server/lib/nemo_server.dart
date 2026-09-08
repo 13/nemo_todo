@@ -3,6 +3,7 @@ library;
 
 export 'src/api_exception.dart';
 export 'src/auth/auth_service.dart';
+export 'src/auth/password_hasher.dart';
 export 'src/auth/rate_limiter.dart';
 export 'src/config.dart';
 export 'src/db/server_database.dart';

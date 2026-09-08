@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:nemo_core/nemo_core.dart';
+import 'package:nemo_server/src/api_exception.dart';
 import 'package:nemo_server/src/db/server_database.dart';
 import 'package:nemo_server/src/sync/sync_log_writer.dart';
 
@@ -20,6 +21,7 @@ class SyncService {
     HlcClock? clock,
     DateTime Function()? now,
     this.pageSize = 500,
+    this.maxChanges = 1000,
     this.maxSkew = const Duration(hours: 1),
   }) : _clock = clock ?? HlcClock(node: 'server'),
        _now = now ?? DateTime.now;
@@ -28,9 +30,20 @@ class SyncService {
   final HlcClock _clock;
   final DateTime Function() _now;
   final int pageSize;
+
+  /// Ceiling on the changes one push may carry. Every change is applied
+  /// inside a single write transaction, and SQLite has one writer, so an
+  /// unbounded push holds the lock while every other request waits out its
+  /// busy timeout and then fails.
+  final int maxChanges;
   final Duration maxSkew;
 
   Future<SyncOutcome> sync(String userId, SyncRequest request) {
+    // Checked before the transaction opens, so an oversized push costs
+    // nothing and writes nothing.
+    if (request.changes.length > maxChanges) {
+      throw const ApiException(413, 'too_many_changes');
+    }
     return _db.transaction(() async {
       final roles = await _db.rolesOf(userId);
       final rejected = <RejectedChange>[];

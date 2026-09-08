@@ -7,6 +7,7 @@ class Config {
     this.webDir = '/app/web',
     this.corsOrigins = const [],
     this.nodeId = 'server',
+    this.trustedProxyHops = 0,
   });
 
   factory Config.fromEnv(Map<String, String> env) {
@@ -16,6 +17,7 @@ class Config {
     }
 
     final port = read('NEMO_PORT');
+    final hops = read('NEMO_TRUSTED_PROXY_HOPS');
     final origins = read('NEMO_CORS_ORIGINS');
     return Config(
       port: port == null ? 8080 : int.parse(port),
@@ -34,6 +36,7 @@ class Config {
                 .where((o) => o.isNotEmpty)
                 .toList(),
       nodeId: read('NEMO_NODE_ID') ?? 'server',
+      trustedProxyHops: hops == null ? 0 : int.parse(hops),
     );
   }
 
@@ -45,4 +48,10 @@ class Config {
   final String webDir;
   final List<String> corsOrigins;
   final String nodeId;
+
+  /// How many proxies of our own sit in front of the server. Zero means the
+  /// server is reached directly, so `x-forwarded-for` is whatever the client
+  /// chose to send and is ignored. Set it to the number of proxies that
+  /// rewrite the header, or per-client limits count a header, not a client.
+  final int trustedProxyHops;
 }

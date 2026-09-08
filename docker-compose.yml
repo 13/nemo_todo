@@ -11,6 +11,9 @@ services:
       NEMO_ALLOW_SIGNUP: ${NEMO_ALLOW_SIGNUP:-}
       # Dev only: origins allowed to call the API from another host.
       NEMO_CORS_ORIGINS: ${NEMO_CORS_ORIGINS:-}
+      # Number of your own proxies in front of the server. At 0 the
+      # x-forwarded-for header is ignored, because a client can send it.
+      NEMO_TRUSTED_PROXY_HOPS: ${NEMO_TRUSTED_PROXY_HOPS:-0}
     restart: unless-stopped
 
 volumes:

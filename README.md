@@ -140,6 +140,13 @@ front of it; nothing in the container terminates TLS.
 | `NEMO_ALLOW_SIGNUP` | `true`, `false`, or empty for "open until the first account exists" |
 | `NEMO_WEB_DIR` | Where the built web app lives, default `/app/web` |
 | `NEMO_CORS_ORIGINS` | Comma-separated origins allowed to call the API, for development |
+| `NEMO_TRUSTED_PROXY_HOPS` | How many proxies of yours sit in front, default 0 |
+
+If you put a TLS proxy in front of the server, set `NEMO_TRUSTED_PROXY_HOPS`
+to the number of proxies it passes through. The per-address limit on the
+sign-in endpoints reads `x-forwarded-for` only that many entries deep, and
+at the default of 0 it ignores the header altogether: anyone can send it, so
+trusting it unconditionally would limit headers rather than callers.
 
 Forgotten password:
 

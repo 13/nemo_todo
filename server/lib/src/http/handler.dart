@@ -43,8 +43,8 @@ Handler createHandler({
   ) async {
     final body = await readJson(request);
     final result = await call(
-      body['username'] as String? ?? '',
-      body['password'] as String? ?? '',
+      stringField(body, 'username') ?? '',
+      stringField(body, 'password') ?? '',
     );
     return jsonResponse({
       'token': result.token,
@@ -52,7 +52,9 @@ Handler createHandler({
     });
   }
 
-  final limited = const Pipeline().addMiddleware(rateLimit(rateLimiter));
+  final limited = const Pipeline().addMiddleware(
+    rateLimit(rateLimiter, trustedProxyHops: config.trustedProxyHops),
+  );
 
   final api = Router()
     ..post('/auth/logout', (Request request) async {
@@ -86,9 +88,9 @@ Handler createHandler({
     })
     ..post('/lists/<id>/members', (Request request, String id) async {
       final body = await readJson(request);
-      final username = body['username'] as String? ?? '';
+      final username = stringField(body, 'username') ?? '';
       final role = MemberRole.values
-          .asNameMap()[body['role'] as String? ?? 'editor'];
+          .asNameMap()[stringField(body, 'role') ?? 'editor'];
       if (role == null) throw const ApiException(400, 'bad_request');
       final notify = await membersService.share(
         request.user.id,

@@ -329,6 +329,32 @@ void main() {
     expect(r.changes, isEmpty, reason: 'a loss must not leak the row');
   });
 
+  test('an oversized push is refused before anything is written', () async {
+    final ben = await user('ben');
+    await push(ben, [SyncChange.list(list('l1', dev))]);
+    sync = SyncService(
+      db,
+      now: () => fixedNow,
+      clock: HlcClock(node: 'srv', now: () => fixedNow),
+      maxChanges: 2,
+    );
+
+    final changes = [
+      for (var i = 0; i < 3; i++) SyncChange.task(task('t$i', 'l1', dev)),
+    ];
+    await expectLater(
+      () => sync.sync(ben, SyncRequest(cursor: 0, changes: changes)),
+      throwsA(
+        isA<ApiException>().having((e) => e.code, 'code', 'too_many_changes'),
+      ),
+    );
+    expect(
+      await db.select(db.tasks).get(),
+      isEmpty,
+      reason: 'the cap has to be checked outside the write transaction',
+    );
+  });
+
   test('tombstones sync like any other row', () async {
     final ben = await user('ben');
     await push(ben, [

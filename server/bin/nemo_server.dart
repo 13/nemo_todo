@@ -18,6 +18,7 @@ Future<void> main(List<String> args) async {
   final runner = CommandRunner<int>('nemo_server', 'nemo sync server')
     ..addCommand(_ServeCommand())
     ..addCommand(_ResetPasswordCommand())
+    ..addCommand(_BackupCommand())
     ..addCommand(_HealthcheckCommand());
   try {
     exitCode = await runner.run(args.isEmpty ? const ['serve'] : args) ?? 0;
@@ -46,6 +47,20 @@ class _ServeCommand extends Command<int> {
     final db = _openDatabase(config);
     final hub = EventHub();
     final handler = createHandler(db: db, config: config, hub: hub);
+
+    // An expired session is otherwise only noticed when its own token comes
+    // back, which for an abandoned one never happens.
+    final auth = AuthService(db);
+    Future<void> sweep() async {
+      final removed = await auth.deleteExpiredSessions();
+      if (removed > 0) log.info('swept $removed expired session(s)');
+    }
+
+    await sweep();
+    final sweeper = Timer.periodic(
+      const Duration(hours: 6),
+      (_) => unawaited(sweep()),
+    );
     final server = await shelf_io.serve(
       handler,
       InternetAddress.anyIPv4,
@@ -59,6 +74,7 @@ class _ServeCommand extends Command<int> {
     Future<void> stop(ProcessSignal signal) async {
       if (stopped.isCompleted) return;
       log.info('received $signal, shutting down');
+      sweeper.cancel();
       await server.close(force: true);
       await hub.close();
       await db.close();
@@ -102,6 +118,42 @@ class _ResetPasswordCommand extends Command<int> {
       return 0;
     } on ApiException catch (e) {
       stderr.writeln('failed: ${e.code}');
+      return 1;
+    } finally {
+      await db.close();
+    }
+  }
+}
+
+class _BackupCommand extends Command<int> {
+  @override
+  String get name => 'backup';
+
+  @override
+  String get description =>
+      'Write a consistent copy of the database to <file>, while serving. '
+      'Refuses to overwrite an existing file.';
+
+  @override
+  Future<int> run() async {
+    final rest = argResults?.rest ?? const [];
+    if (rest.length != 1) usageException('usage: backup <file>');
+    final target = rest.single;
+    final config = Config.fromEnv(Platform.environment);
+    if (!File(config.dbPath).existsSync()) {
+      stderr.writeln('no database at ${config.dbPath}');
+      return 1;
+    }
+    final db = _openDatabase(config);
+    try {
+      await db.backupTo(target);
+      stdout.writeln(
+        'wrote $target (${File(target).lengthSync()} bytes) '
+        'from ${config.dbPath}',
+      );
+      return 0;
+    } on Object catch (e) {
+      stderr.writeln('backup failed: $e');
       return 1;
     } finally {
       await db.close();

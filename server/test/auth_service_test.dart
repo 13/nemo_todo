@@ -138,6 +138,26 @@ void main() {
     );
   });
 
+  test('expired sessions are swept, live ones are left alone', () async {
+    final auth = service(allowSignup: true);
+    final ben = await auth.signup('ben', 'password123');
+    final anna = await auth.signup('anna', 'password123');
+
+    // Ben's session is renewed inside its lifetime; Anna's is abandoned.
+    now = now.add(const Duration(days: 20));
+    expect(await auth.authenticate(ben.token), isNotNull);
+    now = now.add(const Duration(days: 20));
+
+    expect(await auth.deleteExpiredSessions(), 1);
+    expect(await auth.authenticate(ben.token), isNotNull);
+    expect(
+      await auth.authenticate(anna.token),
+      isNull,
+      reason: 'the sweep took the session nobody came back for',
+    );
+    expect(await auth.deleteExpiredSessions(), 0);
+  });
+
   test('hashing a password does not block the event loop', () async {
     // The default cost is the production setting and takes long enough that
     // a timer beside it cannot fire while the thread is busy hashing.

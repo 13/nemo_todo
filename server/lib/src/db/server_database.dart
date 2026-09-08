@@ -31,6 +31,17 @@ class ServerDatabase extends _$ServerDatabase {
         ),
       );
 
+  /// Writes a consistent copy of the database to [path], with the server
+  /// still running.
+  ///
+  /// Copying the file by hand is not the same thing: with WAL on, the
+  /// recent writes live in a second file, and a copy taken mid-write can
+  /// be torn. `vacuum into` takes its own read transaction and writes a
+  /// single tidy file, and it refuses to overwrite, so a backup can never
+  /// quietly land on top of another one.
+  Future<void> backupTo(String path) =>
+      customStatement('vacuum into ?', [path]);
+
   @override
   int get schemaVersion => 2;
 

@@ -13,10 +13,17 @@ someone using the app rather than which file moved.
 
 ### Added
 
+- `nemo_server backup <file>` writes a consistent copy of the database
+  while the server keeps running.
 - Android notices a newer release on GitHub, shows what changed, downloads
   the build for the device and hands it to the system installer. It checks
   once a day, says nothing when it cannot reach GitHub, and Settings has a
   check you can run yourself.
+
+### Changed
+
+- The server sweeps expired sessions at startup and every six hours instead
+  of only noticing one when its own token comes back.
 
 ### Fixed
 

@@ -127,6 +127,21 @@ class AuthService {
 
   Future<void> logout(String token) => _deleteSession(hashToken(token));
 
+  /// Removes sessions that have expired, and answers how many there were.
+  ///
+  /// A session is otherwise only noticed as expired when its own token is
+  /// presented again, which for an abandoned one never happens: a phone
+  /// that was reset or an account signed out of by wiping the app leaves a
+  /// row behind for ever. The server sweeps on startup and every few hours
+  /// so the table tracks live sessions rather than every session ever made.
+  Future<int> deleteExpiredSessions() =>
+      (_db.delete(_db.sessions)..where(
+            (t) => t.expiresAt.isSmallerOrEqualValue(
+              _now().millisecondsSinceEpoch,
+            ),
+          ))
+          .go();
+
   /// Sets a new password and signs the user out everywhere.
   Future<void> resetPassword(String username, String newPassword) async {
     _checkPassword(newPassword);

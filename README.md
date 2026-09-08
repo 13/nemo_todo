@@ -160,10 +160,28 @@ Forgotten password:
 docker compose exec nemo nemo_server reset-password <username>
 ```
 
+### Backups
+
+The database is one SQLite file in the `nemo_data` volume, and copying it
+while the server is running is not safe: with write-ahead logging the recent
+writes live in a second file, so a plain copy can be torn. The `backup`
+command takes a consistent copy instead, without stopping the server, and
+refuses to overwrite a file that already exists:
+
+```bash
+docker compose exec nemo nemo_server backup /data/nemo-$(date +%F).db
+docker compose cp nemo:/data/nemo-$(date +%F).db .
+```
+
+That file is the whole thing: tasks, accounts, sharing and the change log.
+Restoring is putting it back as `/data/nemo.db` with the server stopped.
+
 ## Security notes
 
 - Sessions are opaque random tokens; only their hashes are stored, they
-  expire after 30 days, and an active session renews itself.
+  expire after 30 days, and an active session renews itself. Expired ones
+  are swept at startup and every six hours, so a device that never comes
+  back does not leave a row behind for ever.
 - Passwords are hashed with bcrypt. Sign-up is rate limited per address.
 - On Android the session token lives in the platform keystore. On the web
   there is no such vault: it ends up in browser storage, readable by any

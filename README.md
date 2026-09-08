@@ -55,6 +55,22 @@ tool/fetch_web_assets.sh                     # sqlite3.wasm + drift worker
 (cd app && flutter run -d chrome)            # the app against a dev server
 ```
 
+### Changing the database schema
+
+`drift_schemas/` holds one JSON snapshot per schema version, and it is the
+record a migration is written against. After changing a table, bump
+`schemaVersion`, extend the `MigrationStrategy`, and dump the new version:
+
+```bash
+(cd server && dart run drift_dev schema dump lib/src/db/server_database.dart drift_schemas/)
+(cd app    && dart run drift_dev schema dump lib/core/db/app_database.dart   drift_schemas/)
+```
+
+CI re-runs both and fails if the snapshots are not current, and a test fails
+if a version has no snapshot at all. Indexes need `m.create(...)` in
+`onUpgrade` rather than `m.createAll()`: drift emits index DDL without
+`IF NOT EXISTS`, so `createAll` throws on a database that already has them.
+
 To look at the design without a device, render every screen to
 `app/build/screens/*.png`:
 

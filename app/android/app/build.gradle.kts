@@ -17,7 +17,12 @@ plugins {
 
 android {
     namespace = "dev.ben.nemo"
-    compileSdk = flutter.compileSdkVersion
+    // Ahead of Flutter's own default (36), because flutter_secure_storage 11
+    // is built against 37 and refuses to link into an app compiled against
+    // less. AGP 9.1 only "recommends" at most 36 and compiles this happily.
+    // Put it back to flutter.compileSdkVersion once Flutter's default has
+    // caught up, so there is one place deciding this again.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -10,11 +10,5 @@ yearly has to be re-created by hand.
 rule name, and a picker to match. The column already carries text it does
 not interpret, so an older app passes a new rule through untouched.
 
-## Secure storage back on the current major
-**What.** `flutter_secure_storage` is pinned below 11 because 11.0.0
-hardcodes `compileSdk 37`, which Google has not published.
-**Cost of leaving it.** The pin has to be revisited once API 37 ships.
-**What closing it takes.** Raising the constraint and one Android build.
-
 ## Password reset by e-mail, server push notifications, attachments, home-screen widget, iOS, end-to-end encryption, Postgres
 Not planned for the self-hosted single-household use case.

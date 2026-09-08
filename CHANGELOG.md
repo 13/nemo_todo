@@ -31,6 +31,8 @@ someone using the app rather than which file moved.
 
 ### Changed
 
+- Android session storage is back on the current major version of
+  `flutter_secure_storage`, now that the API level it needs exists.
 - The server sweeps expired sessions at startup and every six hours instead
   of only noticing one when its own token comes back.
 

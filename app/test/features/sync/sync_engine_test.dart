@@ -34,9 +34,13 @@ void main() {
 
   /// A container wired to the in-memory database and the fake client, with
   /// an account already connected.
-  Future<ProviderContainer> container({bool connected = true}) async {
+  Future<ProviderContainer> container({
+    bool connected = true,
+    RetryPolicy? retry,
+  }) async {
     final c = ProviderContainer(
       overrides: [
+        if (retry != null) syncRetryPolicyProvider.overrideWithValue(retry),
         appDatabaseProvider.overrideWithValue(db),
         bootstrapProvider.overrideWithValue(
           const AppBootstrap(
@@ -224,6 +228,55 @@ void main() {
     expect(state.status, SyncStatus.offline);
     expect(state.error, 'network');
     expect(await db.outboxCount(), 1);
+  });
+
+  test('a failed sync tries itself again, waiting longer each time', () async {
+    final clock = testClock('device');
+    await db.upsertTask(task('t1', clock.now().toString()));
+    client.failWith = const ApiError(500, 'internal');
+
+    final c = await container(
+      retry: (
+        initial: const Duration(milliseconds: 10),
+        max: const Duration(milliseconds: 20),
+      ),
+    );
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(c.read(syncEngineProvider).status, SyncStatus.error);
+    expect(client.calls, 1);
+
+    // Nothing here edits a row, resumes the app or reconnects a stream.
+    // Before the engine scheduled its own retry, that meant the queue sat
+    // there until the user did something.
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    expect(client.calls, greaterThan(1));
+
+    client.failWith = null;
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+    expect(await db.outboxCount(), 0);
+  });
+
+  test('a rejected token stops the retries', () async {
+    final clock = testClock('device');
+    await db.upsertTask(task('t1', clock.now().toString()));
+    client.failWith = const ApiError(401, 'unauthorized');
+
+    final c = await container(
+      retry: (
+        initial: const Duration(milliseconds: 10),
+        max: const Duration(milliseconds: 20),
+      ),
+    );
+    await c.read(syncEngineProvider.notifier).syncNow();
+    final calls = client.calls;
+
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    expect(
+      client.calls,
+      calls,
+      reason: 'retrying a dead session only spends battery',
+    );
   });
 
   test('a rejected token signs the session out but keeps the data', () async {

@@ -2,6 +2,11 @@
 
 # ---- Stage 1: build the Flutter web app -----------------------------------
 FROM debian:bookworm-slim AS web-build
+# Flutter's SDK tarballs (e.g. gradle-wrapper.tgz) carry uids like 397546.
+# Under an unprivileged LXC, whose uid map covers only 0-65535, tar's chown
+# fails with EINVAL and precache aborts. Ownership of these cache artifacts
+# is irrelevant to the build, so drop it. Harmless on an unmapped host.
+ENV TAR_OPTIONS=--no-same-owner
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       git curl ca-certificates unzip xz-utils zip \

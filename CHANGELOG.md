@@ -27,6 +27,9 @@ someone using the app rather than which file moved.
   to 5 minutes, instead of waiting for an edit or a restart.
 - The version in Settings is read from the build rather than written into
   the screen, so it stops claiming 0.1.0 after an update.
+- Deleting a list now deletes the tasks in it. They used to stay alive
+  behind the hidden list and keep posting their reminders. Restoring the
+  list brings them back.
 
 ## 0.1.0 - 2026-09-08
 

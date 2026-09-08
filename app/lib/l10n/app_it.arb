@@ -153,5 +153,7 @@
 
   "membersMakeOwner": "Rendi proprietario",
   "membersMakeOwnerConfirm": "Passare questa lista a {name}? Potrà rinominarla, eliminarla e cambiare con chi è condivisa. Tu resti come editor.",
-  "membersErrorNotMember": "Condividi prima la lista con loro."
+  "membersErrorNotMember": "Condividi prima la lista con loro.",
+
+  "tasksNoSelection": "Scegli un'attività per vederla qui."
 }

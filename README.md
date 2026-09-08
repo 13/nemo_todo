@@ -15,7 +15,8 @@ host yourself.
 - Lists can be shared with other accounts on the same server, and handed
   over to one of them.
 - The web app is the same app: identical screens, with a navigation rail
-  instead of a bottom bar on wide windows.
+  instead of a bottom bar on wide windows, and a task opening beside the
+  list rather than over it once there is room for both.
 
 ## Layout
 

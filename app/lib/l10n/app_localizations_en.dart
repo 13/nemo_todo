@@ -551,4 +551,7 @@ class LEn extends L {
 
   @override
   String get membersErrorNotMember => 'Share the list with them first.';
+
+  @override
+  String get tasksNoSelection => 'Pick a task to see it here.';
 }

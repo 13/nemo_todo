@@ -554,4 +554,7 @@ class LIt extends L {
 
   @override
   String get membersErrorNotMember => 'Condividi prima la lista con loro.';
+
+  @override
+  String get tasksNoSelection => 'Scegli un\'attività per vederla qui.';
 }

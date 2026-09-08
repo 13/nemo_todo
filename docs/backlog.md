@@ -10,11 +10,6 @@ yearly has to be re-created by hand.
 rule name, and a picker to match. The column already carries text it does
 not interpret, so an older app passes a new rule through untouched.
 
-## Master-detail layout on wide screens
-**What.** Task list on the left, task detail on the right above 1200 dp.
-**Cost of leaving it.** Desktop users open tasks as full pages.
-**What closing it takes.** A two-pane shell variant and duplicated route handling.
-
 ## Secure storage back on the current major
 **What.** `flutter_secure_storage` is pinned below 11 because 11.0.0
 hardcodes `compileSdk 37`, which Google has not published.

@@ -282,5 +282,7 @@
       }
     }
   },
-  "membersErrorNotMember": "Share the list with them first."
+  "membersErrorNotMember": "Share the list with them first.",
+
+  "tasksNoSelection": "Pick a task to see it here."
 }

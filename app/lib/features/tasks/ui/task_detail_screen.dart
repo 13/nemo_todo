@@ -9,6 +9,7 @@ import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -18,9 +19,17 @@ import 'package:nemo_core/nemo_core.dart';
 
 /// Everything about one task. Edits save as you go.
 class TaskDetailScreen extends ConsumerStatefulWidget {
-  const TaskDetailScreen({required this.taskId, super.key});
+  const TaskDetailScreen({
+    required this.taskId,
+    this.embedded = false,
+    super.key,
+  });
 
   final String taskId;
+
+  /// True in the pane beside a list on a wide window. There is no page to
+  /// go back to there, so nothing offers to.
+  final bool embedded;
 
   @override
   ConsumerState<TaskDetailScreen> createState() => _TaskDetailScreenState();
@@ -151,7 +160,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
         ),
       ),
     );
-    if (context.canPop()) {
+    if (widget.embedded) {
+      ref.read(selectedTaskProvider.notifier).select(null);
+    } else if (context.canPop()) {
       context.pop();
     } else {
       context.go(Routes.today);
@@ -164,7 +175,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     final task = ref.watch(taskByIdProvider(widget.taskId)).value;
     if (task == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(automaticallyImplyLeading: !widget.embedded),
         body: Center(child: Text(l.tasksNotFound)),
       );
     }
@@ -181,6 +192,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !widget.embedded,
         actions: [
           IconButton(
             key: const Key('task-delete'),

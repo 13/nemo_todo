@@ -153,5 +153,7 @@
 
   "membersMakeOwner": "Zur Besitzerin machen",
   "membersMakeOwnerConfirm": "Diese Liste an {name} übergeben? Sie können sie dann umbenennen, löschen und die Freigabe ändern. Du bleibst als Bearbeiter dabei.",
-  "membersErrorNotMember": "Teile die Liste zuerst mit ihnen."
+  "membersErrorNotMember": "Teile die Liste zuerst mit ihnen.",
+
+  "tasksNoSelection": "Wähle eine Aufgabe, um sie hier zu sehen."
 }

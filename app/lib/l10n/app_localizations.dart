@@ -1004,6 +1004,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Share the list with them first.'**
   String get membersErrorNotMember;
+
+  /// No description provided for @tasksNoSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a task to see it here.'**
+  String get tasksNoSelection;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

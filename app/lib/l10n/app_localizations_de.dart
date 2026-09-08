@@ -555,4 +555,7 @@ class LDe extends L {
 
   @override
   String get membersErrorNotMember => 'Teile die Liste zuerst mit ihnen.';
+
+  @override
+  String get tasksNoSelection => 'Wähle eine Aufgabe, um sie hier zu sehen.';
 }

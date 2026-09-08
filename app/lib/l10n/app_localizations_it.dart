@@ -463,4 +463,62 @@ class LIt extends L {
   @override
   String get startupErrorBody =>
       'Le tue attività sono salvate su questo dispositivo. Se usi una finestra privata o hai bloccato i dati del sito per questa pagina, consentili e ricarica.';
+
+  @override
+  String get updatesTitle => 'Aggiornamenti';
+
+  @override
+  String updatesCurrentVersion(String version) {
+    return 'Hai la versione $version';
+  }
+
+  @override
+  String get updatesCheckNow => 'Cerca aggiornamenti';
+
+  @override
+  String get updatesChecking => 'Controllo…';
+
+  @override
+  String get updatesUpToDate => 'nemo è aggiornato';
+
+  @override
+  String updatesAvailable(String version) {
+    return 'La versione $version è disponibile';
+  }
+
+  @override
+  String get updatesWhatsNew => 'Novità';
+
+  @override
+  String get updatesDownload => 'Scarica';
+
+  @override
+  String updatesDownloading(int percent) {
+    return 'Download… $percent%';
+  }
+
+  @override
+  String get updatesInstall => 'Installa';
+
+  @override
+  String get updatesInstallHint =>
+      'Android ti chiederà di confermare l\'installazione.';
+
+  @override
+  String get updatesLater => 'Più tardi';
+
+  @override
+  String get updatesErrorNetwork => 'Impossibile raggiungere GitHub.';
+
+  @override
+  String get updatesErrorRateLimited =>
+      'GitHub sta limitando le richieste; riprova più tardi.';
+
+  @override
+  String get updatesErrorNotFound =>
+      'Nessun download per questo dispositivo in quella versione.';
+
+  @override
+  String get updatesErrorMalformed =>
+      'Il download non corrisponde alla sua checksum.';
 }

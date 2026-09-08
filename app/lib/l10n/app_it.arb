@@ -124,5 +124,22 @@
   "remindersChannelDescription": "Notifiche quando un'attività è in scadenza",
   "remindersDueNow": "In scadenza ora",
   "startupErrorTitle": "nemo non riesce ad aprire il suo database",
-  "startupErrorBody": "Le tue attività sono salvate su questo dispositivo. Se usi una finestra privata o hai bloccato i dati del sito per questa pagina, consentili e ricarica."
+  "startupErrorBody": "Le tue attività sono salvate su questo dispositivo. Se usi una finestra privata o hai bloccato i dati del sito per questa pagina, consentili e ricarica.",
+
+  "updatesTitle": "Aggiornamenti",
+  "updatesCurrentVersion": "Hai la versione {version}",
+  "updatesCheckNow": "Cerca aggiornamenti",
+  "updatesChecking": "Controllo…",
+  "updatesUpToDate": "nemo è aggiornato",
+  "updatesAvailable": "La versione {version} è disponibile",
+  "updatesWhatsNew": "Novità",
+  "updatesDownload": "Scarica",
+  "updatesDownloading": "Download… {percent}%",
+  "updatesInstall": "Installa",
+  "updatesInstallHint": "Android ti chiederà di confermare l'installazione.",
+  "updatesLater": "Più tardi",
+  "updatesErrorNetwork": "Impossibile raggiungere GitHub.",
+  "updatesErrorRateLimited": "GitHub sta limitando le richieste; riprova più tardi.",
+  "updatesErrorNotFound": "Nessun download per questo dispositivo in quella versione.",
+  "updatesErrorMalformed": "Il download non corrisponde alla sua checksum."
 }

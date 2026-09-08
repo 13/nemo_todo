@@ -11,6 +11,23 @@ someone using the app rather than which file moved.
 
 ## Unreleased
 
+### Added
+
+- Android notices a newer release on GitHub, shows what changed, downloads
+  the build for the device and hands it to the system installer. It checks
+  once a day, says nothing when it cannot reach GitHub, and Settings has a
+  check you can run yourself.
+
+### Fixed
+
+- Live updates from the server are no longer lost when the notification
+  arrives split across two reads, which left the app showing stale data
+  until something else happened to sync.
+- A sync that fails now tries again on its own, backing off from 5 seconds
+  to 5 minutes, instead of waiting for an edit or a restart.
+- The version in Settings is read from the build rather than written into
+  the screen, so it stops claiming 0.1.0 after an update.
+
 ## 0.1.0 - 2026-09-08
 
 First release: the app, the server and the sync between them.

@@ -464,4 +464,62 @@ class LDe extends L {
   @override
   String get startupErrorBody =>
       'Deine Aufgaben liegen auf diesem Gerät. Wenn du ein privates Fenster nutzt oder Websitedaten für diese Seite blockierst, erlaube sie und lade neu.';
+
+  @override
+  String get updatesTitle => 'Aktualisierungen';
+
+  @override
+  String updatesCurrentVersion(String version) {
+    return 'Du hast Version $version';
+  }
+
+  @override
+  String get updatesCheckNow => 'Nach Updates suchen';
+
+  @override
+  String get updatesChecking => 'Suche …';
+
+  @override
+  String get updatesUpToDate => 'nemo ist aktuell';
+
+  @override
+  String updatesAvailable(String version) {
+    return 'Version $version ist verfügbar';
+  }
+
+  @override
+  String get updatesWhatsNew => 'Neu';
+
+  @override
+  String get updatesDownload => 'Herunterladen';
+
+  @override
+  String updatesDownloading(int percent) {
+    return 'Lädt … $percent %';
+  }
+
+  @override
+  String get updatesInstall => 'Installieren';
+
+  @override
+  String get updatesInstallHint =>
+      'Android fragt dich, ob du die Installation erlaubst.';
+
+  @override
+  String get updatesLater => 'Später';
+
+  @override
+  String get updatesErrorNetwork => 'GitHub ist nicht erreichbar.';
+
+  @override
+  String get updatesErrorRateLimited =>
+      'GitHub bremst die Anfragen; versuche es später erneut.';
+
+  @override
+  String get updatesErrorNotFound =>
+      'In dieser Version gibt es keinen Download für dieses Gerät.';
+
+  @override
+  String get updatesErrorMalformed =>
+      'Der Download passt nicht zu seiner Prüfsumme.';
 }

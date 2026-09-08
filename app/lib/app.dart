@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
+import 'package:nemo/features/updates/ui/update_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/l10n/locale_resolution.dart';
 import 'package:nemo/router.dart';
@@ -30,6 +33,8 @@ class _NemoAppState extends ConsumerState<NemoApp> {
       ref
           .read(syncEngineProvider.notifier)
           .requestSync(delay: const Duration(milliseconds: 200));
+      // Quiet unless something is actually newer, and at most daily.
+      unawaited(ref.read(updateControllerProvider.notifier).check());
     });
   }
 

@@ -194,6 +194,27 @@ CI writes that file from repository secrets. A published build must never
 carry the debug key: it ships with every Android SDK, so anyone could
 replace the app in place.
 
+## Updates on Android
+
+The app is on no store, so it looks after its own updates. Once a day it
+asks GitHub for the newest release; if that release is newer than the build
+running, a line appears above Today and Settings offers the download. The
+APK matching the device's ABI is streamed into the app's cache, checked
+against the SHA-256 digest GitHub publishes for it, and handed to the system
+installer, which asks for confirmation as it does for any sideloaded app.
+
+Nothing installs by itself, and a check that fails in the background says
+nothing at all -- a todo app should not nag about its own plumbing. A check
+you start in Settings does report why it failed.
+
+Android refuses to replace an installed app with a package signed by a
+different key, so the release keystore is what makes any of this work. If
+that key and its password are ever lost, no future build can update an
+installed nemo: every user has to uninstall, losing whatever they had not
+synced. Keep a backup off this machine.
+
+The web build has no updater: reloading the page is the update.
+
 ## Releases
 
 Pushing a `v*` tag publishes a GitHub release. The tag has to match the

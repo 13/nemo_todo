@@ -848,6 +848,102 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.'**
   String get startupErrorBody;
+
+  /// No description provided for @updatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updatesTitle;
+
+  /// No description provided for @updatesCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'You have version {version}'**
+  String updatesCurrentVersion(String version);
+
+  /// No description provided for @updatesCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get updatesCheckNow;
+
+  /// No description provided for @updatesChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get updatesChecking;
+
+  /// No description provided for @updatesUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'nemo is up to date'**
+  String get updatesUpToDate;
+
+  /// No description provided for @updatesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available'**
+  String updatesAvailable(String version);
+
+  /// No description provided for @updatesWhatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get updatesWhatsNew;
+
+  /// No description provided for @updatesDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get updatesDownload;
+
+  /// No description provided for @updatesDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading… {percent}%'**
+  String updatesDownloading(int percent);
+
+  /// No description provided for @updatesInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get updatesInstall;
+
+  /// No description provided for @updatesInstallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Android will ask you to confirm the install.'**
+  String get updatesInstallHint;
+
+  /// No description provided for @updatesLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updatesLater;
+
+  /// No description provided for @updatesErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach GitHub.'**
+  String get updatesErrorNetwork;
+
+  /// No description provided for @updatesErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub is rate limiting; try again later.'**
+  String get updatesErrorRateLimited;
+
+  /// No description provided for @updatesErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No download for this device in that release.'**
+  String get updatesErrorNotFound;
+
+  /// No description provided for @updatesErrorMalformed.
+  ///
+  /// In en, this message translates to:
+  /// **'That download did not match its checksum.'**
+  String get updatesErrorMalformed;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

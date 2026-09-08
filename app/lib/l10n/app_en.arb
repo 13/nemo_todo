@@ -225,5 +225,43 @@
   "remindersChannelDescription": "Notifications when a task is due",
   "remindersDueNow": "Due now",
   "startupErrorTitle": "nemo cannot open its database",
-  "startupErrorBody": "Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload."
+  "startupErrorBody": "Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.",
+
+  "updatesTitle": "Updates",
+  "updatesCurrentVersion": "You have version {version}",
+  "@updatesCurrentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesCheckNow": "Check for updates",
+  "updatesChecking": "Checking…",
+  "updatesUpToDate": "nemo is up to date",
+  "updatesAvailable": "Version {version} is available",
+  "@updatesAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesWhatsNew": "What's new",
+  "updatesDownload": "Download",
+  "updatesDownloading": "Downloading… {percent}%",
+  "@updatesDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesInstall": "Install",
+  "updatesInstallHint": "Android will ask you to confirm the install.",
+  "updatesLater": "Later",
+  "updatesErrorNetwork": "Could not reach GitHub.",
+  "updatesErrorRateLimited": "GitHub is rate limiting; try again later.",
+  "updatesErrorNotFound": "No download for this device in that release.",
+  "updatesErrorMalformed": "That download did not match its checksum."
 }

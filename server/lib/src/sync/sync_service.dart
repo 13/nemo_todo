@@ -96,7 +96,17 @@ class SyncService {
           roles[row.id] = MemberRole.owner;
         } else {
           if (roles[row.id] != MemberRole.owner) return 'forbidden';
-          if (!incomingWins(existing, row)) return null;
+          if (!incomingWins(existing, row)) {
+            await _handBack(
+              SyncEntity.list,
+              row.id,
+              row.id,
+              userId,
+              incoming: row.updatedAt,
+              held: existing.updatedAt,
+            );
+            return null;
+          }
           await _db
               .into(_db.lists)
               .insertOnConflictUpdate(
@@ -116,7 +126,17 @@ class SyncService {
         final oldListId = existing?.listId;
         final moved = oldListId != null && oldListId != row.listId;
         if (moved && !roles.containsKey(oldListId)) return 'forbidden';
-        if (!incomingWins(existing, row)) return null;
+        if (!incomingWins(existing, row)) {
+          await _handBack(
+            SyncEntity.task,
+            row.id,
+            existing!.listId,
+            userId,
+            incoming: row.updatedAt,
+            held: existing.updatedAt,
+          );
+          return null;
+        }
         await _db.into(_db.tasks).insertOnConflictUpdate(row.toInsertable());
         _accept(row.updatedAt);
         final subtasks = moved ? await _db.subtasksOfTask(row.id) : <Subtask>[];
@@ -141,9 +161,32 @@ class SyncService {
         final skew = _checkHlc(row.updatedAt);
         if (skew != null) return skew;
         final existing = await _db.subtaskById(row.id);
-        if (!incomingWins(existing, row)) return null;
+        // Re-parenting carries the subtask between lists, so the list it
+        // comes from has to be ours too. A parent that no longer exists
+        // leaves no list to revoke from, so it does not count as a move.
+        final oldTask = existing == null || existing.taskId == row.taskId
+            ? null
+            : await _db.taskById(existing.taskId);
+        final oldListId = oldTask?.listId;
+        final moved = oldListId != null && oldListId != task.listId;
+        if (moved && !roles.containsKey(oldListId)) return 'forbidden';
+        if (!incomingWins(existing, row)) {
+          await _handBack(
+            SyncEntity.subtask,
+            row.id,
+            oldListId ?? task.listId,
+            userId,
+            incoming: row.updatedAt,
+            held: existing!.updatedAt,
+          );
+          return null;
+        }
         await _db.into(_db.subtasks).insertOnConflictUpdate(row.toInsertable());
         _accept(row.updatedAt);
+        if (moved) {
+          await _db.logRevoke(SyncEntity.subtask, row.id, listId: oldListId);
+          touched.add(oldListId);
+        }
         await _db.logUpsert(SyncEntity.subtask, row.id, task.listId);
         touched.add(task.listId);
         return null;
@@ -151,6 +194,26 @@ class SyncService {
       case SyncChangeRevoke():
         return 'not_allowed';
     }
+  }
+
+  /// A push that lost to what the server already holds is not an error, but
+  /// the client still has the losing row. Re-logging it for that client
+  /// alone puts the winning row in the same response, which is what reverts
+  /// it. This runs only after the authorisation checks above, so it can
+  /// never hand a row to someone who may not see it.
+  Future<void> _handBack(
+    SyncEntity entity,
+    String rowId,
+    String listId,
+    String userId, {
+    required String incoming,
+    required String held,
+  }) async {
+    // Equal stamps mean a retried request, not a stale row: the client
+    // already holds what the server holds, so answering would turn every
+    // retry into traffic. Only a strictly older push needs the winner back.
+    if (incoming == held) return;
+    await _db.logUpsert(entity, rowId, listId, forUserId: userId);
   }
 
   String? _checkHlc(String updatedAt) {

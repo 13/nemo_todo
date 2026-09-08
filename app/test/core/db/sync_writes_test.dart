@@ -57,6 +57,11 @@ void main() {
       );
       expect(await db.applyRemote(SyncChange.task(older)), isNull);
       expect((await db.taskById('t1'))!.title, 'local');
+      expect(
+        await db.outboxCount(),
+        1,
+        reason: 'my newer edit still has to reach the server',
+      );
       final newer = local.copyWith(
         title: 'remote-new',
         updatedAt: clock.now().toString(),
@@ -65,8 +70,8 @@ void main() {
       expect((await db.taskById('t1'))!.title, 'remote-new');
       expect(
         await db.outboxCount(),
-        1,
-        reason: 'remote writes do not touch the outbox',
+        0,
+        reason: 'the queued edit lost, so it must not be pushed again',
       );
     },
   );
@@ -110,6 +115,40 @@ void main() {
     );
     await db.ackOutbox(await db.outboxChanges());
     expect(await db.outboxCount(), 0);
+  });
+
+  test('a remote row that wins clears the superseded outbox entry', () async {
+    final t = task('t1', 'l1');
+    await db.upsertTask(t);
+    expect(await db.outboxCount(), 1);
+
+    await db.applyRemote(
+      SyncChange.task(
+        t.copyWith(title: 'from the server', updatedAt: clock.now().toString()),
+      ),
+    );
+    expect((await db.taskById('t1'))!.title, 'from the server');
+    expect(
+      await db.outboxCount(),
+      0,
+      reason: 'the queued edit lost, so there is nothing left to push',
+    );
+  });
+
+  test('a remote row that loses leaves the pending edit queued', () async {
+    final stale = task('t2', 'l1');
+    final mine = stale.copyWith(
+      title: 'mine',
+      updatedAt: clock.now().toString(),
+    );
+    await db.upsertTask(mine);
+    await db.applyRemote(SyncChange.task(stale));
+    expect((await db.taskById('t2'))!.title, 'mine');
+    expect(
+      await db.outboxCount(),
+      1,
+      reason: 'my newer edit still has to reach the server',
+    );
   });
 
   test('enqueueAll queues every row and outboxChanges drops orphans', () async {

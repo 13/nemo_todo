@@ -6,13 +6,24 @@ import 'package:nemo_server/src/db/server_database.dart';
 /// services. The log keeps one live row per (entity, row, op, scope); a
 /// re-log deletes the old row so `seq` grows but the table does not.
 extension SyncLogWriter on ServerDatabase {
-  Future<void> logUpsert(SyncEntity entity, String rowId, String listId) async {
-    await (delete(syncLog)..where(
-          (t) =>
+  /// Re-logs a row for every member, or for [forUserId] alone when the row
+  /// is only being handed back to one client.
+  Future<void> logUpsert(
+    SyncEntity entity,
+    String rowId,
+    String listId, {
+    String? forUserId,
+  }) async {
+    await (delete(syncLog)..where((t) {
+          final row =
               t.entity.equals(entity.name) &
               t.rowId.equals(rowId) &
-              t.op.equals('upsert'),
-        ))
+              t.op.equals('upsert');
+          // A re-log for everyone supersedes the entries addressed to one
+          // user; a re-log for one user must leave the shared entry alone,
+          // because the other members have not seen it yet.
+          return forUserId == null ? row : row & t.forUserId.equals(forUserId);
+        }))
         .go();
     await into(syncLog).insert(
       SyncLogCompanion.insert(
@@ -20,6 +31,7 @@ extension SyncLogWriter on ServerDatabase {
         rowId: rowId,
         listId: listId,
         op: 'upsert',
+        forUserId: Value(forUserId),
       ),
     );
   }

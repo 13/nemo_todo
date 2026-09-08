@@ -44,25 +44,29 @@ extension SyncWrites on AppDatabase {
     );
   });
 
-  /// Applies a server change with last-write-wins. Returns the task that
-  /// was written, if any, so reminders can be rescheduled.
+  /// Applies a server change with last-write-wins, clearing any queued
+  /// edit the incoming row supersedes. Returns the task that was written,
+  /// if any, so reminders can be rescheduled.
   Future<Task?> applyRemote(SyncChange change) => transaction(() async {
     switch (change) {
       case SyncChangeList(:final row):
         final local = await listById(row.id);
         if (incomingWins(local, row)) {
           await into(lists).insertOnConflictUpdate(row.toInsertable());
+          await dropOutbox(SyncEntity.list, row.id);
         }
         return null;
       case SyncChangeTask(:final row):
         final local = await taskById(row.id);
         if (!incomingWins(local, row)) return null;
         await into(tasks).insertOnConflictUpdate(row.toInsertable());
+        await dropOutbox(SyncEntity.task, row.id);
         return row;
       case SyncChangeSubtask(:final row):
         final local = await subtaskById(row.id);
         if (incomingWins(local, row)) {
           await into(subtasks).insertOnConflictUpdate(row.toInsertable());
+          await dropOutbox(SyncEntity.subtask, row.id);
         }
         return null;
       case SyncChangeRevoke(:final target, :final id):
@@ -179,7 +183,11 @@ extension SyncWrites on AppDatabase {
     }
   });
 
-  /// Drops the queue entry of a change the server refused.
+  /// Drops the queue entry for a row: the server refused the change, or its
+  /// own row won and superseded what was queued. Either way the entry has to
+  /// go, because [ackOutbox] only clears entries whose stamp still matches
+  /// the one recorded when they were enqueued, so a superseded entry would
+  /// otherwise be pushed on every round for the life of the install.
   Future<void> dropOutbox(SyncEntity entity, String rowId) => (delete(
     outbox,
   )..where((t) => t.entity.equals(entity.name) & t.rowId.equals(rowId))).go();

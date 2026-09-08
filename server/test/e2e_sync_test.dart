@@ -74,6 +74,16 @@ class Device {
     put(SyncChange.task(row));
   }
 
+  void editSubtask(String id, {String? title, String? taskId}) {
+    final row = subtasks[id]!.copyWith(
+      title: title ?? subtasks[id]!.title,
+      taskId: taskId ?? subtasks[id]!.taskId,
+      updatedAt: clock.now().toString(),
+    );
+    subtasks[id] = row;
+    put(SyncChange.subtask(row));
+  }
+
   /// One full round: push what is queued, apply what comes back, repeat
   /// while the server has more to send.
   Future<void> sync() async {
@@ -263,6 +273,54 @@ void main() {
       expect(anna.subtasks, isEmpty);
       expect(anna.lists.keys, ['shared']);
       expect(ben.tasks['t1']!.listId, 'private');
+    },
+  );
+
+  test(
+    'a removed member cannot steal a subtask into a list of her own',
+    () async {
+      final benToken = await server.signup('ben');
+      final annaToken = await server.signup('anna');
+      final ben = Device(server, 'ben-phone', benToken);
+      final anna = Device(server, 'anna-phone', annaToken);
+
+      ben
+        ..newList('shared', 'Shared')
+        ..newTask('t1', 'shared', 'Secret plan')
+        ..newSubtask('s1', 't1', 'Step one');
+      await ben.sync();
+      await server.post('/api/v1/lists/shared/members', {
+        'username': 'anna',
+        'role': 'editor',
+      }, token: benToken);
+      await anna.sync();
+      expect(anna.subtasks['s1']!.title, 'Step one');
+
+      final removed = await server.delete(
+        '/api/v1/lists/shared/members/anna',
+        token: benToken,
+      );
+      expect(removed.statusCode, 200);
+      await anna.sync();
+      expect(anna.subtasks, isEmpty, reason: 'the share was revoked');
+
+      // She still remembers the id, so she re-parents it onto a task of
+      // her own and pushes it back.
+      anna
+        ..newList('mine', 'Mine')
+        ..newTask('mt', 'mine', 'My task');
+      await anna.sync();
+      anna.subtasks['s1'] = ben.subtasks['s1']!;
+      anna.editSubtask('s1', taskId: 'mt');
+      await anna.sync();
+
+      expect(anna.rejected.single.reason, 'forbidden');
+      await ben.sync();
+      expect(
+        ben.subtasks['s1']!.taskId,
+        't1',
+        reason: 'the rightful owner keeps it',
+      );
     },
   );
 

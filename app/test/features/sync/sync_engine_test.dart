@@ -177,6 +177,41 @@ void main() {
     );
   });
 
+  test(
+    'a server row that wins a race with a local edit drains the queue',
+    () async {
+      final clock = testClock('device');
+      await db.upsertTask(task('t1', clock.now().toString(), title: 'first'));
+
+      // The user edits again while the push is in flight, so the queue entry
+      // no longer carries the stamp that was sent, and the server's answer
+      // then turns out to be newer than either.
+      client.duringSync = () =>
+          db.upsertTask(task('t1', clock.now().toString(), title: 'second'));
+      client.responses.add(
+        SyncResponse(
+          cursor: 5,
+          serverHlc: serverHlc,
+          changes: [SyncChange.task(task('t1', serverHlc, title: 'server'))],
+        ),
+      );
+
+      final c = await container();
+      await c.read(syncEngineProvider.notifier).syncNow();
+
+      expect((await db.taskById('t1'))!.title, 'server');
+      expect(
+        await db.outboxCount(),
+        0,
+        reason: 'the queued edit lost, and would otherwise be resent forever',
+      );
+
+      // A second round has nothing left to say.
+      await c.read(syncEngineProvider.notifier).syncNow();
+      expect(client.pushes.last, isEmpty);
+    },
+  );
+
   test('an unreachable server leaves the queue intact', () async {
     final clock = testClock('device');
     await db.upsertTask(task('t1', clock.now().toString()));

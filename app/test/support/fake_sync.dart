@@ -20,6 +20,10 @@ class FakeSyncClient implements SyncClient {
   ApiError? failWith;
   int calls = 0;
 
+  /// Runs while a push is in flight, so a test can make the device edit a
+  /// row after its changes were collected but before the answer arrives.
+  Future<void> Function()? duringSync;
+
   @override
   String get baseUrl => 'https://nemo.test';
 
@@ -31,6 +35,7 @@ class FakeSyncClient implements SyncClient {
     calls++;
     pushes.add(request.changes);
     cursors.add(request.cursor);
+    await duringSync?.call();
     final failure = failWith;
     if (failure != null) throw failure;
     return responses.isEmpty

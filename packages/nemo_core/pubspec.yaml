@@ -16,8 +16,8 @@ dependencies:
   uuid: ^4.6.0
 
 dev_dependencies:
-  coverage: ^1.15.0
   build_runner: ^2.16.1
+  coverage: ^1.15.0
   drift_dev: ^2.34.4
   freezed: ^4.0.1
   json_serializable: ^6.14.1

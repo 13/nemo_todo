@@ -42,8 +42,14 @@ dev_dependencies:
     sdk: flutter
   freezed: ^4.0.1
   json_serializable: ^6.14.1
+  # Test-only: one test drives the app's sync client against the real
+  # server rather than a fake of it, which needs the server package and the
+  # one line of shelf that puts its handler on a port.
+  nemo_server:
+    path: ../server
   riverpod_generator: ^4.0.9
   riverpod_lint: ^3.1.8
+  shelf: ^1.4.2
   very_good_analysis: ^11.0.0
 
 flutter:

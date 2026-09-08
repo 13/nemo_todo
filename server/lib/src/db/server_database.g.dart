@@ -533,6 +533,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<List<String>>($TasksTable.$convertertags);
+  static const VerificationMeta _repeatMeta = const VerificationMeta('repeat');
+  @override
+  late final GeneratedColumn<String> repeat = GeneratedColumn<String>(
+    'repeat',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _sortKeyMeta = const VerificationMeta(
     'sortKey',
   );
@@ -579,6 +588,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     remind,
     priority,
     tags,
+    repeat,
     sortKey,
     updatedAt,
     deletedAt,
@@ -659,6 +669,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
       context.handle(
         _priorityMeta,
         priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('repeat')) {
+      context.handle(
+        _repeatMeta,
+        repeat.isAcceptableOrUnknown(data['repeat']!, _repeatMeta),
       );
     }
     if (data.containsKey('sort_key')) {
@@ -746,6 +762,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
           data['${effectivePrefix}tags'],
         )!,
       ),
+      repeat: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repeat'],
+      ),
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}deleted_at'],
@@ -774,6 +794,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<bool> remind;
   final Value<int> priority;
   final Value<List<String>> tags;
+  final Value<String?> repeat;
   final Value<String> sortKey;
   final Value<String> updatedAt;
   final Value<String?> deletedAt;
@@ -790,6 +811,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.remind = const Value.absent(),
     this.priority = const Value.absent(),
     this.tags = const Value.absent(),
+    this.repeat = const Value.absent(),
     this.sortKey = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -807,6 +829,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.remind = const Value.absent(),
     this.priority = const Value.absent(),
     required List<String> tags,
+    this.repeat = const Value.absent(),
     required String sortKey,
     required String updatedAt,
     this.deletedAt = const Value.absent(),
@@ -829,6 +852,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Expression<bool>? remind,
     Expression<int>? priority,
     Expression<String>? tags,
+    Expression<String>? repeat,
     Expression<String>? sortKey,
     Expression<String>? updatedAt,
     Expression<String>? deletedAt,
@@ -846,6 +870,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       if (remind != null) 'remind': remind,
       if (priority != null) 'priority': priority,
       if (tags != null) 'tags': tags,
+      if (repeat != null) 'repeat': repeat,
       if (sortKey != null) 'sort_key': sortKey,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -865,6 +890,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<bool>? remind,
     Value<int>? priority,
     Value<List<String>>? tags,
+    Value<String?>? repeat,
     Value<String>? sortKey,
     Value<String>? updatedAt,
     Value<String?>? deletedAt,
@@ -882,6 +908,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       remind: remind ?? this.remind,
       priority: priority ?? this.priority,
       tags: tags ?? this.tags,
+      repeat: repeat ?? this.repeat,
       sortKey: sortKey ?? this.sortKey,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -927,6 +954,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
         $TasksTable.$convertertags.toSql(tags.value),
       );
     }
+    if (repeat.present) {
+      map['repeat'] = Variable<String>(repeat.value);
+    }
     if (sortKey.present) {
       map['sort_key'] = Variable<String>(sortKey.value);
     }
@@ -956,6 +986,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
           ..write('remind: $remind, ')
           ..write('priority: $priority, ')
           ..write('tags: $tags, ')
+          ..write('repeat: $repeat, ')
           ..write('sortKey: $sortKey, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -982,6 +1013,7 @@ class _$TaskInsertable implements Insertable<Task> {
       remind: Value(_object.remind),
       priority: Value(_object.priority),
       tags: Value(_object.tags),
+      repeat: Value(_object.repeat),
       sortKey: Value(_object.sortKey),
       updatedAt: Value(_object.updatedAt),
       deletedAt: Value(_object.deletedAt),
@@ -2964,6 +2996,7 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   Value<bool> remind,
   Value<int> priority,
   required List<String> tags,
+  Value<String?> repeat,
   required String sortKey,
   required String updatedAt,
   Value<String?> deletedAt,
@@ -2981,6 +3014,7 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<bool> remind,
   Value<int> priority,
   Value<List<String>> tags,
+  Value<String?> repeat,
   Value<String> sortKey,
   Value<String> updatedAt,
   Value<String?> deletedAt,
@@ -3051,6 +3085,11 @@ class $$TasksTableFilterComposer
         column: $table.tags,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnFilters<String> get repeat => $composableBuilder(
+    column: $table.repeat,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get sortKey => $composableBuilder(
     column: $table.sortKey,
@@ -3132,6 +3171,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get repeat => $composableBuilder(
+    column: $table.repeat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get sortKey => $composableBuilder(
     column: $table.sortKey,
     builder: (column) => ColumnOrderings(column),
@@ -3192,6 +3236,9 @@ class $$TasksTableAnnotationComposer
   GeneratedColumnWithTypeConverter<List<String>, String> get tags =>
       $composableBuilder(column: $table.tags, builder: (column) => column);
 
+  GeneratedColumn<String> get repeat =>
+      $composableBuilder(column: $table.repeat, builder: (column) => column);
+
   GeneratedColumn<String> get sortKey =>
       $composableBuilder(column: $table.sortKey, builder: (column) => column);
 
@@ -3241,6 +3288,7 @@ class $$TasksTableTableManager
                 Value<bool> remind = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 Value<List<String>> tags = const Value.absent(),
+                Value<String?> repeat = const Value.absent(),
                 Value<String> sortKey = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> deletedAt = const Value.absent(),
@@ -3257,6 +3305,7 @@ class $$TasksTableTableManager
                 remind: remind,
                 priority: priority,
                 tags: tags,
+                repeat: repeat,
                 sortKey: sortKey,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -3275,6 +3324,7 @@ class $$TasksTableTableManager
                 Value<bool> remind = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 required List<String> tags,
+                Value<String?> repeat = const Value.absent(),
                 required String sortKey,
                 required String updatedAt,
                 Value<String?> deletedAt = const Value.absent(),
@@ -3291,6 +3341,7 @@ class $$TasksTableTableManager
                 remind: remind,
                 priority: priority,
                 tags: tags,
+                repeat: repeat,
                 sortKey: sortKey,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

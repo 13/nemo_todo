@@ -43,7 +43,7 @@ class ServerDatabase extends _$ServerDatabase {
       customStatement('vacuum into ?', [path]);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -56,6 +56,9 @@ class ServerDatabase extends _$ServerDatabase {
         await m.create(listMembersUserId);
         await m.create(syncLogRow);
       }
+      // Version 3 carries how often a task comes back. The server never
+      // reads it; it stores and forwards it like every other column.
+      if (from < 3) await m.addColumn(tasks, tasks.repeat);
     },
   );
 }

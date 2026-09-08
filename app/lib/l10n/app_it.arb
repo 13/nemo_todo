@@ -141,5 +141,13 @@
   "updatesErrorNetwork": "Impossibile raggiungere GitHub.",
   "updatesErrorRateLimited": "GitHub sta limitando le richieste; riprova più tardi.",
   "updatesErrorNotFound": "Nessun download per questo dispositivo in quella versione.",
-  "updatesErrorMalformed": "Il download non corrisponde alla sua checksum."
+  "updatesErrorMalformed": "Il download non corrisponde alla sua checksum.",
+
+  "tasksRepeat": "Ripetizione",
+  "tasksRepeatNeedsDue": "Un'attività ricorrente ha bisogno di una scadenza da cui contare.",
+  "repeatNever": "Mai",
+  "repeatDaily": "Ogni giorno",
+  "repeatWeekly": "Ogni settimana",
+  "repeatMonthly": "Ogni mese",
+  "repeatYearly": "Ogni anno"
 }

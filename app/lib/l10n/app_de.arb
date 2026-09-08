@@ -141,5 +141,13 @@
   "updatesErrorNetwork": "GitHub ist nicht erreichbar.",
   "updatesErrorRateLimited": "GitHub bremst die Anfragen; versuche es später erneut.",
   "updatesErrorNotFound": "In dieser Version gibt es keinen Download für dieses Gerät.",
-  "updatesErrorMalformed": "Der Download passt nicht zu seiner Prüfsumme."
+  "updatesErrorMalformed": "Der Download passt nicht zu seiner Prüfsumme.",
+
+  "tasksRepeat": "Wiederholung",
+  "tasksRepeatNeedsDue": "Eine wiederkehrende Aufgabe braucht ein Fälligkeitsdatum.",
+  "repeatNever": "Nie",
+  "repeatDaily": "Täglich",
+  "repeatWeekly": "Wöchentlich",
+  "repeatMonthly": "Monatlich",
+  "repeatYearly": "Jährlich"
 }

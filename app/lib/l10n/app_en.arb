@@ -263,5 +263,13 @@
   "updatesErrorNetwork": "Could not reach GitHub.",
   "updatesErrorRateLimited": "GitHub is rate limiting; try again later.",
   "updatesErrorNotFound": "No download for this device in that release.",
-  "updatesErrorMalformed": "That download did not match its checksum."
+  "updatesErrorMalformed": "That download did not match its checksum.",
+
+  "tasksRepeat": "Repeats",
+  "tasksRepeatNeedsDue": "A repeating task needs a due date to count from.",
+  "repeatNever": "Never",
+  "repeatDaily": "Daily",
+  "repeatWeekly": "Weekly",
+  "repeatMonthly": "Monthly",
+  "repeatYearly": "Yearly"
 }

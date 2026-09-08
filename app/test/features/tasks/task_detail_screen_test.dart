@@ -43,6 +43,16 @@ void main() {
     await tester.pumpAndSettle();
     expect((await app.db.taskById('t1'))!.priority, 3);
 
+    // The repeat row made the screen taller than the viewport, so the
+    // fields below it are not built until they are scrolled to.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('task-tag-field')),
+      200,
+      // The subtask list is a scrollable of its own, so the one to drive
+      // has to be named rather than guessed at.
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('task-tag-field')),
       'Home Stuff',
@@ -52,6 +62,12 @@ void main() {
     expect((await app.db.taskById('t1'))!.tags, ['home-stuff']);
     expect(find.byKey(const Key('tag-home-stuff')), findsOneWidget);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('task-subtask-field')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('task-subtask-field')),
       'Step one',
@@ -69,6 +85,59 @@ void main() {
       find.byKey(const Key('task-clear-date')),
       findsNothing,
       reason: 'the clear action only exists once a date is set',
+    );
+  });
+
+  appTest('a repeat rule waits for a due date, then sticks', (tester) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: Routes.task('t1'),
+      seed: (db, inbox) async {
+        await TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        ).create(
+          listId: inbox.id,
+          title: 'Bins',
+          dueAt: testNow.add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+      },
+    );
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('task-repeat')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('repeat-weekly')));
+    await tester.pumpAndSettle();
+    expect((await app.db.taskById('t1'))!.repeat, 'weekly');
+
+    await tester.tap(find.byKey(const Key('repeat-never')));
+    await tester.pumpAndSettle();
+    expect((await app.db.taskById('t1'))!.repeat, isNull);
+  });
+
+  appTest('without a due date the repeat row says why it is off', (
+    tester,
+  ) async {
+    await pumpApp(tester, initialLocation: Routes.task('t1'), seed: seed);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('task-repeat')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('needs a due date'), findsOneWidget);
+    expect(
+      tester
+          .widget<ChoiceChip>(find.byKey(const Key('repeat-weekly')))
+          .onSelected,
+      isNull,
     );
   });
 

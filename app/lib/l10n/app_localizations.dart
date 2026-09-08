@@ -944,6 +944,48 @@ abstract class L {
   /// In en, this message translates to:
   /// **'That download did not match its checksum.'**
   String get updatesErrorMalformed;
+
+  /// No description provided for @tasksRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeats'**
+  String get tasksRepeat;
+
+  /// No description provided for @tasksRepeatNeedsDue.
+  ///
+  /// In en, this message translates to:
+  /// **'A repeating task needs a due date to count from.'**
+  String get tasksRepeatNeedsDue;
+
+  /// No description provided for @repeatNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get repeatNever;
+
+  /// No description provided for @repeatDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get repeatDaily;
+
+  /// No description provided for @repeatWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get repeatWeekly;
+
+  /// No description provided for @repeatMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get repeatMonthly;
+
+  /// No description provided for @repeatYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get repeatYearly;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

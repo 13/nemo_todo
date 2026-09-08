@@ -22,6 +22,7 @@ _Task _$TaskFromJson(Map<String, dynamic> json) => _Task(
   tags:
       (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const <String>[],
+  repeat: json['repeat'] as String?,
   deletedAt: json['deleted_at'] as String?,
 );
 
@@ -39,5 +40,6 @@ Map<String, dynamic> _$TaskToJson(_Task instance) => <String, dynamic>{
   'remind': instance.remind,
   'priority': instance.priority,
   'tags': instance.tags,
+  'repeat': instance.repeat,
   'deleted_at': instance.deletedAt,
 };

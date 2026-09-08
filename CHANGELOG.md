@@ -13,6 +13,9 @@ someone using the app rather than which file moved.
 
 ### Added
 
+- Tasks can repeat: daily, weekly, monthly or yearly. Completing one puts
+  the next occurrence on the list, counted from its due date, with the
+  checklist carried over unticked.
 - `nemo_server backup <file>` writes a consistent copy of the database
   while the server keeps running.
 - Android notices a newer release on GitHub, shows what changed, downloads

@@ -518,4 +518,26 @@ class LEn extends L {
   @override
   String get updatesErrorMalformed =>
       'That download did not match its checksum.';
+
+  @override
+  String get tasksRepeat => 'Repeats';
+
+  @override
+  String get tasksRepeatNeedsDue =>
+      'A repeating task needs a due date to count from.';
+
+  @override
+  String get repeatNever => 'Never';
+
+  @override
+  String get repeatDaily => 'Daily';
+
+  @override
+  String get repeatWeekly => 'Weekly';
+
+  @override
+  String get repeatMonthly => 'Monthly';
+
+  @override
+  String get repeatYearly => 'Yearly';
 }

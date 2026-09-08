@@ -311,6 +311,47 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     },
             ),
             const SizedBox(height: 8),
+            _Label(l.tasksRepeat),
+            // Same chips as the priority row below, for the same reason:
+            // five labels do not fit across a phone in one segmented row.
+            Wrap(
+              key: const Key('task-repeat'),
+              spacing: 8,
+              children: [
+                for (final (rule, label) in <(RepeatRule?, String)>[
+                  (null, l.repeatNever),
+                  (RepeatRule.daily, l.repeatDaily),
+                  (RepeatRule.weekly, l.repeatWeekly),
+                  (RepeatRule.monthly, l.repeatMonthly),
+                  (RepeatRule.yearly, l.repeatYearly),
+                ])
+                  ChoiceChip(
+                    key: Key('repeat-${rule?.name ?? 'never'}'),
+                    selected: task.repeatRule == rule,
+                    showCheckmark: false,
+                    avatar: rule == null
+                        ? null
+                        : const Icon(Icons.repeat_rounded, size: 18),
+                    label: Text(label),
+                    // A rule with no date to count from would never come
+                    // back, so the row waits for one.
+                    onSelected: dueAt == null
+                        ? null
+                        : (_) => _save(task.copyWith(repeat: rule?.name)),
+                  ),
+              ],
+            ),
+            if (dueAt == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  l.tasksRepeatNeedsDue,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 20),
             _Label(l.tasksPriority),
             // Chips rather than a segmented button: four labels with flags
             // do not fit across a phone, and a wrapped label reads badly.

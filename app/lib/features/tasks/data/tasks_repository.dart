@@ -97,6 +97,7 @@ class TasksRepository {
     int priority = 0,
     List<String> tags = const [],
     String notes = '',
+    RepeatRule? repeat,
   }) async {
     final task = Task(
       id: _newId(),
@@ -108,6 +109,8 @@ class TasksRepository {
       remind: remind && dueAt != null,
       priority: priority,
       tags: tags,
+      // A rule with nothing to count from would never come back.
+      repeat: dueAt == null ? null : repeat?.name,
       sortKey: await nextSortKey(listId),
       updatedAt: _clock.now().toString(),
     );
@@ -126,6 +129,49 @@ class TasksRepository {
         doneAt: done ? _now().millisecondsSinceEpoch : null,
       ),
     );
+    if (done) await _spawnRepeat(task);
+  }
+
+  /// Puts the next occurrence of a repeating task on the list.
+  ///
+  /// The completed one stays completed and keeps its history; the next one
+  /// is an ordinary new row, which is what makes this safe to sync -- two
+  /// devices ticking the same task off produce two new tasks rather than a
+  /// conflict, and the loser is a duplicate the user can delete rather than
+  /// a lost edit.
+  ///
+  /// A rule needs a due date to count from, and a rule this version does
+  /// not recognise is left alone rather than guessed at.
+  Future<void> _spawnRepeat(Task task) async {
+    final rule = task.repeatRule;
+    final dueAt = task.dueAt;
+    if (rule == null || dueAt == null) return;
+
+    final next = task.copyWith(
+      id: _newId(),
+      done: false,
+      doneAt: null,
+      dueAt: nextDueAt(dueAt: dueAt, rule: rule, after: _now()),
+      sortKey: await nextSortKey(task.listId),
+      updatedAt: _clock.now().toString(),
+    );
+    await _write(next);
+
+    // The checklist comes with it, unticked: a weekly shop whose next
+    // occurrence arrives already ticked off is not a checklist.
+    final subtasks = await (_db.select(
+      _db.subtasks,
+    )..where((t) => t.taskId.equals(task.id) & t.deletedAt.isNull())).get();
+    for (final sub in subtasks) {
+      await _db.upsertSubtask(
+        sub.copyWith(
+          id: _newId(),
+          taskId: next.id,
+          done: false,
+          updatedAt: _clock.now().toString(),
+        ),
+      );
+    }
   }
 
   Future<void> delete(String id) async {

@@ -22,19 +22,21 @@ void main() {
     );
   });
 
-  test('migrates a version 1 database to version 2', () async {
-    final verifier = SchemaVerifier(GeneratedHelper());
-    final connection = await verifier.startAt(1);
-    final db = ServerDatabase(connection);
-    await verifier.migrateAndValidate(db, 2);
-    await db.close();
+  test('migrates a database from every earlier version', () async {
+    for (final from in [1, 2]) {
+      final verifier = SchemaVerifier(GeneratedHelper());
+      final connection = await verifier.startAt(from);
+      final db = ServerDatabase(connection);
+      await verifier.migrateAndValidate(db, 3);
+      await db.close();
+    }
   });
 
   test('the migrated database has the indexes a fresh one gets', () async {
     final verifier = SchemaVerifier(GeneratedHelper());
     final connection = await verifier.startAt(1);
     final db = ServerDatabase(connection);
-    await verifier.migrateAndValidate(db, 2);
+    await verifier.migrateAndValidate(db, 3);
     final indexes =
         (await db
                 .customSelect(

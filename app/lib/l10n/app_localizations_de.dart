@@ -522,4 +522,26 @@ class LDe extends L {
   @override
   String get updatesErrorMalformed =>
       'Der Download passt nicht zu seiner Prüfsumme.';
+
+  @override
+  String get tasksRepeat => 'Wiederholung';
+
+  @override
+  String get tasksRepeatNeedsDue =>
+      'Eine wiederkehrende Aufgabe braucht ein Fälligkeitsdatum.';
+
+  @override
+  String get repeatNever => 'Nie';
+
+  @override
+  String get repeatDaily => 'Täglich';
+
+  @override
+  String get repeatWeekly => 'Wöchentlich';
+
+  @override
+  String get repeatMonthly => 'Monatlich';
+
+  @override
+  String get repeatYearly => 'Jährlich';
 }

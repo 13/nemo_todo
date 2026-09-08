@@ -521,4 +521,26 @@ class LIt extends L {
   @override
   String get updatesErrorMalformed =>
       'Il download non corrisponde alla sua checksum.';
+
+  @override
+  String get tasksRepeat => 'Ripetizione';
+
+  @override
+  String get tasksRepeatNeedsDue =>
+      'Un\'attività ricorrente ha bisogno di una scadenza da cui contare.';
+
+  @override
+  String get repeatNever => 'Mai';
+
+  @override
+  String get repeatDaily => 'Ogni giorno';
+
+  @override
+  String get repeatWeekly => 'Ogni settimana';
+
+  @override
+  String get repeatMonthly => 'Ogni mese';
+
+  @override
+  String get repeatYearly => 'Ogni anno';
 }

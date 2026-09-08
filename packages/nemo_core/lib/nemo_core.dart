@@ -9,4 +9,5 @@ export 'src/model/sync.dart';
 export 'src/model/sync_row.dart';
 export 'src/model/task.dart';
 export 'src/model/task_list.dart';
+export 'src/repeat.dart';
 export 'src/sort_key.dart';

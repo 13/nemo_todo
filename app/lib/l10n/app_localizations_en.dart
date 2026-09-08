@@ -540,4 +540,15 @@ class LEn extends L {
 
   @override
   String get repeatYearly => 'Yearly';
+
+  @override
+  String get membersMakeOwner => 'Make owner';
+
+  @override
+  String membersMakeOwnerConfirm(String name) {
+    return 'Hand this list to $name? They can then rename it, delete it and change who it is shared with. You stay on as an editor.';
+  }
+
+  @override
+  String get membersErrorNotMember => 'Share the list with them first.';
 }

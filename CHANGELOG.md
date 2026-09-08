@@ -16,6 +16,8 @@ someone using the app rather than which file moved.
 - Tasks can repeat: daily, weekly, monthly or yearly. Completing one puts
   the next occurrence on the list, counted from its due date, with the
   checklist carried over unticked.
+- A shared list can be handed to another member: they become the owner, you
+  stay on as an editor.
 - `nemo_server purge` clears out tombstones old enough that every device
   has seen them, without letting an old device resurrect what it purged.
 - `nemo_server backup <file>` writes a consistent copy of the database

@@ -149,5 +149,9 @@
   "repeatDaily": "Täglich",
   "repeatWeekly": "Wöchentlich",
   "repeatMonthly": "Monatlich",
-  "repeatYearly": "Jährlich"
+  "repeatYearly": "Jährlich",
+
+  "membersMakeOwner": "Zur Besitzerin machen",
+  "membersMakeOwnerConfirm": "Diese Liste an {name} übergeben? Sie können sie dann umbenennen, löschen und die Freigabe ändern. Du bleibst als Bearbeiter dabei.",
+  "membersErrorNotMember": "Teile die Liste zuerst mit ihnen."
 }

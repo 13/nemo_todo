@@ -13,6 +13,7 @@ class FakeSyncClient implements SyncClient {
   final List<int> cursors = [];
   final List<String> shared = [];
   final List<String> unshared = [];
+  final List<String> handedOver = [];
   List<ListMember> memberList = const [];
 
   /// Membership the server reports back on every sync.
@@ -59,6 +60,13 @@ class FakeSyncClient implements SyncClient {
     final failure = failWith;
     if (failure != null) throw failure;
     shared.add('$listId:$username:${role.name}');
+  }
+
+  @override
+  Future<void> transferOwnership(String listId, String username) async {
+    final failure = failWith;
+    if (failure != null) throw failure;
+    handedOver.add('$listId:$username');
   }
 
   @override

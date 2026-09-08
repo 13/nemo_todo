@@ -543,4 +543,15 @@ class LIt extends L {
 
   @override
   String get repeatYearly => 'Ogni anno';
+
+  @override
+  String get membersMakeOwner => 'Rendi proprietario';
+
+  @override
+  String membersMakeOwnerConfirm(String name) {
+    return 'Passare questa lista a $name? Potrà rinominarla, eliminarla e cambiare con chi è condivisa. Tu resti come editor.';
+  }
+
+  @override
+  String get membersErrorNotMember => 'Condividi prima la lista con loro.';
 }

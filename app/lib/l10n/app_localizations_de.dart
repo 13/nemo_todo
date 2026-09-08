@@ -544,4 +544,15 @@ class LDe extends L {
 
   @override
   String get repeatYearly => 'Jährlich';
+
+  @override
+  String get membersMakeOwner => 'Zur Besitzerin machen';
+
+  @override
+  String membersMakeOwnerConfirm(String name) {
+    return 'Diese Liste an $name übergeben? Sie können sie dann umbenennen, löschen und die Freigabe ändern. Du bleibst als Bearbeiter dabei.';
+  }
+
+  @override
+  String get membersErrorNotMember => 'Teile die Liste zuerst mit ihnen.';
 }

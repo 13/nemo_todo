@@ -101,6 +101,16 @@ Handler createHandler({
       eventHub.notify(notify);
       return jsonResponse({'ok': true});
     })
+    ..post('/lists/<id>/owner', (Request request, String id) async {
+      final body = await readJson(request);
+      final notify = await membersService.transferOwnership(
+        request.user.id,
+        id,
+        stringField(body, 'username') ?? '',
+      );
+      eventHub.notify(notify);
+      return jsonResponse({'ok': true});
+    })
     ..delete('/lists/<id>/members/<username>', (
       Request request,
       String id,

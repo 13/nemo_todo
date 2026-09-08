@@ -149,5 +149,9 @@
   "repeatDaily": "Ogni giorno",
   "repeatWeekly": "Ogni settimana",
   "repeatMonthly": "Ogni mese",
-  "repeatYearly": "Ogni anno"
+  "repeatYearly": "Ogni anno",
+
+  "membersMakeOwner": "Rendi proprietario",
+  "membersMakeOwnerConfirm": "Passare questa lista a {name}? Potrà rinominarla, eliminarla e cambiare con chi è condivisa. Tu resti come editor.",
+  "membersErrorNotMember": "Condividi prima la lista con loro."
 }

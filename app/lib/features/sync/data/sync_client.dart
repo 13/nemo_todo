@@ -81,6 +81,16 @@ class SyncClient {
     ),
   );
 
+  /// Hands the list to [username], who has to be a member already. The
+  /// caller stays on as an editor.
+  Future<void> transferOwnership(String listId, String username) => _send(
+    () => _dio.postUri<Map<String, dynamic>>(
+      uri('/lists/$listId/owner'),
+      data: {'username': username},
+      options: _options,
+    ),
+  );
+
   Future<void> unshare(String listId, String username) => _send(
     () => _dio.deleteUri<Map<String, dynamic>>(
       uri('/lists/$listId/members/$username'),

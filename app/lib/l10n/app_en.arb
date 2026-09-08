@@ -271,5 +271,16 @@
   "repeatDaily": "Daily",
   "repeatWeekly": "Weekly",
   "repeatMonthly": "Monthly",
-  "repeatYearly": "Yearly"
+  "repeatYearly": "Yearly",
+
+  "membersMakeOwner": "Make owner",
+  "membersMakeOwnerConfirm": "Hand this list to {name}? They can then rename it, delete it and change who it is shared with. You stay on as an editor.",
+  "@membersMakeOwnerConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersErrorNotMember": "Share the list with them first."
 }

@@ -2,11 +2,6 @@
 
 Deliberate omissions from v1. Nothing here is a known defect.
 
-## List ownership transfer
-**What.** Hand a shared list to another member.
-**Cost of leaving it.** The creator must keep the list forever or recreate it.
-**What closing it takes.** A members endpoint that swaps roles and re-logs the list.
-
 ## Repeat rules beyond the four
 **What.** Every second week, the last Friday of the month, weekdays only.
 **Cost of leaving it.** Anything that is not daily, weekly, monthly or

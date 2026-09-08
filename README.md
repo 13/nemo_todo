@@ -12,7 +12,8 @@ host yourself.
   the next one on the list.
 - Connect it to your server later and everything already on the device is
   uploaded. Signing out keeps your tasks.
-- Lists can be shared with other accounts on the same server.
+- Lists can be shared with other accounts on the same server, and handed
+  over to one of them.
 - The web app is the same app: identical screens, with a navigation rail
   instead of a bottom bar on wide windows.
 

@@ -197,6 +197,24 @@ void main() {
       'username': 'ben',
     }, token: anna);
     expect(forbidden.statusCode, 403);
+
+    // Handing the list over moves those powers with it, and hands them back
+    // the same way, so the test leaves ownership where it found it.
+    final handed = await server.post('/api/v1/lists/l1/owner', {
+      'username': 'anna',
+    }, token: ben);
+    expect(handed.statusCode, 200, reason: handed.body);
+    expect(
+      (await server.post('/api/v1/lists/l1/owner', {
+        'username': 'anna',
+      }, token: ben)).statusCode,
+      403,
+      reason: 'the former owner cannot take it back',
+    );
+    final handedBack = await server.post('/api/v1/lists/l1/owner', {
+      'username': 'ben',
+    }, token: anna);
+    expect(handedBack.statusCode, 200, reason: handedBack.body);
     final removed = await server.delete(
       '/api/v1/lists/l1/members/anna',
       token: ben,

@@ -986,6 +986,24 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Yearly'**
   String get repeatYearly;
+
+  /// No description provided for @membersMakeOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Make owner'**
+  String get membersMakeOwner;
+
+  /// No description provided for @membersMakeOwnerConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand this list to {name}? They can then rename it, delete it and change who it is shared with. You stay on as an editor.'**
+  String membersMakeOwnerConfirm(String name);
+
+  /// No description provided for @membersErrorNotMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the list with them first.'**
+  String get membersErrorNotMember;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

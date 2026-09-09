@@ -558,4 +558,15 @@ class LDe extends L {
 
   @override
   String get tasksNoSelection => 'Wähle eine Aufgabe, um sie hier zu sehen.';
+
+  @override
+  String get repeatWeekdays => 'Werktags';
+
+  @override
+  String get repeatFortnightly => 'Alle 2 Wochen';
+
+  @override
+  String repeatLastWeekday(String weekday) {
+    return 'Letzter $weekday im Monat';
+  }
 }

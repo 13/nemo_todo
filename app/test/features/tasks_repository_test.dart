@@ -190,7 +190,7 @@ void main() {
       dueAt: due,
       dueHasTime: true,
       remind: true,
-      repeat: RepeatRule.weekly,
+      repeat: Repeats.weekly,
     );
     await subtasks.add(weekly.id, 'Kitchen');
     await subtasks.add(weekly.id, 'Balcony');
@@ -227,11 +227,31 @@ void main() {
     );
   });
 
+  test('a weekdays rule skips the weekend on the way back', () async {
+    // Friday. Completing it should put Monday on the list, not Saturday.
+    final friday = DateTime(2026, 9, 11, 8);
+    final task = await tasks.create(
+      listId: inbox,
+      title: 'Water the office plant',
+      dueAt: friday.millisecondsSinceEpoch,
+      repeat: Repeats.weekdays,
+    );
+    await tasks.setDone(task.id, done: true);
+
+    final next = (await tasks.watchByList(inbox).first).firstWhere(
+      (t) => !t.done,
+    );
+    final due = DateTime.fromMillisecondsSinceEpoch(next.dueAt!);
+    expect(due.weekday, DateTime.monday);
+    expect(due, DateTime(2026, 9, 14, 8));
+    expect(next.repeat, 'weekdays');
+  });
+
   test('a repeating task with no due date just completes', () async {
     final task = await tasks.create(
       listId: inbox,
       title: 'Someday',
-      repeat: RepeatRule.daily,
+      repeat: Repeats.daily,
     );
     expect(task.repeat, isNull, reason: 'nothing to count a rule from');
     await tasks.setDone(task.id, done: true);
@@ -243,7 +263,7 @@ void main() {
       listId: inbox,
       title: 'Bins',
       dueAt: composeDue(testNow, hour: 8),
-      repeat: RepeatRule.weekly,
+      repeat: Repeats.weekly,
     );
     await tasks.setDone(task.id, done: true);
     expect(await tasks.watchByList(inbox).first, hasLength(2));

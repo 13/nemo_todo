@@ -155,5 +155,9 @@
   "membersMakeOwnerConfirm": "Diese Liste an {name} übergeben? Sie können sie dann umbenennen, löschen und die Freigabe ändern. Du bleibst als Bearbeiter dabei.",
   "membersErrorNotMember": "Teile die Liste zuerst mit ihnen.",
 
-  "tasksNoSelection": "Wähle eine Aufgabe, um sie hier zu sehen."
+  "tasksNoSelection": "Wähle eine Aufgabe, um sie hier zu sehen.",
+
+  "repeatWeekdays": "Werktags",
+  "repeatFortnightly": "Alle 2 Wochen",
+  "repeatLastWeekday": "Letzter {weekday} im Monat"
 }

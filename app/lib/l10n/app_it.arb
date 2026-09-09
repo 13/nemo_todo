@@ -155,5 +155,9 @@
   "membersMakeOwnerConfirm": "Passare questa lista a {name}? Potrà rinominarla, eliminarla e cambiare con chi è condivisa. Tu resti come editor.",
   "membersErrorNotMember": "Condividi prima la lista con loro.",
 
-  "tasksNoSelection": "Scegli un'attività per vederla qui."
+  "tasksNoSelection": "Scegli un'attività per vederla qui.",
+
+  "repeatWeekdays": "Nei giorni feriali",
+  "repeatFortnightly": "Ogni 2 settimane",
+  "repeatLastWeekday": "Ultimo {weekday} del mese"
 }

@@ -554,4 +554,15 @@ class LEn extends L {
 
   @override
   String get tasksNoSelection => 'Pick a task to see it here.';
+
+  @override
+  String get repeatWeekdays => 'Weekdays';
+
+  @override
+  String get repeatFortnightly => 'Every 2 weeks';
+
+  @override
+  String repeatLastWeekday(String weekday) {
+    return 'Last $weekday of the month';
+  }
 }

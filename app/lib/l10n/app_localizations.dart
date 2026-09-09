@@ -1010,6 +1010,24 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Pick a task to see it here.'**
   String get tasksNoSelection;
+
+  /// No description provided for @repeatWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays'**
+  String get repeatWeekdays;
+
+  /// No description provided for @repeatFortnightly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 2 weeks'**
+  String get repeatFortnightly;
+
+  /// No description provided for @repeatLastWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'Last {weekday} of the month'**
+  String repeatLastWeekday(String weekday);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

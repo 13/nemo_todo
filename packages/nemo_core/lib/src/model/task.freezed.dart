@@ -16,8 +16,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Task {
 
- String get id; String get listId; String get title; String get sortKey; String get updatedAt; String get notes; bool get done; int? get doneAt; int? get dueAt; bool get dueHasTime; bool get remind; int get priority; List<String> get tags;/// A [RepeatRule] name, or null for a task that happens once. Kept as
-/// text so a rule from a newer version travels through this one intact.
+ String get id; String get listId; String get title; String get sortKey; String get updatedAt; String get notes; bool get done; int? get doneAt; int? get dueAt; bool get dueHasTime; bool get remind; int get priority; List<String> get tags;/// A [Repeat] rule as text, or null for a task that happens once. Kept
+/// as text so a rule from a newer version travels through this one and
+/// through the server intact instead of being dropped.
  String? get repeat; String? get deletedAt;
 /// Create a copy of Task
 /// with the given fields replaced by the non-null parameter values.
@@ -253,8 +254,9 @@ class _Task extends Task {
   return EqualUnmodifiableListView(_tags);
 }
 
-/// A [RepeatRule] name, or null for a task that happens once. Kept as
-/// text so a rule from a newer version travels through this one intact.
+/// A [Repeat] rule as text, or null for a task that happens once. Kept
+/// as text so a rule from a newer version travels through this one and
+/// through the server intact instead of being dropped.
 @override final  String? repeat;
 @override final  String? deletedAt;
 

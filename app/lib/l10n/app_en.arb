@@ -284,5 +284,16 @@
   },
   "membersErrorNotMember": "Share the list with them first.",
 
-  "tasksNoSelection": "Pick a task to see it here."
+  "tasksNoSelection": "Pick a task to see it here.",
+
+  "repeatWeekdays": "Weekdays",
+  "repeatFortnightly": "Every 2 weeks",
+  "repeatLastWeekday": "Last {weekday} of the month",
+  "@repeatLastWeekday": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      }
+    }
+  }
 }

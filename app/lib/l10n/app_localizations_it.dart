@@ -557,4 +557,15 @@ class LIt extends L {
 
   @override
   String get tasksNoSelection => 'Scegli un\'attività per vederla qui.';
+
+  @override
+  String get repeatWeekdays => 'Nei giorni feriali';
+
+  @override
+  String get repeatFortnightly => 'Ogni 2 settimane';
+
+  @override
+  String repeatLastWeekday(String weekday) {
+    return 'Ultimo $weekday del mese';
+  }
 }

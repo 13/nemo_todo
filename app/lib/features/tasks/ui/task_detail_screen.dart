@@ -325,20 +325,14 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             const SizedBox(height: 8),
             _Label(l.tasksRepeat),
             // Same chips as the priority row below, for the same reason:
-            // five labels do not fit across a phone in one segmented row.
+            // the labels do not fit across a phone in one segmented row.
             Wrap(
               key: const Key('task-repeat'),
               spacing: 8,
               children: [
-                for (final (rule, label) in <(RepeatRule?, String)>[
-                  (null, l.repeatNever),
-                  (RepeatRule.daily, l.repeatDaily),
-                  (RepeatRule.weekly, l.repeatWeekly),
-                  (RepeatRule.monthly, l.repeatMonthly),
-                  (RepeatRule.yearly, l.repeatYearly),
-                ])
+                for (final (rule, label) in _repeatChoices(l, locale, dueAt))
                   ChoiceChip(
-                    key: Key('repeat-${rule?.name ?? 'never'}'),
+                    key: Key(_repeatKey(rule)),
                     selected: task.repeatRule == rule,
                     showCheckmark: false,
                     avatar: rule == null
@@ -349,7 +343,18 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     // back, so the row waits for one.
                     onSelected: dueAt == null
                         ? null
-                        : (_) => _save(task.copyWith(repeat: rule?.name)),
+                        : (_) => _save(task.copyWith(repeat: rule?.encode())),
+                  ),
+                // A rule this version cannot read -- written by a newer app,
+                // or by hand -- is shown as it stands rather than as no
+                // rule at all, which would say the task does not repeat.
+                if (task.repeat != null && task.repeatRule == null)
+                  ChoiceChip(
+                    key: const Key('repeat-unreadable'),
+                    selected: true,
+                    showCheckmark: false,
+                    avatar: const Icon(Icons.repeat_rounded, size: 18),
+                    label: Text(task.repeat!),
                   ),
               ],
             ),
@@ -564,3 +569,30 @@ class _Label extends StatelessWidget {
     ),
   );
 }
+
+/// The rules the picker offers, in the order they read.
+///
+/// "The last Friday of the month" only makes sense once there is a date to
+/// take the weekday from, so it follows the due date rather than being
+/// offered as a fixed choice.
+List<(Repeat?, String)> _repeatChoices(L l, String locale, int? dueAt) {
+  final due = dueAt == null ? null : DateTime.fromMillisecondsSinceEpoch(dueAt);
+  return [
+    (null, l.repeatNever),
+    (Repeats.daily, l.repeatDaily),
+    (Repeats.weekdays, l.repeatWeekdays),
+    (Repeats.weekly, l.repeatWeekly),
+    (Repeats.fortnightly, l.repeatFortnightly),
+    (Repeats.monthly, l.repeatMonthly),
+    if (due != null)
+      (
+        NthWeekdayRepeat(ordinal: NthWeekdayRepeat.last, weekday: due.weekday),
+        l.repeatLastWeekday(weekdayName(locale, due)),
+      ),
+    (Repeats.yearly, l.repeatYearly),
+  ];
+}
+
+/// A widget key that survives the rule's text: `every:2w` is not a key.
+String _repeatKey(Repeat? rule) =>
+    'repeat-${rule?.encode().replaceAll(RegExp('[^a-z0-9]+'), '-') ?? 'never'}';

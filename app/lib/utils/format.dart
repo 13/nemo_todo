@@ -42,3 +42,7 @@ String timeLabel(String locale, int dueAt) =>
 
 String longDate(String locale, DateTime day) =>
     DateFormat.yMMMMEEEEd(locale).format(day);
+
+/// The name of a day: "Friday", "Freitag", "venerdì".
+String weekdayName(String locale, DateTime day) =>
+    DateFormat.EEEE(locale).format(day);

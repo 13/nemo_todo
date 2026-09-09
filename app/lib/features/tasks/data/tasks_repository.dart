@@ -97,7 +97,7 @@ class TasksRepository {
     int priority = 0,
     List<String> tags = const [],
     String notes = '',
-    RepeatRule? repeat,
+    Repeat? repeat,
   }) async {
     final task = Task(
       id: _newId(),
@@ -110,7 +110,7 @@ class TasksRepository {
       priority: priority,
       tags: tags,
       // A rule with nothing to count from would never come back.
-      repeat: dueAt == null ? null : repeat?.name,
+      repeat: dueAt == null ? null : repeat?.encode(),
       sortKey: await nextSortKey(listId),
       updatedAt: _clock.now().toString(),
     );
@@ -151,7 +151,7 @@ class TasksRepository {
       id: _newId(),
       done: false,
       doneAt: null,
-      dueAt: nextDueAt(dueAt: dueAt, rule: rule, after: _now()),
+      dueAt: rule.nextDueAt(dueAt: dueAt, after: _now()),
       sortKey: await nextSortKey(task.listId),
       updatedAt: _clock.now().toString(),
     );

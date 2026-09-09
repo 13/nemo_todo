@@ -8,8 +8,9 @@ host yourself.
 - Works completely offline from the first launch. An account is optional.
 - Lists with colours and icons, due dates with reminders, subtasks, notes,
   tags and four priorities, plus Today, Upcoming and search views.
-- Tasks that repeat daily, weekly, monthly or yearly: ticking one off puts
-  the next one on the list.
+- Tasks that repeat -- daily, weekdays only, weekly, fortnightly, monthly,
+  the last Friday of the month, yearly: ticking one off puts the next one
+  on the list.
 - Connect it to your server later and everything already on the device is
   uploaded. Signing out keeps your tasks.
 - Lists can be shared with other accounts on the same server, and handed

@@ -13,9 +13,10 @@ someone using the app rather than which file moved.
 
 ### Added
 
-- Tasks can repeat: daily, weekly, monthly or yearly. Completing one puts
-  the next occurrence on the list, counted from its due date, with the
-  checklist carried over unticked.
+- Tasks can repeat: daily, on weekdays, weekly, every two weeks, monthly,
+  on the last weekday of the month, or yearly. Completing one puts the next
+  occurrence on the list, counted from its due date, with the checklist
+  carried over unticked.
 - On a window wider than 1200 dp a task opens in a pane beside the list
   instead of covering it.
 - A shared list can be handed to another member: they become the owner, you

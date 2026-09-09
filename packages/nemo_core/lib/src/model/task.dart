@@ -24,8 +24,9 @@ abstract class Task with _$Task implements SyncRow {
     @Default(0) int priority,
     @Default(<String>[]) List<String> tags,
 
-    /// A [RepeatRule] name, or null for a task that happens once. Kept as
-    /// text so a rule from a newer version travels through this one intact.
+    /// A [Repeat] rule as text, or null for a task that happens once. Kept
+    /// as text so a rule from a newer version travels through this one and
+    /// through the server intact instead of being dropped.
     String? repeat,
     String? deletedAt,
   }) = _Task;
@@ -36,6 +37,7 @@ abstract class Task with _$Task implements SyncRow {
 
   bool get isDeleted => deletedAt != null;
 
-  /// The rule this task repeats on, if it repeats and we understand it.
-  RepeatRule? get repeatRule => RepeatRule.tryParse(repeat);
+  /// The rule this task repeats on, if it repeats and this version can
+  /// read the rule.
+  Repeat? get repeatRule => Repeat.tryParse(repeat);
 }

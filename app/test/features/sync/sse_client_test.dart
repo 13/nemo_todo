@@ -91,29 +91,43 @@ void main() {
       adapter.close();
     });
 
-    /// Lets the client's own asynchrony run: the connect awaits a request,
-    /// and the decoder puts another turn between a read and its frames.
+    /// Waits for something to have happened, rather than for a fixed number
+    /// of milliseconds. The client's work is a request and a decoder turn,
+    /// and a machine running the whole suite at once takes longer over
+    /// those than one running this file alone -- which is how a fixed wait
+    /// here turns into a test that fails once a fortnight for no reason.
+    Future<void> waitFor(bool Function() done) async {
+      final deadline = DateTime.now().add(const Duration(seconds: 5));
+      while (!done() && DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
+    }
+
+    /// For the assertions that nothing happens, where there is no condition
+    /// to wait for. Generous, because it only costs time when it passes.
     Future<void> settle() =>
-        Future<void>.delayed(const Duration(milliseconds: 10));
+        Future<void>.delayed(const Duration(milliseconds: 50));
 
     Future<void> send(String text) async {
       adapter.current.add(Uint8List.fromList(utf8.encode(text)));
-      await settle();
     }
 
     test('syncs once on connect, then on every changed frame', () async {
       client.start();
-      await settle();
+      await waitFor(() => changes >= 1);
       expect(changes, 1, reason: 'a reconnect may have missed events');
       expect(adapter.requests.single.uri.toString(), contains('token=tok'));
 
       await send(EventHubFrames.connected);
+      await settle();
       expect(changes, 1);
 
       await send(EventHubFrames.changed);
+      await waitFor(() => changes >= 2);
       expect(changes, 2);
 
       await send(EventHubFrames.ping);
+      await settle();
       expect(changes, 2);
     });
 
@@ -122,19 +136,21 @@ void main() {
     // something else happened to sync it.
     test('reads a frame split across two reads', () async {
       client.start();
-      await settle();
+      await waitFor(() => changes >= 1);
       changes = 0;
 
       await send('event: chan');
+      await settle();
       expect(changes, 0, reason: 'half a frame is not an event');
 
       await send('ged\ndata: {}\n\n');
+      await waitFor(() => changes >= 1);
       expect(changes, 1);
     });
 
     test('reads a frame split inside a multi-byte character', () async {
       client.start();
-      await settle();
+      await waitFor(() => changes >= 1);
       changes = 0;
 
       final bytes = utf8.encode('event: changed\ndata: {"who":"Anné"}\n\n');
@@ -142,18 +158,18 @@ void main() {
       adapter.current
         ..add(Uint8List.fromList(bytes.sublist(0, split)))
         ..add(Uint8List.fromList(bytes.sublist(split)));
-      await settle();
+      await waitFor(() => changes >= 1);
 
       expect(changes, 1);
     });
 
     test('reconnects after the stream ends', () async {
       client.start();
-      await settle();
+      await waitFor(() => changes >= 1);
       expect(changes, 1);
 
       await adapter.current.close();
-      await settle();
+      await waitFor(() => adapter.requests.length >= 2);
 
       expect(adapter.requests, hasLength(2));
       expect(changes, 2, reason: 'a fresh connection syncs');
@@ -161,7 +177,7 @@ void main() {
 
     test('stop ends the stream and stops reconnecting', () async {
       client.start();
-      await settle();
+      await waitFor(() => adapter.requests.isNotEmpty);
       client.stop();
 
       await adapter.current.close();

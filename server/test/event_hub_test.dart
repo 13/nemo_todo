@@ -42,7 +42,10 @@ void main() {
     final hub = EventHub(heartbeat: const Duration(hours: 1));
     final response = sseResponse(hub, 'a');
 
-    expect(response.headers['content-type'], 'text/event-stream; charset=utf-8');
+    expect(
+      response.headers['content-type'],
+      'text/event-stream; charset=utf-8',
+    );
     // nginx buffers proxied responses by default and holds frames back until a
     // buffer fills, which stalls sync behind a reverse proxy. This header is
     // what disables that for this response, so it is not a decoration.

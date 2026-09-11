@@ -37,4 +37,23 @@ void main() {
     ]);
     await hub.close();
   });
+
+  test('sse response opts out of every layer that would buffer it', () async {
+    final hub = EventHub(heartbeat: const Duration(hours: 1));
+    final response = sseResponse(hub, 'a');
+
+    expect(
+      response.headers['content-type'],
+      'text/event-stream; charset=utf-8',
+    );
+    // nginx buffers proxied responses by default and holds frames back until a
+    // buffer fills, which stalls sync behind a reverse proxy. This header is
+    // what disables that for this response, so it is not a decoration.
+    expect(response.headers['x-accel-buffering'], 'no');
+    expect(response.headers['cache-control'], 'no-cache');
+    // shelf's own output buffering would delay frames the same way.
+    expect(response.context['shelf.io.buffer_output'], false);
+
+    await hub.close();
+  });
 }

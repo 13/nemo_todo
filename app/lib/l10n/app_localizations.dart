@@ -848,6 +848,186 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.'**
   String get startupErrorBody;
+
+  /// No description provided for @updatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updatesTitle;
+
+  /// No description provided for @updatesCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'You have version {version}'**
+  String updatesCurrentVersion(String version);
+
+  /// No description provided for @updatesCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get updatesCheckNow;
+
+  /// No description provided for @updatesChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get updatesChecking;
+
+  /// No description provided for @updatesUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'nemo is up to date'**
+  String get updatesUpToDate;
+
+  /// No description provided for @updatesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available'**
+  String updatesAvailable(String version);
+
+  /// No description provided for @updatesWhatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get updatesWhatsNew;
+
+  /// No description provided for @updatesDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get updatesDownload;
+
+  /// No description provided for @updatesDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading… {percent}%'**
+  String updatesDownloading(int percent);
+
+  /// No description provided for @updatesInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get updatesInstall;
+
+  /// No description provided for @updatesInstallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Android will ask you to confirm the install.'**
+  String get updatesInstallHint;
+
+  /// No description provided for @updatesLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updatesLater;
+
+  /// No description provided for @updatesErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach GitHub.'**
+  String get updatesErrorNetwork;
+
+  /// No description provided for @updatesErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub is rate limiting; try again later.'**
+  String get updatesErrorRateLimited;
+
+  /// No description provided for @updatesErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No download for this device in that release.'**
+  String get updatesErrorNotFound;
+
+  /// No description provided for @updatesErrorMalformed.
+  ///
+  /// In en, this message translates to:
+  /// **'That download did not match its checksum.'**
+  String get updatesErrorMalformed;
+
+  /// No description provided for @tasksRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeats'**
+  String get tasksRepeat;
+
+  /// No description provided for @tasksRepeatNeedsDue.
+  ///
+  /// In en, this message translates to:
+  /// **'A repeating task needs a due date to count from.'**
+  String get tasksRepeatNeedsDue;
+
+  /// No description provided for @repeatNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get repeatNever;
+
+  /// No description provided for @repeatDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get repeatDaily;
+
+  /// No description provided for @repeatWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get repeatWeekly;
+
+  /// No description provided for @repeatMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get repeatMonthly;
+
+  /// No description provided for @repeatYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get repeatYearly;
+
+  /// No description provided for @membersMakeOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Make owner'**
+  String get membersMakeOwner;
+
+  /// No description provided for @membersMakeOwnerConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand this list to {name}? They can then rename it, delete it and change who it is shared with. You stay on as an editor.'**
+  String membersMakeOwnerConfirm(String name);
+
+  /// No description provided for @membersErrorNotMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the list with them first.'**
+  String get membersErrorNotMember;
+
+  /// No description provided for @tasksNoSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a task to see it here.'**
+  String get tasksNoSelection;
+
+  /// No description provided for @repeatWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays'**
+  String get repeatWeekdays;
+
+  /// No description provided for @repeatFortnightly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 2 weeks'**
+  String get repeatFortnightly;
+
+  /// No description provided for @repeatLastWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'Last {weekday} of the month'**
+  String repeatLastWeekday(String weekday);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

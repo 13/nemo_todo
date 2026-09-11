@@ -5,6 +5,8 @@ import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_settings_section.dart';
+import 'package:nemo/features/updates/ui/update_controller.dart';
+import 'package:nemo/features/updates/ui/update_tile.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 
@@ -15,6 +17,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
     final mode = ref.watch(themeModeControllerProvider);
+    final version = ref.watch(currentVersionProvider).value;
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
@@ -56,11 +59,14 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SyncSettingsSection(),
+            const UpdateTile(),
             SectionHeader(title: l.settingsAbout),
             ListTile(
               leading: const Icon(Icons.info_outline_rounded),
               title: Text(l.appName),
-              subtitle: Text(l.settingsVersion('0.1.0')),
+              // Read from the package rather than written here, so it
+              // cannot go on claiming 0.1.0 after a release.
+              subtitle: Text(l.settingsVersion(version?.toString() ?? '—')),
             ),
           ],
         ),

@@ -77,6 +77,45 @@ void main() {
     expect(client.unshared, ['seeded:anna']);
   });
 
+  appTest('an owner can hand the list on', (tester) async {
+    await pumpApp(
+      tester,
+      initialLocation: '/lists/seeded/members',
+      overrides: [
+        authStorageProvider.overrideWithValue(MemoryAuthStorage('secret')),
+        syncClientFactoryProvider.overrideWithValue((_, _) => client),
+        sseClientFactoryProvider.overrideWithValue((_, _, _) => null),
+      ],
+      settle: false,
+      seed: (db, inbox) async {
+        final kv = KvStore(db);
+        await kv.set(KvKeys.serverUrl, 'https://nemo.test');
+        await kv.set(KvKeys.username, 'ben');
+        await db.upsertList(
+          const TaskList(
+            id: 'seeded',
+            name: 'Groceries',
+            sortKey: 'V',
+            updatedAt: '1789000000000-0000-seed',
+          ),
+        );
+        await db.setListMeta({'seeded': owners}, 'ben');
+        client.memberMap = {'seeded': owners};
+      },
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('member-own-anna')));
+    await tester.pumpAndSettle();
+    // It says what changes hands before it happens.
+    expect(find.textContaining('Hand this list to anna'), findsOneWidget);
+    expect(find.textContaining('stay on as an editor'), findsOneWidget);
+
+    await tester.tap(find.text('Make owner').last);
+    await settleSync(tester);
+    expect(client.handedOver, ['seeded:anna']);
+  });
+
   appTest('an unknown username is reported', (tester) async {
     await pumpApp(
       tester,

@@ -1,0 +1,209 @@
+name: Release
+
+# Pushing a v* tag publishes a GitHub release: the signed APKs for every
+# ABI, plus the CHANGELOG section for that version as the notes. The app's
+# updater reads exactly this release, so the asset names here and the names
+# it looks for are one contract.
+on:
+  push:
+    tags: ['v*']
+
+env:
+  FLUTTER_VERSION: '3.47.2'
+
+jobs:
+  # The same checks every push gets. A tag that cannot pass them is not a
+  # release, so this gates the job below rather than running beside it.
+  verify:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  publish:
+    name: Build and publish
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      # A tag saying one version while the app reports another gives the
+      # updater a release it can never satisfy: it would offer the update
+      # again after installing it. Cheapest possible place to catch that.
+      - name: Check the tag against the app version
+        id: version
+        run: |
+          tag='${{ github.ref_name }}'
+          version="${tag#v}"
+          declared=$(sed -n 's/^version: *//p' app/pubspec.yaml | head -1)
+          if [ "${declared%%+*}" != "$version" ]; then
+            echo "::error::tag $tag wants version $version, but " \
+                 "app/pubspec.yaml declares $declared"
+            exit 1
+          fi
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "full=$declared"
+          } >> "$GITHUB_OUTPUT"
+
+      # An unreadable release is a release nobody can judge before
+      # installing, so a missing section stops the publish.
+      - name: Take the notes out of the CHANGELOG
+        run: |
+          version='${{ steps.version.outputs.version }}'
+          awk -v v="$version" '
+            $0 ~ "^## " v "( |$|-)" { inside = 1; next }
+            inside && /^## / { exit }
+            inside { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::error::CHANGELOG.md has no section for $version"
+            exit 1
+          fi
+          cat notes.md
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - run: flutter pub get
+
+      - name: Fetch web database assets
+        run: tool/fetch_web_assets.sh
+
+      # flutter_secure_storage 11 compiles against API 37, so the app does
+      # too, and a runner image ships whichever platforms it shipped with.
+      # Installing it here costs seconds; finding out it is missing costs a
+      # failed build, or a failed release.
+      - name: Install the Android platform the build compiles against
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            'platforms;android-37.0' > /dev/null
+
+      # CI may fall back to the debug key; a release may not. That key ships
+      # with every Android SDK, so a published build carrying it can be
+      # replaced in place by anyone who wants to.
+      - name: Configure signing
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not set; a release " \
+                 "must not be signed with the debug key"
+            exit 1
+          fi
+          echo "$KEYSTORE" | base64 -d > app/android/nemo.jks
+          cat > app/android/key.properties <<PROPS
+          storeFile=nemo.jks
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+
+      # Two builds, and each one's output is carried aside as it lands
+      # rather than trusting them to pile up: the task that gives the APKs
+      # their real names mirrors a directory instead of accumulating, so
+      # what survives the second build is gradle's business, not ours.
+      # The universal APK is the fallback for a device whose ABI is not
+      # among the three, and for anyone downloading by hand.
+      - name: Build the per-ABI APKs
+        run: |
+          flutter build apk --release --split-per-abi
+          mkdir -p ../dist
+          cp build/app/outputs/release/*.apk ../dist/
+        working-directory: app
+
+      - name: Build the universal APK
+        run: |
+          flutter build apk --release
+          cp build/app/outputs/release/*universal*.apk ../dist/
+        working-directory: app
+
+      - name: Check the APKs are signed with the release key
+        run: |
+          # apksigner sits under a versioned build-tools directory, so the
+          # newest one installed on the runner is looked up rather than named.
+          signer=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort | tail -1)
+          for apk in dist/*.apk; do
+            printf '%s: ' "$apk"
+            if "$signer" verify --print-certs "$apk" | grep -qi 'Android Debug'
+            then
+              echo "::error::$apk carries the debug key"
+              exit 1
+            fi
+            echo signed
+          done
+          ls -lh dist/
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prerelease=
+          case '${{ steps.version.outputs.version }}' in
+            *-*) prerelease=--prerelease ;;
+          esac
+          gh release create '${{ steps.version.outputs.tag }}' \
+            --title 'nemo ${{ steps.version.outputs.version }}' \
+            --notes-file notes.md \
+            $prerelease \
+            dist/*.apk
+
+  # The server image for the same commit the APKs come from, so a release is
+  # one thing rather than an app release and a server release that happen to
+  # share a number. Runs beside the APKs rather than after them: neither
+  # needs the other, and both need the checks.
+  image:
+    name: Publish the server image
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/13/nemo
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          # Only tags reach this workflow, so latest is unconditional except
+          # for a pre-release: v0.3.0-beta.1 is published as one, and whoever
+          # pulls :latest did not ask to run a beta.
+          flavor: latest=${{ !contains(github.ref_name, '-') }}
+
+      # linux/amd64 alone: the runtime stage copies the bundle out of
+      # build/cli/linux_x64, and an emulated arm64 build would compile Dart
+      # and the web app under qemu for an hour to produce it.
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # The same cache CI fills on every push to main, so a release
+          # mostly re-tags layers instead of building them again.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

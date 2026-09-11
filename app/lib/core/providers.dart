@@ -75,6 +75,11 @@ final reminderSchedulerProvider = Provider<ReminderScheduler>(
   (_) => const NoopReminderScheduler(),
 );
 
+/// Only Android can install an APK, so only Android offers updates.
+final updatesSupportedProvider = Provider<bool>(
+  (_) => !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
+);
+
 /// True on Android where local notifications exist.
 final remindersSupportedProvider = Provider<bool>(
   (_) => !kIsWeb && defaultTargetPlatform == TargetPlatform.android,

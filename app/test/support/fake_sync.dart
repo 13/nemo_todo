@@ -13,12 +13,17 @@ class FakeSyncClient implements SyncClient {
   final List<int> cursors = [];
   final List<String> shared = [];
   final List<String> unshared = [];
+  final List<String> handedOver = [];
   List<ListMember> memberList = const [];
 
   /// Membership the server reports back on every sync.
   Map<String, List<ListMember>> memberMap = const {};
   ApiError? failWith;
   int calls = 0;
+
+  /// Runs while a push is in flight, so a test can make the device edit a
+  /// row after its changes were collected but before the answer arrives.
+  Future<void> Function()? duringSync;
 
   @override
   String get baseUrl => 'https://nemo.test';
@@ -31,6 +36,7 @@ class FakeSyncClient implements SyncClient {
     calls++;
     pushes.add(request.changes);
     cursors.add(request.cursor);
+    await duringSync?.call();
     final failure = failWith;
     if (failure != null) throw failure;
     return responses.isEmpty
@@ -54,6 +60,13 @@ class FakeSyncClient implements SyncClient {
     final failure = failWith;
     if (failure != null) throw failure;
     shared.add('$listId:$username:${role.name}');
+  }
+
+  @override
+  Future<void> transferOwnership(String listId, String username) async {
+    final failure = failWith;
+    if (failure != null) throw failure;
+    handedOver.add('$listId:$username');
   }
 
   @override

@@ -182,6 +182,95 @@ void main() {
     ]);
   });
 
+  test('completing a repeating task puts the next one on the list', () async {
+    final due = composeDue(testNow, hour: 9);
+    final weekly = await tasks.create(
+      listId: inbox,
+      title: 'Water the plants',
+      dueAt: due,
+      dueHasTime: true,
+      remind: true,
+      repeat: Repeats.weekly,
+    );
+    await subtasks.add(weekly.id, 'Kitchen');
+    await subtasks.add(weekly.id, 'Balcony');
+    final first = (await subtasks.watchByTask(weekly.id).first).first;
+    await subtasks.save(first.copyWith(done: true));
+
+    await tasks.setDone(weekly.id, done: true);
+
+    final open = (await tasks.watchByList(inbox).first)
+        .where((t) => !t.done)
+        .toList();
+    expect(open, hasLength(1));
+    final next = open.single;
+    expect(
+      next.id,
+      isNot(weekly.id),
+      reason: 'an ordinary new row, not an edit',
+    );
+    expect(next.title, 'Water the plants');
+    expect(next.repeat, 'weekly');
+    expect(next.remind, isTrue);
+    expect(
+      DateTime.fromMillisecondsSinceEpoch(next.dueAt!),
+      DateTime.fromMillisecondsSinceEpoch(due).add(const Duration(days: 7)),
+    );
+    expect((await db.taskById(weekly.id))!.done, isTrue);
+
+    final carried = await subtasks.watchByTask(next.id).first;
+    expect(carried.map((s) => s.title), ['Kitchen', 'Balcony']);
+    expect(
+      carried.every((s) => !s.done),
+      isTrue,
+      reason: 'a checklist that arrives already ticked is not a checklist',
+    );
+  });
+
+  test('a weekdays rule skips the weekend on the way back', () async {
+    // Friday. Completing it should put Monday on the list, not Saturday.
+    final friday = DateTime(2026, 9, 11, 8);
+    final task = await tasks.create(
+      listId: inbox,
+      title: 'Water the office plant',
+      dueAt: friday.millisecondsSinceEpoch,
+      repeat: Repeats.weekdays,
+    );
+    await tasks.setDone(task.id, done: true);
+
+    final next = (await tasks.watchByList(inbox).first).firstWhere(
+      (t) => !t.done,
+    );
+    final due = DateTime.fromMillisecondsSinceEpoch(next.dueAt!);
+    expect(due.weekday, DateTime.monday);
+    expect(due, DateTime(2026, 9, 14, 8));
+    expect(next.repeat, 'weekdays');
+  });
+
+  test('a repeating task with no due date just completes', () async {
+    final task = await tasks.create(
+      listId: inbox,
+      title: 'Someday',
+      repeat: Repeats.daily,
+    );
+    expect(task.repeat, isNull, reason: 'nothing to count a rule from');
+    await tasks.setDone(task.id, done: true);
+    expect(await tasks.watchByList(inbox).first, hasLength(1));
+  });
+
+  test('unticking a repeating task does not spawn another', () async {
+    final task = await tasks.create(
+      listId: inbox,
+      title: 'Bins',
+      dueAt: composeDue(testNow, hour: 8),
+      repeat: Repeats.weekly,
+    );
+    await tasks.setDone(task.id, done: true);
+    expect(await tasks.watchByList(inbox).first, hasLength(2));
+    await tasks.setDone(task.id, done: false);
+    expect(await tasks.watchByList(inbox).first, hasLength(2));
+  });
+
   test('wantsReminder only for open future tasks with remind on', () {
     final due = testNow.add(const Duration(hours: 1)).millisecondsSinceEpoch;
     Task t({

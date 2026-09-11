@@ -25,11 +25,16 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // Version 2 carries how often a task comes back. Null on every row
+      // that existed before, which is what "happens once" already meant.
+      if (from < 2) await m.addColumn(tasks, tasks.repeat);
+    },
     beforeOpen: (details) async {
       await customStatement('pragma foreign_keys = on');
     },

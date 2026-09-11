@@ -3,10 +3,12 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
+  # Tags do not run this directly. release.yml calls it, so a release runs
+  # exactly the checks a push runs and then publishes on top of them.
+  workflow_call:
 
 env:
   # Pinned so a Flutter release cannot break the build with no change on
@@ -30,12 +32,21 @@ jobs:
 
       # Generated sources are committed and nothing else here regenerates
       # them, so a stale .g.dart would otherwise sail through every check.
+      # The schema snapshots are held to the same rule: they are what the
+      # next migration gets written against, so a schema edit that does not
+      # re-dump them has to fail here rather than at someone's first upgrade.
       - name: Verify generated code is current
         run: |
           (cd app && flutter gen-l10n)
           (cd packages/nemo_core && dart run build_runner build)
           (cd server && dart run build_runner build)
           (cd app && dart run build_runner build)
+          (cd server && dart run drift_dev schema dump \
+            lib/src/db/server_database.dart drift_schemas/)
+          (cd server && dart run drift_dev schema generate \
+            drift_schemas/ test/generated/)
+          (cd app && dart run drift_dev schema dump \
+            lib/core/db/app_database.dart drift_schemas/)
           if ! git diff --quiet; then
             echo "::error::Generated files are out of date. Regenerate and commit:"
             git diff --name-only | sed 's/^/  /'
@@ -57,12 +68,25 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      # dart test writes its own JSON hit map rather than lcov, so each
+      # pure-Dart package is converted before the shared checker reads it.
+      # The floors sit just under what each package measures today; the
+      # server holds the authorisation rules, so it is the last place that
+      # should be able to lose tests unnoticed.
       - name: Test nemo_core
-        run: dart test
+        run: |
+          dart test --coverage=coverage
+          dart run coverage:format_coverage --lcov --in=coverage \
+            --out=coverage/lcov.info --report-on=lib --base-directory=.
+          dart run ../../tool/check_coverage.dart 90
         working-directory: packages/nemo_core
 
       - name: Test server
-        run: dart test
+        run: |
+          dart test --coverage=coverage
+          dart run coverage:format_coverage --lcov --in=coverage \
+            --out=coverage/lcov.info --report-on=lib --base-directory=.
+          dart run ../tool/check_coverage.dart 85
         working-directory: server
 
       - name: Test app
@@ -106,6 +130,15 @@ jobs:
       # keystore is mapped into the environment and tested from there.
       # Without it the APK is signed with the debug key, which is fine for
       # a CI artefact and never for a release.
+      # flutter_secure_storage 11 compiles against API 37, so the app does
+      # too, and a runner image ships whichever platforms it shipped with.
+      # Installing it here costs seconds; finding out it is missing costs a
+      # failed build, or a failed release.
+      - name: Install the Android platform the build compiles against
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            'platforms;android-37.0' > /dev/null
+
       - name: Configure signing
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -137,5 +170,16 @@ jobs:
           path: app/build/app/outputs/release/*.apk
           if-no-files-found: error
 
+      # Not pushed: this only proves the Dockerfile still builds. It goes
+      # through buildx for the cache, which the release workflow reads, so
+      # publishing an image is mostly re-tagging layers built here.
+      - uses: docker/setup-buildx-action@v4
+
       - name: Build the server image
-        run: docker build -t nemo:${{ github.sha }} .
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          tags: nemo:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

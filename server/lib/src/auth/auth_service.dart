@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:bcrypt/bcrypt.dart';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:nemo_server/src/api_exception.dart';
+import 'package:nemo_server/src/auth/password_hasher.dart';
 import 'package:nemo_server/src/db/server_database.dart';
 import 'package:uuid/uuid.dart';
 
@@ -29,8 +29,12 @@ class AuthService {
     Random? random,
     this.bcryptRounds = 12,
     this.sessionLifetime = const Duration(days: 30),
+    PasswordHasher? hasher,
+    PasswordVerifier? verifier,
   }) : _now = now ?? DateTime.now,
-       _random = random ?? Random.secure();
+       _random = random ?? Random.secure(),
+       _hash = hasher ?? hashPassword,
+       _verify = verifier ?? verifyPassword;
 
   static final _usernamePattern = RegExp(r'^[a-z0-9_.-]{3,32}$');
   static const minPasswordLength = 8;
@@ -43,6 +47,13 @@ class AuthService {
   final Random _random;
   final int bcryptRounds;
   final Duration sessionLifetime;
+  final PasswordHasher _hash;
+  final PasswordVerifier _verify;
+
+  /// Hash to check a password against when the account does not exist, so
+  /// an unknown username costs the same as a wrong password instead of
+  /// answering early and telling a caller which usernames are real.
+  Future<String>? _absentUserHash;
 
   /// Explicit setting, else open only until the first account exists.
   Future<bool> get signupOpen async {
@@ -66,10 +77,7 @@ class AuthService {
     final user = User(
       id: const Uuid().v4(),
       username: name,
-      passwordHash: BCrypt.hashpw(
-        password,
-        BCrypt.gensalt(logRounds: bcryptRounds),
-      ),
+      passwordHash: await _hash(password, bcryptRounds),
       createdAt: _now().millisecondsSinceEpoch,
     );
     await _db.into(_db.users).insert(user);
@@ -78,7 +86,11 @@ class AuthService {
 
   Future<AuthResult> login(String username, String password) async {
     final user = await _userByName(_normalise(username));
-    if (user == null || !BCrypt.checkpw(password, user.passwordHash)) {
+    final against =
+        user?.passwordHash ??
+        await (_absentUserHash ??= _hash('no such user', bcryptRounds));
+    final matches = await _verify(password, against);
+    if (user == null || !matches) {
       throw const ApiException(401, 'invalid_credentials');
     }
     return await _createSession(user);
@@ -115,6 +127,21 @@ class AuthService {
 
   Future<void> logout(String token) => _deleteSession(hashToken(token));
 
+  /// Removes sessions that have expired, and answers how many there were.
+  ///
+  /// A session is otherwise only noticed as expired when its own token is
+  /// presented again, which for an abandoned one never happens: a phone
+  /// that was reset or an account signed out of by wiping the app leaves a
+  /// row behind for ever. The server sweeps on startup and every few hours
+  /// so the table tracks live sessions rather than every session ever made.
+  Future<int> deleteExpiredSessions() =>
+      (_db.delete(_db.sessions)..where(
+            (t) => t.expiresAt.isSmallerOrEqualValue(
+              _now().millisecondsSinceEpoch,
+            ),
+          ))
+          .go();
+
   /// Sets a new password and signs the user out everywhere.
   Future<void> resetPassword(String username, String newPassword) async {
     _checkPassword(newPassword);
@@ -122,9 +149,7 @@ class AuthService {
     if (user == null) throw const ApiException(404, 'unknown_user');
     await (_db.update(_db.users)..where((t) => t.id.equals(user.id))).write(
       UsersCompanion(
-        passwordHash: Value(
-          BCrypt.hashpw(newPassword, BCrypt.gensalt(logRounds: bcryptRounds)),
-        ),
+        passwordHash: Value(await _hash(newPassword, bcryptRounds)),
       ),
     );
     await (_db.delete(

@@ -36,6 +36,7 @@ class Tasks extends Table {
   BoolColumn get remind => boolean().withDefault(const Constant(false))();
   IntColumn get priority => integer().withDefault(const Constant(0))();
   TextColumn get tags => text().map(const StringListConverter())();
+  TextColumn get repeat => text().nullable()();
   TextColumn get sortKey => text()();
   TextColumn get updatedAt => text()();
   TextColumn get deletedAt => text().nullable()();

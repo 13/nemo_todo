@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nemo_core/src/model/sync_row.dart';
+import 'package:nemo_core/src/repeat.dart';
 
 part 'task.freezed.dart';
 part 'task.g.dart';
@@ -22,6 +23,11 @@ abstract class Task with _$Task implements SyncRow {
     @Default(false) bool remind,
     @Default(0) int priority,
     @Default(<String>[]) List<String> tags,
+
+    /// A [Repeat] rule as text, or null for a task that happens once. Kept
+    /// as text so a rule from a newer version travels through this one and
+    /// through the server intact instead of being dropped.
+    String? repeat,
     String? deletedAt,
   }) = _Task;
 
@@ -30,4 +36,8 @@ abstract class Task with _$Task implements SyncRow {
   factory Task.fromJson(Map<String, dynamic> json) => _$TaskFromJson(json);
 
   bool get isDeleted => deletedAt != null;
+
+  /// The rule this task repeats on, if it repeats and this version can
+  /// read the rule.
+  Repeat? get repeatRule => Repeat.tryParse(repeat);
 }

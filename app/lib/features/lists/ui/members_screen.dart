@@ -55,6 +55,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           () => _error = switch (e.code) {
             'unknown_user' => l.membersErrorUnknownUser,
             'not_owner' => l.membersOnlyOwner,
+            'not_member' => l.membersErrorNotMember,
             'network' => l.accountErrorNetwork,
             _ => l.accountErrorGeneric(e.code),
           },
@@ -65,13 +66,17 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     }
   }
 
-  Future<void> _remove(String username) async {
+  Future<bool> _confirm({
+    required String title,
+    required String message,
+    required String action,
+  }) async {
     final l = L.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l.commonDelete),
-        content: Text(l.membersRemoveConfirm(username)),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -79,13 +84,38 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l.commonDelete),
+            child: Text(action),
           ),
         ],
       ),
     );
-    if (ok != true) return;
+    return ok ?? false;
+  }
+
+  Future<void> _remove(String username) async {
+    final l = L.of(context);
+    if (!await _confirm(
+      title: l.commonDelete,
+      message: l.membersRemoveConfirm(username),
+      action: l.commonDelete,
+    )) {
+      return;
+    }
     await _run((client) => client.unshare(widget.listId, username));
+  }
+
+  /// Handing the list on is the one action here the owner cannot undo
+  /// alone, so it asks first and says plainly what changes hands.
+  Future<void> _makeOwner(String username) async {
+    final l = L.of(context);
+    if (!await _confirm(
+      title: l.membersMakeOwner,
+      message: l.membersMakeOwnerConfirm(username),
+      action: l.membersMakeOwner,
+    )) {
+      return;
+    }
+    await _run((client) => client.transferOwnership(widget.listId, username));
   }
 
   @override
@@ -136,9 +166,26 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                       ),
                       trailing:
                           canEdit && member.role != MemberRole.owner && !_busy
-                          ? IconButton(
-                              icon: const Icon(Icons.person_remove_outlined),
-                              onPressed: () => _remove(member.username),
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  key: Key('member-own-${member.username}'),
+                                  tooltip: l.membersMakeOwner,
+                                  icon: const Icon(
+                                    Icons.workspace_premium_outlined,
+                                  ),
+                                  onPressed: () => _makeOwner(member.username),
+                                ),
+                                IconButton(
+                                  key: Key('member-remove-${member.username}'),
+                                  tooltip: l.commonDelete,
+                                  icon: const Icon(
+                                    Icons.person_remove_outlined,
+                                  ),
+                                  onPressed: () => _remove(member.username),
+                                ),
+                              ],
                             )
                           : null,
                     ),

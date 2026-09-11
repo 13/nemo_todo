@@ -68,6 +68,60 @@ void main() {
     expect(json(third), {'error': 'too_many_requests'});
   });
 
+  test('a forwarding header cannot buy extra login attempts', () async {
+    server = await TestServer.start(limiter: RateLimiter(max: 2));
+    await server.signup('ben');
+    Future<http.Response> login(String forwarded) => http.post(
+      server.uri('/api/v1/auth/login'),
+      headers: {
+        'content-type': 'application/json',
+        'x-forwarded-for': forwarded,
+      },
+      body: jsonEncode({'username': 'ben', 'password': 'password123'}),
+    );
+
+    expect((await login('1.1.1.1')).statusCode, 200);
+    final third = await login('3.3.3.3');
+    expect(
+      third.statusCode,
+      429,
+      reason: 'a header the client controls must not reset the count',
+    );
+  });
+
+  test('an oversized body is refused', () async {
+    server = await TestServer.start();
+    final token = await server.signup('ben');
+    final big = await http.post(
+      server.uri('/api/v1/sync'),
+      headers: {
+        'content-type': 'application/json',
+        'authorization': 'Bearer $token',
+      },
+      body: '{"cursor":0,"changes":[],"pad":"${'x' * (1024 * 1024 + 64)}"}',
+    );
+    expect(big.statusCode, 413);
+    expect(json(big), {'error': 'payload_too_large'});
+  });
+
+  test('fields of the wrong type are a bad request, not a crash', () async {
+    server = await TestServer.start();
+    final signup = await server.post('/api/v1/auth/signup', {
+      'username': 1,
+      'password': 2,
+    });
+    expect(signup.statusCode, 400);
+    expect(json(signup), {'error': 'bad_request'});
+
+    final token = await server.signup('ben');
+    final member = await server.post('/api/v1/lists/l1/members', {
+      'username': 7,
+      'role': 'editor',
+    }, token: token);
+    expect(member.statusCode, 400);
+    expect(json(member), {'error': 'bad_request'});
+  });
+
   test('sync, sharing and events over HTTP', () async {
     server = await TestServer.start(now: () => fixedNow);
     final ben = await server.signup('ben');
@@ -143,6 +197,24 @@ void main() {
       'username': 'ben',
     }, token: anna);
     expect(forbidden.statusCode, 403);
+
+    // Handing the list over moves those powers with it, and hands them back
+    // the same way, so the test leaves ownership where it found it.
+    final handed = await server.post('/api/v1/lists/l1/owner', {
+      'username': 'anna',
+    }, token: ben);
+    expect(handed.statusCode, 200, reason: handed.body);
+    expect(
+      (await server.post('/api/v1/lists/l1/owner', {
+        'username': 'anna',
+      }, token: ben)).statusCode,
+      403,
+      reason: 'the former owner cannot take it back',
+    );
+    final handedBack = await server.post('/api/v1/lists/l1/owner', {
+      'username': 'ben',
+    }, token: anna);
+    expect(handedBack.statusCode, 200, reason: handedBack.body);
     final removed = await server.delete(
       '/api/v1/lists/l1/members/anna',
       token: ben,

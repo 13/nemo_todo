@@ -30,6 +30,20 @@ final syncClientFactoryProvider = Provider<SyncClientFactory>(
           SyncClient(ref.read(dioProvider), baseUrl: baseUrl, token: token),
 );
 
+/// How long a failed sync waits before trying itself again, and the ceiling
+/// that wait doubles up to.
+typedef RetryPolicy = ({Duration initial, Duration max});
+
+/// A failure used to wait for something else to happen -- a local edit, the
+/// app coming back to the foreground, the event stream reconnecting. On a
+/// device nobody is touching, and against a server that is answering with
+/// errors rather than refusing the connection, none of those arrive, and
+/// the queue sat there. So a failed sync now schedules its own next try.
+final syncRetryPolicyProvider = Provider<RetryPolicy>(
+  (ref) =>
+      (initial: const Duration(seconds: 5), max: const Duration(minutes: 5)),
+);
+
 final sseClientFactoryProvider = Provider<SseClientFactory>(
   (ref) =>
       (baseUrl, token, onChanged) => SseClient(
@@ -52,6 +66,7 @@ class SyncEngine extends _$SyncEngine {
   SseClient? _sse;
   var _running = false;
   var _again = false;
+  Duration? _retryIn;
 
   @override
   SyncState build() {
@@ -108,6 +123,19 @@ class SyncEngine extends _$SyncEngine {
     _debounce = Timer(delay, () => unawaited(syncNow()));
   }
 
+  /// Asks for another try after a failure, waiting longer each time.
+  ///
+  /// It goes through [requestSync], so anything that asks for a sync sooner
+  /// -- an edit, a resume, the event stream reconnecting -- replaces the
+  /// wait rather than queueing behind it.
+  void _scheduleRetry() {
+    final policy = ref.read(syncRetryPolicyProvider);
+    final delay = _retryIn ?? policy.initial;
+    requestSync(delay: delay);
+    final next = delay * 2;
+    _retryIn = next > policy.max ? policy.max : next;
+  }
+
   /// Uploads queued changes and applies everything new from the server.
   Future<void> syncNow() async {
     if (_running) {
@@ -123,9 +151,12 @@ class SyncEngine extends _$SyncEngine {
         _again = false;
         await _runOnce(client);
       } while (_again);
+      _retryIn = null;
       state = state.copyWith(status: SyncStatus.idle);
     } on ApiError catch (e) {
       if (e.isUnauthorized) {
+        // Nothing to retry: the session is gone until someone signs in.
+        _retryIn = null;
         await ref.read(authControllerProvider.notifier).sessionExpired();
         state = state.copyWith(status: SyncStatus.signedOut);
       } else {
@@ -133,6 +164,7 @@ class SyncEngine extends _$SyncEngine {
           status: e.isOffline ? SyncStatus.offline : SyncStatus.error,
           error: e.code,
         );
+        _scheduleRetry();
       }
     } finally {
       _running = false;

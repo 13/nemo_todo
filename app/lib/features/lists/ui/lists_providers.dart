@@ -12,6 +12,7 @@ final listsRepositoryProvider = Provider<ListsRepository>(
     ref.watch(appDatabaseProvider),
     ref.watch(hlcClockProvider),
     ref.watch(idGeneratorProvider),
+    reminders: ref.watch(reminderSchedulerProvider),
   ),
 );
 

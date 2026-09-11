@@ -464,4 +464,109 @@ class LDe extends L {
   @override
   String get startupErrorBody =>
       'Deine Aufgaben liegen auf diesem Gerät. Wenn du ein privates Fenster nutzt oder Websitedaten für diese Seite blockierst, erlaube sie und lade neu.';
+
+  @override
+  String get updatesTitle => 'Aktualisierungen';
+
+  @override
+  String updatesCurrentVersion(String version) {
+    return 'Du hast Version $version';
+  }
+
+  @override
+  String get updatesCheckNow => 'Nach Updates suchen';
+
+  @override
+  String get updatesChecking => 'Suche …';
+
+  @override
+  String get updatesUpToDate => 'nemo ist aktuell';
+
+  @override
+  String updatesAvailable(String version) {
+    return 'Version $version ist verfügbar';
+  }
+
+  @override
+  String get updatesWhatsNew => 'Neu';
+
+  @override
+  String get updatesDownload => 'Herunterladen';
+
+  @override
+  String updatesDownloading(int percent) {
+    return 'Lädt … $percent %';
+  }
+
+  @override
+  String get updatesInstall => 'Installieren';
+
+  @override
+  String get updatesInstallHint =>
+      'Android fragt dich, ob du die Installation erlaubst.';
+
+  @override
+  String get updatesLater => 'Später';
+
+  @override
+  String get updatesErrorNetwork => 'GitHub ist nicht erreichbar.';
+
+  @override
+  String get updatesErrorRateLimited =>
+      'GitHub bremst die Anfragen; versuche es später erneut.';
+
+  @override
+  String get updatesErrorNotFound =>
+      'In dieser Version gibt es keinen Download für dieses Gerät.';
+
+  @override
+  String get updatesErrorMalformed =>
+      'Der Download passt nicht zu seiner Prüfsumme.';
+
+  @override
+  String get tasksRepeat => 'Wiederholung';
+
+  @override
+  String get tasksRepeatNeedsDue =>
+      'Eine wiederkehrende Aufgabe braucht ein Fälligkeitsdatum.';
+
+  @override
+  String get repeatNever => 'Nie';
+
+  @override
+  String get repeatDaily => 'Täglich';
+
+  @override
+  String get repeatWeekly => 'Wöchentlich';
+
+  @override
+  String get repeatMonthly => 'Monatlich';
+
+  @override
+  String get repeatYearly => 'Jährlich';
+
+  @override
+  String get membersMakeOwner => 'Zur Besitzerin machen';
+
+  @override
+  String membersMakeOwnerConfirm(String name) {
+    return 'Diese Liste an $name übergeben? Sie können sie dann umbenennen, löschen und die Freigabe ändern. Du bleibst als Bearbeiter dabei.';
+  }
+
+  @override
+  String get membersErrorNotMember => 'Teile die Liste zuerst mit ihnen.';
+
+  @override
+  String get tasksNoSelection => 'Wähle eine Aufgabe, um sie hier zu sehen.';
+
+  @override
+  String get repeatWeekdays => 'Werktags';
+
+  @override
+  String get repeatFortnightly => 'Alle 2 Wochen';
+
+  @override
+  String repeatLastWeekday(String weekday) {
+    return 'Letzter $weekday im Monat';
+  }
 }

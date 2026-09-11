@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/due_chip.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
-import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// One task in a list: round check, title, and a row of small facts.
@@ -55,7 +54,7 @@ class TaskTile extends ConsumerWidget {
       fontWeight: FontWeight.w500,
     );
     return InkWell(
-      onTap: () => context.push(Routes.task(task.id)),
+      onTap: () => openTask(context, ref, task.id),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

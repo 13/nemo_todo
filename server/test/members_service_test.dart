@@ -141,6 +141,77 @@ void main() {
     );
   });
 
+  group('ownership transfer', () {
+    test('swaps the roles, the row and what each side may do', () async {
+      await members.share(ben, 'l1', 'anna', MemberRole.editor);
+      final synced = await push(anna, []);
+
+      final notify = await members.transferOwnership(ben, 'l1', 'Anna');
+      expect(notify, {ben, anna});
+
+      final seen = await push(anna, [], cursor: synced.cursor);
+      expect(seen.members['l1']!.map((m) => '${m.username}:${m.role.name}'), [
+        'anna:owner',
+        'ben:editor',
+      ]);
+      // The row carries the owner, and the app reads it to decide who may
+      // touch sharing, so it has to travel with the change.
+      final row = seen.changes.whereType<SyncChangeList>().single.row;
+      expect(row.ownerId, anna);
+
+      // And the powers move with it.
+      await members.share(anna, 'l1', 'ben', MemberRole.editor);
+      expect(
+        () => members.unshare(ben, 'l1', 'anna'),
+        throwsA(isA<ApiException>().having((e) => e.code, 'code', 'not_owner')),
+      );
+    });
+
+    test('only the owner may hand it on, and only to a member', () async {
+      expect(
+        () => members.transferOwnership(ben, 'l1', 'anna'),
+        throwsA(
+          isA<ApiException>().having((e) => e.code, 'code', 'not_member'),
+        ),
+      );
+      await members.share(ben, 'l1', 'anna', MemberRole.editor);
+      expect(
+        () => members.transferOwnership(anna, 'l1', 'ben'),
+        throwsA(isA<ApiException>().having((e) => e.code, 'code', 'not_owner')),
+      );
+      expect(
+        () => members.transferOwnership(ben, 'l1', 'ben'),
+        throwsA(
+          isA<ApiException>().having((e) => e.code, 'code', 'already_owner'),
+        ),
+      );
+      expect(
+        () => members.transferOwnership(ben, 'l1', 'nobody'),
+        throwsA(
+          isA<ApiException>().having((e) => e.code, 'code', 'unknown_user'),
+        ),
+      );
+    });
+
+    test('a handed-over list stays where its tasks are', () async {
+      await members.share(ben, 'l1', 'anna', MemberRole.editor);
+      await members.transferOwnership(ben, 'l1', 'anna');
+      // Both sides still get the whole list. The order differs from a
+      // plain share: the transfer re-logs the list, so it arrives after the
+      // rows that were logged before it.
+      final ownerView = await push(anna, []);
+      expect(
+        ownerView.changes.map((c) => c.rowId),
+        containsAll(['l1', 't1', 's1']),
+      );
+      final formerView = await push(ben, []);
+      expect(
+        formerView.changes.map((c) => c.rowId),
+        containsAll(['l1', 't1', 's1']),
+      );
+    });
+  });
+
   test('re-sharing after unshare delivers rows again in order', () async {
     await members.share(ben, 'l1', 'anna', MemberRole.editor);
     final synced = await push(anna, []);

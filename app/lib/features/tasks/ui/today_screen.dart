@@ -8,6 +8,7 @@ import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
+import 'package:nemo/features/updates/ui/update_banner.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo/utils/format.dart';
@@ -38,39 +39,50 @@ class TodayScreen extends ConsumerWidget {
         ),
         actions: const [SettingsAction()],
       ),
-      body: AsyncBody(
-        value: tasks,
-        data: (items) {
-          if (items.isEmpty) {
-            return EmptyState(
-              icon: Icons.wb_sunny_outlined,
-              message: l.todayEmpty,
-            );
-          }
-          final overdue = items
-              .where(
-                (t) =>
-                    !t.done &&
-                    isOverdue(dueAt: t.dueAt, hasTime: t.dueHasTime, now: now),
-              )
-              .toList();
-          final today = items
-              .where((t) => !t.done && !overdue.contains(t))
-              .toList();
-          final done = items.where((t) => t.done).toList();
-          return TaskListView(
-            showList: true,
-            sections: [
-              TaskSection(
-                title: l.todayOverdue,
-                tasks: overdue,
-                color: context.nemoColors.overdue,
-              ),
-              TaskSection(title: l.navToday, tasks: today),
-            ],
-            completed: done,
-          );
-        },
+      body: Column(
+        children: [
+          const UpdateBanner(),
+          Expanded(
+            child: AsyncBody(
+              value: tasks,
+              data: (items) {
+                if (items.isEmpty) {
+                  return EmptyState(
+                    icon: Icons.wb_sunny_outlined,
+                    message: l.todayEmpty,
+                  );
+                }
+                final overdue = items
+                    .where(
+                      (t) =>
+                          !t.done &&
+                          isOverdue(
+                            dueAt: t.dueAt,
+                            hasTime: t.dueHasTime,
+                            now: now,
+                          ),
+                    )
+                    .toList();
+                final today = items
+                    .where((t) => !t.done && !overdue.contains(t))
+                    .toList();
+                final done = items.where((t) => t.done).toList();
+                return TaskListView(
+                  showList: true,
+                  sections: [
+                    TaskSection(
+                      title: l.todayOverdue,
+                      tasks: overdue,
+                      color: context.nemoColors.overdue,
+                    ),
+                    TaskSection(title: l.navToday, tasks: today),
+                  ],
+                  completed: done,
+                );
+              },
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: QuickAddBar(
         listId: null,

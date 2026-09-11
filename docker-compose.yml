@@ -1,7 +1,10 @@
 services:
   nemo:
-    build: .
-    image: nemo:latest
+    # Published by the release workflow, one image per tagged version.
+    # Pin the version if you would rather decide when to move:
+    # ghcr.io/13/nemo:0.2.0. To build it yourself instead, run
+    # `docker build -t ghcr.io/13/nemo:latest .` before starting this.
+    image: ghcr.io/13/nemo:latest
     ports:
       - "8080:8080"
     volumes:
@@ -11,6 +14,9 @@ services:
       NEMO_ALLOW_SIGNUP: ${NEMO_ALLOW_SIGNUP:-}
       # Dev only: origins allowed to call the API from another host.
       NEMO_CORS_ORIGINS: ${NEMO_CORS_ORIGINS:-}
+      # Number of your own proxies in front of the server. At 0 the
+      # x-forwarded-for header is ignored, because a client can send it.
+      NEMO_TRUSTED_PROXY_HOPS: ${NEMO_TRUSTED_PROXY_HOPS:-0}
     restart: unless-stopped
 
 volumes:

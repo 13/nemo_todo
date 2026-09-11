@@ -15,17 +15,29 @@ import 'package:nemo_core/nemo_core.dart';
 
 import 'test_db.dart';
 
+/// Containers [pumpApp] built for the test running right now, so [appTest]
+/// can close them while the framework is still watching.
+final _open = <ProviderContainer>[];
+
 /// A widget test that tears its tree down inside the test body.
 ///
 /// Closing a drift stream schedules a zero-duration timer, and the tree
 /// that flutter_test disposes on its own is torn down too late for that
 /// timer to run before the framework checks that none are pending. Pumping
 /// an empty tree here, then two more frames, keeps that check honest.
+///
+/// The container goes the same way, and for the same reason: a keepAlive
+/// provider outlives the tree, and the sync engine holds a timer for the
+/// next attempt after a failure. `addTearDown` would cancel it a moment
+/// after the framework has already counted it as leaked.
 @isTest
 void appTest(String description, Future<void> Function(WidgetTester) body) {
   testWidgets(description, (tester) async {
     await body(tester);
     await tester.pumpWidget(const SizedBox.shrink());
+    for (final container in _open.toList()) {
+      if (_open.remove(container)) container.dispose();
+    }
     await tester.pump(const Duration(milliseconds: 10));
     await tester.pump(const Duration(milliseconds: 10));
   });
@@ -78,7 +90,10 @@ Future<TestApp> pumpApp(
       ...overrides.cast(),
     ],
   );
-  addTearDown(container.dispose);
+  _open.add(container);
+  addTearDown(() {
+    if (_open.remove(container)) container.dispose();
+  });
 
   final router = AppRouter.router(initialLocation: initialLocation);
   addTearDown(router.dispose);

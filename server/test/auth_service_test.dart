@@ -114,4 +114,68 @@ void main() {
       throwsA(isA<ApiException>().having((e) => e.status, 'status', 404)),
     );
   });
+
+  test('a login for an unknown user still verifies a password', () async {
+    var verifications = 0;
+    final auth = AuthService(
+      db,
+      allowSignup: true,
+      now: () => now,
+      bcryptRounds: 4,
+      verifier: (password, hash) async {
+        verifications++;
+        return false;
+      },
+    );
+    await expectLater(
+      () => auth.login('nobody', 'password123'),
+      throwsA(isA<ApiException>().having((e) => e.status, 'status', 401)),
+    );
+    expect(
+      verifications,
+      1,
+      reason: 'answering early would say which usernames exist',
+    );
+  });
+
+  test('expired sessions are swept, live ones are left alone', () async {
+    final auth = service(allowSignup: true);
+    final ben = await auth.signup('ben', 'password123');
+    final anna = await auth.signup('anna', 'password123');
+
+    // Ben's session is renewed inside its lifetime; Anna's is abandoned.
+    now = now.add(const Duration(days: 20));
+    expect(await auth.authenticate(ben.token), isNotNull);
+    now = now.add(const Duration(days: 20));
+
+    expect(await auth.deleteExpiredSessions(), 1);
+    expect(await auth.authenticate(ben.token), isNotNull);
+    expect(
+      await auth.authenticate(anna.token),
+      isNull,
+      reason: 'the sweep took the session nobody came back for',
+    );
+    expect(await auth.deleteExpiredSessions(), 0);
+  });
+
+  test('hashing a password does not block the event loop', () async {
+    // The default cost is the production setting and takes long enough that
+    // a timer beside it cannot fire while the thread is busy hashing.
+    final auth = AuthService(db, allowSignup: true);
+    await auth.signup('ben', 'password123');
+
+    final order = <String>[];
+    await Future.wait([
+      auth.login('ben', 'password123').then((_) => order.add('login')),
+      Future<void>.delayed(
+        const Duration(milliseconds: 50),
+        () => order.add('timer'),
+      ),
+    ]);
+    expect(
+      order.first,
+      'timer',
+      reason: 'bcrypt must run off the thread that serves requests',
+    );
+  }, timeout: const Timeout(Duration(seconds: 30)));
 }

@@ -9,6 +9,7 @@ import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -18,9 +19,17 @@ import 'package:nemo_core/nemo_core.dart';
 
 /// Everything about one task. Edits save as you go.
 class TaskDetailScreen extends ConsumerStatefulWidget {
-  const TaskDetailScreen({required this.taskId, super.key});
+  const TaskDetailScreen({
+    required this.taskId,
+    this.embedded = false,
+    super.key,
+  });
 
   final String taskId;
+
+  /// True in the pane beside a list on a wide window. There is no page to
+  /// go back to there, so nothing offers to.
+  final bool embedded;
 
   @override
   ConsumerState<TaskDetailScreen> createState() => _TaskDetailScreenState();
@@ -151,7 +160,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
         ),
       ),
     );
-    if (context.canPop()) {
+    if (widget.embedded) {
+      ref.read(selectedTaskProvider.notifier).select(null);
+    } else if (context.canPop()) {
       context.pop();
     } else {
       context.go(Routes.today);
@@ -164,7 +175,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     final task = ref.watch(taskByIdProvider(widget.taskId)).value;
     if (task == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(automaticallyImplyLeading: !widget.embedded),
         body: Center(child: Text(l.tasksNotFound)),
       );
     }
@@ -181,6 +192,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !widget.embedded,
         actions: [
           IconButton(
             key: const Key('task-delete'),
@@ -311,6 +323,52 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     },
             ),
             const SizedBox(height: 8),
+            _Label(l.tasksRepeat),
+            // Same chips as the priority row below, for the same reason:
+            // the labels do not fit across a phone in one segmented row.
+            Wrap(
+              key: const Key('task-repeat'),
+              spacing: 8,
+              children: [
+                for (final (rule, label) in _repeatChoices(l, locale, dueAt))
+                  ChoiceChip(
+                    key: Key(_repeatKey(rule)),
+                    selected: task.repeatRule == rule,
+                    showCheckmark: false,
+                    avatar: rule == null
+                        ? null
+                        : const Icon(Icons.repeat_rounded, size: 18),
+                    label: Text(label),
+                    // A rule with no date to count from would never come
+                    // back, so the row waits for one.
+                    onSelected: dueAt == null
+                        ? null
+                        : (_) => _save(task.copyWith(repeat: rule?.encode())),
+                  ),
+                // A rule this version cannot read -- written by a newer app,
+                // or by hand -- is shown as it stands rather than as no
+                // rule at all, which would say the task does not repeat.
+                if (task.repeat != null && task.repeatRule == null)
+                  ChoiceChip(
+                    key: const Key('repeat-unreadable'),
+                    selected: true,
+                    showCheckmark: false,
+                    avatar: const Icon(Icons.repeat_rounded, size: 18),
+                    label: Text(task.repeat!),
+                  ),
+              ],
+            ),
+            if (dueAt == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  l.tasksRepeatNeedsDue,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 20),
             _Label(l.tasksPriority),
             // Chips rather than a segmented button: four labels with flags
             // do not fit across a phone, and a wrapped label reads badly.
@@ -511,3 +569,30 @@ class _Label extends StatelessWidget {
     ),
   );
 }
+
+/// The rules the picker offers, in the order they read.
+///
+/// "The last Friday of the month" only makes sense once there is a date to
+/// take the weekday from, so it follows the due date rather than being
+/// offered as a fixed choice.
+List<(Repeat?, String)> _repeatChoices(L l, String locale, int? dueAt) {
+  final due = dueAt == null ? null : DateTime.fromMillisecondsSinceEpoch(dueAt);
+  return [
+    (null, l.repeatNever),
+    (Repeats.daily, l.repeatDaily),
+    (Repeats.weekdays, l.repeatWeekdays),
+    (Repeats.weekly, l.repeatWeekly),
+    (Repeats.fortnightly, l.repeatFortnightly),
+    (Repeats.monthly, l.repeatMonthly),
+    if (due != null)
+      (
+        NthWeekdayRepeat(ordinal: NthWeekdayRepeat.last, weekday: due.weekday),
+        l.repeatLastWeekday(weekdayName(locale, due)),
+      ),
+    (Repeats.yearly, l.repeatYearly),
+  ];
+}
+
+/// A widget key that survives the rule's text: `every:2w` is not a key.
+String _repeatKey(Repeat? rule) =>
+    'repeat-${rule?.encode().replaceAll(RegExp('[^a-z0-9]+'), '-') ?? 'never'}';

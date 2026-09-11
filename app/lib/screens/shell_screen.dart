@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/nemo_mark.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
+import 'package:nemo/features/tasks/ui/task_detail_screen.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 
 /// Adaptive chrome around the main destinations: a bottom navigation bar on
-/// phones, a navigation rail from 840 dp. Content is centred and capped so
-/// the web app reads like the phone app.
-class ShellScreen extends StatelessWidget {
+/// phones, a navigation rail from 840 dp, and from 1200 dp a second pane
+/// holding whichever task is open. Content is centred and capped so the web
+/// app reads like the phone app.
+class ShellScreen extends ConsumerWidget {
   const ShellScreen({required this.child, super.key});
 
   final Widget child;
 
   static const railBreakpoint = 840.0;
+
+  /// Where a window stops being one column of content. Below this a task
+  /// opens as a page; above it, beside the list it came from.
+  static const splitBreakpoint = 1200.0;
+
+  /// How much of a wide window the open task takes.
+  static const detailPaneWidth = 460.0;
 
   static List<
     ({IconData icon, IconData selectedIcon, String label, String path})
@@ -57,11 +69,19 @@ class ShellScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = destinations(context);
     final index = indexFor(GoRouterState.of(context).matchedLocation);
-    final wide = MediaQuery.sizeOf(context).width >= railBreakpoint;
-    void go(int i) => context.go(items[i].path);
+    final width = MediaQuery.sizeOf(context).width;
+    final wide = width >= railBreakpoint;
+    final split = width >= splitBreakpoint;
+    void go(int i) {
+      // The open task belongs to the list it was opened from, so changing
+      // destination closes it rather than leaving it beside a list it has
+      // nothing to do with.
+      ref.read(selectedTaskProvider.notifier).select(null);
+      context.go(items[i].path);
+    }
 
     if (wide) {
       return Scaffold(
@@ -99,6 +119,13 @@ class ShellScreen extends StatelessWidget {
             ),
             const VerticalDivider(width: 1),
             Expanded(child: MaxWidth(child: child)),
+            if (split) ...[
+              const VerticalDivider(width: 1),
+              SizedBox(
+                width: detailPaneWidth,
+                child: _DetailPane(taskId: ref.watch(selectedTaskProvider)),
+              ),
+            ],
           ],
         ),
       );
@@ -119,5 +146,28 @@ class ShellScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// The right-hand pane: the open task, or an invitation to open one.
+class _DetailPane extends StatelessWidget {
+  const _DetailPane({required this.taskId});
+
+  final String? taskId;
+
+  @override
+  Widget build(BuildContext context) {
+    final id = taskId;
+    if (id == null) {
+      return Scaffold(
+        body: EmptyState(
+          icon: Icons.splitscreen_outlined,
+          message: L.of(context).tasksNoSelection,
+        ),
+      );
+    }
+    // Keyed by the task, so opening another one rebuilds the editor rather
+    // than carrying the previous task's half-typed title into it.
+    return TaskDetailScreen(key: ValueKey(id), taskId: id, embedded: true);
   }
 }

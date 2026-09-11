@@ -89,6 +89,44 @@ class MembersService {
     });
   }
 
+  /// Hands the list to [username], who must already be a member, and makes
+  /// the outgoing owner an editor. Returns the user ids to notify.
+  ///
+  /// Ownership is not a label: it is who may rename and delete the list, who
+  /// may change its members, and whose account the list follows. A list
+  /// whose owner has left is a list nobody can administer, and the only way
+  /// out today is to rebuild it by hand.
+  Future<Set<String>> transferOwnership(
+    String ownerId,
+    String listId,
+    String username,
+  ) {
+    return _db.transaction(() async {
+      await _requireOwner(ownerId, listId);
+      final target = await _userByName(username);
+      if (target.id == ownerId) {
+        throw const ApiException(400, 'already_owner');
+      }
+      final membership = await _membership(listId, target.id);
+      if (membership == null) throw const ApiException(404, 'not_member');
+
+      await _setRole(listId, target.id, MemberRole.owner);
+      await _setRole(listId, ownerId, MemberRole.editor);
+      // The row itself carries the owner, and clients read it to decide who
+      // may edit sharing, so the list has to travel again for both of them.
+      await (_db.update(_db.lists)..where((t) => t.id.equals(listId))).write(
+        ListsCompanion(ownerId: Value(target.id)),
+      );
+      await _db.logUpsert(SyncEntity.list, listId, listId);
+      return await _db.memberUserIds(listId);
+    });
+  }
+
+  Future<void> _setRole(String listId, String userId, MemberRole role) =>
+      (_db.update(_db.listMembers)
+            ..where((t) => t.listId.equals(listId) & t.userId.equals(userId)))
+          .write(ListMembersCompanion(role: Value(role.name)));
+
   Future<void> _requireOwner(String userId, String listId) async {
     final role = (await _db.rolesOf(userId))[listId];
     if (role == null) throw const ApiException(404, 'unknown_list');

@@ -460,4 +460,109 @@ class LEn extends L {
   @override
   String get startupErrorBody =>
       'Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.';
+
+  @override
+  String get updatesTitle => 'Updates';
+
+  @override
+  String updatesCurrentVersion(String version) {
+    return 'You have version $version';
+  }
+
+  @override
+  String get updatesCheckNow => 'Check for updates';
+
+  @override
+  String get updatesChecking => 'Checking…';
+
+  @override
+  String get updatesUpToDate => 'nemo is up to date';
+
+  @override
+  String updatesAvailable(String version) {
+    return 'Version $version is available';
+  }
+
+  @override
+  String get updatesWhatsNew => 'What\'s new';
+
+  @override
+  String get updatesDownload => 'Download';
+
+  @override
+  String updatesDownloading(int percent) {
+    return 'Downloading… $percent%';
+  }
+
+  @override
+  String get updatesInstall => 'Install';
+
+  @override
+  String get updatesInstallHint =>
+      'Android will ask you to confirm the install.';
+
+  @override
+  String get updatesLater => 'Later';
+
+  @override
+  String get updatesErrorNetwork => 'Could not reach GitHub.';
+
+  @override
+  String get updatesErrorRateLimited =>
+      'GitHub is rate limiting; try again later.';
+
+  @override
+  String get updatesErrorNotFound =>
+      'No download for this device in that release.';
+
+  @override
+  String get updatesErrorMalformed =>
+      'That download did not match its checksum.';
+
+  @override
+  String get tasksRepeat => 'Repeats';
+
+  @override
+  String get tasksRepeatNeedsDue =>
+      'A repeating task needs a due date to count from.';
+
+  @override
+  String get repeatNever => 'Never';
+
+  @override
+  String get repeatDaily => 'Daily';
+
+  @override
+  String get repeatWeekly => 'Weekly';
+
+  @override
+  String get repeatMonthly => 'Monthly';
+
+  @override
+  String get repeatYearly => 'Yearly';
+
+  @override
+  String get membersMakeOwner => 'Make owner';
+
+  @override
+  String membersMakeOwnerConfirm(String name) {
+    return 'Hand this list to $name? They can then rename it, delete it and change who it is shared with. You stay on as an editor.';
+  }
+
+  @override
+  String get membersErrorNotMember => 'Share the list with them first.';
+
+  @override
+  String get tasksNoSelection => 'Pick a task to see it here.';
+
+  @override
+  String get repeatWeekdays => 'Weekdays';
+
+  @override
+  String get repeatFortnightly => 'Every 2 weeks';
+
+  @override
+  String repeatLastWeekday(String weekday) {
+    return 'Last $weekday of the month';
+  }
 }

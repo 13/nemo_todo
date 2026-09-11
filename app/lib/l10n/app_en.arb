@@ -225,5 +225,75 @@
   "remindersChannelDescription": "Notifications when a task is due",
   "remindersDueNow": "Due now",
   "startupErrorTitle": "nemo cannot open its database",
-  "startupErrorBody": "Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload."
+  "startupErrorBody": "Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.",
+
+  "updatesTitle": "Updates",
+  "updatesCurrentVersion": "You have version {version}",
+  "@updatesCurrentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesCheckNow": "Check for updates",
+  "updatesChecking": "Checking…",
+  "updatesUpToDate": "nemo is up to date",
+  "updatesAvailable": "Version {version} is available",
+  "@updatesAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesWhatsNew": "What's new",
+  "updatesDownload": "Download",
+  "updatesDownloading": "Downloading… {percent}%",
+  "@updatesDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesInstall": "Install",
+  "updatesInstallHint": "Android will ask you to confirm the install.",
+  "updatesLater": "Later",
+  "updatesErrorNetwork": "Could not reach GitHub.",
+  "updatesErrorRateLimited": "GitHub is rate limiting; try again later.",
+  "updatesErrorNotFound": "No download for this device in that release.",
+  "updatesErrorMalformed": "That download did not match its checksum.",
+
+  "tasksRepeat": "Repeats",
+  "tasksRepeatNeedsDue": "A repeating task needs a due date to count from.",
+  "repeatNever": "Never",
+  "repeatDaily": "Daily",
+  "repeatWeekly": "Weekly",
+  "repeatMonthly": "Monthly",
+  "repeatYearly": "Yearly",
+
+  "membersMakeOwner": "Make owner",
+  "membersMakeOwnerConfirm": "Hand this list to {name}? They can then rename it, delete it and change who it is shared with. You stay on as an editor.",
+  "@membersMakeOwnerConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersErrorNotMember": "Share the list with them first.",
+
+  "tasksNoSelection": "Pick a task to see it here.",
+
+  "repeatWeekdays": "Weekdays",
+  "repeatFortnightly": "Every 2 weeks",
+  "repeatLastWeekday": "Last {weekday} of the month",
+  "@repeatLastWeekday": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      }
+    }
+  }
 }

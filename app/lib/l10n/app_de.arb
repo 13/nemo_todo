@@ -124,5 +124,40 @@
   "remindersChannelDescription": "Benachrichtigungen, wenn eine Aufgabe fällig ist",
   "remindersDueNow": "Jetzt fällig",
   "startupErrorTitle": "nemo kann seine Datenbank nicht öffnen",
-  "startupErrorBody": "Deine Aufgaben liegen auf diesem Gerät. Wenn du ein privates Fenster nutzt oder Websitedaten für diese Seite blockierst, erlaube sie und lade neu."
+  "startupErrorBody": "Deine Aufgaben liegen auf diesem Gerät. Wenn du ein privates Fenster nutzt oder Websitedaten für diese Seite blockierst, erlaube sie und lade neu.",
+
+  "updatesTitle": "Aktualisierungen",
+  "updatesCurrentVersion": "Du hast Version {version}",
+  "updatesCheckNow": "Nach Updates suchen",
+  "updatesChecking": "Suche …",
+  "updatesUpToDate": "nemo ist aktuell",
+  "updatesAvailable": "Version {version} ist verfügbar",
+  "updatesWhatsNew": "Neu",
+  "updatesDownload": "Herunterladen",
+  "updatesDownloading": "Lädt … {percent} %",
+  "updatesInstall": "Installieren",
+  "updatesInstallHint": "Android fragt dich, ob du die Installation erlaubst.",
+  "updatesLater": "Später",
+  "updatesErrorNetwork": "GitHub ist nicht erreichbar.",
+  "updatesErrorRateLimited": "GitHub bremst die Anfragen; versuche es später erneut.",
+  "updatesErrorNotFound": "In dieser Version gibt es keinen Download für dieses Gerät.",
+  "updatesErrorMalformed": "Der Download passt nicht zu seiner Prüfsumme.",
+
+  "tasksRepeat": "Wiederholung",
+  "tasksRepeatNeedsDue": "Eine wiederkehrende Aufgabe braucht ein Fälligkeitsdatum.",
+  "repeatNever": "Nie",
+  "repeatDaily": "Täglich",
+  "repeatWeekly": "Wöchentlich",
+  "repeatMonthly": "Monatlich",
+  "repeatYearly": "Jährlich",
+
+  "membersMakeOwner": "Zur Besitzerin machen",
+  "membersMakeOwnerConfirm": "Diese Liste an {name} übergeben? Sie können sie dann umbenennen, löschen und die Freigabe ändern. Du bleibst als Bearbeiter dabei.",
+  "membersErrorNotMember": "Teile die Liste zuerst mit ihnen.",
+
+  "tasksNoSelection": "Wähle eine Aufgabe, um sie hier zu sehen.",
+
+  "repeatWeekdays": "Werktags",
+  "repeatFortnightly": "Alle 2 Wochen",
+  "repeatLastWeekday": "Letzter {weekday} im Monat"
 }

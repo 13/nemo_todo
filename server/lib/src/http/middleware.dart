@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:logging/logging.dart';
 import 'package:nemo_server/src/api_exception.dart';
@@ -17,11 +18,35 @@ Response jsonResponse(Object body, {int status = 200}) =>
 Response errorResponse(int status, String code) =>
     jsonResponse({'error': code}, status: status);
 
+/// Largest request body accepted. A sync push is a few hundred small rows,
+/// so a megabyte is generous; the point is that the body is read into
+/// memory, and an unbounded read is a way to spend the server's memory.
+const int maxBodyBytes = 1024 * 1024;
+
 /// Reads a JSON object body; anything else is a 400.
-Future<Map<String, dynamic>> readJson(Request request) async {
+///
+/// The declared length is checked first, but a chunked body declares none,
+/// so the running total is checked as the bytes arrive. Giving up part way
+/// leaves the rest of the body unread and the connection is closed instead
+/// of reused, which is the right trade for a body we are refusing anyway.
+Future<Map<String, dynamic>> readJson(
+  Request request, {
+  int maxBytes = maxBodyBytes,
+}) async {
+  final declared = request.contentLength;
+  if (declared != null && declared > maxBytes) {
+    throw const ApiException(413, 'payload_too_large');
+  }
+  final builder = BytesBuilder(copy: false);
+  await for (final chunk in request.read()) {
+    builder.add(chunk);
+    if (builder.length > maxBytes) {
+      throw const ApiException(413, 'payload_too_large');
+    }
+  }
   final Object? decoded;
   try {
-    decoded = jsonDecode(await request.readAsString());
+    decoded = jsonDecode(utf8.decode(builder.takeBytes()));
   } on FormatException {
     throw const ApiException(400, 'bad_json');
   }
@@ -29,6 +54,20 @@ Future<Map<String, dynamic>> readJson(Request request) async {
     throw const ApiException(400, 'bad_json');
   }
   return decoded;
+}
+
+/// Reads a string field, refusing anything else.
+///
+/// A bare cast would throw a TypeError and surface as a 500, which reads as
+/// a server fault for what is a malformed request. Coercing instead of
+/// throwing would be worse: a numeric username would arrive as the empty
+/// string and be reported as invalid on signup but as bad credentials on
+/// login, which is two different lies about the same mistake.
+String? stringField(Map<String, dynamic> body, String key) {
+  final value = body[key];
+  if (value == null) return null;
+  if (value is! String) throw const ApiException(400, 'bad_request');
+  return value;
 }
 
 /// Turns [ApiException]s into JSON errors and anything else into a 500.
@@ -103,19 +142,39 @@ Middleware cors(List<String> origins) =>
       return response.change(headers: headers);
     };
 
-String clientIp(Request request) {
-  final forwarded = request.headers['x-forwarded-for'];
-  if (forwarded != null && forwarded.isNotEmpty) {
-    return forwarded.split(',').first.trim();
+/// The address to hold responsible for a request.
+///
+/// `x-forwarded-for` is only read when [trustedProxyHops] says a proxy of
+/// ours rewrites it. Each proxy appends the address it received the request
+/// from, so with one proxy in front the last entry is the one it saw and
+/// everything to its left is whatever the client sent. Counting from the
+/// right is therefore the only reading a client cannot shift by prepending
+/// addresses of its own.
+String clientIp(Request request, {int trustedProxyHops = 0}) {
+  if (trustedProxyHops > 0) {
+    final forwarded = request.headers['x-forwarded-for'];
+    if (forwarded != null && forwarded.isNotEmpty) {
+      final hops = forwarded
+          .split(',')
+          .map((h) => h.trim())
+          .where((h) => h.isNotEmpty)
+          .toList();
+      if (hops.isNotEmpty) {
+        final index = hops.length - trustedProxyHops;
+        return hops[index < 0 ? 0 : index];
+      }
+    }
   }
   final info = request.context['shelf.io.connection_info'];
   if (info is HttpConnectionInfo) return info.remoteAddress.address;
   return 'unknown';
 }
 
-Middleware rateLimit(RateLimiter limiter) =>
+Middleware rateLimit(RateLimiter limiter, {int trustedProxyHops = 0}) =>
     (inner) => (request) async {
-      if (!limiter.allow(clientIp(request))) {
+      if (!limiter.allow(
+        clientIp(request, trustedProxyHops: trustedProxyHops),
+      )) {
         return errorResponse(429, 'too_many_requests');
       }
       return await inner(request);

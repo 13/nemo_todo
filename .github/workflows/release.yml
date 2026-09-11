@@ -158,3 +158,52 @@ jobs:
             --notes-file notes.md \
             $prerelease \
             dist/*.apk
+
+  # The server image for the same commit the APKs come from, so a release is
+  # one thing rather than an app release and a server release that happen to
+  # share a number. Runs beside the APKs rather than after them: neither
+  # needs the other, and both need the checks.
+  image:
+    name: Publish the server image
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/13/nemo
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          # Only tags reach this workflow, so latest is unconditional except
+          # for a pre-release: v0.3.0-beta.1 is published as one, and whoever
+          # pulls :latest did not ask to run a beta.
+          flavor: latest=${{ !contains(github.ref_name, '-') }}
+
+      # linux/amd64 alone: the runtime stage copies the bundle out of
+      # build/cli/linux_x64, and an emulated arm64 build would compile Dart
+      # and the web app under qemu for an hour to produce it.
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # The same cache CI fills on every push to main, so a release
+          # mostly re-tags layers instead of building them again.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

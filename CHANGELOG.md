@@ -9,6 +9,14 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
+## Unreleased
+
+### Added
+
+- Every release publishes the server image to `ghcr.io/13/nemo`, tagged with
+  the version, its minor series and `latest`, so running the server is a pull
+  rather than a clone and a build.
+
 ## 0.2.0 - 2026-09-11
 
 ### Added

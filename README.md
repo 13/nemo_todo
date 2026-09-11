@@ -131,8 +131,14 @@ Connect screen in Settings.
 
 ```bash
 cp .env.example .env
-docker compose up --build -d
+docker compose up -d
 ```
+
+That pulls `ghcr.io/13/nemo:latest`, published by the release workflow for
+every tagged version. `:0.2` follows the patches of a minor version and
+`:0.2.0` never moves; pin whichever one matches how much surprise you want.
+Updating is `docker compose pull && docker compose up -d`. To build the image
+here instead of pulling it, `docker build -t ghcr.io/13/nemo:latest .` first.
 
 The container serves the API and the web app on port 8080 and keeps its
 SQLite database in the `nemo_data` volume, which survives a restart. It
@@ -286,8 +292,12 @@ notes. It needs `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
 `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` as repository secrets: unlike
 CI, it will not fall back to the debug key.
 
+Beside it, a second job pushes the server image to `ghcr.io/13/nemo`, tagged
+with the version, its minor series and `latest`. It needs no secrets: the
+workflow's own token can write to the registry.
+
 A version with a hyphen in it (`v0.3.0-beta.1`) is published as a
-pre-release.
+pre-release, and does not take the `latest` image tag.
 
 ## License
 

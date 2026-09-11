@@ -159,7 +159,19 @@ coloured tile would arrive as a filled square.
 
 Code generation (drift, freezed, riverpod) runs per package with
 `dart run build_runner build`; generated files are committed and CI fails if
-they are stale.
+they are stale. Nothing in an ordinary edit regenerates them -- change a
+provider and its `.g.dart` goes on claiming a hash of source that no longer
+exists -- so there is a hook that checks before the commit exists rather
+than four minutes into CI:
+
+```bash
+tool/install_hooks.sh    # git config core.hooksPath .githooks
+```
+
+It rebuilds only the packages whose sources are staged, so a commit that
+touches the README or the icons costs nothing, and it regenerates what was
+stale before refusing, so the fix is to stage it and commit again.
+`git commit --no-verify` skips it.
 
 The server is compiled with `dart build cli`, not `dart compile exe`: the
 sqlite3 package ships a build hook, and only `dart build` runs hooks and

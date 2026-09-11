@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Regenerates what the generators own and refuses the commit if the result
+# differs from what is about to be committed.
+#
+# Generated sources are committed here, and nothing in an ordinary edit
+# regenerates them: change a provider and `sync_engine.g.dart` goes on
+# claiming a hash of the source that no longer exists. CI catches that, but
+# four minutes and a wasted release run later. This catches it before the
+# commit exists.
+#
+# Only the packages whose sources are actually staged are rebuilt, so a
+# commit that touches the README or the icons costs nothing at all.
+#
+# Skip a run with `git commit --no-verify`.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -n "$staged" ] || exit 0
+
+# A generated file is never the reason to regenerate: editing one by hand
+# is exactly what this is here to undo.
+sources=$(grep -vE '\.(g|freezed)\.dart$|app/lib/l10n/app_localizations' \
+  <<< "$staged" || true)
+
+matches() { grep -qE "$1" <<< "$sources"; }
+
+core=false; server=false; app=false; l10n=false
+matches '^packages/nemo_core/(lib|pubspec\.yaml)' && core=true
+matches '^server/(lib|pubspec\.yaml)'             && server=true
+matches '^app/(lib|pubspec\.yaml)'                && app=true
+matches '^app/lib/l10n/.*\.arb$'                  && l10n=true
+
+if ! $core && ! $server && ! $app && ! $l10n; then
+  exit 0
+fi
+
+if ! command -v flutter > /dev/null || ! command -v dart > /dev/null; then
+  echo "pre-commit: no flutter/dart on PATH, leaving generated code to CI" >&2
+  exit 0
+fi
+
+echo "pre-commit: checking generated code is current..."
+$l10n   && (cd app && flutter gen-l10n > /dev/null)
+$core   && (cd packages/nemo_core && dart run build_runner build > /dev/null)
+if $server; then
+  (cd server && dart run build_runner build > /dev/null)
+  (cd server && dart run drift_dev schema dump \
+    lib/src/db/server_database.dart drift_schemas/ > /dev/null)
+  (cd server && dart run drift_dev schema generate \
+    drift_schemas/ test/generated/ > /dev/null)
+fi
+if $app; then
+  (cd app && dart run build_runner build > /dev/null)
+  (cd app && dart run drift_dev schema dump \
+    lib/core/db/app_database.dart drift_schemas/ > /dev/null)
+fi
+
+# Only what a generator writes counts. Anything else dirty in the tree is
+# the author's own business and none of this hook's.
+generated='\.(g|freezed)\.dart$|app/lib/l10n/app_localizations|drift_schemas/.*\.json$|server/test/generated/'
+stale=$(git diff --name-only | grep -E "$generated" || true)
+
+if [ -n "$stale" ]; then
+  echo "" >&2
+  echo "pre-commit: generated files are out of date:" >&2
+  sed 's/^/  /' <<< "$stale" >&2
+  echo "" >&2
+  echo "They have just been regenerated for you. Stage them and commit" >&2
+  echo "again, or run 'git commit --no-verify' to skip this check." >&2
+  exit 1
+fi
+
+echo "pre-commit: generated code is current."

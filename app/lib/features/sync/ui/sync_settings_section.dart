@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
@@ -15,11 +16,16 @@ class SyncSettingsSection extends ConsumerWidget {
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
     final l = L.of(context);
+    // Where an account is required, signing out empties the device as
+    // well, so the confirmation says so rather than promising otherwise.
+    final wipes = ref.read(authRequiredProvider);
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l.settingsSignOut),
-        content: Text(l.settingsSignOutConfirm),
+        content: Text(
+          wipes ? l.settingsSignOutConfirmWeb : l.settingsSignOutConfirm,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

@@ -7,6 +7,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -95,7 +96,27 @@ Future<TestApp> pumpApp(
     if (_open.remove(container)) container.dispose();
   });
 
-  final router = AppRouter.router(initialLocation: initialLocation);
+  // Wired the way `NemoApp` wires it: the guard drives the router only
+  // where an account is required, which a test asks for by overriding
+  // `authRequiredProvider` the way the web build sets it.
+  final guarded = container.read(authRequiredProvider);
+  final session = ValueNotifier<int>(0);
+  addTearDown(session.dispose);
+  if (guarded) {
+    container.listen(authControllerProvider, (_, _) => session.value++);
+  }
+  final router = AppRouter.router(
+    initialLocation: initialLocation,
+    refreshListenable: guarded ? session : null,
+    redirect: guarded
+        ? (context, state) => AuthGuard.redirect(
+            required: true,
+            restored: container.read(authControllerProvider).restored,
+            connected: container.read(authControllerProvider).connected,
+            location: state.uri,
+          )
+        : null,
+  );
   addTearDown(router.dispose);
   await tester.pumpWidget(
     UncontrolledProviderScope(

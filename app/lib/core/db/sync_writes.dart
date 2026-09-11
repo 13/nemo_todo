@@ -228,6 +228,22 @@ extension SyncWrites on AppDatabase {
 
   Future<void> clearListMeta() => delete(listMeta).go();
 
+  /// Empties every table holding someone's tasks, leaving the key-value
+  /// store -- the node id and the theme are this device's, not an
+  /// account's.
+  ///
+  /// Only where an account is required to see anything at all: signing out
+  /// there means the next person to sign in starts from the server, not
+  /// from whatever the last one left in the browser, and certainly not by
+  /// uploading it to their own account.
+  Future<void> clearLocalData() => transaction(() async {
+    await delete(outbox).go();
+    await delete(listMeta).go();
+    await delete(subtasks).go();
+    await delete(tasks).go();
+    await delete(lists).go();
+  });
+
   Stream<Map<String, ListSharing>> watchListMeta() => select(listMeta)
       .watch()
       .map((rows) => {for (final r in rows) r.listId: ListSharing.fromRow(r)});

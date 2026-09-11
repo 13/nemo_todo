@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
@@ -24,7 +25,7 @@ class ListsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.listsTitle),
-        actions: const [SettingsAction()],
+        actions: const [AccountAction(), SettingsAction()],
       ),
       body: AsyncBody(
         value: lists,

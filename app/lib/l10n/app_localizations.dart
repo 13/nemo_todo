@@ -585,6 +585,12 @@ abstract class L {
   /// **'Sign out? Your tasks stay on this device and stop syncing.'**
   String get settingsSignOutConfirm;
 
+  /// No description provided for @settingsSignOutConfirmWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out? This browser forgets your tasks; they stay on your server.'**
+  String get settingsSignOutConfirmWeb;
+
   /// No description provided for @settingsSync.
   ///
   /// In en, this message translates to:
@@ -656,6 +662,60 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Version {version}'**
   String settingsVersion(String version);
+
+  /// No description provided for @accountSignInAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to your server'**
+  String get accountSignInAction;
+
+  /// No description provided for @accountWebNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'nemo keeps your tasks on this server. Sign in to see them.'**
+  String get accountWebNotice;
+
+  /// No description provided for @accountCertificateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust this server\'s certificate?'**
+  String get accountCertificateTitle;
+
+  /// No description provided for @accountCertificateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{host} identifies itself with a certificate this device cannot check. Compare the fingerprint with your server before you accept it.'**
+  String accountCertificateBody(String host);
+
+  /// No description provided for @accountCertificateIssuer.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued by'**
+  String get accountCertificateIssuer;
+
+  /// No description provided for @accountCertificateExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until'**
+  String get accountCertificateExpires;
+
+  /// No description provided for @accountCertificateFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'SHA-256 fingerprint'**
+  String get accountCertificateFingerprint;
+
+  /// No description provided for @accountCertificateTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust and connect'**
+  String get accountCertificateTrust;
+
+  /// No description provided for @accountErrorCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'This device does not trust that server\'s certificate.'**
+  String get accountErrorCertificate;
 
   /// No description provided for @accountTitle.
   ///

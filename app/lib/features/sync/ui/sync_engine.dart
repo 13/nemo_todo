@@ -6,6 +6,7 @@ import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/sync/data/sse_client.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
@@ -227,7 +228,15 @@ class SyncEngine extends _$SyncEngine {
     _debounce?.cancel();
     _sse?.stop();
     _sse = null;
-    await ref.read(appDatabaseProvider).clearListMeta();
+    final db = ref.read(appDatabaseProvider);
+    await db.clearListMeta();
+    if (ref.read(authRequiredProvider)) {
+      // Nothing here is this device's to keep: the next person to sign in
+      // on it gets their own tasks from the server rather than inheriting
+      // -- and uploading -- the last one's.
+      await db.clearLocalData();
+      await ref.read(listsRepositoryProvider).ensureInbox();
+    }
     state = const SyncState();
   }
 

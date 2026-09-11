@@ -12,6 +12,7 @@ abstract final class KvKeys {
   static const discarded = 'sync_discarded';
   static const lastUpdateCheck = 'last_update_check';
   static const dismissedUpdate = 'dismissed_update';
+  static const trustedCertificates = 'trusted_certificates';
 }
 
 /// Typed access to the `kv` table.

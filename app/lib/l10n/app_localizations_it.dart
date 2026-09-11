@@ -296,6 +296,10 @@ class LIt extends L {
       'Uscire? Le attività restano su questo dispositivo e non vengono più sincronizzate.';
 
   @override
+  String get settingsSignOutConfirmWeb =>
+      'Uscire? Questo browser dimentica le tue attività; sul tuo server restano.';
+
+  @override
   String get settingsSync => 'Sincronizzazione';
 
   @override
@@ -355,6 +359,38 @@ class LIt extends L {
   String settingsVersion(String version) {
     return 'Versione $version';
   }
+
+  @override
+  String get accountSignInAction => 'Accedi al tuo server';
+
+  @override
+  String get accountWebNotice =>
+      'nemo conserva le tue attività su questo server. Accedi per vederle.';
+
+  @override
+  String get accountCertificateTitle =>
+      'Vuoi fidarti del certificato di questo server?';
+
+  @override
+  String accountCertificateBody(String host) {
+    return '$host si identifica con un certificato che questo dispositivo non può verificare. Confronta l\'impronta con il tuo server prima di accettarlo.';
+  }
+
+  @override
+  String get accountCertificateIssuer => 'Rilasciato da';
+
+  @override
+  String get accountCertificateExpires => 'Valido fino al';
+
+  @override
+  String get accountCertificateFingerprint => 'Impronta SHA-256';
+
+  @override
+  String get accountCertificateTrust => 'Fidati e connetti';
+
+  @override
+  String get accountErrorCertificate =>
+      'Questo dispositivo non si fida del certificato di quel server.';
 
   @override
   String get accountTitle => 'Connetti';

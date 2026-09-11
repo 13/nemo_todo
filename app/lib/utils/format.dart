@@ -46,3 +46,8 @@ String longDate(String locale, DateTime day) =>
 /// The name of a day: "Friday", "Freitag", "venerdì".
 String weekdayName(String locale, DateTime day) =>
     DateFormat.EEEE(locale).format(day);
+
+/// A plain calendar date: "14 Sep 2026".
+String dateLabel(String locale, int millis) =>
+    DateFormat.yMMMd(locale)
+        .format(DateTime.fromMillisecondsSinceEpoch(millis));

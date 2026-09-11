@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/quick_add_bar.dart';
@@ -37,7 +38,7 @@ class TodayScreen extends ConsumerWidget {
             ),
           ],
         ),
-        actions: const [SettingsAction()],
+        actions: const [AccountAction(), SettingsAction()],
       ),
       body: Column(
         children: [

@@ -16,6 +16,7 @@ class AppBootstrap {
     this.serverUrl,
     this.username,
     this.lastSyncAt,
+    this.trustedCertificates,
   });
 
   final String nodeId;
@@ -26,6 +27,10 @@ class AppBootstrap {
 
   /// Epoch milliseconds of the last successful sync.
   final int? lastSyncAt;
+
+  /// Certificates the user has chosen to trust, as stored by
+  /// `CertificateTrust`.
+  final String? trustedCertificates;
 
   static Future<AppBootstrap> load(AppDatabase db) async {
     final kv = KvStore(db);
@@ -44,6 +49,7 @@ class AppBootstrap {
       serverUrl: await kv.get(KvKeys.serverUrl),
       username: await kv.get(KvKeys.username),
       lastSyncAt: lastSync == null ? null : int.tryParse(lastSync),
+      trustedCertificates: await kv.get(KvKeys.trustedCertificates),
     );
   }
 }
@@ -84,3 +90,11 @@ final updatesSupportedProvider = Provider<bool>(
 final remindersSupportedProvider = Provider<bool>(
   (_) => !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
 );
+
+/// Whether the app refuses to show anything until an account is connected.
+///
+/// The Android app is local-first: it works on its own and an account is
+/// something you add later. The web app is not -- it is opened at the
+/// address of a server, by someone who has an account on it -- so there it
+/// asks who you are before it shows a single task.
+final authRequiredProvider = Provider<bool>((_) => kIsWeb);

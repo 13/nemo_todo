@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/nemo_mark.dart';
@@ -100,10 +101,16 @@ class ShellScreen extends ConsumerWidget {
                   alignment: Alignment.bottomCenter,
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: IconButton(
-                      tooltip: L.of(context).navSettings,
-                      icon: const Icon(Icons.settings_outlined),
-                      onPressed: () => context.push(Routes.settings),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const AccountAction(inRail: true),
+                        IconButton(
+                          tooltip: L.of(context).navSettings,
+                          icon: const Icon(Icons.settings_outlined),
+                          onPressed: () => context.push(Routes.settings),
+                        ),
+                      ],
                     ),
                   ),
                 ),

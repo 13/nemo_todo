@@ -2,14 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
+import 'package:nemo/core/widgets/nemo_mark.dart';
+import 'package:nemo/features/auth/data/certificate_trust.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/utils/format.dart';
 
 /// Connects the app to a nemo server, by signing in or creating an account.
+///
+/// [standalone] is the web app's front door: there is nothing behind it to
+/// go back to, so it carries the mark instead of a back button and moves on
+/// by itself once the session exists.
 class AccountScreen extends ConsumerStatefulWidget {
-  const AccountScreen({super.key});
+  const AccountScreen({this.standalone = false, super.key});
+
+  final bool standalone;
 
   @override
   ConsumerState<AccountScreen> createState() => _AccountScreenState();
@@ -26,8 +35,17 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   void initState() {
     super.initState();
     final auth = ref.read(authControllerProvider);
-    _server.text = auth.serverUrl ?? '';
+    // The web app is served by the server it syncs with, so the address is
+    // the one it was loaded from and there is nothing to type.
+    _server.text = auth.serverUrl ?? (widget.standalone ? _origin() : '');
     _username.text = auth.username ?? '';
+  }
+
+  /// Where the web app is being served from, which is the server it talks
+  /// to. Empty anywhere else, where the address has to be typed.
+  String _origin() {
+    final base = Uri.base;
+    return base.scheme == 'http' || base.scheme == 'https' ? base.origin : '';
   }
 
   @override
@@ -49,7 +67,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     _ => l.accountErrorGeneric(e.code),
   };
 
-  Future<void> _submit({required bool signUp}) async {
+  Future<void> _submit({required bool signUp, bool retry = false}) async {
     final l = L.of(context);
     if (!SyncClient.isValidBaseUrl(_server.text)) {
       setState(() => _error = l.accountInvalidUrl);
@@ -69,25 +87,126 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             signUp: signUp,
           );
       await ref.read(syncEngineProvider.notifier).onSignedIn();
-      if (mounted) context.pop();
+      if (!mounted) return;
+      // Standing on the front door, there is nothing to pop: the session
+      // has changed, and the guard moves the router on to wherever this
+      // visit was headed before it got stopped here.
+      if (!widget.standalone) context.pop();
     } on ApiError catch (e) {
-      if (mounted) setState(() => _error = _messageFor(l, e));
+      if (!mounted) return;
+      // A handshake the device could not verify arrives as "could not
+      // reach the server", which is true but unhelpful: the server is
+      // there, and the certificate it offered is waiting to be looked at.
+      final offered = retry ? null : _offeredCertificate();
+      if (e.isOffline && offered != null) {
+        setState(() => _busy = false);
+        if (await _askToTrust(offered)) {
+          await _submit(signUp: signUp, retry: true);
+        } else if (mounted) {
+          setState(() => _error = l.accountErrorCertificate);
+        }
+        return;
+      }
+      setState(() => _error = _messageFor(l, e));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted && _busy) setState(() => _busy = false);
     }
+  }
+
+  ServerCertificate? _offeredCertificate() {
+    final host = Uri.tryParse(SyncClient.normaliseBaseUrl(_server.text))?.host;
+    if (host == null || host.isEmpty) return null;
+    return ref.read(certificateTrustProvider).refusedFor(host);
+  }
+
+  /// Shows what the server identified itself with and asks whether to
+  /// believe it. The fingerprint is the whole point of the dialog, so it
+  /// is the part that is set in a monospaced face and selectable.
+  Future<bool> _askToTrust(ServerCertificate certificate) async {
+    final l = L.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('trust-certificate'),
+        title: Text(l.accountCertificateTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.accountCertificateBody(certificate.host)),
+            const SizedBox(height: 16),
+            _Detail(
+              label: l.accountCertificateIssuer,
+              value: certificate.issuer,
+            ),
+            _Detail(
+              label: l.accountCertificateExpires,
+              value: dateLabel(
+                locale,
+                certificate.expires.millisecondsSinceEpoch,
+              ),
+            ),
+            _Detail(
+              label: l.accountCertificateFingerprint,
+              value: certificate.fingerprint,
+              monospaced: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            key: const Key('trust-certificate-confirm'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l.accountCertificateTrust),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return false;
+    await ref.read(certificateTrustProvider).trust(certificate);
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final auth = ref.watch(authControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l.accountTitle)),
+      appBar: AppBar(
+        automaticallyImplyLeading: !widget.standalone,
+        title: Text(widget.standalone ? l.accountSignIn : l.accountTitle),
+      ),
       body: MaxWidth(
         maxWidth: 480,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
+            if (widget.standalone) ...[
+              const Padding(
+                padding: EdgeInsets.only(top: 16, bottom: 12),
+                child: Center(child: NemoLogoTile(size: 64)),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Text(
+                  auth.sessionLost
+                      ? l.settingsSignedOutRemotely
+                      : l.accountWebNotice,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: auth.sessionLost
+                        ? scheme.error
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
             TextField(
               key: const Key('account-server'),
               controller: _server,
@@ -146,14 +265,57 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               onPressed: _busy ? null : () => _submit(signUp: true),
               child: Text(l.accountSignUp),
             ),
-            const SizedBox(height: 16),
-            Text(
-              l.accountLocalNotice,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
+            if (!widget.standalone) ...[
+              const SizedBox(height: 16),
+              Text(
+                l.accountLocalNotice,
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One labelled line of a certificate.
+class _Detail extends StatelessWidget {
+  const _Detail({
+    required this.label,
+    required this.value,
+    this.monospaced = false,
+  });
+
+  final String label;
+  final String value;
+  final bool monospaced;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          SelectableText(
+            value,
+            style: monospaced
+                ? theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontFamilyFallback: const ['Courier'],
+                  )
+                : theme.textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }

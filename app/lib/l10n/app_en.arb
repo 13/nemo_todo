@@ -133,6 +133,7 @@
   },
   "settingsSignOut": "Sign out",
   "settingsSignOutConfirm": "Sign out? Your tasks stay on this device and stop syncing.",
+  "settingsSignOutConfirmWeb": "Sign out? This browser forgets your tasks; they stay on your server.",
   "settingsSync": "Sync",
   "settingsSyncNow": "Sync now",
   "settingsLastSync": "Last synced {time}",
@@ -180,6 +181,22 @@
       }
     }
   },
+  "accountSignInAction": "Sign in to your server",
+  "accountWebNotice": "nemo keeps your tasks on this server. Sign in to see them.",
+  "accountCertificateTitle": "Trust this server's certificate?",
+  "accountCertificateBody": "{host} identifies itself with a certificate this device cannot check. Compare the fingerprint with your server before you accept it.",
+  "@accountCertificateBody": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "accountCertificateIssuer": "Issued by",
+  "accountCertificateExpires": "Valid until",
+  "accountCertificateFingerprint": "SHA-256 fingerprint",
+  "accountCertificateTrust": "Trust and connect",
+  "accountErrorCertificate": "This device does not trust that server's certificate.",
   "accountTitle": "Connect",
   "accountServer": "Server address",
   "accountServerHint": "https://nemo.example.com",

@@ -5,19 +5,24 @@
 A local-first todo app for Android and the web, with a small sync server you
 host yourself.
 
-- Works completely offline from the first launch. An account is optional.
+- The Android app works completely offline from the first launch, and an
+  account is optional. Whether one is connected is on screen wherever you
+  are, next to the settings button.
 - Lists with colours and icons, due dates with reminders, subtasks, notes,
   tags and four priorities, plus Today, Upcoming and search views.
 - Tasks that repeat -- daily, weekdays only, weekly, fortnightly, monthly,
   the last Friday of the month, yearly: ticking one off puts the next one
   on the list.
 - Connect it to your server later and everything already on the device is
-  uploaded. Signing out keeps your tasks.
+  uploaded. Signing out of the Android app keeps your tasks on it.
 - Lists can be shared with other accounts on the same server, and handed
   over to one of them.
 - The web app is the same app: identical screens, with a navigation rail
   instead of a bottom bar on wide windows, and a task opening beside the
-  list rather than over it once there is room for both.
+  list rather than over it once there is room for both. It is served by
+  the server it syncs with, so it asks who you are before it shows
+  anything, and signing out clears the browser rather than leaving one
+  person's tasks behind for the next.
 
 ## Layout
 
@@ -28,6 +33,31 @@ host yourself.
 | `packages/nemo_core/` | Models, sync protocol and merge rules shared by both |
 | `docs/superpowers/` | Design spec and implementation plans |
 | `assets/logo/` | The mark, the wordmark and the icon sources |
+
+## Connecting to a server with its own certificate authority
+
+A server on a home network usually carries a certificate from an authority
+of your own making rather than a public one. A browser can be taught about
+that authority in its settings, and so can Android -- but not in a way the
+app can see: Dart's HTTP client reads the system certificate store and
+nothing else, so an authority you install by hand is invisible to it and
+every request fails the handshake. The app used to report that as "could
+not reach the server", which is true and no help at all.
+
+It now shows the certificate the server offered instead -- who issued it,
+how long it is good for, and its SHA-256 fingerprint -- and asks. Compare
+that fingerprint against the server before accepting it:
+
+```bash
+openssl s_client -connect nemo.example:443 -servername nemo.example </dev/null \
+  | openssl x509 -noout -fingerprint -sha256
+```
+
+What is accepted is pinned to that exact certificate on that exact host,
+and kept on the device. Renew the certificate and the app asks again,
+which is the point: a certificate that changed without your doing is worth
+a second look. The browser build has no such prompt, because a page does
+not get to decide what its browser trusts.
 
 ## How syncing works
 

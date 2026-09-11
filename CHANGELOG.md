@@ -16,6 +16,27 @@ someone using the app rather than which file moved.
 - Every release publishes the server image to `ghcr.io/13/nemo`, tagged with
   the version, its minor series and `latest`, so running the server is a pull
   rather than a clone and a build.
+- Every screen says whether an account is connected, beside the settings
+  button: the account's initial when there is one, a way in when there is
+  not, and a warning when the session has expired.
+
+### Changed
+
+- The web app asks who you are before it shows anything, and signing out of
+  it clears the browser rather than leaving one person's tasks behind for
+  the next. The Android app is unchanged: an account is still optional,
+  and signing out keeps your tasks on the device.
+
+### Fixed
+
+- Android can reach a server whose certificate comes from a certificate
+  authority of your own. Dart's HTTP client reads only the system
+  certificate store, so an authority installed on the device was invisible
+  to it and every connection failed as "could not reach the server". The
+  app now shows the certificate the server offered -- who issued it, how
+  long it is good for, and its SHA-256 fingerprint -- and asks. What you
+  accept is pinned to that certificate on that host; a renewed one asks
+  again.
 
 ## 0.2.0 - 2026-09-11
 

@@ -296,6 +296,10 @@ class LDe extends L {
       'Abmelden? Deine Aufgaben bleiben auf diesem Gerät und werden nicht mehr synchronisiert.';
 
   @override
+  String get settingsSignOutConfirmWeb =>
+      'Abmelden? Dieser Browser vergisst deine Aufgaben; auf deinem Server bleiben sie.';
+
+  @override
   String get settingsSync => 'Synchronisierung';
 
   @override
@@ -355,6 +359,37 @@ class LDe extends L {
   String settingsVersion(String version) {
     return 'Version $version';
   }
+
+  @override
+  String get accountSignInAction => 'Bei deinem Server anmelden';
+
+  @override
+  String get accountWebNotice =>
+      'nemo bewahrt deine Aufgaben auf diesem Server auf. Melde dich an, um sie zu sehen.';
+
+  @override
+  String get accountCertificateTitle => 'Zertifikat dieses Servers vertrauen?';
+
+  @override
+  String accountCertificateBody(String host) {
+    return '$host weist sich mit einem Zertifikat aus, das dieses Gerät nicht prüfen kann. Vergleiche den Fingerabdruck mit deinem Server, bevor du es annimmst.';
+  }
+
+  @override
+  String get accountCertificateIssuer => 'Ausgestellt von';
+
+  @override
+  String get accountCertificateExpires => 'Gültig bis';
+
+  @override
+  String get accountCertificateFingerprint => 'SHA-256-Fingerabdruck';
+
+  @override
+  String get accountCertificateTrust => 'Vertrauen und verbinden';
+
+  @override
+  String get accountErrorCertificate =>
+      'Dieses Gerät vertraut dem Zertifikat dieses Servers nicht.';
 
   @override
   String get accountTitle => 'Verbinden';

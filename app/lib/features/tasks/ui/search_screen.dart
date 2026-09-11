@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
@@ -50,7 +51,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
           ),
         ),
-        actions: const [SettingsAction()],
+        actions: const [AccountAction(), SettingsAction()],
       ),
       body: _query.isEmpty
           ? EmptyState(icon: Icons.search_rounded, message: l.searchEmpty)

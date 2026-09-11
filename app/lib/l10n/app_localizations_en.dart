@@ -296,6 +296,10 @@ class LEn extends L {
       'Sign out? Your tasks stay on this device and stop syncing.';
 
   @override
+  String get settingsSignOutConfirmWeb =>
+      'Sign out? This browser forgets your tasks; they stay on your server.';
+
+  @override
   String get settingsSync => 'Sync';
 
   @override
@@ -355,6 +359,37 @@ class LEn extends L {
   String settingsVersion(String version) {
     return 'Version $version';
   }
+
+  @override
+  String get accountSignInAction => 'Sign in to your server';
+
+  @override
+  String get accountWebNotice =>
+      'nemo keeps your tasks on this server. Sign in to see them.';
+
+  @override
+  String get accountCertificateTitle => 'Trust this server\'s certificate?';
+
+  @override
+  String accountCertificateBody(String host) {
+    return '$host identifies itself with a certificate this device cannot check. Compare the fingerprint with your server before you accept it.';
+  }
+
+  @override
+  String get accountCertificateIssuer => 'Issued by';
+
+  @override
+  String get accountCertificateExpires => 'Valid until';
+
+  @override
+  String get accountCertificateFingerprint => 'SHA-256 fingerprint';
+
+  @override
+  String get accountCertificateTrust => 'Trust and connect';
+
+  @override
+  String get accountErrorCertificate =>
+      'This device does not trust that server\'s certificate.';
 
   @override
   String get accountTitle => 'Connect';

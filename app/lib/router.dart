@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/router/transitions.dart';
 import 'package:nemo/features/auth/ui/account_screen.dart';
+import 'package:nemo/features/auth/ui/starting_screen.dart';
 import 'package:nemo/features/lists/ui/list_detail_screen.dart';
 import 'package:nemo/features/lists/ui/lists_screen.dart';
 import 'package:nemo/features/lists/ui/members_screen.dart';
@@ -18,15 +20,38 @@ abstract final class Routes {
   static const search = '/search';
   static const settings = '/settings';
   static const account = '/settings/account';
+
+  /// Where the web app waits while it looks for a stored session, and
+  /// where it sends anyone it does not find one for.
+  static const starting = '/starting';
+  static const signIn = '/sign-in';
   static String list(String id) => '/lists/$id';
   static String members(String id) => '/lists/$id/members';
   static String task(String id) => '/tasks/$id';
 }
 
 abstract final class AppRouter {
-  static GoRouter router({String initialLocation = Routes.today}) => GoRouter(
+  static GoRouter router({
+    String initialLocation = Routes.today,
+    GoRouterRedirect? redirect,
+    Listenable? refreshListenable,
+  }) => GoRouter(
     initialLocation: initialLocation,
+    redirect: redirect,
+    refreshListenable: refreshListenable,
     routes: [
+      GoRoute(
+        path: Routes.starting,
+        pageBuilder: (_, s) =>
+            fadeThroughPage(child: const StartingScreen(), state: s),
+      ),
+      GoRoute(
+        path: Routes.signIn,
+        pageBuilder: (_, s) => fadeThroughPage(
+          child: const AccountScreen(standalone: true),
+          state: s,
+        ),
+      ),
       ShellRoute(
         builder: (context, state, child) => ShellScreen(child: child),
         routes: [

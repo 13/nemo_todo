@@ -177,8 +177,8 @@ docker compose up -d
 ```
 
 That pulls `ghcr.io/13/nemo:latest`, published by the release workflow for
-every tagged version. `:0.3` follows the patches of a minor version and
-`:0.3.0` never moves; pin whichever one matches how much surprise you want.
+every tagged version. `:0.4` follows the patches of a minor version and
+`:0.4.0` never moves; pin whichever one matches how much surprise you want.
 Updating is `docker compose pull && docker compose up -d`. To build the image
 here instead of pulling it, `docker build -t ghcr.io/13/nemo:latest .` first.
 

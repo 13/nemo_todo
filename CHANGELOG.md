@@ -9,7 +9,7 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
-## Unreleased
+## 0.4.0 - 2026-09-11
 
 ### Changed
 
@@ -24,6 +24,12 @@ someone using the app rather than which file moved.
   `Bad state: Too many elements` behind "nemo cannot open its database" --
   the app would not start again at all. The second Inbox is now folded
   into the first, tasks and all, by the sync that landed it.
+- A server certificate the device does not trust could only be reviewed on
+  the Connect screen, so one that changed under a working account -- a
+  renewal, most ordinarily -- stopped syncing and reported "Offline",
+  which was the one thing it was not. Settings now says the certificate is
+  not trusted and offers to show it; accepting it runs the sync that
+  failed on it.
 
 ## 0.3.0 - 2026-09-11
 

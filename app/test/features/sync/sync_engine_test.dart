@@ -118,6 +118,29 @@ void main() {
     expect((await db.taskById('t1'))!.listId, 'a-inbox-from-elsewhere');
   });
 
+  test('remembers which build the server said it was running', () async {
+    client.responses.add(
+      SyncResponse(cursor: 1, serverHlc: serverHlc, serverVersion: '9.9.9'),
+    );
+    final c = await container();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(c.read(syncEngineProvider).serverVersion, '9.9.9');
+    // Stored, so Settings can name the server before the first sync of the
+    // next session and while offline.
+    expect(await KvStore(db).get(KvKeys.serverVersion), '9.9.9');
+  });
+
+  test('a server too old to name itself is recorded as having not', () async {
+    client.responses.add(SyncResponse(cursor: 1, serverHlc: serverHlc));
+    final c = await container();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    // Empty, not null: it answered, it just did not say. Settings shows
+    // the app version alone rather than claiming a mismatch.
+    expect(c.read(syncEngineProvider).serverVersion, isEmpty);
+  });
+
   test(
     'pushes queued rows, applies the answer and stores the cursor',
     () async {

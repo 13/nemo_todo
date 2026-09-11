@@ -8,6 +8,7 @@ class Config {
     this.corsOrigins = const [],
     this.nodeId = 'server',
     this.trustedProxyHops = 0,
+    this.version = 'dev',
   });
 
   factory Config.fromEnv(Map<String, String> env) {
@@ -37,6 +38,7 @@ class Config {
                 .toList(),
       nodeId: read('NEMO_NODE_ID') ?? 'server',
       trustedProxyHops: hops == null ? 0 : int.parse(hops),
+      version: read('NEMO_VERSION') ?? 'dev',
     );
   }
 
@@ -48,6 +50,11 @@ class Config {
   final String webDir;
   final List<String> corsOrigins;
   final String nodeId;
+
+  /// What this build calls itself, baked into the image at build time and
+  /// reported to anyone who asks. `dev` when nobody said, which is what a
+  /// build from a working copy is.
+  final String version;
 
   /// How many proxies of our own sit in front of the server. Zero means the
   /// server is reached directly, so `x-forwarded-for` is whatever the client

@@ -9,6 +9,18 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
+## Unreleased
+
+### Added
+
+- Settings names the server it is talking to, beside this build's own
+  version. The web app says so when the page is older than the server --
+  a browser can hold one in cache long after the server has moved -- and
+  tells you to reload.
+- The server reports its version on `/healthz`, which needs no account and
+  answers even when the web app will not start:
+  `curl -s https://nemo.example/healthz` → `{"status":"ok","version":"0.4.0"}`.
+
 ## 0.4.0 - 2026-09-11
 
 ### Changed

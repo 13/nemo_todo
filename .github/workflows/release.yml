@@ -203,6 +203,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # The same number the image is tagged with, baked in so the
+          # running server can say which build it is when asked.
+          build-args: NEMO_VERSION=${{ steps.meta.outputs.version }}
           # The same cache CI fills on every push to main, so a release
           # mostly re-tags layers instead of building them again.
           cache-from: type=gha

@@ -94,6 +94,7 @@ class SyncEngine extends _$SyncEngine {
       status: SyncStatus.idle,
       lastSyncAt: _storedLastSync(),
       pending: ref.read(pendingChangesProvider).value ?? 0,
+      serverVersion: ref.read(bootstrapProvider).serverVersion,
     );
   }
 
@@ -213,6 +214,12 @@ class SyncEngine extends _$SyncEngine {
       clock.receive(Hlc.parse(response.serverHlc));
       await kv.set(KvKeys.hlcLast, clock.last.toString());
       await kv.set(KvKeys.cursor, '${response.cursor}');
+      // Kept so Settings can name the server before the first sync of the
+      // next session, and while offline. A server too old to say sends an
+      // empty string, which is stored as such: it means "did not say", not
+      // "no server".
+      await kv.set(KvKeys.serverVersion, response.serverVersion);
+      state = state.copyWith(serverVersion: response.serverVersion);
       hasMore = response.hasMore;
     }
     // A device that was used offline before it had an account brings its

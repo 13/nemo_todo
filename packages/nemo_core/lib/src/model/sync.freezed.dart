@@ -1379,7 +1379,9 @@ as MemberRole,
 /// @nodoc
 mixin _$SyncResponse {
 
- int get cursor; String get serverHlc; List<SyncChange> get changes; List<RejectedChange> get rejected; Map<String, List<ListMember>> get members; bool get hasMore;
+ int get cursor; String get serverHlc; List<SyncChange> get changes; List<RejectedChange> get rejected; Map<String, List<ListMember>> get members; bool get hasMore;/// What the server says it is running. Empty from a server old enough
+/// not to say, which is not the same as a mismatch.
+ String get serverVersion;
 /// Create a copy of SyncResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1393,20 +1395,20 @@ $SyncResponseCopyWith<SyncResponse> get copyWith => _$SyncResponseCopyWithImpl<S
 @override
 bool operator ==(Object other) {
   final _this = this as SyncResponse;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncResponse&&(identical(other.cursor, _this.cursor) || other.cursor == _this.cursor)&&(identical(other.serverHlc, _this.serverHlc) || other.serverHlc == _this.serverHlc)&&const DeepCollectionEquality().equals(other.changes, _this.changes)&&const DeepCollectionEquality().equals(other.rejected, _this.rejected)&&const DeepCollectionEquality().equals(other.members, _this.members)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncResponse&&(identical(other.cursor, _this.cursor) || other.cursor == _this.cursor)&&(identical(other.serverHlc, _this.serverHlc) || other.serverHlc == _this.serverHlc)&&const DeepCollectionEquality().equals(other.changes, _this.changes)&&const DeepCollectionEquality().equals(other.rejected, _this.rejected)&&const DeepCollectionEquality().equals(other.members, _this.members)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.serverVersion, _this.serverVersion) || other.serverVersion == _this.serverVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SyncResponse;
-  return Object.hash(runtimeType,_this.cursor,_this.serverHlc,const DeepCollectionEquality().hash(_this.changes),const DeepCollectionEquality().hash(_this.rejected),const DeepCollectionEquality().hash(_this.members),_this.hasMore);
+  return Object.hash(runtimeType,_this.cursor,_this.serverHlc,const DeepCollectionEquality().hash(_this.changes),const DeepCollectionEquality().hash(_this.rejected),const DeepCollectionEquality().hash(_this.members),_this.hasMore,_this.serverVersion);
 }
 
 @override
 String toString() {
   final _this = this as SyncResponse;
-  return 'SyncResponse(cursor: ${_this.cursor}, serverHlc: ${_this.serverHlc}, changes: ${_this.changes}, rejected: ${_this.rejected}, members: ${_this.members}, hasMore: ${_this.hasMore})';
+  return 'SyncResponse(cursor: ${_this.cursor}, serverHlc: ${_this.serverHlc}, changes: ${_this.changes}, rejected: ${_this.rejected}, members: ${_this.members}, hasMore: ${_this.hasMore}, serverVersion: ${_this.serverVersion})';
 }
 
 
@@ -1417,7 +1419,7 @@ abstract mixin class $SyncResponseCopyWith<$Res>  {
   factory $SyncResponseCopyWith(SyncResponse value, $Res Function(SyncResponse) _then) = _$SyncResponseCopyWithImpl;
 @useResult
 $Res call({
- int cursor, String serverHlc, List<SyncChange> changes, List<RejectedChange> rejected, Map<String, List<ListMember>> members, bool hasMore
+ int cursor, String serverHlc, List<SyncChange> changes, List<RejectedChange> rejected, Map<String, List<ListMember>> members, bool hasMore, String serverVersion
 });
 
 
@@ -1434,7 +1436,7 @@ class _$SyncResponseCopyWithImpl<$Res>
 
 /// Create a copy of SyncResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? cursor = null,Object? serverHlc = null,Object? changes = null,Object? rejected = null,Object? members = null,Object? hasMore = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? cursor = null,Object? serverHlc = null,Object? changes = null,Object? rejected = null,Object? members = null,Object? hasMore = null,Object? serverVersion = null,}) {
   return _then(SyncResponse(
 cursor: null == cursor ? _self.cursor : cursor // ignore: cast_nullable_to_non_nullable
 as int,serverHlc: null == serverHlc ? _self.serverHlc : serverHlc // ignore: cast_nullable_to_non_nullable
@@ -1442,7 +1444,8 @@ as String,changes: null == changes ? _self.changes : changes // ignore: cast_nul
 as List<SyncChange>,rejected: null == rejected ? _self.rejected : rejected // ignore: cast_nullable_to_non_nullable
 as List<RejectedChange>,members: null == members ? _self.members : members // ignore: cast_nullable_to_non_nullable
 as Map<String, List<ListMember>>,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,serverVersion: null == serverVersion ? _self.serverVersion : serverVersion // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -1527,10 +1530,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int cursor,  String serverHlc,  List<SyncChange> changes,  List<RejectedChange> rejected,  Map<String, List<ListMember>> members,  bool hasMore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int cursor,  String serverHlc,  List<SyncChange> changes,  List<RejectedChange> rejected,  Map<String, List<ListMember>> members,  bool hasMore,  String serverVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SyncResponse() when $default != null:
-return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.members,_that.hasMore);case _:
+return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.members,_that.hasMore,_that.serverVersion);case _:
   return orElse();
 
 }
@@ -1548,10 +1551,10 @@ return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int cursor,  String serverHlc,  List<SyncChange> changes,  List<RejectedChange> rejected,  Map<String, List<ListMember>> members,  bool hasMore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int cursor,  String serverHlc,  List<SyncChange> changes,  List<RejectedChange> rejected,  Map<String, List<ListMember>> members,  bool hasMore,  String serverVersion)  $default,) {final _that = this;
 switch (_that) {
 case _SyncResponse():
-return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.members,_that.hasMore);case _:
+return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.members,_that.hasMore,_that.serverVersion);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1568,10 +1571,10 @@ return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int cursor,  String serverHlc,  List<SyncChange> changes,  List<RejectedChange> rejected,  Map<String, List<ListMember>> members,  bool hasMore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int cursor,  String serverHlc,  List<SyncChange> changes,  List<RejectedChange> rejected,  Map<String, List<ListMember>> members,  bool hasMore,  String serverVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _SyncResponse() when $default != null:
-return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.members,_that.hasMore);case _:
+return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.members,_that.hasMore,_that.serverVersion);case _:
   return null;
 
 }
@@ -1583,7 +1586,7 @@ return $default(_that.cursor,_that.serverHlc,_that.changes,_that.rejected,_that.
 @JsonSerializable()
 
 class _SyncResponse implements SyncResponse {
-  const _SyncResponse({required this.cursor, required this.serverHlc,  List<SyncChange> changes = const <SyncChange>[],  List<RejectedChange> rejected = const <RejectedChange>[],  Map<String, List<ListMember>> members = const <String, List<ListMember>>{}, this.hasMore = false}): _changes = changes,_rejected = rejected,_members = members;
+  const _SyncResponse({required this.cursor, required this.serverHlc,  List<SyncChange> changes = const <SyncChange>[],  List<RejectedChange> rejected = const <RejectedChange>[],  Map<String, List<ListMember>> members = const <String, List<ListMember>>{}, this.hasMore = false, this.serverVersion = ''}): _changes = changes,_rejected = rejected,_members = members;
   factory _SyncResponse.fromJson(Map<String, dynamic> json) => _$SyncResponseFromJson(json);
 
 @override final  int cursor;
@@ -1610,6 +1613,9 @@ class _SyncResponse implements SyncResponse {
 }
 
 @override@JsonKey() final  bool hasMore;
+/// What the server says it is running. Empty from a server old enough
+/// not to say, which is not the same as a mismatch.
+@override@JsonKey() final  String serverVersion;
 
 /// Create a copy of SyncResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -1624,18 +1630,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncResponse&&(identical(other.cursor, cursor) || other.cursor == cursor)&&(identical(other.serverHlc, serverHlc) || other.serverHlc == serverHlc)&&const DeepCollectionEquality().equals(other.changes, _changes)&&const DeepCollectionEquality().equals(other.rejected, _rejected)&&const DeepCollectionEquality().equals(other.members, _members)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncResponse&&(identical(other.cursor, cursor) || other.cursor == cursor)&&(identical(other.serverHlc, serverHlc) || other.serverHlc == serverHlc)&&const DeepCollectionEquality().equals(other.changes, _changes)&&const DeepCollectionEquality().equals(other.rejected, _rejected)&&const DeepCollectionEquality().equals(other.members, _members)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.serverVersion, serverVersion) || other.serverVersion == serverVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,cursor,serverHlc,const DeepCollectionEquality().hash(_changes),const DeepCollectionEquality().hash(_rejected),const DeepCollectionEquality().hash(_members),hasMore);
+    return Object.hash(runtimeType,cursor,serverHlc,const DeepCollectionEquality().hash(_changes),const DeepCollectionEquality().hash(_rejected),const DeepCollectionEquality().hash(_members),hasMore,serverVersion);
 }
 
 @override
 String toString() {
-    return 'SyncResponse(cursor: $cursor, serverHlc: $serverHlc, changes: $changes, rejected: $rejected, members: $members, hasMore: $hasMore)';
+    return 'SyncResponse(cursor: $cursor, serverHlc: $serverHlc, changes: $changes, rejected: $rejected, members: $members, hasMore: $hasMore, serverVersion: $serverVersion)';
 }
 
 
@@ -1646,7 +1652,7 @@ abstract mixin class _$SyncResponseCopyWith<$Res> implements $SyncResponseCopyWi
   factory _$SyncResponseCopyWith(_SyncResponse value, $Res Function(_SyncResponse) _then) = __$SyncResponseCopyWithImpl;
 @override @useResult
 $Res call({
- int cursor, String serverHlc, List<SyncChange> changes, List<RejectedChange> rejected, Map<String, List<ListMember>> members, bool hasMore
+ int cursor, String serverHlc, List<SyncChange> changes, List<RejectedChange> rejected, Map<String, List<ListMember>> members, bool hasMore, String serverVersion
 });
 
 
@@ -1663,7 +1669,7 @@ class __$SyncResponseCopyWithImpl<$Res>
 
 /// Create a copy of SyncResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? cursor = null,Object? serverHlc = null,Object? changes = null,Object? rejected = null,Object? members = null,Object? hasMore = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? cursor = null,Object? serverHlc = null,Object? changes = null,Object? rejected = null,Object? members = null,Object? hasMore = null,Object? serverVersion = null,}) {
   return _then(_SyncResponse(
 cursor: null == cursor ? _self.cursor : cursor // ignore: cast_nullable_to_non_nullable
 as int,serverHlc: null == serverHlc ? _self.serverHlc : serverHlc // ignore: cast_nullable_to_non_nullable
@@ -1671,7 +1677,8 @@ as String,changes: null == changes ? _self._changes : changes // ignore: cast_nu
 as List<SyncChange>,rejected: null == rejected ? _self._rejected : rejected // ignore: cast_nullable_to_non_nullable
 as List<RejectedChange>,members: null == members ? _self._members : members // ignore: cast_nullable_to_non_nullable
 as Map<String, List<ListMember>>,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,serverVersion: null == serverVersion ? _self.serverVersion : serverVersion // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

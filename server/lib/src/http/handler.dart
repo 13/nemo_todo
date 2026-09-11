@@ -78,7 +78,11 @@ Handler createHandler({
       }
       final outcome = await syncService.sync(request.user.id, syncRequest);
       eventHub.notify(outcome.notifyUserIds);
-      return jsonResponse(outcome.response.toJson());
+      // Stamped here rather than in the service: what build is answering
+      // is a property of this process, not of the merge.
+      return jsonResponse(
+        outcome.response.copyWith(serverVersion: config.version).toJson(),
+      );
     })
     ..get('/lists/<id>/members', (Request request, String id) async {
       final list = await membersService.members(request.user.id, id);
@@ -127,7 +131,14 @@ Handler createHandler({
     ..all('/<ignored|.*>', (Request _) => errorResponse(404, 'not_found'));
 
   final router = Router()
-    ..get('/healthz', (Request _) => jsonResponse({'status': 'ok'}))
+    // Unauthenticated and outside /api/v1 on purpose: "which build is
+    // live?" is a question worth being able to ask with curl, from a
+    // machine that cannot sign in, about a server whose web app will not
+    // start.
+    ..get(
+      '/healthz',
+      (Request _) => jsonResponse({'status': 'ok', 'version': config.version}),
+    )
     ..post(
       '/api/v1/auth/signup',
       limited.addHandler((r) => credentials(r, authService.signup)),

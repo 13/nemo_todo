@@ -17,6 +17,7 @@ class AppBootstrap {
     this.username,
     this.lastSyncAt,
     this.trustedCertificates,
+    this.serverVersion,
   });
 
   final String nodeId;
@@ -31,6 +32,11 @@ class AppBootstrap {
   /// Certificates the user has chosen to trust, as stored by
   /// `CertificateTrust`.
   final String? trustedCertificates;
+
+  /// What the server said it was running, last time one answered. Kept so
+  /// Settings can say so before the first sync of a session, and while
+  /// offline.
+  final String? serverVersion;
 
   static Future<AppBootstrap> load(AppDatabase db) async {
     final kv = KvStore(db);
@@ -50,6 +56,7 @@ class AppBootstrap {
       username: await kv.get(KvKeys.username),
       lastSyncAt: lastSync == null ? null : int.tryParse(lastSync),
       trustedCertificates: await kv.get(KvKeys.trustedCertificates),
+      serverVersion: await kv.get(KvKeys.serverVersion),
     );
   }
 }
@@ -98,3 +105,11 @@ final remindersSupportedProvider = Provider<bool>(
 /// address of a server, by someone who has an account on it -- so there it
 /// asks who you are before it shows a single task.
 final authRequiredProvider = Provider<bool>((_) => kIsWeb);
+
+/// Whether this build was handed to the user by the server it syncs with.
+///
+/// True on the web, where the page comes from the server and a reload is
+/// what fetches a newer one. False on Android, where the app was installed
+/// and a newer server means an update to download -- which the update tile
+/// already offers, and which no amount of reloading would do.
+final servedByServerProvider = Provider<bool>((_) => kIsWeb);

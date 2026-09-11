@@ -94,6 +94,8 @@
   "settingsDiscarded": "{count, plural, =1{1 Änderung wurde vom Server abgelehnt und zurückgesetzt.} other{{count} Änderungen wurden vom Server abgelehnt und zurückgesetzt.}}",
   "settingsCertificateUntrusted": "Dieses Gerät vertraut dem Zertifikat nicht, das dieser Server vorgelegt hat.",
   "settingsCertificateReview": "Ansehen",
+  "settingsVersions": "App {app} · Server {server}",
+  "settingsServerNewer": "Diese Seite ist älter als der Server. Lade sie neu, um den aktuellen Stand zu bekommen.",
   "settingsAbout": "Über",
   "settingsVersion": "Version {version}",
   "accountSignInAction": "Bei deinem Server anmelden",

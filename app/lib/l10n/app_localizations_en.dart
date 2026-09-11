@@ -360,6 +360,15 @@ class LEn extends L {
   String get settingsCertificateReview => 'Review';
 
   @override
+  String settingsVersions(String app, String server) {
+    return 'App $app · Server $server';
+  }
+
+  @override
+  String get settingsServerNewer =>
+      'This page is older than the server. Reload to get the current build.';
+
+  @override
   String get settingsAbout => 'About';
 
   @override

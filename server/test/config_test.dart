@@ -11,6 +11,7 @@ void main() {
     expect(c.corsOrigins, isEmpty);
     expect(c.nodeId, 'server');
     expect(c.trustedProxyHops, 0, reason: 'no proxy is assumed in front');
+    expect(c.version, 'dev', reason: 'a build nobody stamped is a dev build');
   });
 
   test('reads every variable', () {
@@ -22,6 +23,7 @@ void main() {
       'NEMO_CORS_ORIGINS': 'http://localhost:5000, http://a.test ,',
       'NEMO_NODE_ID': 'srv1',
       'NEMO_TRUSTED_PROXY_HOPS': '1',
+      'NEMO_VERSION': '0.4.0',
     });
     expect(c.port, 9000);
     expect(c.dbPath, '/tmp/x.db');
@@ -30,6 +32,7 @@ void main() {
     expect(c.corsOrigins, ['http://localhost:5000', 'http://a.test']);
     expect(c.nodeId, 'srv1');
     expect(c.trustedProxyHops, 1);
+    expect(c.version, '0.4.0');
     expect(Config.fromEnv({'NEMO_ALLOW_SIGNUP': 'TRUE'}).allowSignup, isTrue);
     expect(Config.fromEnv({'NEMO_ALLOW_SIGNUP': 'maybe'}).allowSignup, isNull);
   });

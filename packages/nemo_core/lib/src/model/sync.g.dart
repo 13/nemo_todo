@@ -123,6 +123,7 @@ _SyncResponse _$SyncResponseFromJson(Map<String, dynamic> json) =>
           ) ??
           const <String, List<ListMember>>{},
       hasMore: json['has_more'] as bool? ?? false,
+      serverVersion: json['server_version'] as String? ?? '',
     );
 
 Map<String, dynamic> _$SyncResponseToJson(_SyncResponse instance) =>
@@ -135,4 +136,5 @@ Map<String, dynamic> _$SyncResponseToJson(_SyncResponse instance) =>
         (k, e) => MapEntry(k, e.map((e) => e.toJson()).toList()),
       ),
       'has_more': instance.hasMore,
+      'server_version': instance.serverVersion,
     };

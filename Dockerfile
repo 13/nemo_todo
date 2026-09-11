@@ -61,10 +61,17 @@ RUN apt-get update \
 # ../lib, so it is copied whole.
 COPY --from=server-build /src/server/build/cli/linux_x64/bundle /opt/nemo
 COPY --from=web-build /src/app/build/web /app/web
+# What this image calls itself. The release workflow passes the tag it is
+# building; a build from a working copy says `dev`, which is what it is.
+# The server reports it on /healthz and on every sync, so the app can say
+# what it is talking to instead of leaving it to be worked out from
+# outside.
+ARG NEMO_VERSION=dev
 ENV PATH="/opt/nemo/bin:${PATH}" \
     NEMO_PORT=8080 \
     NEMO_DB=/data/nemo.db \
-    NEMO_WEB_DIR=/app/web
+    NEMO_WEB_DIR=/app/web \
+    NEMO_VERSION=${NEMO_VERSION}
 USER nemo
 EXPOSE 8080
 VOLUME ["/data"]

@@ -360,6 +360,15 @@ class LDe extends L {
   String get settingsCertificateReview => 'Ansehen';
 
   @override
+  String settingsVersions(String app, String server) {
+    return 'App $app · Server $server';
+  }
+
+  @override
+  String get settingsServerNewer =>
+      'Diese Seite ist älter als der Server. Lade sie neu, um den aktuellen Stand zu bekommen.';
+
+  @override
   String get settingsAbout => 'Über';
 
   @override

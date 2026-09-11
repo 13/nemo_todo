@@ -20,6 +20,7 @@ class TestServer {
     List<String> corsOrigins = const [],
     DateTime Function()? now,
     RateLimiter? limiter,
+    String version = 'dev',
   }) async {
     final db = ServerDatabase.memory();
     final hub = EventHub(heartbeat: const Duration(milliseconds: 200));
@@ -35,6 +36,7 @@ class TestServer {
         webDir: webDir ?? '/nonexistent/web',
         allowSignup: allowSignup,
         corsOrigins: corsOrigins,
+        version: version,
       ),
       auth: auth,
       hub: hub,

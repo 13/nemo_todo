@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
+import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
@@ -39,7 +40,11 @@ void main() {
         db: serverDb,
         // No web app to serve, and sign-up open so the test can make an
         // account the way a first run does.
-        config: const server.Config(allowSignup: true, webDir: '/nonexistent'),
+        config: const server.Config(
+          allowSignup: true,
+          webDir: '/nonexistent',
+          version: '7.7.7',
+        ),
       ),
       InternetAddress.loopbackIPv4,
       0,
@@ -225,5 +230,16 @@ void main() {
 
     expect(container.read(syncEngineProvider).status, SyncStatus.signedOut);
     expect(container.read(authControllerProvider).token, isNull);
+  });
+
+  test('the app learns which build the server is running', () async {
+    final container = await app();
+
+    await container.read(syncEngineProvider.notifier).syncNow();
+
+    // Not a fake saying what it was told to say: a real server reporting
+    // its own configured version across a real round trip.
+    expect(container.read(syncEngineProvider).serverVersion, '7.7.7');
+    expect(await KvStore(db).get(KvKeys.serverVersion), '7.7.7');
   });
 }

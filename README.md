@@ -212,12 +212,36 @@ front of it; nothing in the container terminates TLS.
 | `NEMO_WEB_DIR` | Where the built web app lives, default `/app/web` |
 | `NEMO_CORS_ORIGINS` | Comma-separated origins allowed to call the API, for development |
 | `NEMO_TRUSTED_PROXY_HOPS` | How many proxies of yours sit in front, default 0 |
+| `NEMO_VERSION` | What the server calls itself; baked into the published image, `dev` otherwise |
 
 If you put a TLS proxy in front of the server, set `NEMO_TRUSTED_PROXY_HOPS`
 to the number of proxies it passes through. The per-address limit on the
 sign-in endpoints reads `x-forwarded-for` only that many entries deep, and
 at the default of 0 it ignores the header altogether: anyone can send it, so
 trusting it unconditionally would limit headers rather than callers.
+
+### Which build is running
+
+The server reports its own version, so "is the thing I am talking to the
+thing I just deployed?" has an answer that does not involve guessing:
+
+```bash
+curl -s https://nemo.example/healthz     # {"status":"ok","version":"0.4.0"}
+```
+
+That endpoint needs no account and sits outside `/api/v1`, so it answers
+even when the web app will not start. The same version rides on every sync,
+and Settings shows it beside the app's own:
+
+```
+nemo
+App 0.4.0 · Server 0.4.0
+```
+
+A browser can hold a page in cache long after the server has moved on, and
+then the two disagree; the web app says so and tells you to reload. The
+number is baked into the image at build time from the release tag, so a
+container you built yourself reports `dev`.
 
 Forgotten password:
 

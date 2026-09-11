@@ -55,6 +55,7 @@ void main() {
       cursor: 9,
       hasMore: true,
       serverHlc: '0000000000009-0000-srv',
+      serverVersion: '0.4.0',
       rejected: [
         RejectedChange(
           entity: SyncEntity.task,
@@ -73,5 +74,16 @@ void main() {
     ]);
     expect(json['has_more'], isTrue);
     expect(json['server_hlc'], '0000000000009-0000-srv');
+    expect(json['server_version'], '0.4.0');
+  });
+
+  test('a server too old to name itself decodes rather than throws', () {
+    // The field was added after 0.4.0. A server without it must still be
+    // something this app can talk to, and "did not say" has to be
+    // distinguishable from a version -- it is not a mismatch.
+    final json = {'cursor': 3, 'server_hlc': '0000000000003-0000-srv'};
+    final res = SyncResponse.fromJson(json);
+    expect(res.serverVersion, isEmpty);
+    expect(res.cursor, 3);
   });
 }

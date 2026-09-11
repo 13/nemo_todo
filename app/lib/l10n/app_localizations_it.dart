@@ -360,6 +360,15 @@ class LIt extends L {
   String get settingsCertificateReview => 'Esamina';
 
   @override
+  String settingsVersions(String app, String server) {
+    return 'App $app · Server $server';
+  }
+
+  @override
+  String get settingsServerNewer =>
+      'Questa pagina è più vecchia del server. Ricaricala per avere la versione attuale.';
+
+  @override
   String get settingsAbout => 'Informazioni';
 
   @override

@@ -17,7 +17,10 @@ void main() {
 
   test('health, signup, me, logout and auth errors', () async {
     server = await TestServer.start();
-    expect(json(await server.get('/healthz')), {'status': 'ok'});
+    expect(json(await server.get('/healthz')), {
+      'status': 'ok',
+      'version': 'dev',
+    });
     final token = await server.signup('ben');
     final me = await server.get('/api/v1/auth/me', token: token);
     expect(json(me)['username'], 'ben');
@@ -275,5 +278,26 @@ void main() {
   test('without a built web app the root answers 404', () async {
     server = await TestServer.start();
     expect((await server.get('/')).statusCode, 404);
+  });
+
+  test('the server says which build is answering', () async {
+    server = await TestServer.start(version: '9.9.9');
+
+    // Without signing in, and outside /api/v1, so it can be asked of a
+    // server whose web app will not start.
+    expect(json(await server.get('/healthz')), {
+      'status': 'ok',
+      'version': '9.9.9',
+    });
+
+    // And on every sync, so a connected app never has to ask separately.
+    final token = await server.signup('ben');
+    final body = json(
+      await server.post('/api/v1/sync', {
+        'cursor': 0,
+        'changes': <Object>[],
+      }, token: token),
+    );
+    expect(body['server_version'], '9.9.9');
   });
 }

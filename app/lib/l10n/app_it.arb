@@ -94,6 +94,8 @@
   "settingsDiscarded": "{count, plural, =1{1 modifica è stata rifiutata dal server e annullata.} other{{count} modifiche sono state rifiutate dal server e annullate.}}",
   "settingsCertificateUntrusted": "Questo dispositivo non si fida del certificato presentato da questo server.",
   "settingsCertificateReview": "Esamina",
+  "settingsVersions": "App {app} · Server {server}",
+  "settingsServerNewer": "Questa pagina è più vecchia del server. Ricaricala per avere la versione attuale.",
   "settingsAbout": "Informazioni",
   "settingsVersion": "Versione {version}",
   "accountSignInAction": "Accedi al tuo server",

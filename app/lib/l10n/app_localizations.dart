@@ -663,6 +663,18 @@ abstract class L {
   /// **'Review'**
   String get settingsCertificateReview;
 
+  /// No description provided for @settingsVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'App {app} · Server {server}'**
+  String settingsVersions(String app, String server);
+
+  /// No description provided for @settingsServerNewer.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is older than the server. Reload to get the current build.'**
+  String get settingsServerNewer;
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:

@@ -90,6 +90,10 @@ abstract class SyncResponse with _$SyncResponse {
     @Default(<String, List<ListMember>>{})
     Map<String, List<ListMember>> members,
     @Default(false) bool hasMore,
+
+    /// What the server says it is running. Empty from a server old enough
+    /// not to say, which is not the same as a mismatch.
+    @Default('') String serverVersion,
   }) = _SyncResponse;
 
   factory SyncResponse.fromJson(Map<String, dynamic> json) =>

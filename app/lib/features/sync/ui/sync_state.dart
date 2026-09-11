@@ -24,6 +24,7 @@ class SyncState {
     this.pending = 0,
     this.error,
     this.discarded = 0,
+    this.serverVersion,
   });
 
   final SyncStatus status;
@@ -36,6 +37,10 @@ class SyncState {
   /// Changes the server refused since the user last dismissed the notice.
   final int discarded;
 
+  /// What the server last said it was running. Null until one has answered,
+  /// and empty from a server too old to say.
+  final String? serverVersion;
+
   bool get connected => status != SyncStatus.local;
 
   SyncState copyWith({
@@ -45,11 +50,13 @@ class SyncState {
     String? error,
     bool clearError = false,
     int? discarded,
+    String? serverVersion,
   }) => SyncState(
     status: status ?? this.status,
     lastSyncAt: lastSyncAt ?? this.lastSyncAt,
     pending: pending ?? this.pending,
     error: clearError ? null : error ?? this.error,
     discarded: discarded ?? this.discarded,
+    serverVersion: serverVersion ?? this.serverVersion,
   );
 }

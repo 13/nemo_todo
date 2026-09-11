@@ -227,10 +227,19 @@ leaves the machine says which app and which version it is. That folder
 mirrors the last build rather than collecting older ones.
 
 Release builds are signed with the debug key unless `app/android/key.properties`
-names a keystore (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`).
-CI writes that file from repository secrets. A published build must never
-carry the debug key: it ships with every Android SDK, so anyone could
-replace the app in place.
+names a keystore (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`;
+a relative `storeFile` is read from `app/android/`). CI writes that file from
+repository secrets. A published build must never carry the debug key: it ships
+with every Android SDK, so anyone could replace the app in place.
+
+The key is not nemo's own: it is the MUH Studios key the other apps here ship
+with, `CN=Ben, O=MUH Studios`, certificate SHA-256
+
+```
+ef46d303232d7394d83b42f117e2c81f1ca5fe7399a22d0ac0d7dda19a60b8f3
+```
+
+which `apksigner verify --print-certs <apk>` prints for anything genuine.
 
 ## Updates on Android
 
@@ -249,7 +258,8 @@ Android refuses to replace an installed app with a package signed by a
 different key, so the release keystore is what makes any of this work. If
 that key and its password are ever lost, no future build can update an
 installed nemo: every user has to uninstall, losing whatever they had not
-synced. Keep a backup off this machine.
+synced. Keep a backup off this machine. The same key signs the other MUH
+Studios apps, so losing it costs more than nemo.
 
 The web build has no updater: reloading the page is the update.
 

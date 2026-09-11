@@ -56,7 +56,7 @@ final class AuthControllerProvider
   }
 }
 
-String _$authControllerHash() => r'ed2bef9b15ceac49bfa569dfecbe155368f423e6';
+String _$authControllerHash() => r'5f73225bdc13b5610718514b94e6e8152454fff1';
 
 /// Signing in, signing up and signing out.
 ///

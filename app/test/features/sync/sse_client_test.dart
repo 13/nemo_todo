@@ -169,7 +169,10 @@ void main() {
       expect(changes, 1);
 
       await adapter.current.close();
-      await waitFor(() => adapter.requests.length >= 2);
+      // The sync comes after the request that carries it, so waiting for
+      // the request leaves the sync still in flight on a loaded machine.
+      // Wait for the last thing to happen and the earlier one is settled.
+      await waitFor(() => changes >= 2);
 
       expect(adapter.requests, hasLength(2));
       expect(changes, 2, reason: 'a fresh connection syncs');

@@ -172,6 +172,8 @@
       }
     }
   },
+  "settingsCertificateUntrusted": "This device does not trust the certificate this server offered.",
+  "settingsCertificateReview": "Review",
   "settingsAbout": "About",
   "settingsVersion": "Version {version}",
   "@settingsVersion": {

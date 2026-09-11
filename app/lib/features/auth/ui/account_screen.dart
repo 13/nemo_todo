@@ -5,10 +5,10 @@ import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/features/auth/data/certificate_trust.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/auth/ui/certificate_dialog.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/l10n/app_localizations.dart';
-import 'package:nemo/utils/format.dart';
 
 /// Connects the app to a nemo server, by signing in or creating an account.
 ///
@@ -100,7 +100,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       final offered = retry ? null : _offeredCertificate();
       if (e.isOffline && offered != null) {
         setState(() => _busy = false);
-        if (await _askToTrust(offered)) {
+        if (await askToTrustCertificate(context, ref, offered)) {
           await _submit(signUp: signUp, retry: true);
         } else if (mounted) {
           setState(() => _error = l.accountErrorCertificate);
@@ -114,62 +114,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   }
 
   ServerCertificate? _offeredCertificate() {
-    final host = Uri.tryParse(SyncClient.normaliseBaseUrl(_server.text))?.host;
-    if (host == null || host.isEmpty) return null;
+    final host = hostOf(SyncClient.normaliseBaseUrl(_server.text));
+    if (host == null) return null;
     return ref.read(certificateTrustProvider).refusedFor(host);
-  }
-
-  /// Shows what the server identified itself with and asks whether to
-  /// believe it. The fingerprint is the whole point of the dialog, so it
-  /// is the part that is set in a monospaced face and selectable.
-  Future<bool> _askToTrust(ServerCertificate certificate) async {
-    final l = L.of(context);
-    final locale = Localizations.localeOf(context).toString();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        key: const Key('trust-certificate'),
-        title: Text(l.accountCertificateTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l.accountCertificateBody(certificate.host)),
-            const SizedBox(height: 16),
-            _Detail(
-              label: l.accountCertificateIssuer,
-              value: certificate.issuer,
-            ),
-            _Detail(
-              label: l.accountCertificateExpires,
-              value: dateLabel(
-                locale,
-                certificate.expires.millisecondsSinceEpoch,
-              ),
-            ),
-            _Detail(
-              label: l.accountCertificateFingerprint,
-              value: certificate.fingerprint,
-              monospaced: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            key: const Key('trust-certificate-confirm'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l.accountCertificateTrust),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return false;
-    await ref.read(certificateTrustProvider).trust(certificate);
-    return true;
   }
 
   @override
@@ -275,47 +222,6 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// One labelled line of a certificate.
-class _Detail extends StatelessWidget {
-  const _Detail({
-    required this.label,
-    required this.value,
-    this.monospaced = false,
-  });
-
-  final String label;
-  final String value;
-  final bool monospaced;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          SelectableText(
-            value,
-            style: monospaced
-                ? theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                    fontFamilyFallback: const ['Courier'],
-                  )
-                : theme.textTheme.bodyMedium,
-          ),
-        ],
       ),
     );
   }

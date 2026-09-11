@@ -92,6 +92,8 @@
   "settingsOffline": "Offline. Le modifiche verranno sincronizzate quando tornerai online.",
   "settingsSignedOutRemotely": "La sessione è scaduta. Accedi di nuovo per continuare a sincronizzare.",
   "settingsDiscarded": "{count, plural, =1{1 modifica è stata rifiutata dal server e annullata.} other{{count} modifiche sono state rifiutate dal server e annullate.}}",
+  "settingsCertificateUntrusted": "Questo dispositivo non si fida del certificato presentato da questo server.",
+  "settingsCertificateReview": "Esamina",
   "settingsAbout": "Informazioni",
   "settingsVersion": "Versione {version}",
   "accountSignInAction": "Accedi al tuo server",

@@ -353,6 +353,13 @@ class LIt extends L {
   }
 
   @override
+  String get settingsCertificateUntrusted =>
+      'Questo dispositivo non si fida del certificato presentato da questo server.';
+
+  @override
+  String get settingsCertificateReview => 'Esamina';
+
+  @override
   String get settingsAbout => 'Informazioni';
 
   @override

@@ -56,8 +56,11 @@ openssl s_client -connect nemo.example:443 -servername nemo.example </dev/null \
 What is accepted is pinned to that exact certificate on that exact host,
 and kept on the device. Renew the certificate and the app asks again,
 which is the point: a certificate that changed without your doing is worth
-a second look. The browser build has no such prompt, because a page does
-not get to decide what its browser trusts.
+a second look. That second asking happens where you notice it: syncing
+stops, and Settings says the certificate is not trusted and offers to show
+it, rather than reporting a device that is simply offline. The browser
+build has no such prompt, because a page does not get to decide what its
+browser trusts.
 
 ## How syncing works
 

@@ -353,6 +353,13 @@ class LEn extends L {
   }
 
   @override
+  String get settingsCertificateUntrusted =>
+      'This device does not trust the certificate this server offered.';
+
+  @override
+  String get settingsCertificateReview => 'Review';
+
+  @override
   String get settingsAbout => 'About';
 
   @override

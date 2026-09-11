@@ -651,6 +651,18 @@ abstract class L {
   /// **'{count, plural, =1{1 change was rejected by the server and reverted.} other{{count} changes were rejected by the server and reverted.}}'**
   String settingsDiscarded(int count);
 
+  /// No description provided for @settingsCertificateUntrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'This device does not trust the certificate this server offered.'**
+  String get settingsCertificateUntrusted;
+
+  /// No description provided for @settingsCertificateReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get settingsCertificateReview;
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:

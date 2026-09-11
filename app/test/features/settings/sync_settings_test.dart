@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
+import 'package:nemo/features/auth/data/certificate_trust.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
@@ -119,5 +120,66 @@ void main() {
     await settleSync(tester);
     expect(find.textContaining('Offline. Changes will sync'), findsOneWidget);
     expect(await app.db.outboxCount(), 1);
+  });
+
+  appTest('a certificate the sync choked on is shown and can be trusted', (
+    tester,
+  ) async {
+    // How a handshake the device cannot verify reaches the engine.
+    client.failWith = const ApiError(0, 'network');
+    final app = await pumpApp(
+      tester,
+      initialLocation: Routes.settings,
+      overrides: connected(),
+      settle: false,
+      seed: (db, inbox) async {
+        final kv = KvStore(db);
+        await kv.set(KvKeys.serverUrl, 'https://nemo.test');
+        await kv.set(KvKeys.username, 'ben');
+      },
+    );
+    app.container
+        .read(certificateTrustProvider)
+        .refused(
+          ServerCertificate(
+            host: 'nemo.test',
+            subject: 'CN=nemo.test',
+            issuer: 'CN=MUH Root CA',
+            expires: DateTime(2036, 9, 5),
+            fingerprint: 'AB:CD:EF',
+          ),
+        );
+
+    await tester.tap(find.byKey(const Key('sync-now')));
+    await settleSync(tester);
+
+    // Not "offline": the server answered, with a certificate nothing here
+    // vouches for, and it is on screen to be looked at.
+    expect(find.byKey(const Key('sync-untrusted-certificate')), findsOneWidget);
+    expect(
+      find.text("This device does not trust that server's certificate."),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Offline.'), findsNothing);
+
+    client.failWith = null;
+    await tester.tap(find.byKey(const Key('review-certificate')));
+    await tester.pumpAndSettle();
+    expect(find.text('CN=MUH Root CA'), findsOneWidget);
+    expect(find.text('AB:CD:EF'), findsOneWidget);
+
+    final before = client.calls;
+    await tester.tap(find.byKey(const Key('trust-certificate-confirm')));
+    await settleSync(tester);
+
+    // Trusting it ran the sync that failed on it, and the warning is gone.
+    expect(client.calls, greaterThan(before));
+    expect(
+      CertificateTrust.decode(
+        await KvStore(app.db).get(KvKeys.trustedCertificates),
+      ),
+      {'nemo.test': 'AB:CD:EF'},
+    );
+    expect(find.byKey(const Key('sync-untrusted-certificate')), findsNothing);
   });
 }

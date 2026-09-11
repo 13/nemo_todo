@@ -353,6 +353,13 @@ class LDe extends L {
   }
 
   @override
+  String get settingsCertificateUntrusted =>
+      'Dieses Gerät vertraut dem Zertifikat nicht, das dieser Server vorgelegt hat.';
+
+  @override
+  String get settingsCertificateReview => 'Ansehen';
+
+  @override
   String get settingsAbout => 'Über';
 
   @override

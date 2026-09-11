@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/section_header.dart';
+import 'package:nemo/features/auth/data/certificate_trust.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/auth/ui/certificate_dialog.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -44,6 +46,29 @@ class SyncSettingsSection extends ConsumerWidget {
     await ref.read(authControllerProvider.notifier).signOut();
   }
 
+  /// The certificate this server offered and the device refused, if it
+  /// has offered one.
+  ///
+  /// Read rather than watched: the store is a plain map, and what puts a
+  /// refusal in it is a request failing, which moves the sync status and
+  /// rebuilds this anyway.
+  ServerCertificate? _refusedCertificate(WidgetRef ref, String? serverUrl) {
+    final host = hostOf(serverUrl);
+    if (host == null) return null;
+    return ref.read(certificateTrustProvider).refusedFor(host);
+  }
+
+  /// Shows the certificate the server offered and, once it is accepted,
+  /// runs the sync that failed on it.
+  Future<void> _review(
+    BuildContext context,
+    WidgetRef ref,
+    ServerCertificate certificate,
+  ) async {
+    if (!await askToTrustCertificate(context, ref, certificate)) return;
+    await ref.read(syncEngineProvider.notifier).syncNow();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
@@ -73,8 +98,18 @@ class SyncSettingsSection extends ConsumerWidget {
       );
     }
 
+    // A handshake the device could not verify reaches the engine as
+    // "offline": the server did answer, with a certificate nothing here
+    // vouches for. The engine has no screen to ask on, so it is asked
+    // about here, beside the status that went quiet because of it.
+    final untrusted = _refusedCertificate(ref, auth.serverUrl);
+
     final (statusText, statusColor) = switch (sync.status) {
       SyncStatus.syncing => (l.settingsSyncing, scheme.onSurfaceVariant),
+      SyncStatus.offline when untrusted != null => (
+        l.accountErrorCertificate,
+        scheme.error,
+      ),
       SyncStatus.offline => (l.settingsOffline, scheme.onSurfaceVariant),
       SyncStatus.error => (l.settingsSyncError(sync.error ?? ''), scheme.error),
       SyncStatus.signedOut => (l.settingsSignedOutRemotely, scheme.error),
@@ -112,6 +147,18 @@ class SyncSettingsSection extends ConsumerWidget {
               ? null
               : () => ref.read(syncEngineProvider.notifier).syncNow(),
         ),
+        if (untrusted != null)
+          ListTile(
+            key: const Key('sync-untrusted-certificate'),
+            leading: Icon(Icons.gpp_maybe_outlined, color: scheme.error),
+            title: Text(l.settingsCertificateUntrusted),
+            subtitle: Text(untrusted.host),
+            trailing: TextButton(
+              key: const Key('review-certificate'),
+              onPressed: () => _review(context, ref, untrusted),
+              child: Text(l.settingsCertificateReview),
+            ),
+          ),
         if (sync.discarded > 0)
           ListTile(
             key: const Key('sync-discarded'),

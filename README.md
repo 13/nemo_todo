@@ -189,8 +189,8 @@ docker compose up -d
 ```
 
 That pulls `ghcr.io/13/nemo:latest`, published by the release workflow for
-every tagged version. `:0.4` follows the patches of a minor version and
-`:0.4.0` never moves; pin whichever one matches how much surprise you want.
+every tagged version. `:0.5` follows the patches of a minor version and
+`:0.5.0` never moves; pin whichever one matches how much surprise you want.
 Updating is `docker compose pull && docker compose up -d`. To build the image
 here instead of pulling it, `docker build -t ghcr.io/13/nemo:latest .` first.
 
@@ -226,7 +226,7 @@ The server reports its own version, so "is the thing I am talking to the
 thing I just deployed?" has an answer that does not involve guessing:
 
 ```bash
-curl -s https://nemo.example/healthz     # {"status":"ok","version":"0.4.0"}
+curl -s https://nemo.example/healthz     # {"status":"ok","version":"0.5.0"}
 ```
 
 That endpoint needs no account and sits outside `/api/v1`, so it answers
@@ -235,7 +235,7 @@ and Settings shows it beside the app's own:
 
 ```
 nemo
-App 0.4.0 · Server 0.4.0
+App 0.5.0 · Server 0.5.0
 ```
 
 A browser can hold a page in cache long after the server has moved on, and

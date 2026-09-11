@@ -9,7 +9,7 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
-## Unreleased
+## 0.5.0 - 2026-09-11
 
 ### Added
 
@@ -19,7 +19,7 @@ someone using the app rather than which file moved.
   tells you to reload.
 - The server reports its version on `/healthz`, which needs no account and
   answers even when the web app will not start:
-  `curl -s https://nemo.example/healthz` → `{"status":"ok","version":"0.4.0"}`.
+  `curl -s https://nemo.example/healthz` → `{"status":"ok","version":"0.5.0"}`.
 
 ## 0.4.0 - 2026-09-11
 

@@ -1,7 +1,10 @@
 services:
   nemo:
-    build: .
-    image: nemo:latest
+    # Published by the release workflow, one image per tagged version.
+    # Pin the version if you would rather decide when to move:
+    # ghcr.io/13/nemo:0.2.0. To build it yourself instead, run
+    # `docker build -t ghcr.io/13/nemo:latest .` before starting this.
+    image: ghcr.io/13/nemo:latest
     ports:
       - "8080:8080"
     volumes:

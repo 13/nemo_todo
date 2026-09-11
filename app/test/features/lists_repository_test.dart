@@ -54,44 +54,56 @@ void main() {
     expect(all[1].sortKey.compareTo(all[2].sortKey), lessThan(0));
   });
 
-  test('two devices that each made an Inbox end up with one', () async {
-    // What sync does: this device made its own Inbox offline, then
-    // connected to an account that already had one from another device,
-    // and both rows arrived in the same table.
+  test('devices that each made an Inbox end up with one', () async {
+    // What sync does: every device makes its own Inbox before it has ever
+    // spoken to a server, so an account used from four of them ends up
+    // with four rows in the same table, each flagged as the Inbox. Four
+    // and not two because that is what it took in the wild.
     final mine = await repo.ensureInbox();
-    final theirs = TaskList(
-      id: 'a-inbox-from-elsewhere',
-      name: 'Inbox',
-      sortKey: SortKey.first(),
-      isInbox: true,
-      icon: 'inbox',
-      updatedAt: testClock('other').now().toString(),
-    );
-    await db.upsertList(theirs);
-    final task = await TasksRepository(
+    for (final id in ['a-from-phone', 'd-from-web', 'e-from-tablet']) {
+      await db.upsertList(
+        TaskList(
+          id: id,
+          name: 'Inbox',
+          sortKey: SortKey.first(),
+          isInbox: true,
+          icon: 'inbox',
+          updatedAt: testClock(id).now().toString(),
+        ),
+      );
+    }
+    final tasks = TasksRepository(
       db,
       testClock('t'),
       sequentialIds('t'),
       reminders: reminders,
       now: () => testNow,
-    ).create(listId: mine.id, title: 'Buy milk');
+    );
+    final task = await tasks.create(listId: mine.id, title: 'Buy milk');
+    // One that was written into a different device's Inbox, so the merge
+    // has to gather from more than the one it happens to start on.
+    final other = await tasks.create(
+      listId: 'e-from-tablet',
+      title: 'Fahrradschaltung einschalten',
+    );
 
     // Used to throw `Bad state: Too many elements` out of the startup
     // path, which left the app showing nothing but a database error.
     final kept = await repo.ensureInbox();
 
-    // The lower id survives, so every device settles on the same one
+    // The lowest id survives, so every device settles on the same one
     // without asking the server which.
-    expect(kept.id, 'a-inbox-from-elsewhere');
+    expect(kept.id, 'a-from-phone');
     expect(kept.isInbox, isTrue);
     final inboxes = (await repo.watchAll().first).where((l) => l.isInbox);
-    expect(inboxes.map((l) => l.id), ['a-inbox-from-elsewhere']);
+    expect(inboxes.map((l) => l.id), ['a-from-phone']);
 
-    // Nothing is lost on the way: what was in the other Inbox is in this
-    // one now.
-    final moved = await db.taskById(task.id);
-    expect(moved!.listId, kept.id);
-    expect(moved.deletedAt, isNull);
+    // Nothing is lost on the way, from any of them.
+    for (final id in [task.id, other.id]) {
+      final moved = await db.taskById(id);
+      expect(moved!.listId, kept.id, reason: 'task $id moved to the survivor');
+      expect(moved.deletedAt, isNull);
+    }
 
     // And it is settled: asking again changes nothing.
     expect((await repo.ensureInbox()).id, kept.id);

@@ -127,10 +127,13 @@ normal test run skips them (`--exclude-tags design`).
 
 ## The logo
 
-The mark is a lowercase **n** whose right leg flicks up into a check: the
-app's initial and what the app is for, in one stroke. `assets/logo` holds the
-sources; every launcher and web icon is rendered from them, so the mark is
-edited in one place:
+The mark is a **clownfish**, banded the way the fish the app is named after
+is banded. It is one colour and the bands are holes rather than a second
+colour, so whatever is behind the fish shows through them -- which is what
+lets one drawing be the teal mark on a page, the white fish on the launcher
+tile, and the silhouette Android builds in the status bar out of nothing but
+an alpha channel. `assets/logo` holds the sources; every launcher and web
+icon is rendered from them, so the mark is edited in one place:
 
 ```bash
 tool/generate_icons.sh    # needs rsvg-convert (librsvg)
@@ -139,7 +142,13 @@ tool/check_icons.sh       # fails if one is missing or still Flutter's own
 
 In the app the mark is painted rather than loaded, so it stays sharp at any
 size and takes its colour from the theme (`NemoMark`, `NemoLogoTile`). Its
-geometry mirrors `assets/logo/nemo-mark.svg`; change the two together.
+geometry mirrors `assets/logo/nemo-mark.svg` path for path, down to the
+even-odd winding that makes the bands holes; change the two together, and
+render `build/screens/mark.png` to see that they still agree:
+
+```bash
+(cd app && flutter test test/design --update-goldens)
+```
 
 The mark also serves as the Android launcher icon (adaptive, with a
 monochrome layer for themed launchers), the splash screen on every Android

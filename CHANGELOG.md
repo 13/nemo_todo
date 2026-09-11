@@ -11,6 +11,12 @@ someone using the app rather than which file moved.
 
 ## Unreleased
 
+### Changed
+
+- The mark is a clownfish rather than a lowercase "n": the launcher icon,
+  the splash screen, the favicon, the web app's icon, the status bar icon
+  reminders post with, and the mark inside the app.
+
 ### Fixed
 
 - Connecting a device that had been used offline to an account that

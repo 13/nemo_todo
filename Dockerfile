@@ -23,7 +23,8 @@ COPY pubspec.yaml pubspec.lock ./
 COPY packages/nemo_core/pubspec.yaml packages/nemo_core/
 COPY app/pubspec.yaml app/
 COPY server/pubspec.yaml server/
-RUN flutter pub get
+COPY tool/pub_get.sh tool/
+RUN tool/pub_get.sh
 COPY packages ./packages
 COPY app ./app
 COPY tool ./tool
@@ -43,7 +44,8 @@ WORKDIR /src
 RUN printf 'name: nemo_server_workspace\npublish_to: none\nenvironment:\n  sdk: ^3.13.0\nworkspace:\n  - packages/nemo_core\n  - server\n' > pubspec.yaml
 COPY packages/nemo_core/pubspec.yaml packages/nemo_core/
 COPY server/pubspec.yaml server/
-RUN dart pub get
+COPY tool/pub_get.sh tool/
+RUN tool/pub_get.sh dart pub get
 COPY packages ./packages
 COPY server ./server
 RUN cd server && dart build cli --target bin/nemo_server.dart

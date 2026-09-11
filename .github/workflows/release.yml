@@ -73,7 +73,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - run: flutter pub get
+      - run: tool/pub_get.sh
 
       - name: Fetch web database assets
         run: tool/fetch_web_assets.sh

@@ -28,7 +28,7 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Install dependencies
-        run: flutter pub get
+        run: tool/pub_get.sh
 
       # Generated sources are committed and nothing else here regenerates
       # them, so a stale .g.dart would otherwise sail through every check.
@@ -114,7 +114,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - run: flutter pub get
+      - run: tool/pub_get.sh
 
       - name: Fetch web database assets
         run: tool/fetch_web_assets.sh

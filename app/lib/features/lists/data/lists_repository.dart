@@ -37,13 +37,27 @@ class ListsRepository {
     _db.lists,
   )..where((t) => t.id.equals(id) & t.deletedAt.isNull())).watchSingleOrNull();
 
-  /// Creates the Inbox on first launch; harmless afterwards.
+  /// Creates the Inbox on first launch, and folds away any second one.
+  ///
+  /// There can be more than one. Every device makes its own Inbox before
+  /// it has ever spoken to a server, so connecting a device that was used
+  /// offline to an account that already has one brings both rows into the
+  /// same table -- two lists, both flagged as the Inbox. This used to ask
+  /// for the single matching row and throw `Bad state: Too many elements`
+  /// out of the startup path, which left the app showing a database error
+  /// and nothing else.
+  ///
+  /// So the extra ones are folded into the survivor rather than counted
+  /// on not to exist. The lowest id wins: an arbitrary rule, but the same
+  /// arbitrary rule on every device, so two devices that have never met
+  /// settle on the same Inbox without asking the server which. What was
+  /// in the others moves across before they are tombstoned, because an
+  /// Inbox is where things go when they have nowhere else to be, and
+  /// losing it is not an option.
   Future<TaskList> ensureInbox() async {
-    final existing =
-        await (_db.select(_db.lists)
-              ..where((t) => t.isInbox.equals(true) & t.deletedAt.isNull()))
-            .getSingleOrNull();
-    if (existing != null) return existing;
+    final found = await _liveInboxes();
+    if (found.length > 1) return await _mergeInboxes(found);
+    if (found.isNotEmpty) return found.first;
     final inbox = TaskList(
       id: _newId(),
       name: 'Inbox',
@@ -54,6 +68,44 @@ class ListsRepository {
     );
     await _db.upsertList(inbox);
     return inbox;
+  }
+
+  /// Folds away a second Inbox when sync has landed one, and does nothing
+  /// whatever otherwise.
+  ///
+  /// Separate from [ensureInbox] because a sync is no moment to invent a
+  /// list: a device that legitimately holds none would have one appear
+  /// out of a round trip and immediately upload it.
+  Future<void> mergeDuplicateInboxes() async {
+    final found = await _liveInboxes();
+    if (found.length > 1) await _mergeInboxes(found);
+  }
+
+  /// Every list flagged as the Inbox that is still alive, lowest id first.
+  Future<List<TaskList>> _liveInboxes() =>
+      (_db.select(_db.lists)
+            ..where((t) => t.isInbox.equals(true) & t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+          .get();
+
+  /// Moves everything into the first of [inboxes] and tombstones the rest.
+  ///
+  /// The tasks are relisted before their old list goes, so the cascade in
+  /// [delete] finds nothing left to take down with it.
+  Future<TaskList> _mergeInboxes(List<TaskList> inboxes) async {
+    final kept = inboxes.first;
+    for (final extra in inboxes.skip(1)) {
+      for (final task in await _liveTasks(extra.id)) {
+        await _db.upsertTask(
+          task.copyWith(listId: kept.id, updatedAt: _clock.now().toString()),
+        );
+      }
+      final stamp = _clock.now().toString();
+      await _db.upsertList(
+        extra.copyWith(isInbox: false, updatedAt: stamp, deletedAt: stamp),
+      );
+    }
+    return kept;
   }
 
   Future<TaskList> create({

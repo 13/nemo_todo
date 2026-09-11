@@ -7,6 +7,7 @@ import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
@@ -71,6 +72,51 @@ void main() {
     client = FakeSyncClient([]);
   });
   tearDown(() => db.close());
+
+  test('an Inbox arriving beside ours leaves one Inbox, not two', () async {
+    // This device was used offline, so it made its own Inbox; the account
+    // it is now connecting to already had one.
+    final repo = ListsRepository(db, testClock('device'), sequentialIds('l'));
+    final mine = await repo.ensureInbox();
+    await db.upsertTask(
+      Task(
+        id: 't1',
+        listId: mine.id,
+        title: 'Buy milk',
+        sortKey: 'V',
+        updatedAt: testClock('device').now().toString(),
+      ),
+    );
+    client.responses.add(
+      SyncResponse(
+        cursor: 4,
+        serverHlc: serverHlc,
+        changes: [
+          const SyncChange.list(
+            TaskList(
+              id: 'a-inbox-from-elsewhere',
+              name: 'Inbox',
+              sortKey: 'V',
+              isInbox: true,
+              icon: 'inbox',
+              updatedAt: '0000000000008-0000-other',
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final c = await container();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    // Settled by the sync that caused it, rather than left to blow up in
+    // the startup path at the next launch.
+    final inboxes = (await db.select(db.lists).get()).where(
+      (l) => l.isInbox && l.deletedAt == null,
+    );
+    expect(inboxes.map((l) => l.id), ['a-inbox-from-elsewhere']);
+    expect((await db.taskById('t1'))!.listId, 'a-inbox-from-elsewhere');
+  });
 
   test(
     'pushes queued rows, applies the answer and stores the cursor',

@@ -182,6 +182,7 @@ class SyncEngine extends _$SyncEngine {
     final reminders = ref.read(reminderSchedulerProvider);
     var hasMore = true;
     var pushed = false;
+    var listsArrived = false;
     while (hasMore) {
       final cursor = int.tryParse(await kv.get(KvKeys.cursor) ?? '0') ?? 0;
       // Only the first request of a round carries the queue; later pages
@@ -201,6 +202,7 @@ class SyncEngine extends _$SyncEngine {
         );
       }
       for (final change in response.changes) {
+        if (change is SyncChangeList) listsArrived = true;
         final task = await db.applyRemote(change);
         if (task != null) await reminders.sync(task);
       }
@@ -212,6 +214,13 @@ class SyncEngine extends _$SyncEngine {
       await kv.set(KvKeys.hlcLast, clock.last.toString());
       await kv.set(KvKeys.cursor, '${response.cursor}');
       hasMore = response.hasMore;
+    }
+    // A device that was used offline before it had an account brings its
+    // own Inbox to one that already has one, and the first sync lands
+    // both. Settled here rather than at the next launch, so nobody is
+    // left looking at two Inboxes until they restart the app.
+    if (listsArrived) {
+      await ref.read(listsRepositoryProvider).mergeDuplicateInboxes();
     }
     final now = ref.read(nowProvider)();
     await kv.set(KvKeys.lastSyncAt, '${now.millisecondsSinceEpoch}');

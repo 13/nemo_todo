@@ -9,6 +9,16 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
+## Unreleased
+
+### Fixed
+
+- Connecting a device that had been used offline to an account that
+  already had an Inbox left two of them, and the next launch died with
+  `Bad state: Too many elements` behind "nemo cannot open its database" --
+  the app would not start again at all. The second Inbox is now folded
+  into the first, tasks and all, by the sync that landed it.
+
 ## 0.3.0 - 2026-09-11
 
 ### Added

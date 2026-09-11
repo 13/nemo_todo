@@ -59,7 +59,7 @@ final class SyncEngineProvider
   }
 }
 
-String _$syncEngineHash() => r'd3920a439ad9ad30fade10ea569fae09b2b2f1ff';
+String _$syncEngineHash() => r'520cf6c39744cc6d7e33ebf77262b89e0447b207';
 
 /// Drives synchronisation with the server.
 ///

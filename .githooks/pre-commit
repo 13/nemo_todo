@@ -26,10 +26,12 @@ sources=$(grep -vE '\.(g|freezed)\.dart$|app/lib/l10n/app_localizations' \
 matches() { grep -qE "$1" <<< "$sources"; }
 
 core=false; server=false; app=false; l10n=false
-matches '^packages/nemo_core/(lib|pubspec\.yaml)' && core=true
-matches '^server/(lib|pubspec\.yaml)'             && server=true
-matches '^app/(lib|pubspec\.yaml)'                && app=true
-matches '^app/lib/l10n/.*\.arb$'                  && l10n=true
+# Tests generate too -- `github_release_client_test.freezed.dart` is one --
+# so they count as sources like anything under lib.
+matches '^packages/nemo_core/(lib|test|pubspec\.yaml)' && core=true
+matches '^server/(lib|test|pubspec\.yaml)'             && server=true
+matches '^app/(lib|test|pubspec\.yaml)'                && app=true
+matches '^app/lib/l10n/.*\.arb$'                       && l10n=true
 
 if ! $core && ! $server && ! $app && ! $l10n; then
   exit 0

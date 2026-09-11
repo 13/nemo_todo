@@ -9,7 +9,7 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
-## Unreleased
+## 0.2.0 - 2026-09-11
 
 ### Added
 

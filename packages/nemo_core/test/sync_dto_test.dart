@@ -86,4 +86,47 @@ void main() {
     expect(res.serverVersion, isEmpty);
     expect(res.cursor, 3);
   });
+
+  test('a photo change survives a round trip through JSON', () {
+    const photo = Photo(
+      id: 'p1',
+      taskId: 't1',
+      sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      byteSize: 4096,
+      width: 2048,
+      height: 1536,
+      sortKey: 'V',
+      updatedAt: '2026-09-13T10:00:00.000Z-0000-node',
+    );
+    const change = SyncChange.photo(photo);
+    final json = change.toJson();
+    expect(json['type'], 'photo');
+    final back = SyncChange.fromJson(json);
+    expect(back, change);
+    expect(back.entity, SyncEntity.photo);
+    expect(back.rowId, 'p1');
+    expect(photo.isDeleted, isFalse);
+    expect(
+      photo.copyWith(deletedAt: photo.updatedAt).isDeleted,
+      isTrue,
+    );
+  });
+
+  test('a photo merges by its stamp like any other row', () {
+    const older = Photo(
+      id: 'p1',
+      taskId: 't1',
+      sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      byteSize: 10,
+      width: 1,
+      height: 1,
+      sortKey: 'V',
+      updatedAt: '2026-09-13T10:00:00.000Z-0000-a',
+    );
+    final newer = older.copyWith(
+      updatedAt: '2026-09-13T10:00:01.000Z-0000-a',
+    );
+    expect(incomingWins(older, newer), isTrue);
+    expect(incomingWins(newer, older), isFalse);
+  });
 }

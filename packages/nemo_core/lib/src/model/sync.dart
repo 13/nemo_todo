@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:nemo_core/src/model/photo.dart';
 import 'package:nemo_core/src/model/subtask.dart';
 import 'package:nemo_core/src/model/task.dart';
 import 'package:nemo_core/src/model/task_list.dart';
@@ -7,20 +8,21 @@ part 'sync.freezed.dart';
 part 'sync.g.dart';
 
 /// The kinds of rows that travel through the sync endpoint.
-enum SyncEntity { list, task, subtask }
+enum SyncEntity { list, task, subtask, photo }
 
 /// What a user may do with a shared list.
 enum MemberRole { owner, editor }
 
 /// One change in a sync request or response.
 ///
-/// `list`, `task` and `subtask` carry a full row; `revoke` tells the
+/// `list`, `task`, `subtask` and `photo` carry a full row; `revoke` tells the
 /// receiver to delete its local copy of a row it may no longer see.
 @Freezed(unionKey: 'type')
 sealed class SyncChange with _$SyncChange {
   const factory SyncChange.list(TaskList row) = SyncChangeList;
   const factory SyncChange.task(Task row) = SyncChangeTask;
   const factory SyncChange.subtask(Subtask row) = SyncChangeSubtask;
+  const factory SyncChange.photo(Photo row) = SyncChangePhoto;
   const factory SyncChange.revoke({
     required SyncEntity target,
     required String id,
@@ -35,6 +37,7 @@ sealed class SyncChange with _$SyncChange {
     SyncChangeList() => SyncEntity.list,
     SyncChangeTask() => SyncEntity.task,
     SyncChangeSubtask() => SyncEntity.subtask,
+    SyncChangePhoto() => SyncEntity.photo,
     SyncChangeRevoke(:final target) => target,
   };
 
@@ -42,6 +45,7 @@ sealed class SyncChange with _$SyncChange {
     SyncChangeList(:final row) => row.id,
     SyncChangeTask(:final row) => row.id,
     SyncChangeSubtask(:final row) => row.id,
+    SyncChangePhoto(:final row) => row.id,
     SyncChangeRevoke(:final id) => id,
   };
 }

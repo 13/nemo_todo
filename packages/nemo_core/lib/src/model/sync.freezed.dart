@@ -28,6 +28,10 @@ SyncChange _$SyncChangeFromJson(
           return SyncChangeSubtask.fromJson(
             json
           );
+                case 'photo':
+          return SyncChangePhoto.fromJson(
+            json
+          );
                 case 'revoke':
           return SyncChangeRevoke.fromJson(
             json
@@ -90,13 +94,14 @@ extension SyncChangePatterns on SyncChange {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SyncChangeList value)?  list,TResult Function( SyncChangeTask value)?  task,TResult Function( SyncChangeSubtask value)?  subtask,TResult Function( SyncChangeRevoke value)?  revoke,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SyncChangeList value)?  list,TResult Function( SyncChangeTask value)?  task,TResult Function( SyncChangeSubtask value)?  subtask,TResult Function( SyncChangePhoto value)?  photo,TResult Function( SyncChangeRevoke value)?  revoke,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case SyncChangeList() when list != null:
 return list(_that);case SyncChangeTask() when task != null:
 return task(_that);case SyncChangeSubtask() when subtask != null:
-return subtask(_that);case SyncChangeRevoke() when revoke != null:
+return subtask(_that);case SyncChangePhoto() when photo != null:
+return photo(_that);case SyncChangeRevoke() when revoke != null:
 return revoke(_that);case _:
   return orElse();
 
@@ -115,13 +120,14 @@ return revoke(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SyncChangeList value)  list,required TResult Function( SyncChangeTask value)  task,required TResult Function( SyncChangeSubtask value)  subtask,required TResult Function( SyncChangeRevoke value)  revoke,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SyncChangeList value)  list,required TResult Function( SyncChangeTask value)  task,required TResult Function( SyncChangeSubtask value)  subtask,required TResult Function( SyncChangePhoto value)  photo,required TResult Function( SyncChangeRevoke value)  revoke,}){
 final _that = this;
 switch (_that) {
 case SyncChangeList():
 return list(_that);case SyncChangeTask():
 return task(_that);case SyncChangeSubtask():
-return subtask(_that);case SyncChangeRevoke():
+return subtask(_that);case SyncChangePhoto():
+return photo(_that);case SyncChangeRevoke():
 return revoke(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -136,13 +142,14 @@ return revoke(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SyncChangeList value)?  list,TResult? Function( SyncChangeTask value)?  task,TResult? Function( SyncChangeSubtask value)?  subtask,TResult? Function( SyncChangeRevoke value)?  revoke,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SyncChangeList value)?  list,TResult? Function( SyncChangeTask value)?  task,TResult? Function( SyncChangeSubtask value)?  subtask,TResult? Function( SyncChangePhoto value)?  photo,TResult? Function( SyncChangeRevoke value)?  revoke,}){
 final _that = this;
 switch (_that) {
 case SyncChangeList() when list != null:
 return list(_that);case SyncChangeTask() when task != null:
 return task(_that);case SyncChangeSubtask() when subtask != null:
-return subtask(_that);case SyncChangeRevoke() when revoke != null:
+return subtask(_that);case SyncChangePhoto() when photo != null:
+return photo(_that);case SyncChangeRevoke() when revoke != null:
 return revoke(_that);case _:
   return null;
 
@@ -160,12 +167,13 @@ return revoke(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TaskList row)?  list,TResult Function( Task row)?  task,TResult Function( Subtask row)?  subtask,TResult Function( SyncEntity target,  String id)?  revoke,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TaskList row)?  list,TResult Function( Task row)?  task,TResult Function( Subtask row)?  subtask,TResult Function( Photo row)?  photo,TResult Function( SyncEntity target,  String id)?  revoke,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SyncChangeList() when list != null:
 return list(_that.row);case SyncChangeTask() when task != null:
 return task(_that.row);case SyncChangeSubtask() when subtask != null:
-return subtask(_that.row);case SyncChangeRevoke() when revoke != null:
+return subtask(_that.row);case SyncChangePhoto() when photo != null:
+return photo(_that.row);case SyncChangeRevoke() when revoke != null:
 return revoke(_that.target,_that.id);case _:
   return orElse();
 
@@ -184,12 +192,13 @@ return revoke(_that.target,_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TaskList row)  list,required TResult Function( Task row)  task,required TResult Function( Subtask row)  subtask,required TResult Function( SyncEntity target,  String id)  revoke,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TaskList row)  list,required TResult Function( Task row)  task,required TResult Function( Subtask row)  subtask,required TResult Function( Photo row)  photo,required TResult Function( SyncEntity target,  String id)  revoke,}) {final _that = this;
 switch (_that) {
 case SyncChangeList():
 return list(_that.row);case SyncChangeTask():
 return task(_that.row);case SyncChangeSubtask():
-return subtask(_that.row);case SyncChangeRevoke():
+return subtask(_that.row);case SyncChangePhoto():
+return photo(_that.row);case SyncChangeRevoke():
 return revoke(_that.target,_that.id);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -204,12 +213,13 @@ return revoke(_that.target,_that.id);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TaskList row)?  list,TResult? Function( Task row)?  task,TResult? Function( Subtask row)?  subtask,TResult? Function( SyncEntity target,  String id)?  revoke,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TaskList row)?  list,TResult? Function( Task row)?  task,TResult? Function( Subtask row)?  subtask,TResult? Function( Photo row)?  photo,TResult? Function( SyncEntity target,  String id)?  revoke,}) {final _that = this;
 switch (_that) {
 case SyncChangeList() when list != null:
 return list(_that.row);case SyncChangeTask() when task != null:
 return task(_that.row);case SyncChangeSubtask() when subtask != null:
-return subtask(_that.row);case SyncChangeRevoke() when revoke != null:
+return subtask(_that.row);case SyncChangePhoto() when photo != null:
+return photo(_that.row);case SyncChangeRevoke() when revoke != null:
 return revoke(_that.target,_that.id);case _:
   return null;
 
@@ -465,6 +475,90 @@ as Subtask,
 $SubtaskCopyWith<$Res> get row {
   
   return $SubtaskCopyWith<$Res>(_self.row, (value) {
+    return _then(_self.copyWith(row: value));
+  });
+}
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class SyncChangePhoto extends SyncChange {
+  const SyncChangePhoto(this.row, { String? $type}): $type = $type ?? 'photo',super._();
+  factory SyncChangePhoto.fromJson(Map<String, dynamic> json) => _$SyncChangePhotoFromJson(json);
+
+ final  Photo row;
+
+@JsonKey(name: 'type')
+final String $type;
+
+
+/// Create a copy of SyncChange
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SyncChangePhotoCopyWith<SyncChangePhoto> get copyWith => _$SyncChangePhotoCopyWithImpl<SyncChangePhoto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$SyncChangePhotoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncChangePhoto&&(identical(other.row, row) || other.row == row));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,row);
+}
+
+@override
+String toString() {
+    return 'SyncChange.photo(row: $row)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SyncChangePhotoCopyWith<$Res> implements $SyncChangeCopyWith<$Res> {
+  factory $SyncChangePhotoCopyWith(SyncChangePhoto value, $Res Function(SyncChangePhoto) _then) = _$SyncChangePhotoCopyWithImpl;
+@useResult
+$Res call({
+ Photo row
+});
+
+
+$PhotoCopyWith<$Res> get row;
+
+}
+/// @nodoc
+class _$SyncChangePhotoCopyWithImpl<$Res>
+    implements $SyncChangePhotoCopyWith<$Res> {
+  _$SyncChangePhotoCopyWithImpl(this._self, this._then);
+
+  final SyncChangePhoto _self;
+  final $Res Function(SyncChangePhoto) _then;
+
+/// Create a copy of SyncChange
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? row = null,}) {
+  return _then(SyncChangePhoto(
+null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as Photo,
+  ));
+}
+
+/// Create a copy of SyncChange
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PhotoCopyWith<$Res> get row {
+  
+  return $PhotoCopyWith<$Res>(_self.row, (value) {
     return _then(_self.copyWith(row: value));
   });
 }

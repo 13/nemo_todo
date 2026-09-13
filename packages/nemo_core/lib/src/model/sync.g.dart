@@ -33,6 +33,15 @@ SyncChangeSubtask _$SyncChangeSubtaskFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$SyncChangeSubtaskToJson(SyncChangeSubtask instance) =>
     <String, dynamic>{'row': instance.row.toJson(), 'type': instance.$type};
 
+SyncChangePhoto _$SyncChangePhotoFromJson(Map<String, dynamic> json) =>
+    SyncChangePhoto(
+      Photo.fromJson(json['row'] as Map<String, dynamic>),
+      $type: json['type'] as String?,
+    );
+
+Map<String, dynamic> _$SyncChangePhotoToJson(SyncChangePhoto instance) =>
+    <String, dynamic>{'row': instance.row.toJson(), 'type': instance.$type};
+
 SyncChangeRevoke _$SyncChangeRevokeFromJson(Map<String, dynamic> json) =>
     SyncChangeRevoke(
       target: $enumDecode(_$SyncEntityEnumMap, json['target']),
@@ -51,6 +60,7 @@ const _$SyncEntityEnumMap = {
   SyncEntity.list: 'list',
   SyncEntity.task: 'task',
   SyncEntity.subtask: 'subtask',
+  SyncEntity.photo: 'photo',
 };
 
 _SyncRequest _$SyncRequestFromJson(Map<String, dynamic> json) => _SyncRequest(

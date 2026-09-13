@@ -33,3 +33,20 @@ class Kv extends Table {
   @override
   Set<Column<Object>> get primaryKey => {key};
 }
+
+/// What this device holds the bytes for, and whether the server has them.
+///
+/// Never synced: it is a note about this device's storage, not about the
+/// picture. The bytes themselves are a file on Android and memory on the
+/// web -- see `PhotoStore`.
+@DataClassName('BlobRow')
+class Blobs extends Table {
+  TextColumn get sha256 => text()();
+  IntColumn get byteSize => integer()();
+
+  /// `pendingUpload` until the server has the bytes, then `synced`.
+  TextColumn get state => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sha256};
+}

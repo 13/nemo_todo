@@ -188,4 +188,95 @@ void main() {
       expect(await db.watchOutboxCount().first, 0);
     },
   );
+
+  test(
+    'a photo waits in the outbox until its bytes have been uploaded',
+    () async {
+      final db = testDatabase();
+      addTearDown(db.close);
+      final clock = testClock('a');
+      const hash =
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+
+      await db.upsertTask(
+        Task(
+          id: 't1',
+          listId: 'l1',
+          title: 'T',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      await db.rememberBlob(hash, byteSize: 12, state: 'pendingUpload');
+      await db.upsertPhoto(
+        Photo(
+          id: 'p1',
+          taskId: 't1',
+          sha256: hash,
+          byteSize: 12,
+          width: 4,
+          height: 3,
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+
+      expect(
+        (await db.outboxChanges()).whereType<SyncChangePhoto>(),
+        isEmpty,
+        reason: 'the server would hold a row whose bytes it cannot serve',
+      );
+      expect((await db.pendingBlobs()).single.sha256, hash);
+
+      await db.markBlobSynced(hash);
+      expect(
+        (await db.outboxChanges()).whereType<SyncChangePhoto>().single.row.id,
+        'p1',
+      );
+    },
+  );
+
+  test(
+    'a pulled photo is applied, and revoking its task takes it away',
+    () async {
+      final db = testDatabase();
+      addTearDown(db.close);
+      final clock = testClock('server');
+      const hash =
+          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+      await db.applyRemote(
+        SyncChange.task(
+          Task(
+            id: 't1',
+            listId: 'l1',
+            title: 'T',
+            sortKey: 'V',
+            updatedAt: clock.now().toString(),
+          ),
+        ),
+      );
+      await db.applyRemote(
+        SyncChange.photo(
+          Photo(
+            id: 'p1',
+            taskId: 't1',
+            sha256: hash,
+            byteSize: 9,
+            width: 2,
+            height: 2,
+            sortKey: 'V',
+            updatedAt: clock.now().toString(),
+          ),
+        ),
+      );
+      expect(await db.photoById('p1'), isNotNull);
+      expect(await db.missingBlobHashes(), [hash]);
+
+      await db.applyRemote(
+        const SyncChange.revoke(target: SyncEntity.task, id: 't1'),
+      );
+      expect(await db.photoById('p1'), isNull);
+      expect(await db.missingBlobHashes(), isEmpty);
+    },
+  );
 }

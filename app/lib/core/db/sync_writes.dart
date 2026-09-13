@@ -5,6 +5,10 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo_core/nemo_core.dart';
 
+/// Returned for a queued row that is not ready to be pushed yet. It is not
+/// sent and its queue entry is kept.
+const _held = SyncChange.revoke(target: SyncEntity.photo, id: '__held__');
+
 /// Local mutations and remote application, both keeping the outbox honest.
 extension SyncWrites on AppDatabase {
   /// Writes a locally edited list and queues it for the next sync.
@@ -24,6 +28,12 @@ extension SyncWrites on AppDatabase {
     SyncEntity.subtask,
     row,
     () => into(subtasks).insertOnConflictUpdate(row.toInsertable()),
+  );
+
+  Future<void> upsertPhoto(Photo row) => _writeLocal(
+    SyncEntity.photo,
+    row,
+    () => into(photos).insertOnConflictUpdate(row.toInsertable()),
   );
 
   Future<void> _writeLocal(
@@ -69,6 +79,13 @@ extension SyncWrites on AppDatabase {
           await dropOutbox(SyncEntity.subtask, row.id);
         }
         return null;
+      case SyncChangePhoto(:final row):
+        final local = await photoById(row.id);
+        if (incomingWins(local, row)) {
+          await into(photos).insertOnConflictUpdate(row.toInsertable());
+          await dropOutbox(SyncEntity.photo, row.id);
+        }
+        return null;
       case SyncChangeRevoke(:final target, :final id):
         await _revoke(target, id);
         return null;
@@ -85,15 +102,21 @@ extension SyncWrites on AppDatabase {
           final subtaskIds = (await (select(
             subtasks,
           )..where((t) => t.taskId.isIn(taskIds))).get()).map((s) => s.id);
+          final photoIds = (await (select(
+            photos,
+          )..where((t) => t.taskId.isIn(taskIds))).get()).map((p) => p.id);
           await (delete(outbox)..where(
                 (t) =>
                     (t.entity.equals(SyncEntity.task.name) &
                         t.rowId.isIn(taskIds)) |
                     (t.entity.equals(SyncEntity.subtask.name) &
-                        t.rowId.isIn(subtaskIds)),
+                        t.rowId.isIn(subtaskIds)) |
+                    (t.entity.equals(SyncEntity.photo.name) &
+                        t.rowId.isIn(photoIds)),
               ))
               .go();
           await (delete(subtasks)..where((t) => t.taskId.isIn(taskIds))).go();
+          await (delete(photos)..where((t) => t.taskId.isIn(taskIds))).go();
         }
         await (delete(tasks)..where((t) => t.listId.equals(id))).go();
         await (delete(lists)..where((t) => t.id.equals(id))).go();
@@ -102,16 +125,24 @@ extension SyncWrites on AppDatabase {
         final subtaskIds = (await (select(
           subtasks,
         )..where((t) => t.taskId.equals(id))).get()).map((s) => s.id);
+        final photoIds = (await (select(
+          photos,
+        )..where((t) => t.taskId.equals(id))).get()).map((p) => p.id);
         await (delete(outbox)..where(
               (t) =>
-                  t.entity.equals(SyncEntity.subtask.name) &
-                  t.rowId.isIn(subtaskIds),
+                  (t.entity.equals(SyncEntity.subtask.name) &
+                      t.rowId.isIn(subtaskIds)) |
+                  (t.entity.equals(SyncEntity.photo.name) &
+                      t.rowId.isIn(photoIds)),
             ))
             .go();
         await (delete(subtasks)..where((t) => t.taskId.equals(id))).go();
+        await (delete(photos)..where((t) => t.taskId.equals(id))).go();
         await (delete(tasks)..where((t) => t.id.equals(id))).go();
       case SyncEntity.subtask:
         await (delete(subtasks)..where((t) => t.id.equals(id))).go();
+      case SyncEntity.photo:
+        await (delete(photos)..where((t) => t.id.equals(id))).go();
     }
     await (delete(
       outbox,
@@ -135,6 +166,7 @@ extension SyncWrites on AppDatabase {
     await add(SyncEntity.list, await select(lists).get());
     await add(SyncEntity.task, await select(tasks).get());
     await add(SyncEntity.subtask, await select(subtasks).get());
+    await add(SyncEntity.photo, await select(photos).get());
   });
 
   /// The queued rows as they are right now.
@@ -149,7 +181,9 @@ extension SyncWrites on AppDatabase {
         SyncEntity.subtask => (await subtaskById(
           entry.rowId,
         )).let(SyncChange.subtask),
+        SyncEntity.photo => await _pushablePhoto(entry.rowId),
       };
+      if (identical(change, _held)) continue;
       if (change == null) {
         await (delete(outbox)..where(
               (t) =>
@@ -163,6 +197,19 @@ extension SyncWrites on AppDatabase {
     return changes;
   }
 
+  /// A photo row is only offered to the server once the server has its
+  /// bytes. Pushing it first would leave every other device holding a row
+  /// it cannot fetch a picture for.
+  Future<SyncChange?> _pushablePhoto(String rowId) async {
+    final row = await photoById(rowId);
+    if (row == null) return null;
+    final blob = await (select(
+      blobs,
+    )..where((t) => t.sha256.equals(row.sha256))).getSingleOrNull();
+    if (blob != null && blob.state != 'synced') return _held;
+    return SyncChange.photo(row);
+  }
+
   /// Removes queue entries for [pushed] rows unless edited since the push.
   Future<void> ackOutbox(Iterable<SyncChange> pushed) => transaction(() async {
     for (final change in pushed) {
@@ -170,6 +217,7 @@ extension SyncWrites on AppDatabase {
         SyncChangeList(:final row) => row.updatedAt,
         SyncChangeTask(:final row) => row.updatedAt,
         SyncChangeSubtask(:final row) => row.updatedAt,
+        SyncChangePhoto(:final row) => row.updatedAt,
         SyncChangeRevoke() => null,
       };
       if (updatedAt == null) continue;
@@ -239,6 +287,8 @@ extension SyncWrites on AppDatabase {
   Future<void> clearLocalData() => transaction(() async {
     await delete(outbox).go();
     await delete(listMeta).go();
+    await delete(photos).go();
+    await delete(blobs).go();
     await delete(subtasks).go();
     await delete(tasks).go();
     await delete(lists).go();
@@ -256,6 +306,51 @@ extension SyncWrites on AppDatabase {
 
   Future<Subtask?> subtaskById(String id) =>
       (select(subtasks)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<Photo?> photoById(String id) =>
+      (select(photos)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<List<Photo>> photosOfTask(String taskId) =>
+      (select(photos)..where((t) => t.taskId.equals(taskId))).get();
+
+  /// Records that this device holds bytes for [sha256].
+  Future<void> rememberBlob(
+    String sha256, {
+    required int byteSize,
+    required String state,
+  }) => into(blobs).insertOnConflictUpdate(
+    BlobsCompanion.insert(sha256: sha256, byteSize: byteSize, state: state),
+  );
+
+  Future<void> markBlobSynced(String sha256) =>
+      (update(blobs)..where((t) => t.sha256.equals(sha256))).write(
+        const BlobsCompanion(state: Value('synced')),
+      );
+
+  Future<List<BlobRow>> pendingBlobs() =>
+      (select(blobs)..where((t) => t.state.equals('pendingUpload'))).get();
+
+  /// Hashes named by a live photo row that this device does not hold.
+  Future<List<String>> missingBlobHashes() async {
+    final rows = await customSelect(
+      'select distinct p.sha256 as sha256 from photos p '
+      'where p.deleted_at is null '
+      'and p.sha256 not in (select sha256 from blobs)',
+      readsFrom: {photos, blobs},
+    ).get();
+    return [for (final r in rows) r.read<String>('sha256')];
+  }
+
+  /// Forgets a blob once no live photo row names it. Returns whether it
+  /// was forgotten, so the caller knows to delete the bytes as well.
+  Future<bool> forgetUnusedBlob(String sha256) async {
+    final still = await (select(
+      photos,
+    )..where((t) => t.sha256.equals(sha256) & t.deletedAt.isNull())).get();
+    if (still.isNotEmpty) return false;
+    await (delete(blobs)..where((t) => t.sha256.equals(sha256))).go();
+    return true;
+  }
 }
 
 extension<T> on T? {

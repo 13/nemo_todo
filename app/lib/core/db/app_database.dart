@@ -8,7 +8,9 @@ part 'app_database.g.dart';
 
 /// The app's local database: the synced tables plus outbox, sharing
 /// metadata and a key-value store.
-@DriftDatabase(tables: [Lists, Tasks, Subtasks, Outbox, ListMeta, Kv])
+@DriftDatabase(
+  tables: [Lists, Tasks, Subtasks, Photos, Outbox, ListMeta, Kv, Blobs],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
@@ -25,7 +27,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -34,6 +36,13 @@ class AppDatabase extends _$AppDatabase {
       // Version 2 carries how often a task comes back. Null on every row
       // that existed before, which is what "happens once" already meant.
       if (from < 2) await m.addColumn(tasks, tasks.repeat);
+      // Version 3 carries pictures: the rows, and what this device holds
+      // the bytes for.
+      if (from < 3) {
+        await m.createTable(photos);
+        await m.create(photosTaskId);
+        await m.createTable(blobs);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('pragma foreign_keys = on');

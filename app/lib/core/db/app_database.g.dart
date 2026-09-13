@@ -1368,6 +1368,418 @@ extension SubtaskToInsertable on Subtask {
   }
 }
 
+class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PhotosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sha256Meta = const VerificationMeta('sha256');
+  @override
+  late final GeneratedColumn<String> sha256 = GeneratedColumn<String>(
+    'sha256',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _byteSizeMeta = const VerificationMeta(
+    'byteSize',
+  );
+  @override
+  late final GeneratedColumn<int> byteSize = GeneratedColumn<int>(
+    'byte_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _widthMeta = const VerificationMeta('width');
+  @override
+  late final GeneratedColumn<int> width = GeneratedColumn<int>(
+    'width',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _heightMeta = const VerificationMeta('height');
+  @override
+  late final GeneratedColumn<int> height = GeneratedColumn<int>(
+    'height',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortKeyMeta = const VerificationMeta(
+    'sortKey',
+  );
+  @override
+  late final GeneratedColumn<String> sortKey = GeneratedColumn<String>(
+    'sort_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    taskId,
+    sha256,
+    byteSize,
+    width,
+    height,
+    sortKey,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'photos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Photo> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_taskIdMeta);
+    }
+    if (data.containsKey('sha256')) {
+      context.handle(
+        _sha256Meta,
+        sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta),
+      );
+    } else if (isInserting) {
+      context.missing(_sha256Meta);
+    }
+    if (data.containsKey('byte_size')) {
+      context.handle(
+        _byteSizeMeta,
+        byteSize.isAcceptableOrUnknown(data['byte_size']!, _byteSizeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_byteSizeMeta);
+    }
+    if (data.containsKey('width')) {
+      context.handle(
+        _widthMeta,
+        width.isAcceptableOrUnknown(data['width']!, _widthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_widthMeta);
+    }
+    if (data.containsKey('height')) {
+      context.handle(
+        _heightMeta,
+        height.isAcceptableOrUnknown(data['height']!, _heightMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_heightMeta);
+    }
+    if (data.containsKey('sort_key')) {
+      context.handle(
+        _sortKeyMeta,
+        sortKey.isAcceptableOrUnknown(data['sort_key']!, _sortKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sortKeyMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Photo map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Photo(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      )!,
+      sha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sha256'],
+      )!,
+      byteSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}byte_size'],
+      )!,
+      width: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}width'],
+      )!,
+      height: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}height'],
+      )!,
+      sortKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sort_key'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $PhotosTable createAlias(String alias) {
+    return $PhotosTable(attachedDatabase, alias);
+  }
+}
+
+class PhotosCompanion extends UpdateCompanion<Photo> {
+  final Value<String> id;
+  final Value<String> taskId;
+  final Value<String> sha256;
+  final Value<int> byteSize;
+  final Value<int> width;
+  final Value<int> height;
+  final Value<String> sortKey;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<int> rowid;
+  const PhotosCompanion({
+    this.id = const Value.absent(),
+    this.taskId = const Value.absent(),
+    this.sha256 = const Value.absent(),
+    this.byteSize = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.sortKey = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PhotosCompanion.insert({
+    required String id,
+    required String taskId,
+    required String sha256,
+    required int byteSize,
+    required int width,
+    required int height,
+    required String sortKey,
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       taskId = Value(taskId),
+       sha256 = Value(sha256),
+       byteSize = Value(byteSize),
+       width = Value(width),
+       height = Value(height),
+       sortKey = Value(sortKey),
+       updatedAt = Value(updatedAt);
+  static Insertable<Photo> custom({
+    Expression<String>? id,
+    Expression<String>? taskId,
+    Expression<String>? sha256,
+    Expression<int>? byteSize,
+    Expression<int>? width,
+    Expression<int>? height,
+    Expression<String>? sortKey,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (taskId != null) 'task_id': taskId,
+      if (sha256 != null) 'sha256': sha256,
+      if (byteSize != null) 'byte_size': byteSize,
+      if (width != null) 'width': width,
+      if (height != null) 'height': height,
+      if (sortKey != null) 'sort_key': sortKey,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PhotosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? taskId,
+    Value<String>? sha256,
+    Value<int>? byteSize,
+    Value<int>? width,
+    Value<int>? height,
+    Value<String>? sortKey,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return PhotosCompanion(
+      id: id ?? this.id,
+      taskId: taskId ?? this.taskId,
+      sha256: sha256 ?? this.sha256,
+      byteSize: byteSize ?? this.byteSize,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      sortKey: sortKey ?? this.sortKey,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (sha256.present) {
+      map['sha256'] = Variable<String>(sha256.value);
+    }
+    if (byteSize.present) {
+      map['byte_size'] = Variable<int>(byteSize.value);
+    }
+    if (width.present) {
+      map['width'] = Variable<int>(width.value);
+    }
+    if (height.present) {
+      map['height'] = Variable<int>(height.value);
+    }
+    if (sortKey.present) {
+      map['sort_key'] = Variable<String>(sortKey.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PhotosCompanion(')
+          ..write('id: $id, ')
+          ..write('taskId: $taskId, ')
+          ..write('sha256: $sha256, ')
+          ..write('byteSize: $byteSize, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('sortKey: $sortKey, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class _$PhotoInsertable implements Insertable<Photo> {
+  Photo _object;
+  _$PhotoInsertable(this._object);
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    return PhotosCompanion(
+      id: Value(_object.id),
+      taskId: Value(_object.taskId),
+      sha256: Value(_object.sha256),
+      byteSize: Value(_object.byteSize),
+      width: Value(_object.width),
+      height: Value(_object.height),
+      sortKey: Value(_object.sortKey),
+      updatedAt: Value(_object.updatedAt),
+      deletedAt: Value(_object.deletedAt),
+    ).toColumns(false);
+  }
+}
+
+extension PhotoToInsertable on Photo {
+  _$PhotoInsertable toInsertable() {
+    return _$PhotoInsertable(this);
+  }
+}
+
 class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -2119,15 +2531,279 @@ class KvCompanion extends UpdateCompanion<KvRow> {
   }
 }
 
+class $BlobsTable extends Blobs with TableInfo<$BlobsTable, BlobRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BlobsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sha256Meta = const VerificationMeta('sha256');
+  @override
+  late final GeneratedColumn<String> sha256 = GeneratedColumn<String>(
+    'sha256',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _byteSizeMeta = const VerificationMeta(
+    'byteSize',
+  );
+  @override
+  late final GeneratedColumn<int> byteSize = GeneratedColumn<int>(
+    'byte_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stateMeta = const VerificationMeta('state');
+  @override
+  late final GeneratedColumn<String> state = GeneratedColumn<String>(
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [sha256, byteSize, state];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'blobs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BlobRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('sha256')) {
+      context.handle(
+        _sha256Meta,
+        sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta),
+      );
+    } else if (isInserting) {
+      context.missing(_sha256Meta);
+    }
+    if (data.containsKey('byte_size')) {
+      context.handle(
+        _byteSizeMeta,
+        byteSize.isAcceptableOrUnknown(data['byte_size']!, _byteSizeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_byteSizeMeta);
+    }
+    if (data.containsKey('state')) {
+      context.handle(
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sha256};
+  @override
+  BlobRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BlobRow(
+      sha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sha256'],
+      )!,
+      byteSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}byte_size'],
+      )!,
+      state: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state'],
+      )!,
+    );
+  }
+
+  @override
+  $BlobsTable createAlias(String alias) {
+    return $BlobsTable(attachedDatabase, alias);
+  }
+}
+
+class BlobRow extends DataClass implements Insertable<BlobRow> {
+  final String sha256;
+  final int byteSize;
+
+  /// `pendingUpload` until the server has the bytes, then `synced`.
+  final String state;
+  const BlobRow({
+    required this.sha256,
+    required this.byteSize,
+    required this.state,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['sha256'] = Variable<String>(sha256);
+    map['byte_size'] = Variable<int>(byteSize);
+    map['state'] = Variable<String>(state);
+    return map;
+  }
+
+  BlobsCompanion toCompanion(bool nullToAbsent) {
+    return BlobsCompanion(
+      sha256: Value(sha256),
+      byteSize: Value(byteSize),
+      state: Value(state),
+    );
+  }
+
+  factory BlobRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BlobRow(
+      sha256: serializer.fromJson<String>(json['sha256']),
+      byteSize: serializer.fromJson<int>(json['byteSize']),
+      state: serializer.fromJson<String>(json['state']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sha256': serializer.toJson<String>(sha256),
+      'byteSize': serializer.toJson<int>(byteSize),
+      'state': serializer.toJson<String>(state),
+    };
+  }
+
+  BlobRow copyWith({String? sha256, int? byteSize, String? state}) => BlobRow(
+    sha256: sha256 ?? this.sha256,
+    byteSize: byteSize ?? this.byteSize,
+    state: state ?? this.state,
+  );
+  BlobRow copyWithCompanion(BlobsCompanion data) {
+    return BlobRow(
+      sha256: data.sha256.present ? data.sha256.value : this.sha256,
+      byteSize: data.byteSize.present ? data.byteSize.value : this.byteSize,
+      state: data.state.present ? data.state.value : this.state,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BlobRow(')
+          ..write('sha256: $sha256, ')
+          ..write('byteSize: $byteSize, ')
+          ..write('state: $state')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(sha256, byteSize, state);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BlobRow &&
+          other.sha256 == this.sha256 &&
+          other.byteSize == this.byteSize &&
+          other.state == this.state);
+}
+
+class BlobsCompanion extends UpdateCompanion<BlobRow> {
+  final Value<String> sha256;
+  final Value<int> byteSize;
+  final Value<String> state;
+  final Value<int> rowid;
+  const BlobsCompanion({
+    this.sha256 = const Value.absent(),
+    this.byteSize = const Value.absent(),
+    this.state = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BlobsCompanion.insert({
+    required String sha256,
+    required int byteSize,
+    required String state,
+    this.rowid = const Value.absent(),
+  }) : sha256 = Value(sha256),
+       byteSize = Value(byteSize),
+       state = Value(state);
+  static Insertable<BlobRow> custom({
+    Expression<String>? sha256,
+    Expression<int>? byteSize,
+    Expression<String>? state,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sha256 != null) 'sha256': sha256,
+      if (byteSize != null) 'byte_size': byteSize,
+      if (state != null) 'state': state,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BlobsCompanion copyWith({
+    Value<String>? sha256,
+    Value<int>? byteSize,
+    Value<String>? state,
+    Value<int>? rowid,
+  }) {
+    return BlobsCompanion(
+      sha256: sha256 ?? this.sha256,
+      byteSize: byteSize ?? this.byteSize,
+      state: state ?? this.state,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sha256.present) {
+      map['sha256'] = Variable<String>(sha256.value);
+    }
+    if (byteSize.present) {
+      map['byte_size'] = Variable<int>(byteSize.value);
+    }
+    if (state.present) {
+      map['state'] = Variable<String>(state.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BlobsCompanion(')
+          ..write('sha256: $sha256, ')
+          ..write('byteSize: $byteSize, ')
+          ..write('state: $state, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ListsTable lists = $ListsTable(this);
   late final $TasksTable tasks = $TasksTable(this);
   late final $SubtasksTable subtasks = $SubtasksTable(this);
+  late final $PhotosTable photos = $PhotosTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $ListMetaTable listMeta = $ListMetaTable(this);
   late final $KvTable kv = $KvTable(this);
+  late final $BlobsTable blobs = $BlobsTable(this);
   late final Index tasksListId = Index(
     'tasks_list_id',
     'CREATE INDEX tasks_list_id ON tasks (list_id)',
@@ -2135,6 +2811,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index subtasksTaskId = Index(
     'subtasks_task_id',
     'CREATE INDEX subtasks_task_id ON subtasks (task_id)',
+  );
+  late final Index photosTaskId = Index(
+    'photos_task_id',
+    'CREATE INDEX photos_task_id ON photos (task_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -2144,11 +2824,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     lists,
     tasks,
     subtasks,
+    photos,
     outbox,
     listMeta,
     kv,
+    blobs,
     tasksListId,
     subtasksTaskId,
+    photosTaskId,
   ];
 }
 
@@ -3060,6 +3743,283 @@ typedef $$SubtasksTableProcessedTableManager =
       Subtask,
       PrefetchHooks Function()
     >;
+typedef $$PhotosTableCreateCompanionBuilder = PhotosCompanion Function({
+  required String id,
+  required String taskId,
+  required String sha256,
+  required int byteSize,
+  required int width,
+  required int height,
+  required String sortKey,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<int> rowid,
+});
+typedef $$PhotosTableUpdateCompanionBuilder = PhotosCompanion Function({
+  Value<String> id,
+  Value<String> taskId,
+  Value<String> sha256,
+  Value<int> byteSize,
+  Value<int> width,
+  Value<int> height,
+  Value<String> sortKey,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<int> rowid,
+});
+
+class $$PhotosTableFilterComposer
+    extends Composer<_$AppDatabase, $PhotosTable> {
+  $$PhotosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get byteSize => $composableBuilder(
+    column: $table.byteSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sortKey => $composableBuilder(
+    column: $table.sortKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PhotosTableOrderingComposer
+    extends Composer<_$AppDatabase, $PhotosTable> {
+  $$PhotosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get byteSize => $composableBuilder(
+    column: $table.byteSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sortKey => $composableBuilder(
+    column: $table.sortKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PhotosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PhotosTable> {
+  $$PhotosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
+
+  GeneratedColumn<String> get sha256 =>
+      $composableBuilder(column: $table.sha256, builder: (column) => column);
+
+  GeneratedColumn<int> get byteSize =>
+      $composableBuilder(column: $table.byteSize, builder: (column) => column);
+
+  GeneratedColumn<int> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => column);
+
+  GeneratedColumn<int> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => column);
+
+  GeneratedColumn<String> get sortKey =>
+      $composableBuilder(column: $table.sortKey, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$PhotosTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PhotosTable,
+          Photo,
+          $$PhotosTableFilterComposer,
+          $$PhotosTableOrderingComposer,
+          $$PhotosTableAnnotationComposer,
+          $$PhotosTableCreateCompanionBuilder,
+          $$PhotosTableUpdateCompanionBuilder,
+          (Photo, BaseReferences<_$AppDatabase, $PhotosTable, Photo>),
+          Photo,
+          PrefetchHooks Function()
+        > {
+  $$PhotosTableTableManager(_$AppDatabase db, $PhotosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PhotosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PhotosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PhotosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> taskId = const Value.absent(),
+                Value<String> sha256 = const Value.absent(),
+                Value<int> byteSize = const Value.absent(),
+                Value<int> width = const Value.absent(),
+                Value<int> height = const Value.absent(),
+                Value<String> sortKey = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PhotosCompanion(
+                id: id,
+                taskId: taskId,
+                sha256: sha256,
+                byteSize: byteSize,
+                width: width,
+                height: height,
+                sortKey: sortKey,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String taskId,
+                required String sha256,
+                required int byteSize,
+                required int width,
+                required int height,
+                required String sortKey,
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PhotosCompanion.insert(
+                id: id,
+                taskId: taskId,
+                sha256: sha256,
+                byteSize: byteSize,
+                width: width,
+                height: height,
+                sortKey: sortKey,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PhotosTable, Photo>(table),
+                  BaseReferences<_$AppDatabase, $PhotosTable, Photo>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PhotosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PhotosTable,
+      Photo,
+      $$PhotosTableFilterComposer,
+      $$PhotosTableOrderingComposer,
+      $$PhotosTableAnnotationComposer,
+      $$PhotosTableCreateCompanionBuilder,
+      $$PhotosTableUpdateCompanionBuilder,
+      (Photo, BaseReferences<_$AppDatabase, $PhotosTable, Photo>),
+      Photo,
+      PrefetchHooks Function()
+    >;
 typedef $$OutboxTableCreateCompanionBuilder = OutboxCompanion Function({
   required String entity,
   required String rowId,
@@ -3523,6 +4483,168 @@ typedef $$KvTableProcessedTableManager =
       KvRow,
       PrefetchHooks Function()
     >;
+typedef $$BlobsTableCreateCompanionBuilder = BlobsCompanion Function({
+  required String sha256,
+  required int byteSize,
+  required String state,
+  Value<int> rowid,
+});
+typedef $$BlobsTableUpdateCompanionBuilder = BlobsCompanion Function({
+  Value<String> sha256,
+  Value<int> byteSize,
+  Value<String> state,
+  Value<int> rowid,
+});
+
+class $$BlobsTableFilterComposer extends Composer<_$AppDatabase, $BlobsTable> {
+  $$BlobsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get byteSize => $composableBuilder(
+    column: $table.byteSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BlobsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BlobsTable> {
+  $$BlobsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get byteSize => $composableBuilder(
+    column: $table.byteSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BlobsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BlobsTable> {
+  $$BlobsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sha256 =>
+      $composableBuilder(column: $table.sha256, builder: (column) => column);
+
+  GeneratedColumn<int> get byteSize =>
+      $composableBuilder(column: $table.byteSize, builder: (column) => column);
+
+  GeneratedColumn<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => column);
+}
+
+class $$BlobsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BlobsTable,
+          BlobRow,
+          $$BlobsTableFilterComposer,
+          $$BlobsTableOrderingComposer,
+          $$BlobsTableAnnotationComposer,
+          $$BlobsTableCreateCompanionBuilder,
+          $$BlobsTableUpdateCompanionBuilder,
+          (BlobRow, BaseReferences<_$AppDatabase, $BlobsTable, BlobRow>),
+          BlobRow,
+          PrefetchHooks Function()
+        > {
+  $$BlobsTableTableManager(_$AppDatabase db, $BlobsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BlobsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BlobsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BlobsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> sha256 = const Value.absent(),
+                Value<int> byteSize = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BlobsCompanion(
+                sha256: sha256,
+                byteSize: byteSize,
+                state: state,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String sha256,
+                required int byteSize,
+                required String state,
+                Value<int> rowid = const Value.absent(),
+              }) => BlobsCompanion.insert(
+                sha256: sha256,
+                byteSize: byteSize,
+                state: state,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BlobsTable, BlobRow>(table),
+                  BaseReferences<_$AppDatabase, $BlobsTable, BlobRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BlobsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BlobsTable,
+      BlobRow,
+      $$BlobsTableFilterComposer,
+      $$BlobsTableOrderingComposer,
+      $$BlobsTableAnnotationComposer,
+      $$BlobsTableCreateCompanionBuilder,
+      $$BlobsTableUpdateCompanionBuilder,
+      (BlobRow, BaseReferences<_$AppDatabase, $BlobsTable, BlobRow>),
+      BlobRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3533,9 +4655,13 @@ class $AppDatabaseManager {
       $$TasksTableTableManager(_db, _db.tasks);
   $$SubtasksTableTableManager get subtasks =>
       $$SubtasksTableTableManager(_db, _db.subtasks);
+  $$PhotosTableTableManager get photos =>
+      $$PhotosTableTableManager(_db, _db.photos);
   $$OutboxTableTableManager get outbox =>
       $$OutboxTableTableManager(_db, _db.outbox);
   $$ListMetaTableTableManager get listMeta =>
       $$ListMetaTableTableManager(_db, _db.listMeta);
   $$KvTableTableManager get kv => $$KvTableTableManager(_db, _db.kv);
+  $$BlobsTableTableManager get blobs =>
+      $$BlobsTableTableManager(_db, _db.blobs);
 }

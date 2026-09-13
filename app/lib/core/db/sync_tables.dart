@@ -59,3 +59,20 @@ class Subtasks extends Table {
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
+
+@TableIndex(name: 'photos_task_id', columns: {#taskId})
+@UseRowClass(Photo, generateInsertable: true)
+class Photos extends Table {
+  TextColumn get id => text()();
+  TextColumn get taskId => text()();
+  TextColumn get sha256 => text()();
+  IntColumn get byteSize => integer()();
+  IntColumn get width => integer()();
+  IntColumn get height => integer()();
+  TextColumn get sortKey => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get deletedAt => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}

@@ -123,12 +123,22 @@ final class PhotoCountsProvider
 
 String _$photoCountsHash() => r'b381220fa6b2ca97e4b63f2fdeaa8075a33c9fce';
 
-/// The bytes of one picture, or null while this device does not hold them.
+/// The bytes of one picture, or null while nobody can hand them over.
+///
+/// Where downloads are not eager -- the web -- bytes the store does not
+/// hold are fetched here, when the picture is shown: nothing else would
+/// ever bring in a picture from another device, one the in-memory store
+/// evicted, or any of them after a reload.
 
 @ProviderFor(photoBytes)
 final photoBytesProvider = PhotoBytesFamily._();
 
-/// The bytes of one picture, or null while this device does not hold them.
+/// The bytes of one picture, or null while nobody can hand them over.
+///
+/// Where downloads are not eager -- the web -- bytes the store does not
+/// hold are fetched here, when the picture is shown: nothing else would
+/// ever bring in a picture from another device, one the in-memory store
+/// evicted, or any of them after a reload.
 
 final class PhotoBytesProvider
     extends
@@ -138,7 +148,12 @@ final class PhotoBytesProvider
           FutureOr<Uint8List?>
         >
     with $FutureModifier<Uint8List?>, $FutureProvider<Uint8List?> {
-  /// The bytes of one picture, or null while this device does not hold them.
+  /// The bytes of one picture, or null while nobody can hand them over.
+  ///
+  /// Where downloads are not eager -- the web -- bytes the store does not
+  /// hold are fetched here, when the picture is shown: nothing else would
+  /// ever bring in a picture from another device, one the in-memory store
+  /// evicted, or any of them after a reload.
   PhotoBytesProvider._({
     required PhotoBytesFamily super.from,
     required String super.argument,
@@ -182,9 +197,14 @@ final class PhotoBytesProvider
   }
 }
 
-String _$photoBytesHash() => r'b4244c44d9e506688de52659e1b33170e49e89a9';
+String _$photoBytesHash() => r'ab0e30c0188ad23b8eefb11ad8ae105e3237dca9';
 
-/// The bytes of one picture, or null while this device does not hold them.
+/// The bytes of one picture, or null while nobody can hand them over.
+///
+/// Where downloads are not eager -- the web -- bytes the store does not
+/// hold are fetched here, when the picture is shown: nothing else would
+/// ever bring in a picture from another device, one the in-memory store
+/// evicted, or any of them after a reload.
 
 final class PhotoBytesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Uint8List?>, String> {
@@ -197,7 +217,12 @@ final class PhotoBytesFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// The bytes of one picture, or null while this device does not hold them.
+  /// The bytes of one picture, or null while nobody can hand them over.
+  ///
+  /// Where downloads are not eager -- the web -- bytes the store does not
+  /// hold are fetched here, when the picture is shown: nothing else would
+  /// ever bring in a picture from another device, one the in-memory store
+  /// evicted, or any of them after a reload.
 
   PhotoBytesProvider call(String sha256) =>
       PhotoBytesProvider._(argument: sha256, from: this);

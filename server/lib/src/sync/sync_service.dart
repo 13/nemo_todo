@@ -153,16 +153,23 @@ class SyncService {
         await _db.into(_db.tasks).insertOnConflictUpdate(row.toInsertable());
         _accept(row.updatedAt);
         final subtasks = moved ? await _db.subtasksOfTask(row.id) : <Subtask>[];
+        final taskPhotos = moved ? await _db.photosOfTask(row.id) : <Photo>[];
         if (moved) {
           await _db.logRevoke(SyncEntity.task, row.id, listId: oldListId);
           for (final sub in subtasks) {
             await _db.logRevoke(SyncEntity.subtask, sub.id, listId: oldListId);
+          }
+          for (final p in taskPhotos) {
+            await _db.logRevoke(SyncEntity.photo, p.id, listId: oldListId);
           }
           touched.add(oldListId);
         }
         await _db.logUpsert(SyncEntity.task, row.id, row.listId);
         for (final sub in subtasks) {
           await _db.logUpsert(SyncEntity.subtask, sub.id, row.listId);
+        }
+        for (final p in taskPhotos) {
+          await _db.logUpsert(SyncEntity.photo, p.id, row.listId);
         }
         touched.add(row.listId);
         return null;
@@ -204,12 +211,41 @@ class SyncService {
         touched.add(task.listId);
         return null;
 
-      case SyncChangeRevoke():
-        return 'not_allowed';
+      case SyncChangePhoto(:final row):
+        final task = await _db.taskById(row.taskId);
+        if (task == null) return 'unknown_task';
+        if (!roles.containsKey(task.listId)) return 'forbidden';
+        final skew = _checkHlc(row.updatedAt);
+        if (skew != null) return skew;
+        final existing = await _db.photoById(row.id);
+        final oldTask = existing == null || existing.taskId == row.taskId
+            ? null
+            : await _db.taskById(existing.taskId);
+        final oldListId = oldTask?.listId;
+        final moved = oldListId != null && oldListId != task.listId;
+        if (moved && !roles.containsKey(oldListId)) return 'forbidden';
+        if (!incomingWins(existing, row)) {
+          await _handBack(
+            SyncEntity.photo,
+            row.id,
+            oldListId ?? task.listId,
+            userId,
+            incoming: row.updatedAt,
+            held: existing!.updatedAt,
+          );
+          return null;
+        }
+        await _db.into(_db.photos).insertOnConflictUpdate(row.toInsertable());
+        _accept(row.updatedAt);
+        if (moved) {
+          await _db.logRevoke(SyncEntity.photo, row.id, listId: oldListId);
+          touched.add(oldListId);
+        }
+        await _db.logUpsert(SyncEntity.photo, row.id, task.listId);
+        touched.add(task.listId);
+        return null;
 
-      // Photo sync lands in a later task; until then a pushed photo change
-      // is rejected rather than silently accepted and dropped.
-      case SyncChangePhoto():
+      case SyncChangeRevoke():
         return 'not_allowed';
     }
   }
@@ -276,6 +312,7 @@ class SyncService {
     final listRows = await _listsById(idsFor(SyncEntity.list));
     final taskRows = await _tasksById(idsFor(SyncEntity.task));
     final subtaskRows = await _subtasksById(idsFor(SyncEntity.subtask));
+    final photoRows = await _photosById(idsFor(SyncEntity.photo));
 
     final changes = <SyncChange>[];
     for (final entry in page) {
@@ -291,9 +328,7 @@ class SyncService {
           subtaskRows[entry.rowId],
           SyncChange.subtask,
         ),
-        // Nothing logs a photo upsert yet (that lands with photo sync in a
-        // later task), so there is no row to fetch here.
-        SyncEntity.photo => null,
+        SyncEntity.photo => _wrap(photoRows[entry.rowId], SyncChange.photo),
       };
       if (change != null) changes.add(change);
     }
@@ -323,6 +358,14 @@ class SyncService {
     if (ids.isEmpty) return {};
     final rows = await (_db.select(
       _db.subtasks,
+    )..where((t) => t.id.isIn(ids))).get();
+    return {for (final r in rows) r.id: r};
+  }
+
+  Future<Map<String, Photo>> _photosById(Set<String> ids) async {
+    if (ids.isEmpty) return {};
+    final rows = await (_db.select(
+      _db.photos,
     )..where((t) => t.id.isIn(ids))).get();
     return {for (final r in rows) r.id: r};
   }

@@ -367,4 +367,73 @@ void main() {
     final r = await push(ben, [SyncChange.task(deleted)], cursor: 2);
     expect((r.changes.single as SyncChangeTask).row.deletedAt, stamp);
   });
+
+  test('a photo travels with the task it hangs off', () async {
+    final ben = await user('ben');
+    final anna = await user('anna');
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+      SyncChange.photo(photo('p1', 't1', dev)),
+    ]);
+    expect((await db.photoById('p1'))!.sha256, 'a' * 64);
+
+    // Anna joins the list; the next push re-logs the photo for her too.
+    await db
+        .into(db.listMembers)
+        .insert(
+          ListMembersCompanion.insert(
+            listId: 'l1',
+            userId: anna,
+            role: MemberRole.editor.name,
+          ),
+        );
+    await push(ben, [SyncChange.photo(photo('p1', 't1', laterClock('dev')))]);
+
+    final pulled = await push(anna, []);
+    expect(pulled.changes.whereType<SyncChangePhoto>().single.row.id, 'p1');
+  });
+
+  test('a photo on a task you are not a member of is refused', () async {
+    final ben = await user('ben');
+    final mallory = await user('mallory');
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+    ]);
+
+    final refused = await push(mallory, [
+      SyncChange.photo(photo('p1', 't1', dev)),
+    ]);
+    expect(refused.rejected.single.reason, 'forbidden');
+    expect(await db.photoById('p1'), isNull);
+  });
+
+  test('a photo whose task is unknown is refused', () async {
+    final ben = await user('ben');
+    final refused = await push(ben, [
+      SyncChange.photo(photo('p1', 'nope', dev)),
+    ]);
+    expect(refused.rejected.single.reason, 'unknown_task');
+  });
+
+  test('moving a task to another list carries its photos', () async {
+    final ben = await user('ben');
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.list(list('l2', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+      SyncChange.photo(photo('p1', 't1', dev)),
+    ]);
+
+    await push(ben, [SyncChange.task(task('t1', 'l2', laterClock('dev')))]);
+
+    final entries = await (db.select(
+      db.syncLog,
+    )..where((t) => t.entity.equals('photo'))).get();
+    expect(
+      entries.map((e) => '${e.op}:${e.listId}'),
+      containsAll(['revoke:l1', 'upsert:l2']),
+    );
+  });
 }

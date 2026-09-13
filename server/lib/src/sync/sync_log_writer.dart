@@ -94,6 +94,12 @@ extension SyncLogWriter on ServerDatabase {
   Future<Subtask?> subtaskById(String id) =>
       (select(subtasks)..where((t) => t.id.equals(id))).getSingleOrNull();
 
+  Future<Photo?> photoById(String id) =>
+      (select(photos)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<List<Photo>> photosOfTask(String taskId) =>
+      (select(photos)..where((t) => t.taskId.equals(taskId))).get();
+
   /// Members of every list in [listIds], owner first then by username.
   Future<Map<String, List<ListMember>>> membersOf(
     Iterable<String> listIds,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/nemo_server.dart';
 import 'package:test/test.dart';
@@ -24,7 +26,8 @@ void main() {
     SyncRequest(cursor: cursor, changes: changes),
   )).response;
 
-  PurgeService purge() => PurgeService(db, now: () => now);
+  PurgeService purge({BlobStore? blobs}) =>
+      PurgeService(db, blobs: blobs, now: () => now);
 
   /// A device whose stamps sit [ago] before the wall clock the purge reads.
   ///
@@ -218,4 +221,98 @@ void main() {
     expect((await purge().purge()).total, 0);
     expect((await db.select(db.syncLog).get()).length, entries);
   });
+
+  test(
+    'a purged task takes its photos, and orphaned bytes are swept',
+    () async {
+      final root = Directory.systemTemp.createTempSync('nemo-purge-blobs');
+      addTearDown(() => root.deleteSync(recursive: true));
+      final store = BlobStore(root.path);
+
+      String stamp(Duration ago) => Hlc(
+        millis: now.subtract(ago).millisecondsSinceEpoch,
+        counter: 0,
+        node: 'a',
+      ).toString();
+      final old = stamp(const Duration(days: 60));
+      final live = stamp(Duration.zero);
+
+      await db
+          .into(db.lists)
+          .insert(
+            TaskList(
+              id: 'l1',
+              name: 'L',
+              sortKey: 'V',
+              updatedAt: live,
+            ).toInsertable(),
+          );
+      await db
+          .into(db.tasks)
+          .insert(
+            Task(
+              id: 't1',
+              listId: 'l1',
+              title: 'T',
+              sortKey: 'V',
+              updatedAt: old,
+              deletedAt: old,
+            ).toInsertable(),
+          );
+      await db
+          .into(db.photos)
+          .insert(
+            Photo(
+              id: 'p1',
+              taskId: 't1',
+              sha256: 'a' * 64,
+              byteSize: 3,
+              width: 1,
+              height: 1,
+              sortKey: 'V',
+              updatedAt: old,
+            ).toInsertable(),
+          );
+
+      Future<void> blob(String hash, Duration ago) async {
+        await store.write(hash, [1, 2, 3]);
+        await db
+            .into(db.blobs)
+            .insert(
+              BlobsCompanion.insert(
+                sha256: hash,
+                byteSize: 3,
+                ownerUserId: 'u1',
+                createdAt: now.subtract(ago).millisecondsSinceEpoch,
+              ),
+            );
+      }
+
+      await blob(
+        'a' * 64,
+        const Duration(days: 60),
+      ); // held by p1, until p1 goes
+      await blob('b' * 64, const Duration(days: 60)); // orphaned and old: swept
+      await blob('c' * 64, const Duration(days: 1)); // an upload mid-flight
+
+      final report = await purge(blobs: store).purge();
+
+      expect(report.photos, 1);
+      expect(report.blobs, 2);
+      expect(await db.photoById('p1'), isNull);
+      expect(await store.exists('a' * 64), isFalse);
+      expect(await store.exists('b' * 64), isFalse);
+      expect(
+        await store.exists('c' * 64),
+        isTrue,
+        reason:
+            'bytes uploaded a moment ago are waiting for the row that '
+            'will name them',
+      );
+      final logged = await (db.select(
+        db.syncLog,
+      )..where((t) => t.entity.equals('photo'))).get();
+      expect(logged.single.op, 'revoke');
+    },
+  );
 }

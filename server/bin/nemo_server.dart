@@ -200,10 +200,11 @@ class _PurgeCommand extends Command<int> {
     }
     final db = _openDatabase(config);
     try {
-      final report = await PurgeService(db).purge(
-        retention: Duration(days: days),
-        dryRun: dryRun,
-      );
+      final report = await PurgeService(db, blobs: BlobStore(config.blobDir))
+          .purge(
+            retention: Duration(days: days),
+            dryRun: dryRun,
+          );
       stdout.writeln(
         report.total == 0
             ? 'nothing tombstoned longer than $days day(s)'

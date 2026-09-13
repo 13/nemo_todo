@@ -192,8 +192,6 @@ void main() {
   test(
     'a photo waits in the outbox until its bytes have been uploaded',
     () async {
-      final db = testDatabase();
-      addTearDown(db.close);
       final clock = testClock('a');
       const hash =
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -239,8 +237,6 @@ void main() {
   test(
     'a pulled photo is applied, and revoking its task takes it away',
     () async {
-      final db = testDatabase();
-      addTearDown(db.close);
       final clock = testClock('server');
       const hash =
           'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';

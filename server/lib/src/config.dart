@@ -9,6 +9,9 @@ class Config {
     this.nodeId = 'server',
     this.trustedProxyHops = 0,
     this.version = 'dev',
+    this.blobDir = '/data/blobs',
+    this.maxBlobBytes = 5 * 1024 * 1024,
+    this.accountQuotaBytes = 500 * 1024 * 1024,
   });
 
   factory Config.fromEnv(Map<String, String> env) {
@@ -39,6 +42,12 @@ class Config {
       nodeId: read('NEMO_NODE_ID') ?? 'server',
       trustedProxyHops: hops == null ? 0 : int.parse(hops),
       version: read('NEMO_VERSION') ?? 'dev',
+      blobDir: read('NEMO_BLOB_DIR') ?? '/data/blobs',
+      maxBlobBytes:
+          int.tryParse(read('NEMO_MAX_BLOB_BYTES') ?? '') ?? 5 * 1024 * 1024,
+      accountQuotaBytes:
+          int.tryParse(read('NEMO_ACCOUNT_QUOTA_BYTES') ?? '') ??
+          500 * 1024 * 1024,
     );
   }
 
@@ -61,4 +70,14 @@ class Config {
   /// chose to send and is ignored. Set it to the number of proxies that
   /// rewrite the header, or per-client limits count a header, not a client.
   final int trustedProxyHops;
+
+  /// Where the bytes of pictures live. One file per distinct SHA-256.
+  final String blobDir;
+
+  /// The largest single upload accepted. Well above what the app produces:
+  /// it is here to stop a client that is not the app.
+  final int maxBlobBytes;
+
+  /// How much one account may store in total before uploads are refused.
+  final int accountQuotaBytes;
 }

@@ -417,6 +417,30 @@ void main() {
     expect(refused.rejected.single.reason, 'unknown_task');
   });
 
+  // Controller decision: a photo naming a hash that is not a bare 64-char
+  // lowercase hex string is refused outright, before it can ever be read
+  // back through GET /blobs/<hash> and resolved by BlobStore.fileFor into a
+  // path outside the blob directory.
+  test('a photo whose sha256 is not a valid hash is refused', () async {
+    final ben = await user('ben');
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+    ]);
+
+    final refused = await push(ben, [
+      SyncChange.photo(photo('p1', 't1', dev, sha: '../../../../etc/passwd')),
+    ]);
+    expect(refused.rejected.single.reason, 'invalid_row');
+    expect(await db.photoById('p1'), isNull);
+
+    // Checked before the task lookup: an unknown task must not mask it.
+    final refusedUnknownTask = await push(ben, [
+      SyncChange.photo(photo('p2', 'nope', dev, sha: '../../../../etc/passwd')),
+    ]);
+    expect(refusedUnknownTask.rejected.single.reason, 'invalid_row');
+  });
+
   test('moving a task to another list carries its photos', () async {
     final ben = await user('ben');
     await push(ben, [

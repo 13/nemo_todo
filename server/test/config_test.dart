@@ -37,6 +37,22 @@ void main() {
     expect(Config.fromEnv({'NEMO_ALLOW_SIGNUP': 'maybe'}).allowSignup, isNull);
   });
 
+  test('blob settings come from the environment', () {
+    final config = Config.fromEnv({
+      'NEMO_BLOB_DIR': '/srv/blobs',
+      'NEMO_MAX_BLOB_BYTES': '1024',
+      'NEMO_ACCOUNT_QUOTA_BYTES': '4096',
+    });
+    expect(config.blobDir, '/srv/blobs');
+    expect(config.maxBlobBytes, 1024);
+    expect(config.accountQuotaBytes, 4096);
+
+    const fallback = Config();
+    expect(fallback.blobDir, '/data/blobs');
+    expect(fallback.maxBlobBytes, 5 * 1024 * 1024);
+    expect(fallback.accountQuotaBytes, 500 * 1024 * 1024);
+  });
+
   test('invalid port throws', () {
     expect(() => Config.fromEnv({'NEMO_PORT': 'x'}), throwsFormatException);
     expect(

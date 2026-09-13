@@ -100,6 +100,32 @@ extension SyncLogWriter on ServerDatabase {
   Future<List<Photo>> photosOfTask(String taskId) =>
       (select(photos)..where((t) => t.taskId.equals(taskId))).get();
 
+  /// Whether [userId] is a member of any list holding a live photo that
+  /// names [sha256]. Losing a share loses the pictures with the tasks.
+  Future<bool> canSeeBlob(String userId, String sha256) async {
+    final row = await customSelect(
+      'select 1 from photos p '
+      'join tasks t on t.id = p.task_id '
+      'join list_members m on m.list_id = t.list_id '
+      'where p.sha256 = ? and p.deleted_at is null and m.user_id = ? '
+      'limit 1',
+      variables: [Variable<String>(sha256), Variable<String>(userId)],
+      readsFrom: {photos, tasks, listMembers},
+    ).getSingleOrNull();
+    return row != null;
+  }
+
+  /// How many bytes of blobs [userId] is already being charged for.
+  Future<int> bytesOwnedBy(String userId) async {
+    final row = await customSelect(
+      'select coalesce(sum(byte_size), 0) as total from blobs '
+      'where owner_user_id = ?',
+      variables: [Variable<String>(userId)],
+      readsFrom: {blobs},
+    ).getSingle();
+    return row.read<int>('total');
+  }
+
   /// Members of every list in [listIds], owner first then by username.
   Future<Map<String, List<ListMember>>> membersOf(
     Iterable<String> listIds,

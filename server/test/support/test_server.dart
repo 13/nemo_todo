@@ -7,12 +7,13 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 
 /// A real HTTP server over an in-memory database for handler tests.
 class TestServer {
-  TestServer._(this.db, this.hub, this.auth, this._server);
+  TestServer._(this.db, this.hub, this.auth, this._server, this._blobDir);
 
   final ServerDatabase db;
   final EventHub hub;
   final AuthService auth;
   final HttpServer _server;
+  final Directory _blobDir;
 
   static Future<TestServer> start({
     bool? allowSignup = true,
@@ -21,8 +22,11 @@ class TestServer {
     DateTime Function()? now,
     RateLimiter? limiter,
     String version = 'dev',
+    int maxBlobBytes = 5 * 1024 * 1024,
+    int accountQuotaBytes = 500 * 1024 * 1024,
   }) async {
     final db = ServerDatabase.memory();
+    final blobDir = Directory.systemTemp.createTempSync('nemo-test-blobs');
     final hub = EventHub(heartbeat: const Duration(milliseconds: 200));
     final auth = AuthService(
       db,
@@ -37,6 +41,9 @@ class TestServer {
         allowSignup: allowSignup,
         corsOrigins: corsOrigins,
         version: version,
+        blobDir: blobDir.path,
+        maxBlobBytes: maxBlobBytes,
+        accountQuotaBytes: accountQuotaBytes,
       ),
       auth: auth,
       hub: hub,
@@ -48,7 +55,7 @@ class TestServer {
       InternetAddress.loopbackIPv4,
       0,
     );
-    return TestServer._(db, hub, auth, server);
+    return TestServer._(db, hub, auth, server, blobDir);
   }
 
   Uri uri(String path) => Uri.parse('http://127.0.0.1:${_server.port}$path');
@@ -67,6 +74,19 @@ class TestServer {
   Future<http.Response> delete(String path, {String? token}) =>
       http.delete(uri(path), headers: headers(token));
 
+  Future<http.Response> putBytes(
+    String path,
+    List<int> bytes, {
+    String? token,
+  }) => http.post(
+    uri(path),
+    headers: {
+      'content-type': 'image/jpeg',
+      if (token != null) 'authorization': 'Bearer $token',
+    },
+    body: bytes,
+  );
+
   Future<String> signup(
     String username, [
     String password = 'password123',
@@ -83,6 +103,7 @@ class TestServer {
     await _server.close(force: true);
     await hub.close();
     await db.close();
+    if (_blobDir.existsSync()) _blobDir.deleteSync(recursive: true);
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/src/api_exception.dart';
+import 'package:nemo_server/src/blobs/blob_store.dart';
 import 'package:nemo_server/src/db/server_database.dart';
 import 'package:nemo_server/src/sync/sync_log_writer.dart';
 
@@ -212,6 +213,10 @@ class SyncService {
         return null;
 
       case SyncChangePhoto(:final row):
+        // Checked before the task lookup: a hash this malformed is not a
+        // photo naming the wrong task, it is an attempt to make `fileFor`
+        // resolve outside the blob directory once the row is fetched back.
+        if (!BlobStore.isValidHash(row.sha256)) return 'invalid_row';
         final task = await _db.taskById(row.taskId);
         if (task == null) return 'unknown_task';
         if (!roles.containsKey(task.listId)) return 'forbidden';

@@ -15,6 +15,14 @@ class BlobStore {
 
   static String hashOf(List<int> bytes) => sha256.convert(bytes).toString();
 
+  // Exactly lowercase hex, exactly 64 characters: what a SHA-256 hex digest
+  // always looks like, and never any less. `fileFor` builds a path by
+  // interpolating this string with no escaping of its own, so anything a
+  // caller lets through this check is a path an attacker gets to choose.
+  static final RegExp _hashPattern = RegExp(r'^[0-9a-f]{64}$');
+
+  static bool isValidHash(String hash) => _hashPattern.hasMatch(hash);
+
   File fileFor(String sha256) =>
       File('$root/${sha256.substring(0, 2)}/${sha256.substring(2, 4)}/$sha256');
 

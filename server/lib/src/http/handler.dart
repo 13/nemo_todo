@@ -2,6 +2,8 @@ import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/src/api_exception.dart';
 import 'package:nemo_server/src/auth/auth_service.dart';
 import 'package:nemo_server/src/auth/rate_limiter.dart';
+import 'package:nemo_server/src/blobs/blob_service.dart';
+import 'package:nemo_server/src/blobs/blob_store.dart';
 import 'package:nemo_server/src/config.dart';
 import 'package:nemo_server/src/db/server_database.dart';
 import 'package:nemo_server/src/events/event_hub.dart';
@@ -20,6 +22,7 @@ Handler createHandler({
   AuthService? auth,
   SyncService? sync,
   MembersService? members,
+  BlobService? blobs,
   EventHub? hub,
   RateLimiter? limiter,
   DateTime Function()? now,
@@ -34,6 +37,15 @@ Handler createHandler({
         now: now,
       );
   final membersService = members ?? MembersService(db);
+  final blobService =
+      blobs ??
+      BlobService(
+        db,
+        BlobStore(config.blobDir),
+        maxBlobBytes: config.maxBlobBytes,
+        accountQuotaBytes: config.accountQuotaBytes,
+        now: now,
+      );
   final eventHub = hub ?? EventHub();
   final rateLimiter = limiter ?? RateLimiter(now: now);
 
@@ -82,6 +94,34 @@ Handler createHandler({
       // is a property of this process, not of the merge.
       return jsonResponse(
         outcome.response.copyWith(serverVersion: config.version).toJson(),
+      );
+    })
+    ..post('/blobs/<hash>', (Request request, String hash) async {
+      // Checked before a byte is read: an oversized upload should cost the
+      // server the header, not the body.
+      final declared = request.contentLength;
+      if (declared != null && declared > config.maxBlobBytes) {
+        throw const ApiException(413, 'blob_too_large');
+      }
+      final bytes = <int>[];
+      await for (final chunk in request.read()) {
+        bytes.addAll(chunk);
+        if (bytes.length > config.maxBlobBytes) {
+          throw const ApiException(413, 'blob_too_large');
+        }
+      }
+      await blobService.put(request.user.id, hash, bytes);
+      return jsonResponse({'ok': true});
+    })
+    ..get('/blobs/<hash>', (Request request, String hash) async {
+      final bytes = await blobService.get(request.user.id, hash);
+      return Response.ok(
+        bytes,
+        headers: {
+          'content-type': 'image/jpeg',
+          // Content-addressed: these bytes can never become other bytes.
+          'cache-control': 'private, max-age=31536000, immutable',
+        },
       );
     })
     ..get('/lists/<id>/members', (Request request, String id) async {

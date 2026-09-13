@@ -55,6 +55,15 @@ void main() {
     expect(entries.single.path, store.fileFor(hash).path);
   });
 
+  test('isValidHash accepts only a bare lowercase sha256 digest', () {
+    expect(BlobStore.isValidHash('a' * 64), isTrue);
+    expect(BlobStore.isValidHash(('a' * 64).toUpperCase()), isFalse);
+    expect(BlobStore.isValidHash('a' * 63), isFalse);
+    expect(BlobStore.isValidHash('${'a' * 64}/'), isFalse);
+    expect(BlobStore.isValidHash('../../../../etc/passwd'), isFalse);
+    expect(BlobStore.isValidHash('g' * 64), isFalse);
+  });
+
   test('deleting removes the file and forgets it existed', () async {
     final bytes = [7];
     final hash = BlobStore.hashOf(bytes);

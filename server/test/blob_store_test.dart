@@ -36,10 +36,23 @@ void main() {
     final hash = BlobStore.hashOf(bytes);
     await store.write(hash, bytes);
     await store.write(hash, bytes);
-    expect(
-      root.listSync(recursive: true).whereType<File>().length,
-      1,
-    );
+    expect(root.listSync(recursive: true).whereType<File>().length, 1);
+  });
+
+  test('writing the same hash concurrently is conflict-free', () async {
+    // An interrupted upload can simply be repeated, and the same photo
+    // sent by two people at once is stored once - neither write should
+    // throw, and no temp file should be left behind fanned out with it.
+    final bytes = [5, 5, 5, 5, 5];
+    final hash = BlobStore.hashOf(bytes);
+    for (var i = 0; i < 20; i++) {
+      await Future.wait([store.write(hash, bytes), store.write(hash, bytes)]);
+    }
+
+    expect(await store.read(hash).expand((c) => c).toList(), bytes);
+    final entries = root.listSync(recursive: true).whereType<File>().toList();
+    expect(entries.length, 1, reason: 'no temp files should be left behind');
+    expect(entries.single.path, store.fileFor(hash).path);
   });
 
   test('deleting removes the file and forgets it existed', () async {

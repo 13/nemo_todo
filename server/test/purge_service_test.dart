@@ -6,11 +6,31 @@ import 'package:test/test.dart';
 
 import 'support/rows.dart';
 
+/// A [BlobStore] whose `delete` throws for one chosen hash, as if that file
+/// could not be removed (permissions, a busy disk) -- the failure a real
+/// sweep must survive without losing the rest of the orphans or the row
+/// purge running alongside it.
+class _FlakyBlobStore extends BlobStore {
+  _FlakyBlobStore(super.root, this.failing);
+
+  final String failing;
+
+  @override
+  Future<void> delete(String sha256) {
+    if (sha256 == failing) {
+      throw const FileSystemException('permission denied', 'x');
+    }
+    return super.delete(sha256);
+  }
+}
+
 void main() {
   late ServerDatabase db;
   late SyncService sync;
   late HlcClock dev;
   late DateTime now;
+  late Directory blobRoot;
+  late BlobStore defaultStore;
 
   Future<String> user(String name) async {
     final auth = AuthService(db, allowSignup: true, bcryptRounds: 4);
@@ -27,7 +47,7 @@ void main() {
   )).response;
 
   PurgeService purge({BlobStore? blobs}) =>
-      PurgeService(db, blobs: blobs, now: () => now);
+      PurgeService(db, blobs: blobs ?? defaultStore, now: () => now);
 
   /// A device whose stamps sit [ago] before the wall clock the purge reads.
   ///
@@ -46,8 +66,13 @@ void main() {
       clock: HlcClock(node: 'srv', now: () => now),
     );
     dev = longAgo('dev', const Duration(days: 90));
+    blobRoot = Directory.systemTemp.createTempSync('nemo-purge-default');
+    defaultStore = BlobStore(blobRoot.path);
   });
-  tearDown(() => db.close());
+  tearDown(() async {
+    await db.close();
+    blobRoot.deleteSync(recursive: true);
+  });
 
   test('leaves live rows and recent tombstones alone', () async {
     final ben = await user('ben');
@@ -313,6 +338,172 @@ void main() {
         db.syncLog,
       )..where((t) => t.entity.equals('photo'))).get();
       expect(logged.single.op, 'revoke');
+    },
+  );
+
+  test('a blob that fails to delete keeps its row, without blocking the rest '
+      'of the sweep or the row purge running alongside it', () async {
+    final root = Directory.systemTemp.createTempSync('nemo-purge-blobs');
+    addTearDown(() => root.deleteSync(recursive: true));
+    final good = 'd' * 64;
+    final bad = 'e' * 64;
+    final flaky = _FlakyBlobStore(root.path, bad);
+
+    final ben = await user('ben');
+    final old = longAgo('dev', const Duration(days: 40));
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+    ]);
+    await push(ben, [
+      SyncChange.task(
+        task('t1', 'l1', old).copyWith(
+          deletedAt: old.now().toString(),
+          updatedAt: old.now().toString(),
+        ),
+      ),
+    ]);
+
+    Future<void> blob(String hash) async {
+      await flaky.write(hash, [1, 2, 3]);
+      await db
+          .into(db.blobs)
+          .insert(
+            BlobsCompanion.insert(
+              sha256: hash,
+              byteSize: 3,
+              ownerUserId: 'u1',
+              createdAt: now
+                  .subtract(const Duration(days: 60))
+                  .millisecondsSinceEpoch,
+            ),
+          );
+    }
+
+    await blob(good);
+    await blob(bad);
+
+    final report = await purge(blobs: flaky).purge();
+
+    expect(
+      report.tasks,
+      1,
+      reason:
+          'a file that will not delete must not roll back the row '
+          'purge committing alongside it',
+    );
+    expect(await db.taskById('t1'), isNull);
+    expect(
+      report.blobs,
+      1,
+      reason: 'only the blob actually removed is counted',
+    );
+    expect(await flaky.exists(good), isFalse);
+    expect(
+      await flaky.exists(bad),
+      isTrue,
+      reason: 'the failing delete left the file behind',
+    );
+    final goodRow = await (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(good))).getSingleOrNull();
+    expect(goodRow, isNull);
+    final badRow = await (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(bad))).getSingleOrNull();
+    expect(
+      badRow,
+      isNotNull,
+      reason: 'its row is kept so a later sweep retries it',
+    );
+  });
+
+  test(
+    'a dry run predicts the same blobs count a real run would sweep',
+    () async {
+      final root = Directory.systemTemp.createTempSync('nemo-purge-blobs');
+      addTearDown(() => root.deleteSync(recursive: true));
+      final store = BlobStore(root.path);
+
+      String stamp(Duration ago) => Hlc(
+        millis: now.subtract(ago).millisecondsSinceEpoch,
+        counter: 0,
+        node: 'a',
+      ).toString();
+      final old = stamp(const Duration(days: 60));
+      final live = stamp(Duration.zero);
+
+      await db
+          .into(db.lists)
+          .insert(
+            TaskList(
+              id: 'l1',
+              name: 'L',
+              sortKey: 'V',
+              updatedAt: live,
+            ).toInsertable(),
+          );
+      await db
+          .into(db.tasks)
+          .insert(
+            Task(
+              id: 't1',
+              listId: 'l1',
+              title: 'T',
+              sortKey: 'V',
+              updatedAt: old,
+              deletedAt: old,
+            ).toInsertable(),
+          );
+      await db
+          .into(db.photos)
+          .insert(
+            Photo(
+              id: 'p1',
+              taskId: 't1',
+              sha256: 'a' * 64,
+              byteSize: 3,
+              width: 1,
+              height: 1,
+              sortKey: 'V',
+              updatedAt: old,
+            ).toInsertable(),
+          );
+
+      Future<void> blob(String hash, Duration ago) async {
+        await store.write(hash, [1, 2, 3]);
+        await db
+            .into(db.blobs)
+            .insert(
+              BlobsCompanion.insert(
+                sha256: hash,
+                byteSize: 3,
+                ownerUserId: 'u1',
+                createdAt: now.subtract(ago).millisecondsSinceEpoch,
+              ),
+            );
+      }
+
+      // Orphaned only once this run's own purge of p1 lands -- exactly the
+      // undercount a dry run must not fall into.
+      await blob('a' * 64, const Duration(days: 60));
+      // Already orphaned before this run starts.
+      await blob('b' * 64, const Duration(days: 60));
+
+      final dryReport = await purge(blobs: store).purge(dryRun: true);
+      expect(
+        dryReport.blobs,
+        2,
+        reason:
+            'a dry run predicts what the photo purge below would newly '
+            'orphan, not only what is orphaned already',
+      );
+      expect(await store.exists('a' * 64), isTrue);
+      expect(await store.exists('b' * 64), isTrue);
+      expect(await db.photoById('p1'), isNotNull);
+
+      final report = await purge(blobs: store).purge();
+      expect(report.blobs, dryReport.blobs);
     },
   );
 }

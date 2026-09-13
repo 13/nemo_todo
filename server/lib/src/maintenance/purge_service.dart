@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
+import 'package:logging/logging.dart';
 import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/src/blobs/blob_store.dart';
 import 'package:nemo_server/src/db/server_database.dart';
 import 'package:nemo_server/src/sync/sync_log_writer.dart';
+
+final _log = Logger('nemo.purge');
 
 /// What a purge removed, or would have removed.
 class PurgeReport {
@@ -47,11 +52,11 @@ class PurgeReport {
 /// one small row instead of a whole task. A device syncing from any cursor,
 /// however old, is told to delete rather than left to guess.
 class PurgeService {
-  PurgeService(this._db, {this._blobs, DateTime Function()? now})
+  PurgeService(this._db, {required this._blobs, DateTime Function()? now})
     : _now = now ?? DateTime.now;
 
   final ServerDatabase _db;
-  final BlobStore? _blobs;
+  final BlobStore _blobs;
   final DateTime Function() _now;
 
   /// The default window. Long enough that a device switched off for a
@@ -65,14 +70,14 @@ class PurgeService {
   Future<PurgeReport> purge({
     Duration retention = defaultRetention,
     bool dryRun = false,
-  }) {
+  }) async {
     // Tombstones are HLC stamps, and an HLC sorts as a string exactly as it
     // sorts as a time, so "older than" is a string comparison against a
     // stamp built for the cutoff instant.
     final staleMillis = _now().subtract(retention).millisecondsSinceEpoch;
     final cutoff = Hlc(millis: staleMillis, counter: 0, node: '').toString();
 
-    return _db.transaction(() async {
+    final result = await _db.transaction(() async {
       final lists = await _oldLists(cutoff);
       final tasks = await _oldTasks(cutoff);
       final subtasks = await _oldSubtasks(cutoff);
@@ -93,14 +98,14 @@ class PurgeService {
         for (final row in await _childPhotos(taskIds)) row.id,
       };
 
-      final report = PurgeReport(
-        lists: lists.length,
-        tasks: taskIds.length,
-        subtasks: subtaskIds.length,
-        photos: photoIds.length,
-        blobs: dryRun ? (await _orphanBlobs(staleMillis)).length : 0,
-      );
-      if (dryRun) return report;
+      if (dryRun) {
+        return (
+          lists: lists.length,
+          tasks: taskIds.length,
+          subtasks: subtaskIds.length,
+          photoIds: photoIds,
+        );
+      }
 
       // Children first, so a parent still exists to name the list a revoke
       // is addressed to. Photos are retired and deleted before their tasks,
@@ -127,19 +132,33 @@ class PurgeService {
         _db.lists,
       )..where((t) => t.id.isIn(lists.map((l) => l.id)))).go();
 
-      // Bytes are swept last, and separately from the row counts above: a
-      // blob is uploaded before the row that references it, so a blob is
-      // orphaned by an upload nothing ever claimed, not only by the rows
-      // just deleted.
-      final swept = await _sweepBlobs(staleMillis);
-      return PurgeReport(
+      return (
         lists: lists.length,
         tasks: taskIds.length,
         subtasks: subtaskIds.length,
-        photos: photoIds.length,
-        blobs: swept,
+        photoIds: photoIds,
       );
     });
+
+    // Blobs are swept only once the row purge's transaction above has
+    // committed (see `_sweepBlobs` for why), and a dry run never sweeps at
+    // all -- it instead asks `_orphanBlobs` to predict what a real run
+    // would newly orphan, by treating this run's own photo deletions as
+    // already having happened.
+    final blobs = dryRun
+        ? (await _orphanBlobs(
+            staleMillis,
+            excludingPhotoIds: result.photoIds,
+          )).length
+        : await _sweepBlobs(staleMillis);
+
+    return PurgeReport(
+      lists: result.lists,
+      tasks: result.tasks,
+      subtasks: result.subtasks,
+      photos: result.photoIds.length,
+      blobs: blobs,
+    );
   }
 
   // Three near-identical queries rather than one generic helper: drift's
@@ -251,29 +270,65 @@ class PurgeService {
   /// Blobs no live photo row names any more, old enough that they are not
   /// bytes waiting for the row that is about to claim them.
   ///
+  /// [excludingPhotoIds] is how a dry run asks "what would be orphaned if
+  /// these photo rows were already gone" without deleting them: a real
+  /// sweep never passes it, because by the time `_sweepBlobs` calls this,
+  /// the transaction that deleted those rows has already committed, and
+  /// they are simply gone from `photos` already.
+  ///
   /// [staleMillis] is plain epoch milliseconds, not an HLC stamp: a blob's
   /// `createdAt` is wall-clock time, not a synced row with a device clock.
-  Future<List<BlobRow>> _orphanBlobs(int staleMillis) {
+  Future<List<BlobRow>> _orphanBlobs(
+    int staleMillis, {
+    Set<String> excludingPhotoIds = const {},
+  }) {
+    final referenced = _db.selectOnly(_db.photos)
+      ..addColumns([_db.photos.sha256]);
+    if (excludingPhotoIds.isNotEmpty) {
+      referenced.where(_db.photos.id.isNotIn(excludingPhotoIds));
+    }
     return (_db.select(_db.blobs)..where(
           (t) =>
               t.createdAt.isSmallerThanValue(staleMillis) &
-              t.sha256.isNotInQuery(
-                _db.selectOnly(_db.photos)..addColumns([_db.photos.sha256]),
-              ),
+              t.sha256.isNotInQuery(referenced),
         ))
         .get();
   }
 
+  /// Deletes files and rows for every orphaned, stale blob.
+  ///
+  /// Runs after the row purge's transaction has committed, and handles one
+  /// orphan at a time: unlinking a file is not transactional, so doing it
+  /// inside the same transaction as the row purge would mean a single file
+  /// that will not delete rolling back every list/task/subtask/photo
+  /// deletion committed alongside it, while the files swept before it
+  /// stayed gone -- and the bad file would wedge every later purge the same
+  /// way. Deleting the file before its row, rather than the other way
+  /// round, means a blob whose file fails to delete simply keeps its row,
+  /// so the next sweep retries it, and this sweep still gets to the rest of
+  /// the orphans instead of aborting.
   Future<int> _sweepBlobs(int staleMillis) async {
-    final store = _blobs;
-    final orphans = await _orphanBlobs(staleMillis);
-    if (orphans.isEmpty) return 0;
-    for (final blob in orphans) {
-      if (store != null) await store.delete(blob.sha256);
+    var swept = 0;
+    for (final blob in await _orphanBlobs(staleMillis)) {
+      try {
+        await _blobs.delete(blob.sha256);
+      } on FileSystemException catch (e) {
+        // Already-gone files are handled inside BlobStore.delete itself, so
+        // reaching here means a real failure (permissions, a busy disk).
+        // Logged and skipped, not rethrown: one stubborn file must not stop
+        // the rest of the orphans from being swept.
+        _log.warning(
+          'could not delete blob ${blob.sha256}, keeping its row for a '
+          'later sweep to retry',
+          e,
+        );
+        continue;
+      }
+      await (_db.delete(
+        _db.blobs,
+      )..where((t) => t.sha256.equals(blob.sha256))).go();
+      swept++;
     }
-    await (_db.delete(
-      _db.blobs,
-    )..where((t) => t.sha256.isIn(orphans.map((b) => b.sha256)))).go();
-    return orphans.length;
+    return swept;
   }
 }

@@ -17,14 +17,19 @@ class MemoryPhotoStore implements PhotoStore {
   // find the least recently used entry.
   final _entries = <String, Uint8List>{};
 
+  // Hashes currently exempt from eviction -- bytes with no other copy
+  // yet (a web upload still in flight) that would otherwise be lost for
+  // good if they aged out while nothing was looking at them. A hash can
+  // be pinned before it is ever put, so this can hold hashes `_entries`
+  // doesn't (yet).
+  final _pinned = <String>{};
+
   @override
   Future<void> put(String sha256, Uint8List bytes) async {
     _entries
       ..remove(sha256)
       ..[sha256] = bytes;
-    while (_entries.length > maxEntries) {
-      _entries.remove(_entries.keys.first);
-    }
+    _evict();
   }
 
   @override
@@ -35,7 +40,40 @@ class MemoryPhotoStore implements PhotoStore {
   }
 
   @override
-  Future<void> remove(String sha256) async => _entries.remove(sha256);
+  Future<void> remove(String sha256) async {
+    _entries.remove(sha256);
+    _pinned.remove(sha256);
+  }
+
+  @override
+  Future<void> pin(String sha256) async {
+    // Recorded even if `sha256` isn't held yet, so a `put` that follows
+    // finds it already protected.
+    _pinned.add(sha256);
+  }
+
+  @override
+  Future<void> unpin(String sha256) async {
+    _pinned.remove(sha256);
+    // The entry (if any) may now be over the bound it was exempt from.
+    _evict();
+  }
+
+  // Removes the least-recently-used *unpinned* entry, repeatedly, until
+  // unpinned entries are within maxEntries or none are left to remove.
+  // Pinned entries are never counted against the bound, so the store may
+  // temporarily hold more than maxEntries entries in total while any are
+  // pinned -- that's the point: bytes with no other copy yet must survive
+  // however full the store gets.
+  void _evict() {
+    while (_entries.keys.where((hash) => !_pinned.contains(hash)).length >
+        maxEntries) {
+      final victim = _entries.keys.firstWhere(
+        (hash) => !_pinned.contains(hash),
+      );
+      _entries.remove(victim);
+    }
+  }
 }
 
 Future<PhotoStore> createPhotoStore() async => MemoryPhotoStore();

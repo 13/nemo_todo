@@ -66,6 +66,16 @@ class FilePhotoStore implements PhotoStore {
       // Removing what is not there is not an error: two deletes can race.
     }
   }
+
+  // Files on disk are never evicted, so there is nothing for pinning to
+  // protect -- both are unconditional no-ops, which incidentally keeps
+  // them consistent with `remove`'s hash guard: an invalid hash is
+  // ignored here too, the same as it would be if we checked.
+  @override
+  Future<void> pin(String sha256) async {}
+
+  @override
+  Future<void> unpin(String sha256) async {}
 }
 
 Future<PhotoStore> createPhotoStore() async {

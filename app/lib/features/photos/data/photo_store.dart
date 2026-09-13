@@ -13,6 +13,16 @@ abstract interface class PhotoStore {
   Future<void> put(String sha256, Uint8List bytes);
   Future<Uint8List?> get(String sha256);
   Future<void> remove(String sha256);
+
+  /// Keeps these bytes until [unpin], however full the store gets.
+  ///
+  /// Bytes that exist nowhere else yet -- a picture added on the web,
+  /// still on its way to the server -- must not be evicted before the
+  /// upload that is their only other copy has finished with them.
+  Future<void> pin(String sha256);
+
+  /// Undoes [pin]: these bytes may be evicted again.
+  Future<void> unpin(String sha256);
 }
 
 /// The store this platform uses. On Android the directory is created on

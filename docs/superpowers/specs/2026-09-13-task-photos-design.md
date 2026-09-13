@@ -90,7 +90,7 @@ class Blobs extends Table {        // server only, never synced
   TextColumn get sha256 => text()();
   IntColumn get byteSize => integer()();
   TextColumn get ownerUserId => text()();   // who paid for it, for quota
-  TextColumn get createdAt => text()();
+  IntColumn get createdAt => integer()();          // epoch milliseconds
   Set<Column> get primaryKey => {sha256};
 }
 ```

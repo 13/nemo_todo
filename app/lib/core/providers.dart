@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo_core/nemo_core.dart';
 import 'package:uuid/uuid.dart';
 
@@ -113,3 +114,15 @@ final authRequiredProvider = Provider<bool>((_) => kIsWeb);
 /// and a newer server means an update to download -- which the update tile
 /// already offers, and which no amount of reloading would do.
 final servedByServerProvider = Provider<bool>((_) => kIsWeb);
+
+/// Whether this platform downloads pictures ahead of being asked.
+///
+/// Android does: the app is expected to work with the network off, and a
+/// placeholder where a photo should be is exactly the offline failure the
+/// app exists to avoid. The web app fetches when it shows.
+final photoDownloadEagerProvider = Provider<bool>((_) => !kIsWeb);
+
+/// Where this device keeps the bytes of pictures. Overridden in tests.
+final photoStoreProvider = Provider<PhotoStore>(
+  (_) => throw UnimplementedError('override photoStoreProvider in main'),
+);

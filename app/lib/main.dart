@@ -8,6 +8,7 @@ import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/screens/startup_error_screen.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -25,12 +26,14 @@ Future<void> main() async {
   final db = AppDatabase.open();
   try {
     final boot = await _prepare(db).timeout(startupTimeout);
+    final photoStore = await openPhotoStore();
     runApp(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           bootstrapProvider.overrideWithValue(boot.bootstrap),
           reminderSchedulerProvider.overrideWithValue(boot.reminders),
+          photoStoreProvider.overrideWithValue(photoStore),
         ],
         child: const NemoApp(),
       ),

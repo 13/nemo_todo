@@ -23,6 +23,7 @@ class SyncState {
     this.lastSyncAt,
     this.pending = 0,
     this.error,
+    this.photoError,
     this.discarded = 0,
     this.serverVersion,
   });
@@ -33,6 +34,11 @@ class SyncState {
   /// Local changes not yet accepted by the server.
   final int pending;
   final String? error;
+
+  /// Why the server would not take a picture: `blob_too_large` or
+  /// `quota_exceeded`. Separate from [error] because the sync itself
+  /// succeeded -- only the picture did not.
+  final String? photoError;
 
   /// Changes the server refused since the user last dismissed the notice.
   final int discarded;
@@ -49,6 +55,8 @@ class SyncState {
     int? pending,
     String? error,
     bool clearError = false,
+    String? photoError,
+    bool clearPhotoError = false,
     int? discarded,
     String? serverVersion,
   }) => SyncState(
@@ -56,6 +64,7 @@ class SyncState {
     lastSyncAt: lastSyncAt ?? this.lastSyncAt,
     pending: pending ?? this.pending,
     error: clearError ? null : error ?? this.error,
+    photoError: clearPhotoError ? null : photoError ?? this.photoError,
     discarded: discarded ?? this.discarded,
     serverVersion: serverVersion ?? this.serverVersion,
   );

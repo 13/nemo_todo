@@ -275,4 +275,41 @@ void main() {
       expect(await db.missingBlobHashes(), isEmpty);
     },
   );
+
+  test('missing bytes are listed newest photo first', () async {
+    const older =
+        '1111111111111111111111111111111111111111111111111111111111111111';
+    const newer =
+        '2222222222222222222222222222222222222222222222222222222222222222';
+    await db.applyRemote(
+      const SyncChange.task(
+        Task(
+          id: 't1',
+          listId: 'l1',
+          title: 'T',
+          sortKey: 'V',
+          updatedAt: '0000000000001-0000-srv',
+        ),
+      ),
+    );
+    Photo photo(String id, String sha256, String stamp) => Photo(
+      id: id,
+      taskId: 't1',
+      sha256: sha256,
+      byteSize: 9,
+      width: 2,
+      height: 2,
+      sortKey: 'V',
+      updatedAt: stamp,
+    );
+    // Applied oldest first, so the answer cannot just be insertion order.
+    await db.applyRemote(
+      SyncChange.photo(photo('p1', older, '0000000000002-0000-srv')),
+    );
+    await db.applyRemote(
+      SyncChange.photo(photo('p2', newer, '0000000000003-0000-srv')),
+    );
+
+    expect(await db.missingBlobHashes(), [newer, older]);
+  });
 }

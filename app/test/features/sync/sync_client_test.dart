@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -165,6 +166,75 @@ void main() {
             .having((e) => e.isOffline, 'isOffline', true)
             .having((e) => e.code, 'code', 'network'),
       ),
+    );
+  });
+
+  test('uploads bytes under their hash and fetches them back', () async {
+    const hash =
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    final bytes = Uint8List.fromList([1, 2, 3]);
+    final adapter = _FakeAdapter(
+      (options) => options.method == 'GET'
+          ? ResponseBody.fromBytes(
+              bytes,
+              200,
+              headers: {
+                Headers.contentTypeHeader: ['image/jpeg'],
+              },
+            )
+          : _json({'ok': true}),
+    );
+    final client = SyncClient(
+      _dio(adapter),
+      baseUrl: 'https://nemo.test',
+      token: 'secret',
+    );
+
+    await client.uploadBlob(hash, bytes);
+    expect(await client.downloadBlob(hash), bytes);
+
+    expect(adapter.requests.map((r) => '${r.method} ${r.uri.path}'), [
+      'POST /api/v1/blobs/$hash',
+      'GET /api/v1/blobs/$hash',
+    ]);
+    expect(adapter.requests.first.headers['authorization'], 'Bearer secret');
+    expect(adapter.requests.last.headers['authorization'], 'Bearer secret');
+  });
+
+  test('a refused upload and a dropped download are ApiErrors', () async {
+    const hash =
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    final full = SyncClient(
+      _dio(
+        _FakeAdapter((_) => _json({'error': 'quota_exceeded'}, status: 507)),
+      ),
+      baseUrl: 'https://nemo.test',
+      token: 'secret',
+    );
+    await expectLater(
+      full.uploadBlob(hash, Uint8List.fromList([1])),
+      throwsA(
+        isA<ApiError>()
+            .having((e) => e.status, 'status', 507)
+            .having((e) => e.code, 'code', 'quota_exceeded'),
+      ),
+    );
+
+    final dead = SyncClient(
+      _dio(
+        _FakeAdapter(
+          (options) => throw DioException.connectionError(
+            requestOptions: options,
+            reason: 'no route',
+          ),
+        ),
+      ),
+      baseUrl: 'https://nemo.test',
+      token: 'secret',
+    );
+    await expectLater(
+      dead.downloadBlob(hash),
+      throwsA(isA<ApiError>().having((e) => e.isOffline, 'isOffline', true)),
     );
   });
 

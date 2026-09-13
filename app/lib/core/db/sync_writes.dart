@@ -330,12 +330,17 @@ extension SyncWrites on AppDatabase {
   Future<List<BlobRow>> pendingBlobs() =>
       (select(blobs)..where((t) => t.state.equals('pendingUpload'))).get();
 
-  /// Hashes named by a live photo row that this device does not hold.
+  /// Hashes named by a live photo row that this device does not hold,
+  /// those of the most recently changed photos first: the picture someone
+  /// just attached is the one they are about to look for. `updated_at` is
+  /// an HLC string, which sorts in the order the changes happened.
   Future<List<String>> missingBlobHashes() async {
     final rows = await customSelect(
-      'select distinct p.sha256 as sha256 from photos p '
+      'select p.sha256 as sha256 from photos p '
       'where p.deleted_at is null '
-      'and p.sha256 not in (select sha256 from blobs)',
+      'and p.sha256 not in (select sha256 from blobs) '
+      'group by p.sha256 '
+      'order by max(p.updated_at) desc',
       readsFrom: {photos, blobs},
     ).get();
     return [for (final r in rows) r.read<String>('sha256')];

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -31,10 +33,64 @@ class FakeSyncClient implements SyncClient {
   @override
   String get token => 'secret';
 
+  /// Bytes the fake server is holding, by hash.
+  final Map<String, Uint8List> blobs = {};
+  final List<String> uploaded = [];
+  final List<String> downloaded = [];
+
+  /// Failures for single blobs, by hash, so one picture can go wrong while
+  /// the rest of the sync goes right.
+  final Map<String, Exception> blobFailures = {};
+
+  /// The most blob requests that were in flight at once.
+  int maxBlobsInFlight = 0;
+  int _blobsInFlight = 0;
+
+  /// Hashes pushed as photo rows, in order, so a test can check that the
+  /// bytes went first.
+  final List<String> pushedPhotoHashes = [];
+
+  bool uploadedBefore(String sha256) =>
+      uploaded.contains(sha256) &&
+      (!pushedPhotoHashes.contains(sha256) ||
+          uploaded.indexOf(sha256) <= pushedPhotoHashes.indexOf(sha256));
+
+  Future<T> _blobRequest<T>(String sha256, T Function() answer) async {
+    _blobsInFlight++;
+    if (_blobsInFlight > maxBlobsInFlight) maxBlobsInFlight = _blobsInFlight;
+    try {
+      // Yields, so concurrent requests really overlap.
+      await Future<void>.delayed(Duration.zero);
+      final failure = failWith ?? blobFailures[sha256];
+      if (failure != null) throw failure;
+      return answer();
+    } finally {
+      _blobsInFlight--;
+    }
+  }
+
+  @override
+  Future<void> uploadBlob(String sha256, Uint8List bytes) =>
+      _blobRequest(sha256, () {
+        uploaded.add(sha256);
+        blobs[sha256] = bytes;
+      });
+
+  @override
+  Future<Uint8List> downloadBlob(String sha256) => _blobRequest(sha256, () {
+    downloaded.add(sha256);
+    final bytes = blobs[sha256];
+    if (bytes == null) throw const ApiError(404, 'not_found');
+    return bytes;
+  });
+
   @override
   Future<SyncResponse> sync(SyncRequest request) async {
     calls++;
     pushes.add(request.changes);
+    for (final change in request.changes) {
+      if (change is SyncChangePhoto) pushedPhotoHashes.add(change.row.sha256);
+    }
     cursors.add(request.cursor);
     await duringSync?.call();
     final failure = failWith;

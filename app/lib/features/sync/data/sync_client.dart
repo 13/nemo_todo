@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -104,6 +106,37 @@ class SyncClient {
       options: _options,
     ),
   );
+
+  /// Uploads the bytes of a picture. Idempotent: the server answers the
+  /// same whether it already held them or not.
+  Future<void> uploadBlob(String sha256, Uint8List bytes) => _send(
+    () => _dio.postUri<Map<String, dynamic>>(
+      uri('/blobs/$sha256'),
+      data: Stream.value(bytes),
+      options: Options(
+        headers: {
+          'authorization': 'Bearer $token',
+          // A stream has no length of its own, and the server refuses an
+          // oversized picture by its declared length before reading it.
+          'content-length': bytes.length,
+        },
+        contentType: 'image/jpeg',
+      ),
+    ),
+  );
+
+  Future<Uint8List> downloadBlob(String sha256) async {
+    final bytes = await _send<List<int>>(
+      () => _dio.getUri<List<int>>(
+        uri('/blobs/$sha256'),
+        options: Options(
+          headers: {'authorization': 'Bearer $token'},
+          responseType: ResponseType.bytes,
+        ),
+      ),
+    );
+    return Uint8List.fromList(bytes);
+  }
 
   /// Signs in (or signs up) and returns the new session.
   static Future<({String token, String username})> authenticate(

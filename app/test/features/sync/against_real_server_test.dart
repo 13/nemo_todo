@@ -10,6 +10,8 @@ import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/photos/data/photo_store_web.dart';
+import 'package:nemo/features/photos/data/photos_repository.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
@@ -17,6 +19,7 @@ import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/nemo_server.dart' as server;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
+import '../../support/photos.dart';
 import '../../support/test_db.dart';
 
 /// The app talking to the real server over HTTP.
@@ -32,18 +35,23 @@ void main() {
   late String baseUrl;
   late AppDatabase db;
   late String token;
+  late Directory blobDir;
 
   setUp(() async {
     serverDb = server.ServerDatabase.memory();
+    // Somewhere this test may write pictures to, rather than the
+    // container path the server defaults to.
+    blobDir = Directory.systemTemp.createTempSync('nemo-app-blobs');
     http = await shelf_io.serve(
       server.createHandler(
         db: serverDb,
         // No web app to serve, and sign-up open so the test can make an
         // account the way a first run does.
-        config: const server.Config(
+        config: server.Config(
           allowSignup: true,
           webDir: '/nonexistent',
           version: '7.7.7',
+          blobDir: blobDir.path,
         ),
       ),
       InternetAddress.loopbackIPv4,
@@ -65,6 +73,7 @@ void main() {
     await http.close(force: true);
     await serverDb.close();
     await db.close();
+    blobDir.deleteSync(recursive: true);
   });
 
   /// The app, connected to that server, with nothing faked.
@@ -84,6 +93,7 @@ void main() {
         nowProvider.overrideWithValue(() => testNow),
         authStorageProvider.overrideWithValue(MemoryAuthStorage(token)),
         sseClientFactoryProvider.overrideWithValue((_, _, _) => null),
+        photoStoreProvider.overrideWithValue(MemoryPhotoStore()),
       ],
     );
     addTearDown(container.dispose);
@@ -242,4 +252,50 @@ void main() {
     expect(container.read(syncEngineProvider).serverVersion, '7.7.7');
     expect(await KvStore(db).get(KvKeys.serverVersion), '7.7.7');
   });
+
+  test(
+    'a picture reaches the server before its row, and can be fetched back',
+    () async {
+      final clock = testClock('device');
+      final container = await app();
+      await db.upsertList(
+        TaskList(
+          id: 'l1',
+          name: 'Groceries',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      await db.upsertTask(
+        Task(
+          id: 't1',
+          listId: 'l1',
+          title: 'Buy milk',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      final photo = (await PhotosRepository(
+        db,
+        clock,
+        sequentialIds('p'),
+        container.read(photoStoreProvider),
+      ).add('t1', smallJpeg()))!;
+
+      await container.read(syncEngineProvider.notifier).syncNow();
+
+      expect(container.read(syncEngineProvider).status, SyncStatus.idle);
+      expect(await db.pendingBlobs(), isEmpty);
+      expect(await db.outboxCount(), 0, reason: 'the photo row was released');
+      final fetched = await SyncClient(
+        Dio(),
+        baseUrl: baseUrl,
+        token: token,
+      ).downloadBlob(photo.sha256);
+      expect(
+        fetched,
+        await container.read(photoStoreProvider).get(photo.sha256),
+      );
+    },
+  );
 }

@@ -184,6 +184,7 @@ class SyncEngine extends _$SyncEngine {
     var hasMore = true;
     var pushed = false;
     var listsArrived = false;
+    await _uploadPending(client);
     while (hasMore) {
       final cursor = int.tryParse(await kv.get(KvKeys.cursor) ?? '0') ?? 0;
       // Only the first request of a round carries the queue; later pages
@@ -222,6 +223,7 @@ class SyncEngine extends _$SyncEngine {
       state = state.copyWith(serverVersion: response.serverVersion);
       hasMore = response.hasMore;
     }
+    if (ref.read(photoDownloadEagerProvider)) await _downloadMissing(client);
     // A device that was used offline before it had an account brings its
     // own Inbox to one that already has one, and the first sync lands
     // both. Settled here rather than at the next launch, so nobody is
@@ -232,6 +234,100 @@ class SyncEngine extends _$SyncEngine {
     final now = ref.read(nowProvider)();
     await kv.set(KvKeys.lastSyncAt, '${now.millisecondsSinceEpoch}');
     state = state.copyWith(lastSyncAt: now);
+  }
+
+  /// How many blobs move at once. Two: enough to keep a home connection
+  /// busy, few enough that a sync is not one long upload.
+  static const _blobConcurrency = 2;
+
+  /// Sends the bytes of every picture the server does not have yet.
+  ///
+  /// A blob that lands flips to `synced`, which is what releases its row
+  /// into the push that follows: the server never holds a photo row it
+  /// cannot serve the picture for. A failure is left queued and tried
+  /// again.
+  Future<void> _uploadPending(SyncClient client) async {
+    final db = ref.read(appDatabaseProvider);
+    final store = ref.read(photoStoreProvider);
+    final pending = await db.pendingBlobs();
+    if (pending.isEmpty) return;
+    var landed = false;
+    final failures = await _forEachLimited(pending.map((b) => b.sha256), (
+      sha256,
+    ) async {
+      final bytes = await store.get(sha256);
+      // The bytes are gone from this device -- a web tab that was reloaded
+      // before the upload finished. The photo row stays held: pushing it
+      // would name a picture nobody can fetch. Adding the same picture
+      // again, or another device uploading it, is what can release it.
+      if (bytes == null) return;
+      await client.uploadBlob(sha256, bytes);
+      await db.markBlobSynced(sha256);
+      landed = true;
+      // Only now does a second copy exist, so only now may the web store
+      // evict these bytes like any others.
+      await store.unpin(sha256);
+    });
+    // A refusal that will not change on its own -- too large, or no room
+    // on the server -- is kept until an upload gets through, rather than
+    // cleared at the start of every sync only to be found again, or the
+    // photo sits there marked "not uploaded" with no reason given.
+    final refusal = failures
+        .where((e) => e.status == 413 || e.status == 507)
+        .lastOrNull;
+    if (refusal != null) {
+      state = state.copyWith(photoError: refusal.code);
+    } else if (landed) {
+      state = state.copyWith(clearPhotoError: true);
+    }
+  }
+
+  /// Fetches the bytes of pictures that arrived as rows, newest first.
+  Future<void> _downloadMissing(SyncClient client) async {
+    final db = ref.read(appDatabaseProvider);
+    final store = ref.read(photoStoreProvider);
+    final missing = await db.missingBlobHashes();
+    await _forEachLimited(missing, (sha256) async {
+      final bytes = await client.downloadBlob(sha256);
+      await store.put(sha256, bytes);
+      await db.rememberBlob(sha256, byteSize: bytes.length, state: 'synced');
+    });
+  }
+
+  /// Runs [action] over [items], [_blobConcurrency] at a time, in order.
+  /// Returns the refusals the server answered with.
+  ///
+  /// One item failing does not stop the rest, nor the sync: pictures are
+  /// independent, and the next sync tries whatever is still missing.
+  Future<List<ApiError>> _forEachLimited(
+    Iterable<String> items,
+    Future<void> Function(String) action,
+  ) async {
+    final queue = items.toList();
+    final refusals = <ApiError>[];
+    Future<void> worker() async {
+      while (queue.isNotEmpty) {
+        final item = queue.removeAt(0);
+        try {
+          await action(item);
+        } on ApiError catch (e) {
+          refusals.add(e);
+        } on Object catch (e, stack) {
+          // Something on this device -- a full disk under the store, the
+          // database refusing a write -- is worth a line in the log, not
+          // failing the tasks' sync over one picture. So is the
+          // ArgumentError `FilePhotoStore.put` documents for a hash that is
+          // not a digest, which a corrupted row can carry: left to escape,
+          // it would fail every sync from then on. Any other Error is a bug
+          // and stays loud.
+          if (e is! Exception && e is! ArgumentError) rethrow;
+          debugPrint('picture $item not moved: $e\n$stack');
+        }
+      }
+    }
+
+    await Future.wait([for (var i = 0; i < _blobConcurrency; i++) worker()]);
+    return refusals;
   }
 
   /// After connecting an account, every local row is offered to the server.

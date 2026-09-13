@@ -9,6 +9,7 @@ import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -88,6 +89,8 @@ Future<TestApp> pumpApp(
       bootstrapProvider.overrideWithValue(boot),
       nowProvider.overrideWithValue(() => testNow),
       idGeneratorProvider.overrideWithValue(sequentialIds()),
+      // Opened in `main` in the app; a connected sync reads it.
+      photoStoreProvider.overrideWithValue(MemoryPhotoStore()),
       ...overrides.cast(),
     ],
   );

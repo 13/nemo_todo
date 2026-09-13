@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,16 +11,20 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/photos/data/photo_store_web.dart';
+import 'package:nemo/features/photos/data/photos_repository.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/fake_sync.dart';
+import '../../support/photos.dart';
 import '../../support/test_db.dart';
 
 void main() {
   late AppDatabase db;
+  late MemoryPhotoStore store;
   late FakeSyncClient client;
 
   // Later than anything the device clock issues, so the server wins ties
@@ -38,6 +45,8 @@ void main() {
   Future<ProviderContainer> container({
     bool connected = true,
     RetryPolicy? retry,
+    // Riverpod does not export the type of its overrides; see pumpApp.
+    List<Object> extra = const [],
   }) async {
     final c = ProviderContainer(
       overrides: [
@@ -57,6 +66,8 @@ void main() {
         syncClientFactoryProvider.overrideWithValue((_, _) => client),
         // No live-update stream in tests: it would try to reach the network.
         sseClientFactoryProvider.overrideWithValue((_, _, _) => null),
+        photoStoreProvider.overrideWithValue(store),
+        ...extra.cast(),
       ],
     );
     addTearDown(c.dispose);
@@ -69,6 +80,7 @@ void main() {
 
   setUp(() {
     db = testDatabase();
+    store = MemoryPhotoStore();
     client = FakeSyncClient([]);
   });
   tearDown(() => db.close());
@@ -393,4 +405,216 @@ void main() {
     expect(await db.watchListMeta().first, isEmpty);
     expect(c.read(syncEngineProvider).status, SyncStatus.local);
   });
+
+  PhotosRepository photos() =>
+      PhotosRepository(db, testClock('a'), sequentialIds('p'), store);
+
+  /// A pulled photo row, naming bytes this device does not hold.
+  SyncResponse pulledPhoto(String hash) {
+    final stamp = Hlc(millis: testNowMs, counter: 0, node: 'srv').toString();
+    return SyncResponse(
+      cursor: 1,
+      serverHlc: stamp,
+      changes: [
+        SyncChange.task(task('t1', stamp)),
+        SyncChange.photo(
+          Photo(
+            id: 'p1',
+            taskId: 't1',
+            sha256: hash,
+            byteSize: 3,
+            width: 1,
+            height: 1,
+            sortKey: 'V',
+            updatedAt: stamp,
+          ),
+        ),
+      ],
+    );
+  }
+
+  test('bytes are uploaded before the row that names them is pushed', () async {
+    final c = await container();
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final photo = (await photos().add('t1', smallJpeg()))!;
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.uploaded, [photo.sha256]);
+    final pushed = client.pushes.expand((c) => c).whereType<SyncChangePhoto>();
+    expect(pushed.single.row.id, photo.id);
+    expect(
+      client.uploadedBefore(photo.sha256),
+      isTrue,
+      reason:
+          'a row the server cannot serve bytes for is a broken picture '
+          'on every other device',
+    );
+    expect(await db.pendingBlobs(), isEmpty);
+  });
+
+  test('a photo row that cannot be uploaded yet is held back', () async {
+    final c = await container();
+    client.failWith = const ApiError(507, 'quota_exceeded');
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    await photos().add('t1', smallJpeg());
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(
+      client.pushes.expand((c) => c).whereType<SyncChangePhoto>(),
+      isEmpty,
+    );
+    expect(await db.pendingBlobs(), hasLength(1));
+  });
+
+  test('blobs move two at a time', () async {
+    final c = await container();
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final repo = photos();
+    for (final width in [10, 20, 30, 40]) {
+      await repo.add('t1', smallJpeg(width: width));
+    }
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.uploaded, hasLength(4));
+    expect(client.maxBlobsInFlight, 2);
+  });
+
+  test('one picture failing on this device does not fail the sync', () async {
+    final logged = <String?>[];
+    final print = debugPrint;
+    debugPrint = (message, {wrapWidth}) => logged.add(message);
+    addTearDown(() => debugPrint = print);
+    final c = await container();
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final repo = photos();
+    final broken = (await repo.add('t1', smallJpeg(width: 10)))!;
+    final fine = (await repo.add('t1', smallJpeg(width: 30)))!;
+    client.blobFailures[broken.sha256] = const FileSystemException(
+      'No space left on device',
+    );
+    client.responses.add(
+      SyncResponse(
+        cursor: 3,
+        serverHlc: serverHlc,
+        changes: [SyncChange.task(task('t2', serverHlc))],
+      ),
+    );
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.uploaded, [fine.sha256]);
+    expect(
+      client.pushes
+          .expand((c) => c)
+          .whereType<SyncChangePhoto>()
+          .map((c) => c.row.id),
+      [fine.id],
+    );
+    expect(await db.taskById('t2'), isNotNull, reason: 'the pull still ran');
+    expect((await db.pendingBlobs()).single.sha256, broken.sha256);
+    final state = c.read(syncEngineProvider);
+    expect(state.status, SyncStatus.idle);
+    expect(state.error, isNull);
+    expect(logged.join('\n'), contains('No space left on device'));
+  });
+
+  test('a refused picture is reported until one gets through', () async {
+    final c = await container();
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final photo = (await photos().add('t1', smallJpeg()))!;
+    client.blobFailures[photo.sha256] = const ApiError(507, 'quota_exceeded');
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(c.read(syncEngineProvider).photoError, 'quota_exceeded');
+    expect(c.read(syncEngineProvider).error, isNull);
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(
+      c.read(syncEngineProvider).photoError,
+      'quota_exceeded',
+      reason: 'a refusal that has not changed is not wiped by the next sync',
+    );
+
+    client.blobFailures.clear();
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(c.read(syncEngineProvider).photoError, isNull);
+  });
+
+  test(
+    'bytes may be evicted once, and only once, the server has them',
+    () async {
+      store = MemoryPhotoStore(maxEntries: 1);
+      final c = await container();
+      await db.upsertTask(task('t1', testClock('a').now().toString()));
+      final photo = (await photos().add('t1', smallJpeg()))!;
+      Future<void> crowd() async {
+        for (var i = 0; i < 3; i++) {
+          await store.put('filler$i', Uint8List.fromList([i]));
+        }
+      }
+
+      client.blobFailures[photo.sha256] = const ApiError(0, 'network');
+      await c.read(syncEngineProvider.notifier).syncNow();
+      await crowd();
+      expect(await store.get(photo.sha256), isNotNull);
+
+      client.blobFailures.clear();
+      await c.read(syncEngineProvider.notifier).syncNow();
+      await crowd();
+      expect(await store.get(photo.sha256), isNull);
+    },
+  );
+
+  test(
+    'a pulled photo has its bytes fetched where downloads are eager',
+    () async {
+      const hash =
+          'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
+      client.responses.add(pulledPhoto(hash));
+      client.blobs[hash] = Uint8List.fromList([4, 5, 6]);
+      final c = await container(
+        extra: [photoDownloadEagerProvider.overrideWithValue(true)],
+      );
+
+      await c.read(syncEngineProvider.notifier).syncNow();
+
+      expect(await store.get(hash), [4, 5, 6]);
+      expect(await db.missingBlobHashes(), isEmpty);
+    },
+  );
+
+  test('a download that fails is left for the next sync', () async {
+    const hash =
+        'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
+    client.responses.add(pulledPhoto(hash));
+    final c = await container(
+      extra: [photoDownloadEagerProvider.overrideWithValue(true)],
+    );
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+    expect(await db.missingBlobHashes(), [hash]);
+  });
+
+  test(
+    'where downloads are not eager, nothing is fetched until it is shown',
+    () async {
+      const hash =
+          'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd';
+      client.responses.add(pulledPhoto(hash));
+      client.blobs[hash] = Uint8List.fromList([7]);
+      final c = await container(
+        extra: [photoDownloadEagerProvider.overrideWithValue(false)],
+      );
+
+      await c.read(syncEngineProvider.notifier).syncNow();
+
+      expect(client.downloaded, isEmpty);
+      expect(await db.missingBlobHashes(), [hash]);
+    },
+  );
 }

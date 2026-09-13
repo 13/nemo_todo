@@ -1,26 +1,16 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:image/image.dart' as img;
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/photos/data/photos_repository.dart';
 import 'package:nemo_core/nemo_core.dart';
 
+import '../../support/photos.dart';
 import '../../support/test_db.dart';
 
 void main() {
-  Uint8List jpeg({int width = 60, int height = 40}) {
-    final image = img.Image(width: width, height: height);
-    for (var y = 0; y < height; y++) {
-      for (var x = 0; x < width; x++) {
-        image.setPixelRgb(x, y, x % 256, y % 256, 128);
-      }
-    }
-    return Uint8List.fromList(img.encodeJpg(image));
-  }
-
   Future<void> addTask(AppDatabase db, {String id = 't1'}) => db.upsertTask(
     Task(
       id: id,
@@ -43,7 +33,7 @@ void main() {
     );
     await addTask(db);
 
-    final photo = (await repo.add('t1', jpeg()))!;
+    final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
     expect(photo.taskId, 't1');
     expect(photo.width, 60);
@@ -66,8 +56,8 @@ void main() {
     );
     await addTask(db);
 
-    final first = (await repo.add('t1', jpeg(width: 10, height: 10)))!;
-    final second = (await repo.add('t1', jpeg(width: 20, height: 20)))!;
+    final first = (await repo.add('t1', smallJpeg(width: 10, height: 10)))!;
+    final second = (await repo.add('t1', smallJpeg(height: 20)))!;
 
     expect(first.sortKey.compareTo(second.sortKey), lessThan(0));
     expect(await repo.watchCounts().first, {'t1': 2});
@@ -86,7 +76,7 @@ void main() {
         store,
       );
       await addTask(db);
-      final photo = (await repo.add('t1', jpeg()))!;
+      final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
       await repo.delete(photo.id);
 
@@ -131,7 +121,7 @@ void main() {
       );
       await addTask(db);
 
-      final photo = (await repo.add('t1', jpeg()))!;
+      final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
       expect(
         (await db.outboxChanges()).whereType<SyncChangePhoto>(),
@@ -162,7 +152,7 @@ void main() {
     );
     await addTask(db);
 
-    final photo = (await repo.add('t1', jpeg()))!;
+    final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
     for (var i = 0; i < 5; i++) {
       await store.put('filler$i', Uint8List.fromList([i]));
     }
@@ -182,10 +172,10 @@ void main() {
       store,
     );
     await addTask(db);
-    final first = (await repo.add('t1', jpeg()))!;
+    final first = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
     await db.markBlobSynced(first.sha256);
 
-    final second = (await repo.add('t1', jpeg()))!;
+    final second = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
     expect(second.sha256, first.sha256);
     final blob = await db.pendingBlobs();
@@ -210,9 +200,9 @@ void main() {
       store,
     );
     await addTask(db);
-    final first = (await repo.add('t1', jpeg()))!;
+    final first = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
     await db.markBlobSynced(first.sha256);
-    final second = (await repo.add('t1', jpeg()))!;
+    final second = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
     await repo.delete(first.id);
 

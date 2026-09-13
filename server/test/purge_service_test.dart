@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/nemo_server.dart';
 import 'package:test/test.dart';
@@ -21,6 +22,25 @@ class _FlakyBlobStore extends BlobStore {
       throw const FileSystemException('permission denied', 'x');
     }
     return super.delete(sha256);
+  }
+}
+
+/// A [BlobStore] that runs [beforeFirstDelete] the first time a sweep
+/// deletes a file, standing in for a `/sync` push that lands while the
+/// sweep is part-way through its candidates.
+class _InterruptedBlobStore extends BlobStore {
+  _InterruptedBlobStore(super.root, this.beforeFirstDelete);
+
+  final Future<void> Function() beforeFirstDelete;
+  var _interrupted = false;
+
+  @override
+  Future<void> delete(String sha256) async {
+    if (!_interrupted) {
+      _interrupted = true;
+      await beforeFirstDelete();
+    }
+    await super.delete(sha256);
   }
 }
 
@@ -345,8 +365,11 @@ void main() {
       'of the sweep or the row purge running alongside it', () async {
     final root = Directory.systemTemp.createTempSync('nemo-purge-blobs');
     addTearDown(() => root.deleteSync(recursive: true));
-    final good = 'd' * 64;
-    final bad = 'e' * 64;
+    // Candidates are claimed in hash order, so `bad` sits between the two
+    // that must still be swept.
+    final a = 'a' * 64;
+    final bad = 'b' * 64;
+    final c = 'c' * 64;
     final flaky = _FlakyBlobStore(root.path, bad);
 
     final ben = await user('ben');
@@ -380,8 +403,17 @@ void main() {
           );
     }
 
-    await blob(good);
+    // Inserted out of order, so only the candidate query's ordering puts
+    // them in the order the comment above relies on.
+    await blob(c);
     await blob(bad);
+    await blob(a);
+
+    final warnings = <LogRecord>[];
+    final listening = Logger.root.onRecord
+        .where((r) => r.loggerName == 'nemo.purge')
+        .listen(warnings.add);
+    addTearDown(listening.cancel);
 
     final report = await purge(blobs: flaky).purge();
 
@@ -395,27 +427,114 @@ void main() {
     expect(await db.taskById('t1'), isNull);
     expect(
       report.blobs,
-      1,
-      reason: 'only the blob actually removed is counted',
+      2,
+      reason: 'only the blobs actually removed are counted',
     );
-    expect(await flaky.exists(good), isFalse);
+    Future<BlobRow?> row(String hash) => (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(hash))).getSingleOrNull();
+    for (final swept in [a, c]) {
+      expect(await flaky.exists(swept), isFalse);
+      expect(await row(swept), isNull);
+    }
     expect(
       await flaky.exists(bad),
       isTrue,
       reason: 'the failing delete left the file behind',
     );
-    final goodRow = await (db.select(
-      db.blobs,
-    )..where((t) => t.sha256.equals(good))).getSingleOrNull();
-    expect(goodRow, isNull);
-    final badRow = await (db.select(
-      db.blobs,
-    )..where((t) => t.sha256.equals(bad))).getSingleOrNull();
     expect(
-      badRow,
+      await row(bad),
       isNotNull,
       reason: 'its row is kept so a later sweep retries it',
     );
+    expect(warnings, hasLength(1));
+    expect(warnings.single.level, Level.WARNING);
+    expect(warnings.single.error, isA<FileSystemException>());
+    expect(warnings.single.stackTrace, isNotNull);
+  });
+
+  test('a blob a photo row names after the sweep listed it is not '
+      'deleted', () async {
+    final root = Directory.systemTemp.createTempSync('nemo-purge-blobs');
+    addTearDown(() => root.deleteSync(recursive: true));
+    final x = 'a' * 64;
+    final y = 'b' * 64;
+    final live = Hlc(
+      millis: now.millisecondsSinceEpoch,
+      counter: 0,
+      node: 'a',
+    ).toString();
+
+    await db
+        .into(db.lists)
+        .insert(
+          TaskList(
+            id: 'l1',
+            name: 'L',
+            sortKey: 'V',
+            updatedAt: live,
+          ).toInsertable(),
+        );
+    await db
+        .into(db.tasks)
+        .insert(
+          Task(
+            id: 't1',
+            listId: 'l1',
+            title: 'T',
+            sortKey: 'V',
+            updatedAt: live,
+          ).toInsertable(),
+        );
+
+    // Sweeping x (the first candidate, by hash) is the moment a client
+    // pushes the row that claims y, which was also listed as an orphan.
+    final store = _InterruptedBlobStore(root.path, () async {
+      await db
+          .into(db.photos)
+          .insert(
+            Photo(
+              id: 'p1',
+              taskId: 't1',
+              sha256: y,
+              byteSize: 3,
+              width: 1,
+              height: 1,
+              sortKey: 'V',
+              updatedAt: live,
+            ).toInsertable(),
+          );
+    });
+
+    for (final hash in [x, y]) {
+      await store.write(hash, [1, 2, 3]);
+      await db
+          .into(db.blobs)
+          .insert(
+            BlobsCompanion.insert(
+              sha256: hash,
+              byteSize: 3,
+              ownerUserId: 'u1',
+              createdAt: now
+                  .subtract(const Duration(days: 60))
+                  .millisecondsSinceEpoch,
+            ),
+          );
+    }
+
+    final report = await purge(blobs: store).purge();
+
+    expect(report.blobs, 1);
+    expect(await store.exists(x), isFalse);
+    expect(
+      await store.exists(y),
+      isTrue,
+      reason: 'a live photo row names these bytes now',
+    );
+    final yRow = await (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(y))).getSingleOrNull();
+    expect(yRow, isNotNull);
   });
 
   test(

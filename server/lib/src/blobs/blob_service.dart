@@ -41,17 +41,27 @@ class BlobService {
     if (BlobStore.hashOf(bytes) != sha256) {
       throw const ApiException(400, 'hash_mismatch');
     }
-    // Already held: the upload is a no-op, and it costs the caller nothing
-    // whether they were the one who paid for it or not.
-    final existing = await (_db.select(
-      _db.blobs,
-    )..where((t) => t.sha256.equals(sha256))).getSingleOrNull();
-    if (existing != null) {
+    // Already held: it costs the caller nothing whether they were the one
+    // who paid for it or not, and no bytes are written. But the upload is
+    // almost always followed by a push of the row that names it, so the
+    // blob is made young again: an old orphan re-uploaded must not be swept
+    // between the two. That is a write rather than a read on purpose - it
+    // takes the database's write lock, so it waits out a purge (another
+    // process) in the middle of claiming this blob, and then either finds
+    // the row still there and refreshes it, or finds it gone and stores
+    // the bytes afresh below.
+    final held =
+        await (_db.update(
+          _db.blobs,
+        )..where((t) => t.sha256.equals(sha256))).write(
+          BlobsCompanion(createdAt: Value(_now().millisecondsSinceEpoch)),
+        );
+    if (held > 0) {
       if (!await _store.exists(sha256)) await _store.write(sha256, bytes);
       return;
     }
-    final held = await _db.bytesOwnedBy(userId);
-    if (held + bytes.length > accountQuotaBytes) {
+    final owned = await _db.bytesOwnedBy(userId);
+    if (owned + bytes.length > accountQuotaBytes) {
       throw const ApiException(507, 'quota_exceeded');
     }
     // The file first: a row naming bytes that are not there would be a

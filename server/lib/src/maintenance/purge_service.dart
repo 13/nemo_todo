@@ -278,6 +278,10 @@ class PurgeService {
   ///
   /// [staleMillis] is plain epoch milliseconds, not an HLC stamp: a blob's
   /// `createdAt` is wall-clock time, not a synced row with a device clock.
+  ///
+  /// For a real sweep this is only a list of candidates, in hash order so a
+  /// run is repeatable: it is read once, and the server keeps accepting
+  /// pushes and uploads while the sweep works through it.
   Future<List<BlobRow>> _orphanBlobs(
     int staleMillis, {
     Set<String> excludingPhotoIds = const {},
@@ -287,47 +291,70 @@ class PurgeService {
     if (excludingPhotoIds.isNotEmpty) {
       referenced.where(_db.photos.id.isNotIn(excludingPhotoIds));
     }
-    return (_db.select(_db.blobs)..where(
-          (t) =>
-              t.createdAt.isSmallerThanValue(staleMillis) &
-              t.sha256.isNotInQuery(referenced),
-        ))
+    return (_db.select(_db.blobs)
+          ..where(
+            (t) =>
+                t.createdAt.isSmallerThanValue(staleMillis) &
+                t.sha256.isNotInQuery(referenced),
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.sha256)]))
         .get();
   }
 
   /// Deletes files and rows for every orphaned, stale blob.
   ///
-  /// Runs after the row purge's transaction has committed, and handles one
-  /// orphan at a time: unlinking a file is not transactional, so doing it
-  /// inside the same transaction as the row purge would mean a single file
-  /// that will not delete rolling back every list/task/subtask/photo
-  /// deletion committed alongside it, while the files swept before it
-  /// stayed gone -- and the bad file would wedge every later purge the same
-  /// way. Deleting the file before its row, rather than the other way
-  /// round, means a blob whose file fails to delete simply keeps its row,
-  /// so the next sweep retries it, and this sweep still gets to the rest of
-  /// the orphans instead of aborting.
+  /// Runs after the row purge's transaction has committed, so a file that
+  /// will not delete can never roll back the rows purged alongside it.
+  ///
+  /// The purge is a separate process from the server, writing the same
+  /// database, so between listing the candidates and reaching one of them
+  /// a `/sync` push may have named its hash, or an upload may have made it
+  /// young again. No lock in this process can see that; SQLite's write
+  /// lock can. So each candidate is claimed in its own transaction that
+  /// opens with a conditional delete of its row, re-checking "stale and
+  /// unnamed" at the moment the lock is taken. A push or upload that
+  /// arrives after that waits for the transaction, and the file is deleted
+  /// before it ends, so either the claim finds the blob wanted and leaves
+  /// it, or it holds the lock until the bytes are gone and the uploader
+  /// finds no row and stores them afresh.
+  ///
+  /// One transaction per blob rather than one for the sweep, so a single
+  /// file that will not delete rolls back only its own row (kept for a
+  /// later sweep to retry), and the server is never locked out of writing
+  /// for the length of a whole sweep.
   Future<int> _sweepBlobs(int staleMillis) async {
     var swept = 0;
-    for (final blob in await _orphanBlobs(staleMillis)) {
+    for (final candidate in await _orphanBlobs(staleMillis)) {
+      final hash = candidate.sha256;
       try {
-        await _blobs.delete(blob.sha256);
-      } on FileSystemException catch (e) {
-        // Already-gone files are handled inside BlobStore.delete itself, so
-        // reaching here means a real failure (permissions, a busy disk).
-        // Logged and skipped, not rethrown: one stubborn file must not stop
-        // the rest of the orphans from being swept.
+        final claimed = await _db.transaction(() async {
+          final referenced = _db.selectOnly(_db.photos)
+            ..addColumns([_db.photos.sha256]);
+          final deleted =
+              await (_db.delete(_db.blobs)..where(
+                    (t) =>
+                        t.sha256.equals(hash) &
+                        t.createdAt.isSmallerThanValue(staleMillis) &
+                        t.sha256.isNotInQuery(referenced),
+                  ))
+                  .go();
+          if (deleted == 0) return false;
+          // Already-gone files are handled inside BlobStore.delete itself,
+          // so a FileSystemException here is a real failure (permissions, a
+          // busy disk), and letting it out of the transaction puts the row
+          // back.
+          await _blobs.delete(hash);
+          return true;
+        });
+        if (claimed) swept++;
+      } on FileSystemException catch (e, s) {
         _log.warning(
-          'could not delete blob ${blob.sha256}, keeping its row for a '
-          'later sweep to retry',
+          'could not delete blob $hash, keeping its row for a later sweep '
+          'to retry',
           e,
+          s,
         );
-        continue;
       }
-      await (_db.delete(
-        _db.blobs,
-      )..where((t) => t.sha256.equals(blob.sha256))).go();
-      swept++;
     }
     return swept;
   }

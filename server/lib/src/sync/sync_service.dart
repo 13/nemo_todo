@@ -206,6 +206,11 @@ class SyncService {
 
       case SyncChangeRevoke():
         return 'not_allowed';
+
+      // Photo sync lands in a later task; until then a pushed photo change
+      // is rejected rather than silently accepted and dropped.
+      case SyncChangePhoto():
+        return 'not_allowed';
     }
   }
 
@@ -286,6 +291,9 @@ class SyncService {
           subtaskRows[entry.rowId],
           SyncChange.subtask,
         ),
+        // Nothing logs a photo upsert yet (that lands with photo sync in a
+        // later task), so there is no row to fetch here.
+        SyncEntity.photo => null,
       };
       if (change != null) changes.add(change);
     }

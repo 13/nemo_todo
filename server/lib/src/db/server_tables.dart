@@ -49,3 +49,21 @@ class SyncLog extends Table {
   TextColumn get forUserId => text().nullable()();
   TextColumn get op => text()();
 }
+
+/// Bytes the server holds, one row per distinct SHA-256. The file itself
+/// lives under the blob directory; this row is what makes it findable,
+/// countable against a quota, and sweepable once no photo names it.
+@DataClassName('BlobRow')
+class Blobs extends Table {
+  TextColumn get sha256 => text()();
+  IntColumn get byteSize => integer()();
+
+  /// Who first uploaded it, and therefore whose quota it counts against.
+  TextColumn get ownerUserId => text()();
+
+  /// Epoch milliseconds. A blob is not a synced row and has no HLC.
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sha256};
+}

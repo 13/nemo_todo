@@ -115,6 +115,10 @@ class Device {
         if (incomingWins(tasks[row.id], row)) tasks[row.id] = row;
       case SyncChangeSubtask(:final row):
         if (incomingWins(subtasks[row.id], row)) subtasks[row.id] = row;
+      // Photo sync lands in a later task; this fixture client does not
+      // track photos yet, so there is nothing to apply.
+      case SyncChangePhoto():
+        break;
       case SyncChangeRevoke(:final target, :final id):
         switch (target) {
           case SyncEntity.list:
@@ -125,6 +129,8 @@ class Device {
             subtasks.removeWhere((_, s) => s.taskId == id);
           case SyncEntity.subtask:
             subtasks.remove(id);
+          case SyncEntity.photo:
+            break;
         }
     }
   }

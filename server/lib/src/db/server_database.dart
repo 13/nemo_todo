@@ -11,7 +11,17 @@ part 'server_database.g.dart';
 /// The server's single SQLite database: the synced tables shared with the
 /// app plus accounts, sessions, memberships and the change log.
 @DriftDatabase(
-  tables: [Lists, Tasks, Subtasks, Users, Sessions, ListMembers, SyncLog],
+  tables: [
+    Lists,
+    Tasks,
+    Subtasks,
+    Photos,
+    Users,
+    Sessions,
+    ListMembers,
+    SyncLog,
+    Blobs,
+  ],
 )
 class ServerDatabase extends _$ServerDatabase {
   ServerDatabase(super.e);
@@ -43,7 +53,7 @@ class ServerDatabase extends _$ServerDatabase {
       customStatement('vacuum into ?', [path]);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -59,6 +69,13 @@ class ServerDatabase extends _$ServerDatabase {
       // Version 3 carries how often a task comes back. The server never
       // reads it; it stores and forwards it like every other column.
       if (from < 3) await m.addColumn(tasks, tasks.repeat);
+      // Version 4 carries pictures: the rows that name them, and the
+      // bytes the server is holding for them.
+      if (from < 4) {
+        await m.createTable(photos);
+        await m.create(photosTaskId);
+        await m.createTable(blobs);
+      }
     },
   );
 }

@@ -23,11 +23,11 @@ void main() {
   });
 
   test('migrates a database from every earlier version', () async {
-    for (final from in [1, 2]) {
+    for (final from in [1, 2, 3]) {
       final verifier = SchemaVerifier(GeneratedHelper());
       final connection = await verifier.startAt(from);
       final db = ServerDatabase(connection);
-      await verifier.migrateAndValidate(db, 3);
+      await verifier.migrateAndValidate(db, 4);
       await db.close();
     }
   });
@@ -36,7 +36,7 @@ void main() {
     final verifier = SchemaVerifier(GeneratedHelper());
     final connection = await verifier.startAt(1);
     final db = ServerDatabase(connection);
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
     final indexes =
         (await db
                 .customSelect(
@@ -45,7 +45,10 @@ void main() {
                 .get())
             .map((r) => r.read<String>('name'))
             .toList();
-    expect(indexes, containsAll(['list_members_user_id', 'sync_log_row']));
+    expect(
+      indexes,
+      containsAll(['list_members_user_id', 'sync_log_row', 'photos_task_id']),
+    );
     await db.close();
   });
 }

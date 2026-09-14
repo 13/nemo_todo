@@ -89,7 +89,9 @@ void main() {
         }, 'ben');
       },
     );
-    await tester.ensureVisible(find.byKey(const Key('sign-out')));
+    // Settings runs longer than the test's window; the tile is built only
+    // once it is scrolled to.
+    await scrollIntoView(tester, find.byKey(const Key('sign-out')));
     await tester.tap(find.byKey(const Key('sign-out')));
     await settleSync(tester);
     await tester.tap(find.byKey(const Key('confirm-sign-out')));
@@ -117,7 +119,9 @@ void main() {
   );
 
   Future<void> tapTile(WidgetTester tester, String key) async {
-    await tester.ensureVisible(find.byKey(Key(key)));
+    // Settings runs longer than the test's window; the tile is built only
+    // once it is scrolled to.
+    await scrollIntoView(tester, find.byKey(Key(key)));
     await tester.tap(find.byKey(Key(key)));
     await settleSync(tester);
   }
@@ -247,6 +251,9 @@ void main() {
     expect(find.textContaining('Offline.'), findsNothing);
 
     client.failWith = null;
+    // Settings runs longer than the test's window; the banner is built only
+    // once it is scrolled to.
+    await scrollIntoView(tester, find.byKey(const Key('review-certificate')));
     await tester.tap(find.byKey(const Key('review-certificate')));
     await tester.pumpAndSettle();
     expect(find.text('CN=MUH Root CA'), findsOneWidget);

@@ -31,6 +31,12 @@ abstract final class KvKeys {
   /// `yyyy-mm-dd`, so one day is counted once.
   static const clearedDays = 'cleared_days';
   static const lastClearedDay = 'last_cleared_day';
+
+  /// Per-device celebration switches: `"true"` or `"false"`; unset is the
+  /// default (celebrations and achievements on, sound off).
+  static const celebrations = 'celebrations';
+  static const celebrationSound = 'celebration_sound';
+  static const achievements = 'achievements';
 }
 
 /// Typed access to the `kv` table.

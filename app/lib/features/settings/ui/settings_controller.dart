@@ -16,3 +16,39 @@ class ThemeModeController extends _$ThemeModeController {
     await ref.read(kvStoreProvider).set(KvKeys.themeMode, mode.name);
   }
 }
+
+/// Confetti, animations and haptics on completing a task.
+@Riverpod(keepAlive: true)
+class CelebrationsEnabled extends _$CelebrationsEnabled {
+  @override
+  bool build() => ref.watch(bootstrapProvider).celebrations;
+
+  Future<void> set({required bool enabled}) async {
+    state = enabled;
+    await ref.read(kvStoreProvider).set(KvKeys.celebrations, '$enabled');
+  }
+}
+
+/// A sound for a cleared day or an unlocked achievement.
+@Riverpod(keepAlive: true)
+class CelebrationSoundEnabled extends _$CelebrationSoundEnabled {
+  @override
+  bool build() => ref.watch(bootstrapProvider).celebrationSound;
+
+  Future<void> set({required bool enabled}) async {
+    state = enabled;
+    await ref.read(kvStoreProvider).set(KvKeys.celebrationSound, '$enabled');
+  }
+}
+
+/// Achievements, their unlock banners and their Settings tile.
+@Riverpod(keepAlive: true)
+class AchievementsEnabled extends _$AchievementsEnabled {
+  @override
+  bool build() => ref.watch(bootstrapProvider).achievements;
+
+  Future<void> set({required bool enabled}) async {
+    state = enabled;
+    await ref.read(kvStoreProvider).set(KvKeys.achievements, '$enabled');
+  }
+}

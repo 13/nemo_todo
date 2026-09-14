@@ -28,12 +28,20 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
       child: Row(
         children: [
-          Text(title, style: style),
-          if (count != null) ...[
-            const SizedBox(width: 6),
-            Text('$count', style: style?.copyWith(fontWeight: FontWeight.w500)),
-          ],
-          const Spacer(),
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(child: Text(title, style: style)),
+                if (count != null) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    '$count',
+                    style: style?.copyWith(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ],
+            ),
+          ),
           if (collapsed != null)
             Icon(
               collapsed! ? Icons.expand_more : Icons.expand_less,

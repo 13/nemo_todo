@@ -19,6 +19,9 @@ class AppBootstrap {
     this.lastSyncAt,
     this.trustedCertificates,
     this.serverVersion,
+    this.celebrations = true,
+    this.celebrationSound = false,
+    this.achievements = true,
   });
 
   final String nodeId;
@@ -39,6 +42,15 @@ class AppBootstrap {
   /// offline.
   final String? serverVersion;
 
+  /// Confetti, animations and haptics when a task is completed.
+  final bool celebrations;
+
+  /// A sound for the big moments; off unless chosen.
+  final bool celebrationSound;
+
+  /// Achievements, their banners and the Settings tile.
+  final bool achievements;
+
   static Future<AppBootstrap> load(AppDatabase db) async {
     final kv = KvStore(db);
     var nodeId = await kv.get(KvKeys.nodeId);
@@ -58,6 +70,9 @@ class AppBootstrap {
       lastSyncAt: lastSync == null ? null : int.tryParse(lastSync),
       trustedCertificates: await kv.get(KvKeys.trustedCertificates),
       serverVersion: await kv.get(KvKeys.serverVersion),
+      celebrations: await kv.get(KvKeys.celebrations) != 'false',
+      celebrationSound: await kv.get(KvKeys.celebrationSound) == 'true',
+      achievements: await kv.get(KvKeys.achievements) != 'false',
     );
   }
 }

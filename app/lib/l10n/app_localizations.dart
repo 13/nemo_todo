@@ -801,6 +801,54 @@ abstract class L {
   /// **'Version {version}'**
   String settingsVersion(String version);
 
+  /// No description provided for @settingsCelebrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrations & achievements'**
+  String get settingsCelebrations;
+
+  /// No description provided for @settingsCelebrationsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrations'**
+  String get settingsCelebrationsEnabled;
+
+  /// No description provided for @settingsCelebrationsEnabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Confetti, animations and haptics when you complete tasks'**
+  String get settingsCelebrationsEnabledHint;
+
+  /// No description provided for @settingsCelebrationSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get settingsCelebrationSound;
+
+  /// No description provided for @settingsCelebrationSoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound for big moments'**
+  String get settingsCelebrationSoundHint;
+
+  /// No description provided for @settingsAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get settingsAchievements;
+
+  /// No description provided for @settingsAchievementsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show achievements and unlock banners'**
+  String get settingsAchievementsHint;
+
+  /// No description provided for @achievementsView.
+  ///
+  /// In en, this message translates to:
+  /// **'View achievements'**
+  String get achievementsView;
+
   /// No description provided for @accountSignInAction.
   ///
   /// In en, this message translates to:

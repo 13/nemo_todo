@@ -74,15 +74,14 @@ void main() {
     await settleSync(tester);
     // Settings runs longer than the test's window; the tile is built only
     // once it is scrolled to.
-    await tester.scrollUntilVisible(
-      find.byType(AboutTile),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await scrollIntoView(tester, find.byType(AboutTile));
   }
 
   appTest('with no account it names this build alone', (tester) async {
     await pumpApp(tester, initialLocation: Routes.settings);
+    // Settings runs longer than the test's window; the tile is built only
+    // once it is scrolled to.
+    await scrollIntoView(tester, find.byType(AboutTile));
     // package_info reports nothing under test, so this is about the shape
     // rather than the number: one version, no server, no warning.
     expect(find.textContaining('Version'), findsOneWidget);
@@ -143,11 +142,7 @@ void main() {
   );
 
   Future<void> scrollToButtons(WidgetTester tester) async {
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('about-source')),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await scrollIntoView(tester, find.byKey(const Key('about-source')));
     await tester.pump();
   }
 

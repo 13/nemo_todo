@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/section_header.dart';
+import 'package:nemo/features/celebrations/ui/celebration_settings_section.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart';
 import 'package:nemo/features/settings/ui/data_tiles.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
@@ -58,6 +59,7 @@ class SettingsScreen extends ConsumerWidget {
                     ref.read(themeModeControllerProvider.notifier).set(s.first),
               ),
             ),
+            const CelebrationSettingsSection(),
             const SyncSettingsSection(),
             const DataTiles(),
             const UpdateTile(),

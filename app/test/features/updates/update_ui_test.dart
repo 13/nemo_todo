@@ -32,6 +32,9 @@ void main() {
       initialLocation: Routes.settings,
       overrides: overrides(),
     );
+    // Settings runs longer than the test's window; the tile is built only
+    // once it is scrolled to.
+    await scrollIntoView(tester, find.byKey(const Key('check-for-updates')));
     expect(find.text('Updates'), findsOneWidget);
     expect(find.textContaining('You have version 0.1.0'), findsWidgets);
 
@@ -47,6 +50,9 @@ void main() {
       initialLocation: Routes.settings,
       overrides: overrides(),
     );
+    // Settings runs longer than the test's window; the tile is built only
+    // once it is scrolled to.
+    await scrollIntoView(tester, find.byKey(const Key('check-for-updates')));
     await tester.tap(find.byKey(const Key('check-for-updates')));
     await tester.pumpAndSettle();
     expect(find.textContaining('rate limiting'), findsOneWidget);

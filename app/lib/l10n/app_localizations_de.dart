@@ -441,6 +441,33 @@ class LDe extends L {
   }
 
   @override
+  String get settingsCelebrations => 'Feiern & Erfolge';
+
+  @override
+  String get settingsCelebrationsEnabled => 'Feiern';
+
+  @override
+  String get settingsCelebrationsEnabledHint =>
+      'Konfetti, Animationen und Vibration beim Erledigen von Aufgaben';
+
+  @override
+  String get settingsCelebrationSound => 'Ton';
+
+  @override
+  String get settingsCelebrationSoundHint =>
+      'Bei großen Momenten einen Ton abspielen';
+
+  @override
+  String get settingsAchievements => 'Erfolge';
+
+  @override
+  String get settingsAchievementsHint =>
+      'Erfolge und Freischalt-Hinweise anzeigen';
+
+  @override
+  String get achievementsView => 'Erfolge ansehen';
+
+  @override
   String get accountSignInAction => 'Bei deinem Server anmelden';
 
   @override

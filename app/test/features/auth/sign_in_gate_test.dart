@@ -106,6 +106,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('account-action')));
     await tester.pumpAndSettle();
+    // Settings runs longer than the test's window; the tile is built only
+    // once it is scrolled to.
+    await scrollIntoView(tester, find.byKey(const Key('sign-out')));
     await tester.tap(find.byKey(const Key('sign-out')));
     await tester.pumpAndSettle();
     expect(

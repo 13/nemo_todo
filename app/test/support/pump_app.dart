@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meta/meta.dart';
 import 'package:nemo/core/db/app_database.dart';
+import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
@@ -71,6 +72,10 @@ Future<TestApp> pumpApp(
   // lets `pumpAndSettle` return. Those tests pump a fixed number of frames.
   bool settle = true,
   PhotoStore? photoStore,
+  // Celebrations are on in the app. Most tests tick tasks off and look at
+  // what follows, which a banner over the app bar would get in the way of,
+  // so they start off unless a test is about them.
+  bool celebrate = false,
 }) async {
   final db = testDatabase();
   addTearDown(db.close);
@@ -83,6 +88,10 @@ Future<TestApp> pumpApp(
     testClock('seed'),
     sequentialIds('l'),
   ).ensureInbox();
+  if (!celebrate) {
+    await KvStore(db).set(KvKeys.celebrations, 'false');
+    await KvStore(db).set(KvKeys.achievements, 'false');
+  }
   await seed?.call(db, inbox);
   final boot = await AppBootstrap.load(db);
 
@@ -159,6 +168,18 @@ Future<void> settleSync(WidgetTester tester) async {
     await tester.pump(const Duration(milliseconds: 100));
   }
 }
+
+/// Scrolls the first scrollable until [finder] can actually be tapped.
+///
+/// `ensureVisible` does nothing for a widget that is built but below the
+/// fold, and `scrollUntilVisible` stops as soon as the widget exists; asking
+/// for a hit-testable match keeps scrolling until it is really on screen.
+Future<void> scrollIntoView(WidgetTester tester, Finder finder) =>
+    tester.scrollUntilVisible(
+      finder.hitTestable(),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
 
 /// Types into the quick-add field and submits it.
 Future<void> quickAdd(WidgetTester tester, String title) async {

@@ -442,6 +442,32 @@ class LIt extends L {
   }
 
   @override
+  String get settingsCelebrations => 'Festeggiamenti e traguardi';
+
+  @override
+  String get settingsCelebrationsEnabled => 'Festeggiamenti';
+
+  @override
+  String get settingsCelebrationsEnabledHint =>
+      'Coriandoli, animazioni e vibrazione quando completi le attività';
+
+  @override
+  String get settingsCelebrationSound => 'Suono';
+
+  @override
+  String get settingsCelebrationSoundHint =>
+      'Riproduci un suono nei momenti importanti';
+
+  @override
+  String get settingsAchievements => 'Traguardi';
+
+  @override
+  String get settingsAchievementsHint => 'Mostra traguardi e avvisi di sblocco';
+
+  @override
+  String get achievementsView => 'Vedi traguardi';
+
+  @override
   String get accountSignInAction => 'Accedi al tuo server';
 
   @override

@@ -440,6 +440,31 @@ class LEn extends L {
   }
 
   @override
+  String get settingsCelebrations => 'Celebrations & achievements';
+
+  @override
+  String get settingsCelebrationsEnabled => 'Celebrations';
+
+  @override
+  String get settingsCelebrationsEnabledHint =>
+      'Confetti, animations and haptics when you complete tasks';
+
+  @override
+  String get settingsCelebrationSound => 'Sound';
+
+  @override
+  String get settingsCelebrationSoundHint => 'Play a sound for big moments';
+
+  @override
+  String get settingsAchievements => 'Achievements';
+
+  @override
+  String get settingsAchievementsHint => 'Show achievements and unlock banners';
+
+  @override
+  String get achievementsView => 'View achievements';
+
+  @override
   String get accountSignInAction => 'Sign in to your server';
 
   @override

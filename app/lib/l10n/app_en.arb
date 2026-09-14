@@ -231,6 +231,14 @@
       }
     }
   },
+  "settingsCelebrations": "Celebrations & achievements",
+  "settingsCelebrationsEnabled": "Celebrations",
+  "settingsCelebrationsEnabledHint": "Confetti, animations and haptics when you complete tasks",
+  "settingsCelebrationSound": "Sound",
+  "settingsCelebrationSoundHint": "Play a sound for big moments",
+  "settingsAchievements": "Achievements",
+  "settingsAchievementsHint": "Show achievements and unlock banners",
+  "achievementsView": "View achievements",
   "accountSignInAction": "Sign in to your server",
   "accountWebNotice": "nemo keeps your tasks on this server. Sign in to see them.",
   "accountCertificateTitle": "Trust this server's certificate?",

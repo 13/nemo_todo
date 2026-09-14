@@ -77,6 +77,17 @@ void main() {
     return ben;
   }
 
+  setUp(() {
+    db = ServerDatabase.memory();
+    sync = SyncService(
+      db,
+      now: () => fixedNow,
+      clock: HlcClock(node: 'srv', now: () => fixedNow),
+    );
+    dev = deviceClock('dev');
+  });
+  tearDown(() => db.close());
+
   test(
     'a client that cannot read photos gets everything else, and moves on',
     () async {
@@ -129,17 +140,6 @@ void main() {
     ]);
     expect(all.pages, [(11, false)]);
   });
-
-  setUp(() {
-    db = ServerDatabase.memory();
-    sync = SyncService(
-      db,
-      now: () => fixedNow,
-      clock: HlcClock(node: 'srv', now: () => fixedNow),
-    );
-    dev = deviceClock('dev');
-  });
-  tearDown(() => db.close());
 
   test('every response says the server takes photos', () async {
     final ben = await user('ben');

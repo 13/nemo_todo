@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
 import 'package:nemo_core/nemo_core.dart';
 import 'package:test/test.dart';
 
@@ -121,6 +123,33 @@ void main() {
       expect(jsonDecode(full.body), {'error': 'quota_exceeded'});
     },
   );
+
+  test('a streamed upload that grows past the cap is refused', () async {
+    server = await TestServer.start(maxBlobBytes: 8);
+    final token = await server.signup('ben');
+    final big = List.filled(12, 7);
+
+    // No Content-Length: the body arrives chunked, so only the running
+    // count while reading can catch it.
+    final request =
+        http.StreamedRequest(
+            'POST',
+            server.uri('/api/v1/blobs/${sha256.convert(big)}'),
+          )
+          ..headers['content-type'] = 'image/jpeg'
+          ..headers['authorization'] = 'Bearer $token';
+    expect(request.contentLength, isNull);
+    request.sink
+      ..add(big.sublist(0, 6))
+      ..add(big.sublist(6));
+    unawaited(request.sink.close());
+    final response = await http.Response.fromStream(await request.send());
+
+    expect(response.statusCode, 413);
+    expect(jsonDecode(response.body), {'error': 'blob_too_large'});
+    expect(await server.db.select(server.db.blobs).get(), isEmpty);
+    expect(server.blobDir.listSync(recursive: true), isEmpty);
+  });
 
   // Controller decision: a malformed hash must never reach BlobStore.fileFor,
   // which interpolates it into a filesystem path with no validation of its

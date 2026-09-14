@@ -58,6 +58,9 @@ class TestServer {
     return TestServer._(db, hub, auth, server, blobDir);
   }
 
+  /// Where uploaded bytes land on disk.
+  Directory get blobDir => _blobDir;
+
   Uri uri(String path) => Uri.parse('http://127.0.0.1:${_server.port}$path');
 
   Map<String, String> headers(String? token) => {

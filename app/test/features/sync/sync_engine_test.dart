@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -706,6 +707,17 @@ void main() {
     max: Duration(milliseconds: 20),
   );
 
+  /// Waits until [done] holds, or two seconds pass, whichever comes first.
+  Future<void> eventually(FutureOr<bool> Function() done) async {
+    final deadline = DateTime.now().add(const Duration(seconds: 2));
+    while (!await done() && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+  }
+
+  /// Clearly longer than [fastRetry] would take to try again, several times.
+  const noRetryWindow = Duration(milliseconds: 200);
+
   test('an upload the server failed is tried again with the backoff', () async {
     final c = await container(retry: fastRetry);
     await db.upsertTask(task('t1', testClock('a').now().toString()));
@@ -721,7 +733,7 @@ void main() {
 
     // Nothing else asks for a sync: no edit, no resume, no event.
     client.blobFailures.clear();
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await eventually(() => client.pushedPhotoHashes.isNotEmpty);
     expect(client.uploaded, [photo.sha256]);
     expect(client.pushedPhotoHashes, [photo.sha256]);
   });
@@ -733,7 +745,7 @@ void main() {
     client.blobFailures[photo.sha256] = const ApiError(413, 'blob_too_large');
 
     await c.read(syncEngineProvider.notifier).syncNow();
-    await Future<void>.delayed(const Duration(milliseconds: 40));
+    await Future<void>.delayed(noRetryWindow);
 
     expect(client.calls, 1, reason: 'asking again gets the same answer');
   });
@@ -750,7 +762,7 @@ void main() {
     // The fake answers 404 for bytes it does not hold, as an old server
     // with no blob routes would.
     await c.read(syncEngineProvider.notifier).syncNow();
-    await Future<void>.delayed(const Duration(milliseconds: 40));
+    await Future<void>.delayed(noRetryWindow);
 
     expect(client.downloaded, [hash], reason: 'asked once, not again');
     expect(client.calls, 1);
@@ -771,7 +783,7 @@ void main() {
     expect(await db.missingBlobHashes(), [hash]);
 
     client.blobFailures.clear();
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await eventually(() async => await store.get(hash) != null);
     expect(await store.get(hash), [1, 2]);
   });
 

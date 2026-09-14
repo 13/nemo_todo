@@ -116,16 +116,26 @@ jobs:
       # what survives the second build is gradle's business, not ours.
       # The universal APK is the fallback for a device whose ABI is not
       # among the three, and for anyone downloading by hand.
+      # When and from what this was built, for the app's About and /healthz.
+      # Stamped once per job so every artefact in it names the same moment.
+      - name: Stamp the build
+        run: |
+          date=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          {
+            echo "NEMO_BUILD_DATE=$date"
+            echo "NEMO_DEFINES=--dart-define=NEMO_COMMIT=$GITHUB_SHA --dart-define=NEMO_BUILD_DATE=$date --dart-define=NEMO_CHANNEL=release"
+          } >> "$GITHUB_ENV"
+
       - name: Build the per-ABI APKs
         run: |
-          flutter build apk --release --split-per-abi
+          flutter build apk --release --split-per-abi $NEMO_DEFINES
           mkdir -p ../dist
           cp build/app/outputs/release/*.apk ../dist/
         working-directory: app
 
       - name: Build the universal APK
         run: |
-          flutter build apk --release
+          flutter build apk --release $NEMO_DEFINES
           cp build/app/outputs/release/*universal*.apk ../dist/
         working-directory: app
 
@@ -193,6 +203,16 @@ jobs:
           # pulls :latest did not ask to run a beta.
           flavor: latest=${{ !contains(github.ref_name, '-') }}
 
+      # When and from what this was built, for the app's About and /healthz.
+      # Stamped once per job so every artefact in it names the same moment.
+      - name: Stamp the build
+        run: |
+          date=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          {
+            echo "NEMO_BUILD_DATE=$date"
+            echo "NEMO_DEFINES=--dart-define=NEMO_COMMIT=$GITHUB_SHA --dart-define=NEMO_BUILD_DATE=$date --dart-define=NEMO_CHANNEL=release"
+          } >> "$GITHUB_ENV"
+
       # linux/amd64 alone: the runtime stage copies the bundle out of
       # build/cli/linux_x64, and an emulated arm64 build would compile Dart
       # and the web app under qemu for an hour to produce it.
@@ -205,7 +225,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           # The same number the image is tagged with, baked in so the
           # running server can say which build it is when asked.
-          build-args: NEMO_VERSION=${{ steps.meta.outputs.version }}
+          build-args: |
+            NEMO_VERSION=${{ steps.meta.outputs.version }}
+            NEMO_COMMIT=${{ github.sha }}
+            NEMO_BUILD_DATE=${{ env.NEMO_BUILD_DATE }}
+            NEMO_CHANNEL=release
           # The same cache CI fills on every push to main, so a release
           # mostly re-tags layers instead of building them again.
           cache-from: type=gha

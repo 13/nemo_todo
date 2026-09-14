@@ -119,8 +119,18 @@ jobs:
       - name: Fetch web database assets
         run: tool/fetch_web_assets.sh
 
+      # When and from what this was built, for the app's About and /healthz.
+      # Stamped once per job so every artefact in it names the same moment.
+      - name: Stamp the build
+        run: |
+          date=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          {
+            echo "NEMO_BUILD_DATE=$date"
+            echo "NEMO_DEFINES=--dart-define=NEMO_COMMIT=$GITHUB_SHA --dart-define=NEMO_BUILD_DATE=$date --dart-define=NEMO_CHANNEL=main"
+          } >> "$GITHUB_ENV"
+
       - name: Build web
-        run: flutter build web --release --no-web-resources-cdn
+        run: flutter build web --release --no-web-resources-cdn $NEMO_DEFINES
         working-directory: app
 
       # Signed with the release keystore when the secrets are present, and
@@ -159,7 +169,7 @@ jobs:
           PROPS
 
       - name: Build APK
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi $NEMO_DEFINES
         working-directory: app
 
       # These carry the app name and version; Flutter's own copies under
@@ -183,6 +193,10 @@ jobs:
           tags: nemo:${{ github.sha }}
           # An image built off main is not a release and should not claim
           # to be one; it names the commit it came from instead.
-          build-args: NEMO_VERSION=main-${{ github.sha }}
+          build-args: |
+            NEMO_VERSION=main-${{ github.sha }}
+            NEMO_COMMIT=${{ github.sha }}
+            NEMO_BUILD_DATE=${{ env.NEMO_BUILD_DATE }}
+            NEMO_CHANNEL=main
           cache-from: type=gha
           cache-to: type=gha,mode=max

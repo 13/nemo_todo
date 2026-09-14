@@ -28,9 +28,17 @@ RUN tool/pub_get.sh
 COPY packages ./packages
 COPY app ./app
 COPY tool ./tool
+# Which build this is, shown in the app's About. Declared here rather than at
+# the top so a new commit does not throw away the dependency layers above.
+ARG NEMO_COMMIT=
+ARG NEMO_BUILD_DATE=
+ARG NEMO_CHANNEL=dev
 RUN tool/fetch_web_assets.sh \
  && cd app \
- && flutter build web --release --no-web-resources-cdn
+ && flutter build web --release --no-web-resources-cdn \
+      --dart-define=NEMO_COMMIT="${NEMO_COMMIT}" \
+      --dart-define=NEMO_BUILD_DATE="${NEMO_BUILD_DATE}" \
+      --dart-define=NEMO_CHANNEL="${NEMO_CHANNEL}"
 
 # ---- Stage 2: build the server --------------------------------------------
 # `dart build cli` rather than `dart compile exe`: the sqlite3 package ships
@@ -67,11 +75,15 @@ COPY --from=web-build /src/app/build/web /app/web
 # what it is talking to instead of leaving it to be worked out from
 # outside.
 ARG NEMO_VERSION=dev
+ARG NEMO_COMMIT=
+ARG NEMO_BUILD_DATE=
 ENV PATH="/opt/nemo/bin:${PATH}" \
     NEMO_PORT=8080 \
     NEMO_DB=/data/nemo.db \
     NEMO_WEB_DIR=/app/web \
-    NEMO_VERSION=${NEMO_VERSION}
+    NEMO_VERSION=${NEMO_VERSION} \
+    NEMO_COMMIT=${NEMO_COMMIT} \
+    NEMO_BUILD_DATE=${NEMO_BUILD_DATE}
 USER nemo
 EXPOSE 8080
 VOLUME ["/data"]

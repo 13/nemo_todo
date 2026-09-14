@@ -22,6 +22,15 @@ abstract final class KvKeys {
   /// `"true"` once the server's last answer said it takes photo changes.
   /// Unset or anything else means it has not, and photo changes stay queued.
   static const serverPhotos = 'server_photos';
+
+  /// JSON list of achievement ids this device has already celebrated, or
+  /// quietly recorded as reached. Unset until the first check.
+  static const achievementsSeen = 'achievements_seen';
+
+  /// How many days this device saw Today cleared, and the last such day as
+  /// `yyyy-mm-dd`, so one day is counted once.
+  static const clearedDays = 'cleared_days';
+  static const lastClearedDay = 'last_cleared_day';
 }
 
 /// Typed access to the `kv` table.

@@ -19,6 +19,10 @@ abstract interface class CelebrationSound {
 /// Plays the bundled chime, and never throws: a device that cannot play it
 /// still gets its task ticked off.
 class AssetCelebrationSound implements CelebrationSound {
+  AssetCelebrationSound({@visibleForTesting AudioPlayer Function()? newPlayer})
+    : _newPlayer = newPlayer ?? AudioPlayer.new;
+
+  final AudioPlayer Function() _newPlayer;
   AudioPlayer? _player;
   var _disposed = false;
 
@@ -26,12 +30,13 @@ class AssetCelebrationSound implements CelebrationSound {
   Future<void> play() async {
     if (_disposed) return;
     try {
-      var player = _player;
-      if (player == null) {
-        player = _player = AudioPlayer();
-        await player.setAudioContext(celebrationAudioContext);
-      }
-      await player.play(AssetSource('sounds/celebrate.mp3'), volume: 0.6);
+      final player = _player ??= _newPlayer();
+      // Asked for with every play, so no chime ever takes full focus.
+      await player.play(
+        AssetSource('sounds/celebrate.mp3'),
+        volume: 0.6,
+        ctx: celebrationAudioContext,
+      );
     } on Object catch (error) {
       debugPrint('Celebration sound failed: $error');
     }

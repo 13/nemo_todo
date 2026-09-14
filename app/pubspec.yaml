@@ -1,6 +1,6 @@
 name: nemo
 description: nemo - a local-first todo app for Android and Web.
-version: 0.6.0+6
+version: 0.7.0+7
 publish_to: none
 resolution: workspace
 

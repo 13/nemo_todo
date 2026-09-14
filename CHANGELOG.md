@@ -13,7 +13,7 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
-## Unreleased
+## 0.7.0 - 2026-09-14
 
 ### Added
 

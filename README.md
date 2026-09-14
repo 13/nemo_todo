@@ -380,6 +380,11 @@ Studios apps, so losing it costs more than nemo.
 
 The web build has no updater: reloading the page is the update.
 
+Photos need a server from the release that introduced them. An app built
+before photos keeps syncing everything else and shows a task's photos once
+it is updated; a newer app talking to an older server keeps its photos
+marked "not uploaded" until the server is updated.
+
 ## Releases
 
 Pushing a `v*` tag publishes a GitHub release. The tag has to match the

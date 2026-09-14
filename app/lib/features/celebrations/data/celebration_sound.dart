@@ -13,9 +13,11 @@ abstract interface class CelebrationSound {
 /// still gets its task ticked off.
 class AssetCelebrationSound implements CelebrationSound {
   AudioPlayer? _player;
+  var _disposed = false;
 
   @override
   Future<void> play() async {
+    if (_disposed) return;
     try {
       final player = _player ??= AudioPlayer();
       await player.play(AssetSource('sounds/celebrate.mp3'), volume: 0.6);
@@ -25,6 +27,7 @@ class AssetCelebrationSound implements CelebrationSound {
   }
 
   Future<void> dispose() async {
+    _disposed = true;
     await _player?.dispose();
     _player = null;
   }

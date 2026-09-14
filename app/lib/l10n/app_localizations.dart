@@ -1646,6 +1646,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1-day streak} other{{count}-day streak}}'**
   String achievementsStreak(int count);
+
+  /// No description provided for @achievementsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements could not be loaded.'**
+  String get achievementsLoadError;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

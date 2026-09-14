@@ -988,4 +988,7 @@ class LEn extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get achievementsLoadError => 'Achievements could not be loaded.';
 }

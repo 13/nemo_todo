@@ -526,5 +526,6 @@
   "achievementsStreak": "{count, plural, =1{1-day streak} other{{count}-day streak}}",
   "@achievementsStreak": {
     "placeholders": {"count": {"type": "int"}}
-  }
+  },
+  "achievementsLoadError": "Achievements could not be loaded."
 }

@@ -11,12 +11,12 @@ class AchievementsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
-    final stats = ref.watch(completionStatsProvider).value;
+    final async = ref.watch(completionStatsProvider);
+    final stats = async.value;
     return Scaffold(
       appBar: AppBar(title: Text(l.achievementsTitle)),
-      body: stats == null
-          ? const Center(child: CircularProgressIndicator())
-          : MaxWidth(
+      body: stats != null
+          ? MaxWidth(
               child: Builder(
                 builder: (context) {
                   final items = progressOf(stats);
@@ -80,7 +80,18 @@ class AchievementsScreen extends ConsumerWidget {
                   );
                 },
               ),
-            ),
+            )
+          : async.hasError
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  l.achievementsLoadError,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : const Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -124,6 +135,8 @@ class AchievementCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 a.title(l),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: text.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: on ? scheme.onPrimaryContainer : scheme.onSurface,

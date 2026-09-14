@@ -999,4 +999,7 @@ class LIt extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get achievementsLoadError => 'Impossibile caricare i traguardi.';
 }

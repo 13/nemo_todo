@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/features/achievements/domain/completion_stats.dart';
+import 'package:nemo/features/achievements/ui/achievements_providers.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/router.dart';
 
@@ -42,5 +44,20 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  appTest('a failed stats query says so instead of spinning', (tester) async {
+    await pumpApp(
+      tester,
+      initialLocation: Routes.achievements,
+      overrides: [
+        completionStatsProvider.overrideWith(
+          (ref) => Stream<CompletionStats>.error(StateError('broken')),
+        ),
+      ],
+    );
+
+    expect(find.text('Achievements could not be loaded.'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

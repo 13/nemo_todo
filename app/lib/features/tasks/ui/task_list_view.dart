@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
+import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -146,14 +147,14 @@ class _TaskListViewState extends ConsumerState<TaskListView> {
         final repo = ref.read(tasksRepositoryProvider);
         final messenger = ScaffoldMessenger.of(context);
         if (direction == DismissDirection.startToEnd) {
-          await repo.setDone(task.id, done: !task.done);
+          await completeTask(ref, task, done: !task.done);
           if (!task.done) {
             messenger.showSnackBar(
               SnackBar(
                 content: Text(l.tasksCompletedSnack),
                 action: SnackBarAction(
                   label: l.commonUndo,
-                  onPressed: () => repo.setDone(task.id, done: false),
+                  onPressed: () => completeTask(ref, task, done: false),
                 ),
               ),
             );

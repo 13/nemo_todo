@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
+import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_detail_sections.dart';
@@ -164,9 +165,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   child: DoneCheck(
                     done: task.done,
                     color: nemo.priority(task.priority),
-                    onChanged: (done) => ref
-                        .read(tasksRepositoryProvider)
-                        .setDone(task.id, done: done),
+                    onChanged: (done) => completeTask(ref, task, done: done),
                   ),
                 ),
                 Expanded(

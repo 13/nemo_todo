@@ -5,6 +5,7 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/due_chip.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
+import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
@@ -86,9 +87,7 @@ class TaskTile extends ConsumerWidget {
             DoneCheck(
               done: task.done,
               color: nemo.priority(task.priority),
-              onChanged: (done) => ref
-                  .read(tasksRepositoryProvider)
-                  .setDone(task.id, done: done),
+              onChanged: (done) => completeTask(ref, task, done: done),
             ),
             const SizedBox(width: 4),
             Expanded(

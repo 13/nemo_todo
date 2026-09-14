@@ -42,6 +42,12 @@ void main() {
     // Somewhere this test may write pictures to, rather than the
     // container path the server defaults to.
     blobDir = Directory.systemTemp.createTempSync('nemo-app-blobs');
+    // Registered here, not folded into tearDown() below, so it still runs
+    // even if closing the server or the database throws first: each
+    // teardown callback is isolated from the others.
+    addTearDown(() {
+      if (blobDir.existsSync()) blobDir.deleteSync(recursive: true);
+    });
     http = await shelf_io.serve(
       server.createHandler(
         db: serverDb,
@@ -73,7 +79,6 @@ void main() {
     await http.close(force: true);
     await serverDb.close();
     await db.close();
-    blobDir.deleteSync(recursive: true);
   });
 
   /// The app, connected to that server, with nothing faked.
@@ -295,6 +300,115 @@ void main() {
       expect(
         fetched,
         await container.read(photoStoreProvider).get(photo.sha256),
+      );
+    },
+  );
+
+  test(
+    'a picture reaches a second member of a shared list, who downloads it',
+    () async {
+      final clock = testClock('device');
+      final container = await app();
+      await db.upsertList(
+        TaskList(
+          id: 'l1',
+          name: 'Groceries',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      await db.upsertTask(
+        Task(
+          id: 't1',
+          listId: 'l1',
+          title: 'Buy milk',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      final photo = (await PhotosRepository(
+        db,
+        clock,
+        sequentialIds('p'),
+        container.read(photoStoreProvider),
+      ).add('t1', smallJpeg()))!;
+      await container.read(syncEngineProvider.notifier).syncNow();
+
+      final anna = (await SyncClient.authenticate(
+        Dio(),
+        baseUrl: baseUrl,
+        username: 'anna',
+        password: 'password123',
+        signUp: true,
+      )).token;
+      await SyncClient(
+        Dio(),
+        baseUrl: baseUrl,
+        token: token,
+      ).share('l1', 'anna', MemberRole.editor);
+
+      final annaClient = SyncClient(Dio(), baseUrl: baseUrl, token: anna);
+      final pulled = await annaClient.sync(const SyncRequest(cursor: 0));
+      expect(
+        pulled.changes.map((c) => c.rowId),
+        containsAll(['l1', 't1', photo.id]),
+        reason: 'the row travelled to her through /sync, not just the blob',
+      );
+
+      final fetched = await annaClient.downloadBlob(photo.sha256);
+      expect(
+        fetched,
+        await container.read(photoStoreProvider).get(photo.sha256),
+        reason: 'she gets back exactly the bytes taken on the first device',
+      );
+    },
+  );
+
+  test(
+    'a user with no access to the list gets a 404, not the picture',
+    () async {
+      final clock = testClock('device');
+      final container = await app();
+      await db.upsertList(
+        TaskList(
+          id: 'l1',
+          name: 'Groceries',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      await db.upsertTask(
+        Task(
+          id: 't1',
+          listId: 'l1',
+          title: 'Buy milk',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      final photo = (await PhotosRepository(
+        db,
+        clock,
+        sequentialIds('p'),
+        container.read(photoStoreProvider),
+      ).add('t1', smallJpeg()))!;
+      await container.read(syncEngineProvider.notifier).syncNow();
+
+      final carol = (await SyncClient.authenticate(
+        Dio(),
+        baseUrl: baseUrl,
+        username: 'carol',
+        password: 'password123',
+        signUp: true,
+      )).token;
+
+      await expectLater(
+        SyncClient(
+          Dio(),
+          baseUrl: baseUrl,
+          token: carol,
+        ).downloadBlob(photo.sha256),
+        throwsA(isA<ApiError>().having((e) => e.status, 'status', 404)),
       );
     },
   );

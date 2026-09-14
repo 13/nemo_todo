@@ -13,6 +13,17 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## Unreleased
+
+### Added
+
+- Completing a task is celebrated: the check bounces, clearing Today sets
+  off confetti, and ten achievements -- from the first task done to a
+  30-day streak -- announce themselves as they are unlocked and are listed
+  under Settings. An optional sound plays for the big moments.
+- Settings has switches for celebrations, their sound and achievements, so
+  the app can be kept quiet. They apply to this device only.
+
 ## 0.7.0 - 2026-09-14
 
 ### Added

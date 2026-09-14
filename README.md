@@ -18,6 +18,10 @@ host yourself.
   the last Friday of the month, yearly, or a rule of your own such as every
   three days or the second Tuesday: ticking one off puts the next one on the
   list.
+- Ticking a task off feels like it: a small bounce on every tick, confetti
+  when Today is cleared, and ten achievements to unlock, from the first
+  task done to a 30-day streak. Settings turns celebrations, their sound
+  and achievements off one by one, for a quieter, more professional app.
 - Connect it to your server later and everything already on the device is
   uploaded. Signing out of the Android app keeps your tasks on it.
 - Lists can be shared with other accounts on the same server, and handed

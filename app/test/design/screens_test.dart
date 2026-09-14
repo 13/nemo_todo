@@ -119,6 +119,10 @@ void main() {
   );
   appTest('settings', (t) => shoot(t, 'settings', location: Routes.settings));
   appTest(
+    'achievements',
+    (t) => shoot(t, 'achievements', location: Routes.achievements),
+  );
+  appTest(
     'today in the dark',
     (t) => shoot(t, 'today_dark', location: Routes.today, dark: true),
   );

@@ -12,7 +12,7 @@ quiet, professional tool can switch every part of it off in Settings.
 | Topic | Decision |
 |---|---|
 | Intensity | Tiered: a small tick on every completion, confetti and a cheer only for a cleared Today or an unlocked achievement |
-| Sound | A short cheer, behind its own switch, off by default |
+| Sound | A short generated chime, behind its own switch, off by default |
 | Where achievements come from | Derived from synced task rows (`done`, `doneAt`, `dueAt`, subtasks); no new table, no server change |
 | What is stored | Only a local set of achievement ids already celebrated, in the `kv` table |
 | What celebrates | Only a completion made on this device; completions arriving through sync unlock silently |
@@ -114,7 +114,9 @@ which awaits `setDone` and, when `done` is true, calls
 
 `onCompleted` does, in order:
 
-1. If Celebrations is off and Achievements is off, stop.
+1. Bookkeeping always runs, whatever the switches say, so turning a
+   switch back on never replays old progress; only the event emitted in
+   step 4 depends on them.
 2. Query whether Today is now empty. If it is, and this day is not
    already recorded, increment the cleared-days counter and remember
    the day.
@@ -132,8 +134,7 @@ shrunk, so re-ticking a task never celebrates the same achievement twice.
 
 ### Backfill
 
-On the first start of a version with this feature (`kv` key
-`achievements_seen` absent), every achievement already unlocked by the
+On every start, every achievement already unlocked by the
 existing history is written to the celebrated set without any event.
 The same happens after sign-in or a sync pull: sync writes never call
 `onCompleted`, so achievements they unlock are only added to the set,
@@ -151,27 +152,33 @@ later local tick is not credited with another device's unlock.
 - `ui/celebration_overlay.dart` is inserted through `MaterialApp.builder`
   above the router. It listens to the controller and:
   - on `dayCleared` or `achievementUnlocked`, plays a confetti burst from
-    the top centre for about 1.5 s, using the theme's primary, tertiary
-    and priority colours;
+    the top centre for about 1.5 s, using colours from the theme's colour
+    scheme;
   - on `achievementUnlocked`, shows a dismissible banner with the icon and
     title, tappable to open `/achievements`; several unlocks at once show
     one banner, "3 achievements unlocked";
   - wraps the banner in `Semantics(liveRegion: true)` so screen readers
     announce it.
+- The overlay provides its own `Overlay` above the router, because it
+  sits outside the navigator's own overlay and the banner's close button
+  shows a tooltip.
 - When `MediaQuery.disableAnimationsOf(context)` is true, no confetti and
   no bounce are shown; the banner still appears.
 - Confetti ignores pointer events so it never blocks the next tap.
+- The confetti is stopped after its own burst duration by a timer, so its
+  state is deterministic under test clocks.
 
 ### Sound
 
 `features/celebrations/data/celebration_sound.dart` defines
 `CelebrationSound` with `Future<void> cheer()`. The real implementation
-uses `audioplayers` with one bundled asset,
-`app/assets/sounds/cheer.ogg` (plus `.mp3` for Safari on the web),
-under 60 KB, CC0 licensed, with its source and licence recorded next to
-it in `app/assets/sounds/LICENSE.txt`. It plays at a moderate volume and
-respects the device's media volume. Failures are logged and swallowed:
-a missing codec never breaks ticking a task. Tests use a fake.
+uses audioplayers with one bundled asset,
+app/assets/sounds/celebrate.mp3: a 1.3 s four-note chime generated with
+ffmpeg and dedicated to the public domain (CC0), recorded in
+app/assets/sounds/LICENSE.txt. MP3 plays on Android and in every
+supported browser, so no second format ships. It plays at a moderate
+volume and respects the device's media volume. Failures are logged and
+swallowed: a missing codec never breaks ticking a task. Tests use a fake.
 
 Sound plays only on `dayCleared` and `achievementUnlocked`, and only
 when both Celebrations and Sound are on. On the web a tick is a user

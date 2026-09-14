@@ -49,7 +49,7 @@ void main() {
   testWidgets('the mark is a disc with the check cut out of it', (
     tester,
   ) async {
-    // Inside the disc, below where a clownfish's fins ever reached.
+    // Inside the disc, clear of the check.
     final disc = await pixelOfMark(tester, const Offset(256, 440));
     expect(disc.a, closeTo(1, 0.01));
     expect(disc.toARGB32(), 0xFF0E7C86);

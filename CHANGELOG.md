@@ -9,6 +9,10 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
+Changes not released yet collect under `## Unreleased`, which is renamed to
+the version when it is tagged. A new version heading added beside it instead
+would ship without them, and nothing would say so.
+
 ## Unreleased
 
 ### Added

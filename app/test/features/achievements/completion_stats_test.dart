@@ -92,6 +92,15 @@ void main() {
     expect(s.onTimeDone, 1);
   });
 
+  test('the due day ends at midnight when the clocks go forward', () {
+    // 29 March 2026 lasts 23 hours in Europe; run with TZ=Europe/Berlin.
+    final s = of([
+      done('a', DateTime(2026, 3, 29, 23, 30), due: DateTime(2026, 3, 29)),
+      done('b', DateTime(2026, 3, 30, 0, 30), due: DateTime(2026, 3, 29)),
+    ], at: DateTime(2026, 3, 30, 12));
+    expect(s.onTimeDone, 1);
+  });
+
   test('streak counts consecutive local days ending today', () {
     final s = of([
       done('a', DateTime(2026, 9, 5, 23, 30)),

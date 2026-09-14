@@ -81,6 +81,18 @@ void main() {
     expect(await onSunday.todayIsClear(), isFalse);
   });
 
+  test('Today is clear on a short day with only tomorrow left', () async {
+    // 29 March 2026 lasts 23 hours in Europe; run with TZ=Europe/Berlin.
+    final sunday = DateTime(2026, 3, 29, 12);
+    await tasks.create(
+      listId: inbox,
+      title: 'Monday',
+      dueAt: DateTime(2026, 3, 30).millisecondsSinceEpoch,
+    );
+    final onSunday = AchievementsRepository(db, now: () => sunday);
+    expect(await onSunday.todayIsClear(), isTrue);
+  });
+
   test('a cleared day is counted once', () async {
     await repo.recordClearedDay();
     await repo.recordClearedDay();

@@ -878,4 +878,70 @@ class LDe extends L {
   @override
   String get tasksAddHintSmart =>
       'Aufgabe hinzufügen – z. B. „morgen #einkauf !hoch“';
+
+  @override
+  String get achievementFirstDoneTitle => 'Erster Schritt';
+
+  @override
+  String get achievementFirstDoneDescription => 'Erledige deine erste Aufgabe';
+
+  @override
+  String get achievementDone10Title => 'In Fahrt';
+
+  @override
+  String get achievementDone10Description => 'Erledige 10 Aufgaben';
+
+  @override
+  String get achievementDone100Title => 'Hundert geschafft';
+
+  @override
+  String get achievementDone100Description => 'Erledige 100 Aufgaben';
+
+  @override
+  String get achievementDone500Title => 'Unaufhaltsam';
+
+  @override
+  String get achievementDone500Description => 'Erledige 500 Aufgaben';
+
+  @override
+  String get achievementStreak3Title => 'Am Laufen';
+
+  @override
+  String get achievementStreak3Description =>
+      'Erledige 3 Tage in Folge eine Aufgabe';
+
+  @override
+  String get achievementStreak7Title => 'Wochenheld';
+
+  @override
+  String get achievementStreak7Description =>
+      'Erledige 7 Tage in Folge eine Aufgabe';
+
+  @override
+  String get achievementStreak30Title => 'Gewohnheit';
+
+  @override
+  String get achievementStreak30Description =>
+      'Erledige 30 Tage in Folge eine Aufgabe';
+
+  @override
+  String get achievementClearedTodayTitle => 'Reiner Tisch';
+
+  @override
+  String get achievementClearedTodayDescription =>
+      'Erledige alles, was heute fällig ist';
+
+  @override
+  String get achievementOnTime25Title => 'Pünktlich';
+
+  @override
+  String get achievementOnTime25Description =>
+      'Erledige 25 Aufgaben vor ihrer Fälligkeit';
+
+  @override
+  String get achievementChecklist5Title => 'Checklisten-Profi';
+
+  @override
+  String get achievementChecklist5Description =>
+      'Erledige eine Aufgabe mit 5 oder mehr Unteraufgaben';
 }

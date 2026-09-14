@@ -213,8 +213,12 @@
   "settingsVersions": "App {app} · Server {server}",
   "@settingsVersions": {
     "placeholders": {
-      "app": { "type": "String" },
-      "server": { "type": "String" }
+      "app": {
+        "type": "String"
+      },
+      "server": {
+        "type": "String"
+      }
     }
   },
   "settingsServerNewer": "This page is older than the server. Reload to get the current build.",
@@ -289,7 +293,6 @@
   "remindersDueNow": "Due now",
   "startupErrorTitle": "nemo cannot open its database",
   "startupErrorBody": "Your tasks are stored on this device. If you are using a private window or have blocked site data for this page, allow it and reload.",
-
   "updatesTitle": "Updates",
   "updatesCurrentVersion": "You have version {version}",
   "@updatesCurrentVersion": {
@@ -327,7 +330,6 @@
   "updatesErrorRateLimited": "GitHub is rate limiting; try again later.",
   "updatesErrorNotFound": "No download for this device in that release.",
   "updatesErrorMalformed": "That download did not match its checksum.",
-
   "tasksRepeat": "Repeats",
   "tasksRepeatNeedsDue": "A repeating task needs a due date to count from.",
   "repeatNever": "Never",
@@ -335,7 +337,6 @@
   "repeatWeekly": "Weekly",
   "repeatMonthly": "Monthly",
   "repeatYearly": "Yearly",
-
   "membersMakeOwner": "Make owner",
   "membersMakeOwnerConfirm": "Hand this list to {name}? They can then rename it, delete it and change who it is shared with. You stay on as an editor.",
   "@membersMakeOwnerConfirm": {
@@ -346,9 +347,7 @@
     }
   },
   "membersErrorNotMember": "Share the list with them first.",
-
   "tasksNoSelection": "Pick a task to see it here.",
-
   "repeatWeekdays": "Weekdays",
   "repeatFortnightly": "Every 2 weeks",
   "repeatLastWeekday": "Last {weekday} of the month",
@@ -485,5 +484,25 @@
     }
   },
   "rescheduleCleared": "Date cleared.",
-  "tasksAddHintSmart": "Add a task — try “tomorrow #shop !high”"
+  "tasksAddHintSmart": "Add a task — try “tomorrow #shop !high”",
+  "achievementFirstDoneTitle": "First step",
+  "achievementFirstDoneDescription": "Complete your first task",
+  "achievementDone10Title": "Getting going",
+  "achievementDone10Description": "Complete 10 tasks",
+  "achievementDone100Title": "Centurion",
+  "achievementDone100Description": "Complete 100 tasks",
+  "achievementDone500Title": "Unstoppable",
+  "achievementDone500Description": "Complete 500 tasks",
+  "achievementStreak3Title": "On a roll",
+  "achievementStreak3Description": "Complete a task 3 days in a row",
+  "achievementStreak7Title": "Week warrior",
+  "achievementStreak7Description": "Complete a task 7 days in a row",
+  "achievementStreak30Title": "Habit formed",
+  "achievementStreak30Description": "Complete a task 30 days in a row",
+  "achievementClearedTodayTitle": "Clean slate",
+  "achievementClearedTodayDescription": "Finish everything due today",
+  "achievementOnTime25Title": "Punctual",
+  "achievementOnTime25Description": "Complete 25 tasks before they are due",
+  "achievementChecklist5Title": "Checklist master",
+  "achievementChecklist5Description": "Complete a task with 5 or more subtasks"
 }

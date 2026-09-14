@@ -879,4 +879,71 @@ class LIt extends L {
   @override
   String get tasksAddHintSmart =>
       'Aggiungi un\'attività – prova “domani #spesa !alta”';
+
+  @override
+  String get achievementFirstDoneTitle => 'Primo passo';
+
+  @override
+  String get achievementFirstDoneDescription =>
+      'Completa la tua prima attività';
+
+  @override
+  String get achievementDone10Title => 'Si parte';
+
+  @override
+  String get achievementDone10Description => 'Completa 10 attività';
+
+  @override
+  String get achievementDone100Title => 'Centurione';
+
+  @override
+  String get achievementDone100Description => 'Completa 100 attività';
+
+  @override
+  String get achievementDone500Title => 'Inarrestabile';
+
+  @override
+  String get achievementDone500Description => 'Completa 500 attività';
+
+  @override
+  String get achievementStreak3Title => 'In serie';
+
+  @override
+  String get achievementStreak3Description =>
+      'Completa un\'attività per 3 giorni di fila';
+
+  @override
+  String get achievementStreak7Title => 'Guerriero della settimana';
+
+  @override
+  String get achievementStreak7Description =>
+      'Completa un\'attività per 7 giorni di fila';
+
+  @override
+  String get achievementStreak30Title => 'Abitudine presa';
+
+  @override
+  String get achievementStreak30Description =>
+      'Completa un\'attività per 30 giorni di fila';
+
+  @override
+  String get achievementClearedTodayTitle => 'Tabula rasa';
+
+  @override
+  String get achievementClearedTodayDescription =>
+      'Completa tutto ciò che scade oggi';
+
+  @override
+  String get achievementOnTime25Title => 'Puntuale';
+
+  @override
+  String get achievementOnTime25Description =>
+      'Completa 25 attività prima della scadenza';
+
+  @override
+  String get achievementChecklist5Title => 'Maestro delle checklist';
+
+  @override
+  String get achievementChecklist5Description =>
+      'Completa un\'attività con 5 o più sottoattività';
 }

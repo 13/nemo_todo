@@ -1448,6 +1448,126 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Add a task — try “tomorrow #shop !high”'**
   String get tasksAddHintSmart;
+
+  /// No description provided for @achievementFirstDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First step'**
+  String get achievementFirstDoneTitle;
+
+  /// No description provided for @achievementFirstDoneDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your first task'**
+  String get achievementFirstDoneDescription;
+
+  /// No description provided for @achievementDone10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting going'**
+  String get achievementDone10Title;
+
+  /// No description provided for @achievementDone10Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 tasks'**
+  String get achievementDone10Description;
+
+  /// No description provided for @achievementDone100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Centurion'**
+  String get achievementDone100Title;
+
+  /// No description provided for @achievementDone100Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 100 tasks'**
+  String get achievementDone100Description;
+
+  /// No description provided for @achievementDone500Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstoppable'**
+  String get achievementDone500Title;
+
+  /// No description provided for @achievementDone500Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 500 tasks'**
+  String get achievementDone500Description;
+
+  /// No description provided for @achievementStreak3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'On a roll'**
+  String get achievementStreak3Title;
+
+  /// No description provided for @achievementStreak3Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a task 3 days in a row'**
+  String get achievementStreak3Description;
+
+  /// No description provided for @achievementStreak7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Week warrior'**
+  String get achievementStreak7Title;
+
+  /// No description provided for @achievementStreak7Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a task 7 days in a row'**
+  String get achievementStreak7Description;
+
+  /// No description provided for @achievementStreak30Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit formed'**
+  String get achievementStreak30Title;
+
+  /// No description provided for @achievementStreak30Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a task 30 days in a row'**
+  String get achievementStreak30Description;
+
+  /// No description provided for @achievementClearedTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean slate'**
+  String get achievementClearedTodayTitle;
+
+  /// No description provided for @achievementClearedTodayDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish everything due today'**
+  String get achievementClearedTodayDescription;
+
+  /// No description provided for @achievementOnTime25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Punctual'**
+  String get achievementOnTime25Title;
+
+  /// No description provided for @achievementOnTime25Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 25 tasks before they are due'**
+  String get achievementOnTime25Description;
+
+  /// No description provided for @achievementChecklist5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist master'**
+  String get achievementChecklist5Title;
+
+  /// No description provided for @achievementChecklist5Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a task with 5 or more subtasks'**
+  String get achievementChecklist5Description;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

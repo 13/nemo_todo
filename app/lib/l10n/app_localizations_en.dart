@@ -872,4 +872,68 @@ class LEn extends L {
 
   @override
   String get tasksAddHintSmart => 'Add a task — try “tomorrow #shop !high”';
+
+  @override
+  String get achievementFirstDoneTitle => 'First step';
+
+  @override
+  String get achievementFirstDoneDescription => 'Complete your first task';
+
+  @override
+  String get achievementDone10Title => 'Getting going';
+
+  @override
+  String get achievementDone10Description => 'Complete 10 tasks';
+
+  @override
+  String get achievementDone100Title => 'Centurion';
+
+  @override
+  String get achievementDone100Description => 'Complete 100 tasks';
+
+  @override
+  String get achievementDone500Title => 'Unstoppable';
+
+  @override
+  String get achievementDone500Description => 'Complete 500 tasks';
+
+  @override
+  String get achievementStreak3Title => 'On a roll';
+
+  @override
+  String get achievementStreak3Description => 'Complete a task 3 days in a row';
+
+  @override
+  String get achievementStreak7Title => 'Week warrior';
+
+  @override
+  String get achievementStreak7Description => 'Complete a task 7 days in a row';
+
+  @override
+  String get achievementStreak30Title => 'Habit formed';
+
+  @override
+  String get achievementStreak30Description =>
+      'Complete a task 30 days in a row';
+
+  @override
+  String get achievementClearedTodayTitle => 'Clean slate';
+
+  @override
+  String get achievementClearedTodayDescription =>
+      'Finish everything due today';
+
+  @override
+  String get achievementOnTime25Title => 'Punctual';
+
+  @override
+  String get achievementOnTime25Description =>
+      'Complete 25 tasks before they are due';
+
+  @override
+  String get achievementChecklist5Title => 'Checklist master';
+
+  @override
+  String get achievementChecklist5Description =>
+      'Complete a task with 5 or more subtasks';
 }

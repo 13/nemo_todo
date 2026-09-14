@@ -158,7 +158,6 @@
   "remindersDueNow": "Jetzt fällig",
   "startupErrorTitle": "nemo kann seine Datenbank nicht öffnen",
   "startupErrorBody": "Deine Aufgaben liegen auf diesem Gerät. Wenn du ein privates Fenster nutzt oder Websitedaten für diese Seite blockierst, erlaube sie und lade neu.",
-
   "updatesTitle": "Aktualisierungen",
   "updatesCurrentVersion": "Du hast Version {version}",
   "updatesCheckNow": "Nach Updates suchen",
@@ -175,7 +174,6 @@
   "updatesErrorRateLimited": "GitHub bremst die Anfragen; versuche es später erneut.",
   "updatesErrorNotFound": "In dieser Version gibt es keinen Download für dieses Gerät.",
   "updatesErrorMalformed": "Der Download passt nicht zu seiner Prüfsumme.",
-
   "tasksRepeat": "Wiederholung",
   "tasksRepeatNeedsDue": "Eine wiederkehrende Aufgabe braucht ein Fälligkeitsdatum.",
   "repeatNever": "Nie",
@@ -183,13 +181,10 @@
   "repeatWeekly": "Wöchentlich",
   "repeatMonthly": "Monatlich",
   "repeatYearly": "Jährlich",
-
   "membersMakeOwner": "Zur Besitzerin machen",
   "membersMakeOwnerConfirm": "Diese Liste an {name} übergeben? Sie können sie dann umbenennen, löschen und die Freigabe ändern. Du bleibst als Bearbeiter dabei.",
   "membersErrorNotMember": "Teile die Liste zuerst mit ihnen.",
-
   "tasksNoSelection": "Wähle eine Aufgabe, um sie hier zu sehen.",
-
   "repeatWeekdays": "Werktags",
   "repeatFortnightly": "Alle 2 Wochen",
   "repeatLastWeekday": "Letzter {weekday} im Monat",
@@ -229,5 +224,25 @@
   "reschedulePick": "Datum wählen…",
   "rescheduleMoved": "Verschoben auf {when}.",
   "rescheduleCleared": "Datum entfernt.",
-  "tasksAddHintSmart": "Aufgabe hinzufügen – z. B. „morgen #einkauf !hoch“"
+  "tasksAddHintSmart": "Aufgabe hinzufügen – z. B. „morgen #einkauf !hoch“",
+  "achievementFirstDoneTitle": "Erster Schritt",
+  "achievementFirstDoneDescription": "Erledige deine erste Aufgabe",
+  "achievementDone10Title": "In Fahrt",
+  "achievementDone10Description": "Erledige 10 Aufgaben",
+  "achievementDone100Title": "Hundert geschafft",
+  "achievementDone100Description": "Erledige 100 Aufgaben",
+  "achievementDone500Title": "Unaufhaltsam",
+  "achievementDone500Description": "Erledige 500 Aufgaben",
+  "achievementStreak3Title": "Am Laufen",
+  "achievementStreak3Description": "Erledige 3 Tage in Folge eine Aufgabe",
+  "achievementStreak7Title": "Wochenheld",
+  "achievementStreak7Description": "Erledige 7 Tage in Folge eine Aufgabe",
+  "achievementStreak30Title": "Gewohnheit",
+  "achievementStreak30Description": "Erledige 30 Tage in Folge eine Aufgabe",
+  "achievementClearedTodayTitle": "Reiner Tisch",
+  "achievementClearedTodayDescription": "Erledige alles, was heute fällig ist",
+  "achievementOnTime25Title": "Pünktlich",
+  "achievementOnTime25Description": "Erledige 25 Aufgaben vor ihrer Fälligkeit",
+  "achievementChecklist5Title": "Checklisten-Profi",
+  "achievementChecklist5Description": "Erledige eine Aufgabe mit 5 oder mehr Unteraufgaben"
 }

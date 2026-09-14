@@ -158,7 +158,6 @@
   "remindersDueNow": "In scadenza ora",
   "startupErrorTitle": "nemo non riesce ad aprire il suo database",
   "startupErrorBody": "Le tue attività sono salvate su questo dispositivo. Se usi una finestra privata o hai bloccato i dati del sito per questa pagina, consentili e ricarica.",
-
   "updatesTitle": "Aggiornamenti",
   "updatesCurrentVersion": "Hai la versione {version}",
   "updatesCheckNow": "Cerca aggiornamenti",
@@ -175,7 +174,6 @@
   "updatesErrorRateLimited": "GitHub sta limitando le richieste; riprova più tardi.",
   "updatesErrorNotFound": "Nessun download per questo dispositivo in quella versione.",
   "updatesErrorMalformed": "Il download non corrisponde alla sua checksum.",
-
   "tasksRepeat": "Ripetizione",
   "tasksRepeatNeedsDue": "Un'attività ricorrente ha bisogno di una scadenza da cui contare.",
   "repeatNever": "Mai",
@@ -183,13 +181,10 @@
   "repeatWeekly": "Ogni settimana",
   "repeatMonthly": "Ogni mese",
   "repeatYearly": "Ogni anno",
-
   "membersMakeOwner": "Rendi proprietario",
   "membersMakeOwnerConfirm": "Passare questa lista a {name}? Potrà rinominarla, eliminarla e cambiare con chi è condivisa. Tu resti come editor.",
   "membersErrorNotMember": "Condividi prima la lista con loro.",
-
   "tasksNoSelection": "Scegli un'attività per vederla qui.",
-
   "repeatWeekdays": "Nei giorni feriali",
   "repeatFortnightly": "Ogni 2 settimane",
   "repeatLastWeekday": "Ultimo {weekday} del mese",
@@ -229,5 +224,25 @@
   "reschedulePick": "Scegli una data…",
   "rescheduleMoved": "Spostata a {when}.",
   "rescheduleCleared": "Data rimossa.",
-  "tasksAddHintSmart": "Aggiungi un'attività – prova “domani #spesa !alta”"
+  "tasksAddHintSmart": "Aggiungi un'attività – prova “domani #spesa !alta”",
+  "achievementFirstDoneTitle": "Primo passo",
+  "achievementFirstDoneDescription": "Completa la tua prima attività",
+  "achievementDone10Title": "Si parte",
+  "achievementDone10Description": "Completa 10 attività",
+  "achievementDone100Title": "Centurione",
+  "achievementDone100Description": "Completa 100 attività",
+  "achievementDone500Title": "Inarrestabile",
+  "achievementDone500Description": "Completa 500 attività",
+  "achievementStreak3Title": "In serie",
+  "achievementStreak3Description": "Completa un'attività per 3 giorni di fila",
+  "achievementStreak7Title": "Guerriero della settimana",
+  "achievementStreak7Description": "Completa un'attività per 7 giorni di fila",
+  "achievementStreak30Title": "Abitudine presa",
+  "achievementStreak30Description": "Completa un'attività per 30 giorni di fila",
+  "achievementClearedTodayTitle": "Tabula rasa",
+  "achievementClearedTodayDescription": "Completa tutto ciò che scade oggi",
+  "achievementOnTime25Title": "Puntuale",
+  "achievementOnTime25Description": "Completa 25 attività prima della scadenza",
+  "achievementChecklist5Title": "Maestro delle checklist",
+  "achievementChecklist5Description": "Completa un'attività con 5 o più sottoattività"
 }

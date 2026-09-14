@@ -70,12 +70,14 @@ _SyncRequest _$SyncRequestFromJson(Map<String, dynamic> json) => _SyncRequest(
           ?.map((e) => SyncChange.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <SyncChange>[],
+  photos: json['photos'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$SyncRequestToJson(_SyncRequest instance) =>
     <String, dynamic>{
       'cursor': instance.cursor,
       'changes': instance.changes.map((e) => e.toJson()).toList(),
+      'photos': instance.photos,
     };
 
 _RejectedChange _$RejectedChangeFromJson(Map<String, dynamic> json) =>

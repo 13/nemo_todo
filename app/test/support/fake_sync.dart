@@ -13,6 +13,7 @@ class FakeSyncClient implements SyncClient {
   final List<SyncResponse> responses;
   final List<List<SyncChange>> pushes = [];
   final List<int> cursors = [];
+  final List<SyncRequest> requests = [];
   final List<String> shared = [];
   final List<String> unshared = [];
   final List<String> handedOver = [];
@@ -87,6 +88,7 @@ class FakeSyncClient implements SyncClient {
   @override
   Future<SyncResponse> sync(SyncRequest request) async {
     calls++;
+    requests.add(request);
     pushes.add(request.changes);
     for (final change in request.changes) {
       if (change is SyncChangePhoto) pushedPhotoHashes.add(change.row.sha256);

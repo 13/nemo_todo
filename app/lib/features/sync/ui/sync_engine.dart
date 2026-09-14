@@ -191,7 +191,7 @@ class SyncEngine extends _$SyncEngine {
       // are pure pulls.
       final changes = pushed ? <SyncChange>[] : await db.outboxChanges();
       final response = await client.sync(
-        SyncRequest(cursor: cursor, changes: changes),
+        SyncRequest(cursor: cursor, changes: changes, photos: true),
       );
       pushed = true;
       await db.ackOutbox(changes);

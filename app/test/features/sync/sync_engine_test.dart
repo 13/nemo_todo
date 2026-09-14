@@ -130,6 +130,19 @@ void main() {
     expect((await db.taskById('t1'))!.listId, 'a-inbox-from-elsewhere');
   });
 
+  test('tells the server it can read photo changes', () async {
+    // A server only sends photo changes to clients that say so, because
+    // apps from before photos cannot decode them.
+    client.responses.add(
+      SyncResponse(cursor: 1, serverHlc: serverHlc, hasMore: true),
+    );
+    final c = await container();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.requests, hasLength(2));
+    expect(client.requests.map((r) => r.photos), everyElement(isTrue));
+  });
+
   test('remembers which build the server said it was running', () async {
     client.responses.add(
       SyncResponse(cursor: 1, serverHlc: serverHlc, serverVersion: '9.9.9'),

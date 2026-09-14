@@ -27,6 +27,35 @@ void main() {
     expect(SyncRequest.fromJson(json), req);
   });
 
+  test('a request says whether it can read photos, and defaults to not', () {
+    // Apps released before photos send no such key: they must be treated
+    // as unable to read photo changes.
+    final old = SyncRequest.fromJson({'cursor': 3, 'changes': <Object>[]});
+    expect(old.photos, isFalse);
+
+    const req = SyncRequest(cursor: 3, photos: true);
+    final json = jsonDecode(jsonEncode(req.toJson())) as Map<String, dynamic>;
+    expect(json['photos'], isTrue);
+    final back = SyncRequest.fromJson(json);
+    expect(back, req);
+    expect(back.photos, isTrue);
+    expect(back, isNot(old));
+    expect(back.hashCode, isNot(old.hashCode));
+    expect(back.toString(), contains('photos: true'));
+    expect(back.copyWith(photos: false), old);
+  });
+
+  test('a request carrying keys this build does not know still decodes', () {
+    // A newer app talking to an older server relies on unknown keys being
+    // ignored rather than refused.
+    final req = SyncRequest.fromJson({
+      'cursor': 1,
+      'photos': true,
+      'something_newer': 42,
+    });
+    expect(req.cursor, 1);
+  });
+
   test('SyncChange exposes entity and rowId for every case', () {
     const list = TaskList(
       id: 'l',

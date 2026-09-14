@@ -348,7 +348,9 @@ void main() {
       ).share('l1', 'anna', MemberRole.editor);
 
       final annaClient = SyncClient(Dio(), baseUrl: baseUrl, token: anna);
-      final pulled = await annaClient.sync(const SyncRequest(cursor: 0));
+      final pulled = await annaClient.sync(
+        const SyncRequest(cursor: 0, photos: true),
+      );
       expect(
         pulled.changes.map((c) => c.rowId),
         containsAll(['l1', 't1', photo.id]),

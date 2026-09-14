@@ -61,7 +61,12 @@ class SyncService {
           );
         }
       }
-      final page = await _pull(userId, roles.keys.toSet(), request.cursor);
+      final page = await _pull(
+        userId,
+        roles.keys.toSet(),
+        request.cursor,
+        includePhotos: request.photos,
+      );
       final members = await _db.membersOf(roles.keys);
       final notify = <String>{userId};
       for (final listId in touched) {
@@ -291,23 +296,46 @@ class SyncService {
   Future<({List<SyncChange> changes, int cursor, bool hasMore})> _pull(
     String userId,
     Set<String> listIds,
-    int cursor,
-  ) async {
+    int cursor, {
+    required bool includePhotos,
+  }) async {
+    Expression<bool> visibleAfterCursor($SyncLogTable t) {
+      final mine = t.forUserId.equals(userId);
+      final visible = listIds.isEmpty
+          ? mine
+          : mine | (t.forUserId.isNull() & t.listId.isIn(listIds));
+      return t.seq.isBiggerThanValue(cursor) & visible;
+    }
+
+    // Filtered in the query, not after it, so the page limit counts what a
+    // client that cannot read photos is actually sent.
     final query = _db.select(_db.syncLog)
       ..where((t) {
-        final mine = t.forUserId.equals(userId);
-        final visible = listIds.isEmpty
-            ? mine
-            : mine | (t.forUserId.isNull() & t.listId.isIn(listIds));
-        return t.seq.isBiggerThanValue(cursor) & visible;
+        final after = visibleAfterCursor(t);
+        return includePhotos
+            ? after
+            : after & t.entity.equals(SyncEntity.photo.name).not();
       })
       ..orderBy([(t) => OrderingTerm.asc(t.seq)])
       ..limit(pageSize + 1);
     final entries = await query.get();
     final hasMore = entries.length > pageSize;
     final page = hasMore ? entries.sublist(0, pageSize) : entries;
+    var nextCursor = page.isEmpty ? cursor : page.last.seq;
+    if (!includePhotos && !hasMore) {
+      // Photo entries after the last change sent were skipped, not missed:
+      // move past them, or the client asks about them on every sync.
+      final last = _db.syncLog.seq.max();
+      final row =
+          await (_db.selectOnly(_db.syncLog)
+                ..addColumns([last])
+                ..where(visibleAfterCursor(_db.syncLog)))
+              .getSingle();
+      final skipped = row.read(last);
+      if (skipped != null && skipped > nextCursor) nextCursor = skipped;
+    }
     if (page.isEmpty) {
-      return (changes: <SyncChange>[], cursor: cursor, hasMore: false);
+      return (changes: <SyncChange>[], cursor: nextCursor, hasMore: false);
     }
 
     Set<String> idsFor(SyncEntity entity) => page
@@ -337,7 +365,7 @@ class SyncService {
       };
       if (change != null) changes.add(change);
     }
-    return (changes: changes, cursor: page.last.seq, hasMore: hasMore);
+    return (changes: changes, cursor: nextCursor, hasMore: hasMore);
   }
 
   SyncChange? _wrap<T>(T? row, SyncChange Function(T) make) =>

@@ -14,14 +14,121 @@ void main() {
     return (await auth.signup(name, 'password123')).user.id;
   }
 
+  // A client of this release, unless a test says otherwise.
   Future<SyncResponse> push(
     String userId,
     List<SyncChange> changes, {
     int cursor = 0,
+    bool photos = true,
   }) async => (await sync.sync(
     userId,
-    SyncRequest(cursor: cursor, changes: changes),
+    SyncRequest(cursor: cursor, changes: changes, photos: photos),
   )).response;
+
+  /// Every page from [cursor] on, pulled the way a client does.
+  Future<({List<String> changes, List<(int, bool)> pages})> pullAll(
+    String userId, {
+    required bool photos,
+  }) async {
+    final changes = <String>[];
+    final pages = <(int, bool)>[];
+    var cursor = 0;
+    var hasMore = true;
+    while (hasMore) {
+      final r = await push(userId, [], cursor: cursor, photos: photos);
+      changes.addAll(
+        r.changes.map(
+          (c) =>
+              '${c is SyncChangeRevoke ? 'revoke' : 'upsert'}:'
+              '${c.entity.name}:${c.rowId}',
+        ),
+      );
+      pages.add((r.cursor, r.hasMore));
+      cursor = r.cursor;
+      hasMore = r.hasMore;
+    }
+    return (changes: changes, pages: pages);
+  }
+
+  /// Another device of ben's creates, tombstones and moves a photo, then
+  /// adds a task with a photo, so the log ends on a photo entry.
+  ///
+  /// Live log entries afterwards: 1 list l1, 2 list l2, 6 revoke t1,
+  /// 7 revoke p1, 8 upsert t1, 9 upsert p1, 10 upsert t2, 11 upsert p2.
+  Future<String> photoHistory() async {
+    final ben = await user('ben');
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.list(list('l2', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+      SyncChange.photo(photo('p1', 't1', dev)),
+    ]);
+    final stamp = dev.now().toString();
+    await push(ben, [
+      SyncChange.photo(
+        photo('p1', 't1', dev).copyWith(updatedAt: stamp, deletedAt: stamp),
+      ),
+    ]);
+    await push(ben, [SyncChange.task(task('t1', 'l2', dev))]);
+    await push(ben, [
+      SyncChange.task(task('t2', 'l1', dev)),
+      SyncChange.photo(photo('p2', 't2', dev)),
+    ]);
+    return ben;
+  }
+
+  test(
+    'a client that cannot read photos gets everything else, and moves on',
+    () async {
+      final ben = await photoHistory();
+
+      final all = await pullAll(ben, photos: false);
+      expect(all.changes, [
+        'upsert:list:l1',
+        'upsert:list:l2',
+        'revoke:task:t1',
+        'upsert:task:t1',
+        'upsert:task:t2',
+      ]);
+      expect(all.pages, [
+        (11, false),
+      ], reason: 'the cursor passes the photo entries it skipped');
+
+      // Paged, the limit counts what is sent, and the last page still
+      // carries the cursor past the trailing photo.
+      sync = SyncService(
+        db,
+        now: () => fixedNow,
+        clock: HlcClock(node: 'srv', now: () => fixedNow),
+        pageSize: 2,
+      );
+      final paged = await pullAll(ben, photos: false);
+      expect(paged.changes, all.changes);
+      expect(paged.pages, [(2, true), (8, true), (11, false)]);
+
+      final caughtUp = await push(ben, [], cursor: 11, photos: false);
+      expect(caughtUp.changes, isEmpty);
+      expect(caughtUp.cursor, 11);
+      expect(caughtUp.hasMore, isFalse);
+    },
+  );
+
+  test('a client that can read photos gets them', () async {
+    final ben = await photoHistory();
+
+    final all = await pullAll(ben, photos: true);
+    expect(all.changes, [
+      'upsert:list:l1',
+      'upsert:list:l2',
+      'revoke:task:t1',
+      'revoke:photo:p1',
+      'upsert:task:t1',
+      'upsert:photo:p1',
+      'upsert:task:t2',
+      'upsert:photo:p2',
+    ]);
+    expect(all.pages, [(11, false)]);
+  });
 
   setUp(() {
     db = ServerDatabase.memory();

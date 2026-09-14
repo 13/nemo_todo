@@ -93,7 +93,7 @@ class Device {
     while (hasMore) {
       final changes = pushed ? <SyncChange>[] : outbox.values.toList();
       final response = await _post(
-        SyncRequest(cursor: cursor, changes: changes),
+        SyncRequest(cursor: cursor, changes: changes, photos: true),
       );
       pushed = true;
       for (final change in changes) {

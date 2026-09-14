@@ -645,7 +645,11 @@ as String,
 /// @nodoc
 mixin _$SyncRequest {
 
- int get cursor; List<SyncChange> get changes;
+ int get cursor; List<SyncChange> get changes;/// Whether this client can read photo changes. Apps released before
+/// photos throw on a change they cannot decode, which stalls their
+/// whole sync, so the server only sends photo changes to clients that
+/// say they can.
+ bool get photos;
 /// Create a copy of SyncRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -659,20 +663,20 @@ $SyncRequestCopyWith<SyncRequest> get copyWith => _$SyncRequestCopyWithImpl<Sync
 @override
 bool operator ==(Object other) {
   final _this = this as SyncRequest;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncRequest&&(identical(other.cursor, _this.cursor) || other.cursor == _this.cursor)&&const DeepCollectionEquality().equals(other.changes, _this.changes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncRequest&&(identical(other.cursor, _this.cursor) || other.cursor == _this.cursor)&&const DeepCollectionEquality().equals(other.changes, _this.changes)&&(identical(other.photos, _this.photos) || other.photos == _this.photos));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SyncRequest;
-  return Object.hash(runtimeType,_this.cursor,const DeepCollectionEquality().hash(_this.changes));
+  return Object.hash(runtimeType,_this.cursor,const DeepCollectionEquality().hash(_this.changes),_this.photos);
 }
 
 @override
 String toString() {
   final _this = this as SyncRequest;
-  return 'SyncRequest(cursor: ${_this.cursor}, changes: ${_this.changes})';
+  return 'SyncRequest(cursor: ${_this.cursor}, changes: ${_this.changes}, photos: ${_this.photos})';
 }
 
 
@@ -683,7 +687,7 @@ abstract mixin class $SyncRequestCopyWith<$Res>  {
   factory $SyncRequestCopyWith(SyncRequest value, $Res Function(SyncRequest) _then) = _$SyncRequestCopyWithImpl;
 @useResult
 $Res call({
- int cursor, List<SyncChange> changes
+ int cursor, List<SyncChange> changes, bool photos
 });
 
 
@@ -700,11 +704,12 @@ class _$SyncRequestCopyWithImpl<$Res>
 
 /// Create a copy of SyncRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? cursor = null,Object? changes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? cursor = null,Object? changes = null,Object? photos = null,}) {
   return _then(SyncRequest(
 cursor: null == cursor ? _self.cursor : cursor // ignore: cast_nullable_to_non_nullable
 as int,changes: null == changes ? _self.changes : changes // ignore: cast_nullable_to_non_nullable
-as List<SyncChange>,
+as List<SyncChange>,photos: null == photos ? _self.photos : photos // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -789,10 +794,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int cursor,  List<SyncChange> changes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int cursor,  List<SyncChange> changes,  bool photos)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SyncRequest() when $default != null:
-return $default(_that.cursor,_that.changes);case _:
+return $default(_that.cursor,_that.changes,_that.photos);case _:
   return orElse();
 
 }
@@ -810,10 +815,10 @@ return $default(_that.cursor,_that.changes);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int cursor,  List<SyncChange> changes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int cursor,  List<SyncChange> changes,  bool photos)  $default,) {final _that = this;
 switch (_that) {
 case _SyncRequest():
-return $default(_that.cursor,_that.changes);case _:
+return $default(_that.cursor,_that.changes,_that.photos);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -830,10 +835,10 @@ return $default(_that.cursor,_that.changes);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int cursor,  List<SyncChange> changes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int cursor,  List<SyncChange> changes,  bool photos)?  $default,) {final _that = this;
 switch (_that) {
 case _SyncRequest() when $default != null:
-return $default(_that.cursor,_that.changes);case _:
+return $default(_that.cursor,_that.changes,_that.photos);case _:
   return null;
 
 }
@@ -845,7 +850,7 @@ return $default(_that.cursor,_that.changes);case _:
 @JsonSerializable()
 
 class _SyncRequest implements SyncRequest {
-  const _SyncRequest({required this.cursor,  List<SyncChange> changes = const <SyncChange>[]}): _changes = changes;
+  const _SyncRequest({required this.cursor,  List<SyncChange> changes = const <SyncChange>[], this.photos = false}): _changes = changes;
   factory _SyncRequest.fromJson(Map<String, dynamic> json) => _$SyncRequestFromJson(json);
 
 @override final  int cursor;
@@ -856,6 +861,11 @@ class _SyncRequest implements SyncRequest {
   return EqualUnmodifiableListView(_changes);
 }
 
+/// Whether this client can read photo changes. Apps released before
+/// photos throw on a change they cannot decode, which stalls their
+/// whole sync, so the server only sends photo changes to clients that
+/// say they can.
+@override@JsonKey() final  bool photos;
 
 /// Create a copy of SyncRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -870,18 +880,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncRequest&&(identical(other.cursor, cursor) || other.cursor == cursor)&&const DeepCollectionEquality().equals(other.changes, _changes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncRequest&&(identical(other.cursor, cursor) || other.cursor == cursor)&&const DeepCollectionEquality().equals(other.changes, _changes)&&(identical(other.photos, photos) || other.photos == photos));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,cursor,const DeepCollectionEquality().hash(_changes));
+    return Object.hash(runtimeType,cursor,const DeepCollectionEquality().hash(_changes),photos);
 }
 
 @override
 String toString() {
-    return 'SyncRequest(cursor: $cursor, changes: $changes)';
+    return 'SyncRequest(cursor: $cursor, changes: $changes, photos: $photos)';
 }
 
 
@@ -892,7 +902,7 @@ abstract mixin class _$SyncRequestCopyWith<$Res> implements $SyncRequestCopyWith
   factory _$SyncRequestCopyWith(_SyncRequest value, $Res Function(_SyncRequest) _then) = __$SyncRequestCopyWithImpl;
 @override @useResult
 $Res call({
- int cursor, List<SyncChange> changes
+ int cursor, List<SyncChange> changes, bool photos
 });
 
 
@@ -909,11 +919,12 @@ class __$SyncRequestCopyWithImpl<$Res>
 
 /// Create a copy of SyncRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? cursor = null,Object? changes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? cursor = null,Object? changes = null,Object? photos = null,}) {
   return _then(_SyncRequest(
 cursor: null == cursor ? _self.cursor : cursor // ignore: cast_nullable_to_non_nullable
 as int,changes: null == changes ? _self._changes : changes // ignore: cast_nullable_to_non_nullable
-as List<SyncChange>,
+as List<SyncChange>,photos: null == photos ? _self.photos : photos // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

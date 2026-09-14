@@ -55,6 +55,12 @@ abstract class SyncRequest with _$SyncRequest {
   const factory SyncRequest({
     required int cursor,
     @Default(<SyncChange>[]) List<SyncChange> changes,
+
+    /// Whether this client can read photo changes. Apps released before
+    /// photos throw on a change they cannot decode, which stalls their
+    /// whole sync, so the server only sends photo changes to clients that
+    /// say they can.
+    @Default(false) bool photos,
   }) = _SyncRequest;
 
   factory SyncRequest.fromJson(Map<String, dynamic> json) =>

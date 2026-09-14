@@ -84,6 +84,14 @@ class MembersService {
             forUserId: target.id,
           );
         }
+        for (final photo in await _db.photosOfTask(task.id)) {
+          await _db.logRevoke(
+            SyncEntity.photo,
+            photo.id,
+            listId: listId,
+            forUserId: target.id,
+          );
+        }
       }
       return {...await _db.memberUserIds(listId), target.id};
     });
@@ -154,6 +162,12 @@ class MembersService {
       await _db.logUpsert(SyncEntity.task, task.id, listId);
       for (final sub in await _db.subtasksOfTask(task.id)) {
         await _db.logUpsert(SyncEntity.subtask, sub.id, listId);
+      }
+      // Photos too: a member whose cursor is already past a photo's own
+      // entry would otherwise never hear of a picture added before they
+      // joined, and one who leaves would keep the rows.
+      for (final photo in await _db.photosOfTask(task.id)) {
+        await _db.logUpsert(SyncEntity.photo, photo.id, listId);
       }
     }
   }

@@ -18,7 +18,7 @@ void main() {
     int cursor = 0,
   }) async => (await sync.sync(
     userId,
-    SyncRequest(cursor: cursor, changes: changes),
+    SyncRequest(cursor: cursor, changes: changes, photos: true),
   )).response;
 
   setUp(() async {
@@ -53,6 +53,27 @@ void main() {
       final fromZero = await push(anna, []);
       expect(fromZero.changes.map((c) => c.rowId), ['l1', 't1', 's1']);
       expect(await members.members(anna, 'l1'), hasLength(2));
+    },
+  );
+
+  test(
+    'photos already on a list reach a new member, and leave with them',
+    () async {
+      await push(ben, [SyncChange.photo(photo('p1', 't1', dev))]);
+      // Anna has been using her own list since, so her cursor is already
+      // past the photo's entry in the log: only a re-log can reach her.
+      final before = await push(anna, [
+        SyncChange.list(list('annas', deviceClock('anna'))),
+      ]);
+
+      await members.share(ben, 'l1', 'anna', MemberRole.editor);
+      final shared = await push(anna, [], cursor: before.cursor);
+      expect(shared.changes.map((c) => c.rowId), ['l1', 't1', 's1', 'p1']);
+
+      await members.unshare(ben, 'l1', 'anna');
+      final after = await push(anna, [], cursor: shared.cursor);
+      expect(after.changes.every((c) => c is SyncChangeRevoke), isTrue);
+      expect(after.changes.map((c) => c.rowId), ['l1', 't1', 's1', 'p1']);
     },
   );
 

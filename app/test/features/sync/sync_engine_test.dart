@@ -560,6 +560,50 @@ void main() {
     },
   );
 
+  test(
+    'switching account re-uploads only the pictures this device holds',
+    () async {
+      // Room for both pictures, so only the one removed below is missing.
+      store = MemoryPhotoStore(maxEntries: 2);
+      await db.upsertTask(task('t1', testClock('a').now().toString()));
+      final repo = photos();
+      final held = (await repo.add('t1', smallJpeg(width: 10)))!;
+      final gone = (await repo.add('t1', smallJpeg(width: 30)))!;
+      for (final p in [held, gone]) {
+        await db.markBlobSynced(p.sha256);
+        await store.unpin(p.sha256);
+      }
+      // Evicted, or a browser tab that was reloaded: the bytes are not here.
+      await store.remove(gone.sha256);
+      await db.clearOutbox();
+      await KvStore(db).set(KvKeys.blobAccount, 'https://nemo.test|anna');
+      // The upload fails, so what the switch left behind can be inspected.
+      client.blobFailures[held.sha256] = const ApiError(0, 'network');
+      final c = await container();
+
+      await c.read(syncEngineProvider.notifier).onSignedIn();
+
+      expect((await db.pendingBlobs()).map((b) => b.sha256), [held.sha256]);
+      final goneRow = await (db.select(
+        db.blobs,
+      )..where((t) => t.sha256.equals(gone.sha256))).getSingle();
+      expect(
+        goneRow.state,
+        'synced',
+        reason: 'nothing to upload, and pending would hold its row forever',
+      );
+      expect(client.pushedPhotoHashes, [gone.sha256]);
+      for (var i = 0; i < 3; i++) {
+        await store.put('filler$i', Uint8List.fromList([i]));
+      }
+      expect(
+        await store.get(held.sha256),
+        isNotNull,
+        reason: 'pinned: the upload to come is its only other copy',
+      );
+    },
+  );
+
   /// A task, and a picture added and then deleted, on a device whose server
   /// has no photo support: the upload was refused, and the delete forgot
   /// the blob, so only the flag holds the tombstone back.

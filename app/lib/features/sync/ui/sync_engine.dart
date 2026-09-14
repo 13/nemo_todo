@@ -420,7 +420,16 @@ class SyncEngine extends _$SyncEngine {
       // first sign-in has nothing recorded, and nothing to redo.
       if (previous != null && previous != account) {
         final store = ref.read(photoStoreProvider);
-        for (final sha256 in await db.resetBlobsToPending()) {
+        // Only bytes this device still holds: a blob marked pending whose
+        // bytes are gone can never be uploaded, and would hold its row back
+        // forever. Left `synced`, the row still reaches the new account,
+        // which simply has no picture for it.
+        final held = [
+          for (final sha256 in await db.syncedBlobHashes())
+            if (await store.get(sha256) != null) sha256,
+        ];
+        await db.resetBlobsToPending(held);
+        for (final sha256 in held) {
           // Their only copy on the new server is the upload to come.
           await store.pin(sha256);
         }

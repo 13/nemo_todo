@@ -333,15 +333,24 @@ extension SyncWrites on AppDatabase {
         const BlobsCompanion(state: Value('synced')),
       );
 
-  /// Marks every blob as waiting for an upload again, and returns their
-  /// hashes. `synced` only ever meant "the server this device last talked
-  /// to has them", which says nothing about a different one.
-  Future<List<String>> resetBlobsToPending() => transaction(() async {
-    final rows = await select(blobs).get();
-    await update(blobs)
-        .write(const BlobsCompanion(state: Value('pendingUpload')));
-    return [for (final r in rows) r.sha256];
-  });
+  /// Hashes of the blobs the server this device last talked to has.
+  Future<List<String>> syncedBlobHashes() async => [
+    for (final r in await (select(
+      blobs,
+    )..where((t) => t.state.equals('synced'))).get())
+      r.sha256,
+  ];
+
+  /// Marks the blobs named by [hashes] as waiting for an upload again.
+  /// `synced` only ever meant "the server this device last talked to has
+  /// them", which says nothing about a different one.
+  Future<void> resetBlobsToPending(Iterable<String> hashes) {
+    final list = hashes.toList();
+    if (list.isEmpty) return Future.value();
+    return (update(blobs)..where((t) => t.sha256.isIn(list))).write(
+      const BlobsCompanion(state: Value('pendingUpload')),
+    );
+  }
 
   Future<List<BlobRow>> pendingBlobs() =>
       (select(blobs)..where((t) => t.state.equals('pendingUpload'))).get();

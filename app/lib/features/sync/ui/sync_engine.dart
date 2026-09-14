@@ -280,6 +280,18 @@ class SyncEngine extends _$SyncEngine {
     } else if (landed) {
       state = state.copyWith(clearPhotoError: true);
     }
+    final account = _account();
+    if (landed && account != null) {
+      await ref.read(kvStoreProvider).set(KvKeys.blobAccount, account);
+    }
+  }
+
+  /// Which server and account this device is talking to, as far as picture
+  /// bytes are concerned: a username only means something on its server.
+  String? _account() {
+    final auth = ref.read(authControllerProvider);
+    if (!auth.connected) return null;
+    return '${auth.serverUrl}|${auth.username}';
   }
 
   /// Fetches the bytes of pictures that arrived as rows, newest first.
@@ -332,7 +344,26 @@ class SyncEngine extends _$SyncEngine {
 
   /// After connecting an account, every local row is offered to the server.
   Future<void> onSignedIn() async {
-    await ref.read(appDatabaseProvider).enqueueAll();
+    final db = ref.read(appDatabaseProvider);
+    final account = _account();
+    if (account != null) {
+      final kv = ref.read(kvStoreProvider);
+      final previous = await kv.get(KvKeys.blobAccount);
+      // Android keeps its data across a sign-out, so the rows about to be
+      // offered may go to a different account or server than the one whose
+      // `synced` their bytes are. That server has none of them: upload them
+      // all again, or it gets rows it can never serve a picture for. A
+      // first sign-in has nothing recorded, and nothing to redo.
+      if (previous != null && previous != account) {
+        final store = ref.read(photoStoreProvider);
+        for (final sha256 in await db.resetBlobsToPending()) {
+          // Their only copy on the new server is the upload to come.
+          await store.pin(sha256);
+        }
+      }
+      await kv.set(KvKeys.blobAccount, account);
+    }
+    await db.enqueueAll();
     await syncNow();
   }
 

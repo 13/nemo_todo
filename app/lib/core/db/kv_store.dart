@@ -14,6 +14,10 @@ abstract final class KvKeys {
   static const dismissedUpdate = 'dismissed_update';
   static const trustedCertificates = 'trusted_certificates';
   static const serverVersion = 'server_version';
+
+  /// The server and account (`"$serverUrl|$username"`) that last received
+  /// this device's picture bytes.
+  static const blobAccount = 'blob_account';
 }
 
 /// Typed access to the `kv` table.

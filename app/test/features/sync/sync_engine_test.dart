@@ -466,6 +466,65 @@ void main() {
     expect(await db.pendingBlobs(), isEmpty);
   });
 
+  /// A picture this device already uploaded to the account in [account],
+  /// with its row waiting to be offered again by a sign-in.
+  Future<Photo> syncedPicture(String account) async {
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final photo = (await photos().add('t1', smallJpeg()))!;
+    await db.markBlobSynced(photo.sha256);
+    await store.unpin(photo.sha256);
+    await db.clearOutbox();
+    await KvStore(db).set(KvKeys.blobAccount, account);
+    return photo;
+  }
+
+  test(
+    'signing in to another account uploads the bytes again, first',
+    () async {
+      final photo = await syncedPicture('https://nemo.test|anna');
+      final c = await container();
+
+      await c.read(syncEngineProvider.notifier).onSignedIn();
+
+      expect(client.uploaded, [photo.sha256]);
+      expect(client.pushedPhotoHashes, [
+        photo.sha256,
+      ], reason: 'the row is still offered to the new account');
+      expect(
+        client.uploadedBefore(photo.sha256),
+        isTrue,
+        reason: 'the new server has never had these bytes',
+      );
+      expect(await db.pendingBlobs(), isEmpty);
+      expect(
+        await KvStore(db).get(KvKeys.blobAccount),
+        'https://nemo.test|ben',
+      );
+    },
+  );
+
+  test('signing in to the same account again uploads nothing', () async {
+    final photo = await syncedPicture('https://nemo.test|ben');
+    final c = await container();
+
+    await c.read(syncEngineProvider.notifier).onSignedIn();
+
+    expect(client.uploaded, isEmpty);
+    expect(client.pushedPhotoHashes, [photo.sha256]);
+  });
+
+  test('a first sign-in does not upload what is already synced', () async {
+    final photo = await syncedPicture('unused');
+    await KvStore(db).set(KvKeys.blobAccount, null);
+    final c = await container();
+
+    await c.read(syncEngineProvider.notifier).onSignedIn();
+
+    expect(client.uploaded, isEmpty);
+    expect(client.pushedPhotoHashes, [photo.sha256]);
+    expect(await KvStore(db).get(KvKeys.blobAccount), 'https://nemo.test|ben');
+  });
+
   test('a photo row that cannot be uploaded yet is held back', () async {
     final c = await container();
     client.failWith = const ApiError(507, 'quota_exceeded');

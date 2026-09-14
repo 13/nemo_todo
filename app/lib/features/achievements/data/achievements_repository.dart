@@ -69,10 +69,12 @@ class AchievementsRepository {
   /// Counts today as a cleared day, once however often it is cleared.
   Future<void> recordClearedDay() async {
     final day = startOfDay(_now()).toIso8601String().substring(0, 10);
-    if (await _kv.get(KvKeys.lastClearedDay) == day) return;
-    final count = int.tryParse(await _kv.get(KvKeys.clearedDays) ?? '') ?? 0;
-    await _kv.set(KvKeys.clearedDays, '${count + 1}');
-    await _kv.set(KvKeys.lastClearedDay, day);
+    await _db.transaction(() async {
+      if (await _kv.get(KvKeys.lastClearedDay) == day) return;
+      final count = int.tryParse(await _kv.get(KvKeys.clearedDays) ?? '') ?? 0;
+      await _kv.set(KvKeys.clearedDays, '${count + 1}');
+      await _kv.set(KvKeys.lastClearedDay, day);
+    });
   }
 
   /// Ids already celebrated or quietly recorded; null when never written or

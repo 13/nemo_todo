@@ -87,6 +87,11 @@ void main() {
     expect((await repo.stats()).clearedDays, 1);
   });
 
+  test('a cleared day is counted once when two taps race', () async {
+    await Future.wait([repo.recordClearedDay(), repo.recordClearedDay()]);
+    expect((await repo.stats()).clearedDays, 1);
+  });
+
   test('the celebrated set starts unset and grows', () async {
     expect(await repo.seen(), isNull);
     await repo.markSeen(['first_done']);

@@ -159,9 +159,9 @@ later local tick is not credited with another device's unlock.
     one banner, "3 achievements unlocked";
   - wraps the banner in `Semantics(liveRegion: true)` so screen readers
     announce it.
-- The overlay provides its own `Overlay` above the router, because it
-  sits outside the navigator's own overlay and the banner's close button
-  shows a tooltip.
+- The overlay keeps the router as a direct child and gives the confetti
+  and banner their own `Overlay` layer, because it sits outside the
+  navigator's own overlay and the banner's close button shows a tooltip.
 - When `MediaQuery.disableAnimationsOf(context)` is true, no confetti and
   no bounce are shown; the banner still appears.
 - Confetti ignores pointer events so it never blocks the next tap.
@@ -171,7 +171,7 @@ later local tick is not credited with another device's unlock.
 ### Sound
 
 `features/celebrations/data/celebration_sound.dart` defines
-`CelebrationSound` with `Future<void> cheer()`. The real implementation
+`CelebrationSound` with `Future<void> play()`. The real implementation
 uses audioplayers with one bundled asset,
 app/assets/sounds/celebrate.mp3: a 1.3 s four-note chime generated with
 ffmpeg and dedicated to the public domain (CC0), recorded in

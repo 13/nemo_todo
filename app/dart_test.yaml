@@ -6,3 +6,8 @@ tags:
   #   flutter test test/design --update-goldens
   design:
     skip: false
+  # Dates on either side of a daylight saving change. They hold in any time
+  # zone and run in the normal run; CI runs them again where the clocks
+  # move, so tag any new one:
+  #   TZ=Europe/Berlin flutter test --tags dst
+  dst:

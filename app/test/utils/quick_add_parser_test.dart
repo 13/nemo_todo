@@ -54,7 +54,7 @@ void main() {
       ),
       DateTime(2026, 3, 30),
     );
-  });
+  }, tags: 'dst');
 
   test('a date word inside the title is part of the title', () {
     final q = parse('Buy the Sunday paper');

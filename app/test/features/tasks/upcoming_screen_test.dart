@@ -71,7 +71,7 @@ void main() {
     );
     expect(find.text('Tuesday task'), findsOneWidget);
     expect(find.text('Tue, Oct 27'), findsOneWidget);
-  });
+  }, tags: 'dst');
 
   appTest('empty state and quick add defaults to tomorrow', (tester) async {
     final app = await pumpApp(tester, initialLocation: Routes.upcoming);

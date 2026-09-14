@@ -57,7 +57,7 @@ void main() {
         dayStartMsFrom(DateTime(2026, 3, 29, 12), 0),
         midnight(2026, 3, 29),
       );
-    });
+    }, tags: 'dst');
 
     test('a short or long day is still one day away', () {
       expect(
@@ -80,7 +80,7 @@ void main() {
         daysFromToday(midnight(2026, 4, 5), DateTime(2026, 3, 25, 12)),
         11,
       );
-    });
+    }, tags: 'dst');
 
     test('labels name the right day', () async {
       final l = await L.delegate.load(const Locale('en'));
@@ -96,7 +96,7 @@ void main() {
         'Tomorrow',
       );
       expect(dayHeader(l, 'en', DateTime(2026, 3, 30), spring), 'Tomorrow');
-    });
+    }, tags: 'dst');
   });
 
   test('overdue depends on whether a time is set', () {

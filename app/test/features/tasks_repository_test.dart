@@ -124,7 +124,7 @@ void main() {
     expect((await tasks.watchUpcoming(sunday).first).map((t) => t.title), [
       'monday',
     ]);
-  });
+  }, tags: 'dst');
 
   test('today ends at midnight on the day the clocks go forward', () async {
     // 29 March 2026 lasts 23 hours in Europe; run with TZ=Europe/Berlin.
@@ -146,7 +146,7 @@ void main() {
     expect((await tasks.watchUpcoming(sunday).first).map((t) => t.title), [
       'monday',
     ]);
-  });
+  }, tags: 'dst');
 
   test('tasks of a deleted list disappear from today and search', () async {
     final lists = ListsRepository(db, testClock('x'), sequentialIds('l'));

@@ -90,7 +90,7 @@ void main() {
       done('b', DateTime(2026, 10, 26, 0, 30), due: DateTime(2026, 10, 25)),
     ], at: DateTime(2026, 10, 26, 12));
     expect(s.onTimeDone, 1);
-  });
+  }, tags: 'dst');
 
   test('the due day ends at midnight when the clocks go forward', () {
     // 29 March 2026 lasts 23 hours in Europe; run with TZ=Europe/Berlin.
@@ -99,7 +99,7 @@ void main() {
       done('b', DateTime(2026, 3, 30, 0, 30), due: DateTime(2026, 3, 29)),
     ], at: DateTime(2026, 3, 30, 12));
     expect(s.onTimeDone, 1);
-  });
+  }, tags: 'dst');
 
   test('streak counts consecutive local days ending today', () {
     final s = of([
@@ -138,7 +138,7 @@ void main() {
       done('c', DateTime(2026, 3, 30, 0, 30)),
     ], at: DateTime(2026, 3, 30, 12));
     expect(s.currentStreak, 3);
-  });
+  }, tags: 'dst');
 
   test('largest checklist counts live subtasks of done tasks only', () {
     final s = of(

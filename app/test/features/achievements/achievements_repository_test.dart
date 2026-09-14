@@ -79,7 +79,7 @@ void main() {
     );
     final onSunday = AchievementsRepository(db, now: () => sunday);
     expect(await onSunday.todayIsClear(), isFalse);
-  });
+  }, tags: 'dst');
 
   test('Today is clear on a short day with only tomorrow left', () async {
     // 29 March 2026 lasts 23 hours in Europe; run with TZ=Europe/Berlin.
@@ -91,7 +91,7 @@ void main() {
     );
     final onSunday = AchievementsRepository(db, now: () => sunday);
     expect(await onSunday.todayIsClear(), isTrue);
-  });
+  }, tags: 'dst');
 
   test('a cleared day is counted once', () async {
     await repo.recordClearedDay();

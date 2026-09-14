@@ -41,7 +41,11 @@ final _open = <ProviderContainer>[];
 /// next attempt after a failure. `addTearDown` would cancel it a moment
 /// after the framework has already counted it as leaked.
 @isTest
-void appTest(String description, Future<void> Function(WidgetTester) body) {
+void appTest(
+  String description,
+  Future<void> Function(WidgetTester) body, {
+  Object? tags,
+}) {
   testWidgets(description, (tester) async {
     await body(tester);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -50,7 +54,7 @@ void appTest(String description, Future<void> Function(WidgetTester) body) {
     }
     await tester.pump(const Duration(milliseconds: 10));
     await tester.pump(const Duration(milliseconds: 10));
-  });
+  }, tags: tags);
 }
 
 typedef TestApp = ({

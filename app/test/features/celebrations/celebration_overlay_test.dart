@@ -13,6 +13,7 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/achievements/data/achievements_repository.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
+import 'package:nemo/features/achievements/ui/achievements_providers.dart';
 import 'package:nemo/features/achievements/ui/achievements_screen.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
@@ -22,6 +23,7 @@ import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/settings/data/server_build.dart';
+import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -108,6 +110,16 @@ class _ScriptedCelebrations extends CelebrationController {
   @override
   Future<void> backfill() async {}
 }
+
+/// Bumped to make the celebration controller provider build a new one.
+class _Generation extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+final _generationProvider = NotifierProvider<_Generation, int>(_Generation.new);
 
 ConfettiControllerState confetti(WidgetTester tester) => tester
     .widget<ConfettiWidget>(find.byType(ConfettiWidget))
@@ -316,6 +328,38 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     container.dispose();
+  });
+
+  appTest('the overlay follows a new celebration controller', (tester) async {
+    var built = 0;
+    final app = await pumpApp(
+      tester,
+      celebrate: true,
+      seed: seedToday(['First', 'Second']),
+      overrides: [
+        celebrationControllerProvider.overrideWith((ref) {
+          ref.watch(_generationProvider);
+          built++;
+          final controller = CelebrationController(
+            ref.watch(achievementsRepositoryProvider),
+            now: ref.watch(nowProvider),
+            celebrate: () => ref.read(celebrationsEnabledProvider),
+            showAchievements: () => ref.read(achievementsEnabledProvider),
+          );
+          ref.onDispose(controller.dispose);
+          return controller;
+        }),
+      ],
+    );
+    expect(built, 1);
+
+    app.container.read(_generationProvider.notifier).bump();
+    await tester.pump();
+
+    await tickOff(tester, 'First');
+
+    expect(built, 2, reason: 'the tick went through a new controller');
+    expect(find.byKey(const Key('achievement-banner')), findsOneWidget);
   });
 
   appTest("a sync's unlocks are recorded before the next tick", (tester) async {

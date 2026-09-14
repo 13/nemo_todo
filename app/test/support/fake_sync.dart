@@ -47,6 +47,10 @@ class FakeSyncClient implements SyncClient {
   final List<String> uploaded = [];
   final List<String> downloaded = [];
 
+  /// How many times `uploadBlob` was called, including ones that failed --
+  /// so a test can tell whether bytes were ever sent at all.
+  int uploadAttempts = 0;
+
   /// Failures for single blobs, by hash, so one picture can go wrong while
   /// the rest of the sync goes right.
   final Map<String, Exception> blobFailures = {};
@@ -79,11 +83,13 @@ class FakeSyncClient implements SyncClient {
   }
 
   @override
-  Future<void> uploadBlob(String sha256, Uint8List bytes) =>
-      _blobRequest(sha256, () {
-        uploaded.add(sha256);
-        blobs[sha256] = bytes;
-      });
+  Future<void> uploadBlob(String sha256, Uint8List bytes) {
+    uploadAttempts++;
+    return _blobRequest(sha256, () {
+      uploaded.add(sha256);
+      blobs[sha256] = bytes;
+    });
+  }
 
   @override
   Future<Uint8List> downloadBlob(String sha256) => _blobRequest(sha256, () {

@@ -87,6 +87,22 @@ void main() {
   });
   tearDown(() => db.close());
 
+  const fastRetry = (
+    initial: Duration(milliseconds: 10),
+    max: Duration(milliseconds: 20),
+  );
+
+  /// Waits until [done] holds, or two seconds pass, whichever comes first.
+  Future<void> eventually(FutureOr<bool> Function() done) async {
+    final deadline = DateTime.now().add(const Duration(seconds: 2));
+    while (!await done() && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+  }
+
+  /// Clearly longer than [fastRetry] would take to try again, several times.
+  const noRetryWindow = Duration(milliseconds: 200);
+
   test('an Inbox arriving beside ours leaves one Inbox, not two', () async {
     // This device was used offline, so it made its own Inbox; the account
     // it is now connecting to already had one.
@@ -346,11 +362,13 @@ void main() {
     // Nothing here edits a row, resumes the app or reconnects a stream.
     // Before the engine scheduled its own retry, that meant the queue sat
     // there until the user did something.
-    await Future<void>.delayed(const Duration(milliseconds: 40));
+    await eventually(() => client.calls > 1);
     expect(client.calls, greaterThan(1));
 
     client.failWith = null;
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await eventually(
+      () => c.read(syncEngineProvider).status == SyncStatus.idle,
+    );
     expect(c.read(syncEngineProvider).status, SyncStatus.idle);
     expect(await db.outboxCount(), 0);
   });
@@ -661,6 +679,44 @@ void main() {
     expect(await KvStore(db).get(KvKeys.serverPhotos), 'true');
   });
 
+  test('a server that said it has no photos is not sent their bytes, '
+      'until it says it has', () async {
+    await KvStore(db).set(KvKeys.serverPhotos, 'false');
+    client
+      ..photos = false
+      ..rejectPhotoChanges = true;
+    final c = await container();
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final photo = (await photos().add('t1', smallJpeg()))!;
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.uploadAttempts, 0);
+    expect(client.pushedPhotoHashes, isEmpty);
+    expect(client.pushes.expand((p) => p).map((x) => x.rowId), contains('t1'));
+    final held = c.read(syncEngineProvider);
+    expect(held.status, SyncStatus.idle);
+    expect(held.error, isNull);
+
+    client
+      ..photos = true
+      ..rejectPhotoChanges = false;
+    final before = client.calls;
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.uploaded, [photo.sha256]);
+    expect(client.pushedPhotoHashes, [photo.sha256]);
+    expect(client.uploadedBefore(photo.sha256), isTrue);
+    expect(
+      client.calls - before,
+      2,
+      reason:
+          'one round sees the flip and holds, the sync-again round '
+          'uploads and pushes',
+    );
+  });
+
   test('a server rolled back to one without photos is noticed', () async {
     await KvStore(db).set(KvKeys.serverPhotos, 'true');
     final c = await container();
@@ -701,22 +757,6 @@ void main() {
     );
     expect(c.read(syncEngineProvider).status, SyncStatus.idle);
   });
-
-  const fastRetry = (
-    initial: Duration(milliseconds: 10),
-    max: Duration(milliseconds: 20),
-  );
-
-  /// Waits until [done] holds, or two seconds pass, whichever comes first.
-  Future<void> eventually(FutureOr<bool> Function() done) async {
-    final deadline = DateTime.now().add(const Duration(seconds: 2));
-    while (!await done() && DateTime.now().isBefore(deadline)) {
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-    }
-  }
-
-  /// Clearly longer than [fastRetry] would take to try again, several times.
-  const noRetryWindow = Duration(milliseconds: 200);
 
   test('an upload the server failed is tried again with the backoff', () async {
     final c = await container(retry: fastRetry);

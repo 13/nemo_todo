@@ -194,7 +194,11 @@ class SyncEngine extends _$SyncEngine {
     var hasMore = true;
     var pushed = false;
     var listsArrived = false;
-    await _uploadPending(client);
+    // A server that has said it has no photos answers an upload with a 404
+    // only after the whole body has been sent -- so the bytes are not
+    // offered at all until it says otherwise.
+    final uploadsHeld = await kv.get(KvKeys.serverPhotos) == 'false';
+    if (!uploadsHeld) await _uploadPending(client);
     while (hasMore) {
       final cursor = int.tryParse(await kv.get(KvKeys.cursor) ?? '0') ?? 0;
       // A server from before photos refuses the whole request over a photo
@@ -227,12 +231,15 @@ class SyncEngine extends _$SyncEngine {
       // The server has just said it takes photos, and this request did not
       // carry the ones waiting for that: go round again now rather than at
       // the next edit. Only for photos that would actually be sent -- a row
-      // still waiting on its upload would send the loop round for nothing.
+      // still waiting on its upload would send the loop round for nothing --
+      // unless the upload itself was what this round held back, in which
+      // case the bytes are what round two would send.
       if (!pushed &&
-          !serverPhotos &&
           response.photos &&
-          (await db.outboxChanges(includePhotos: true))
-              .any((c) => c.entity == SyncEntity.photo)) {
+          ((uploadsHeld && (await db.pendingBlobs()).isNotEmpty) ||
+              (!serverPhotos &&
+                  (await db.outboxChanges(includePhotos: true))
+                      .any((c) => c.entity == SyncEntity.photo)))) {
         _again = true;
       }
       pushed = true;

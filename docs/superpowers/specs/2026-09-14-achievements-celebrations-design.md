@@ -99,8 +99,8 @@ Streak achievements use `bestStreak`, so once reached they stay unlocked.
   unlocked achievements in full colour with their title, locked ones in
   `onSurfaceVariant` with a progress bar and "7 / 10". A header shows
   "4 of 10 unlocked" and the current streak.
-- Route `/settings/achievements` in `router.dart`, reached from a tile in the new
-  Settings section. The tile is hidden when Achievements is switched off.
+- Route `/settings/achievements` in `router.dart`, reached from a tile in the
+  new Settings section. The tile is hidden when Achievements is switched off.
 
 ## Celebrations
 
@@ -155,8 +155,8 @@ later local tick is not credited with another device's unlock.
     (0.6 s emission) from the top centre, using colours from the theme's
     colour scheme;
   - on `achievementUnlocked`, shows a dismissible banner with the icon and
-    title, tappable to open `/settings/achievements`; several unlocks at once show
-    one banner, "3 achievements unlocked";
+    title, tappable to open `/settings/achievements`; several unlocks at once
+    show one banner, "3 achievements unlocked";
   - wraps the banner in `Semantics(liveRegion: true)` so screen readers
     announce it.
 - The overlay keeps the router as a direct child and gives the confetti

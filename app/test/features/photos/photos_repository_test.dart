@@ -145,27 +145,43 @@ void main() {
     expect(await store.get(photo.sha256), isNotNull);
   });
 
-  test('adding a picture already synced on this device leaves it synced and '
-      'immediately pushable', () async {
+  test('adding a picture this device thinks is synced uploads it again, and '
+      'holds the row until it has', () async {
     final db = testDatabase();
     addTearDown(db.close);
-    final store = MemoryPhotoStore();
+    // A bound of one, so an unpinned copy would be evicted by the filler.
+    final store = MemoryPhotoStore(maxEntries: 1);
     final repo = newRepo(db, store);
     await addTask(db);
     final first = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
     await db.markBlobSynced(first.sha256);
+    await store.unpin(first.sha256);
 
     final second = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
     expect(second.sha256, first.sha256);
-    final blob = await db.pendingBlobs();
-    expect(blob, isEmpty, reason: 'the blob must stay synced, not revert');
+    // "Synced" is only what the server said last time: it may have swept
+    // the bytes since, and a row that reaches it without them is a broken
+    // picture on every other device.
     expect(
-      (await db.outboxChanges()).whereType<SyncChangePhoto>().map(
-        (c) => c.row.id,
-      ),
-      containsAll([first.id, second.id]),
+      (await db.pendingBlobs()).single.sha256,
+      first.sha256,
+      reason: 'the blob goes back to waiting for an upload',
     );
+    await store.put('filler', Uint8List.fromList([1]));
+    expect(
+      await store.get(first.sha256),
+      isNotNull,
+      reason: 'pinned again until that upload lands',
+    );
+    Future<List<String>> pushable() async => (await db.outboxChanges())
+        .whereType<SyncChangePhoto>()
+        .map((c) => c.row.id)
+        .toList();
+    expect(await pushable(), isEmpty, reason: 'both rows name those bytes');
+
+    await db.markBlobSynced(first.sha256);
+    expect(await pushable(), containsAll([first.id, second.id]));
   });
 
   test('deleting one of two photos sharing a hash keeps the bytes until both '

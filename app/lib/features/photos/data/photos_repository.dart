@@ -76,27 +76,25 @@ class PhotosRepository {
       sortKey: last == null ? SortKey.first() : SortKey.after(last.sortKey),
       updatedAt: _clock.now().toString(),
     );
-    // This device may already hold these exact bytes -- another photo, or
-    // the same one added twice -- and if the server already has them too,
-    // recording `pendingUpload` unconditionally would flip a `synced` blob
-    // back, re-upload it, and hold this row behind that upload for no
-    // reason. So the existing state decides, not a blanket overwrite.
-    final alreadySynced = await _blobState(processed.sha256) == 'synced';
     await _store.put(processed.sha256, processed.bytes);
-    if (!alreadySynced) {
-      // Bytes with no other copy yet -- a picture added on the web, still
-      // on its way to the server -- must not be evicted before the upload
-      // that is their only other copy has finished with them. The sync
-      // engine unpins once that upload succeeds.
-      await _store.pin(processed.sha256);
-      // The blob is recorded before the row, so the row can never be found
-      // pushable before the bytes it needs are known about.
-      await _db.rememberBlob(
-        processed.sha256,
-        byteSize: processed.bytes.length,
-        state: 'pendingUpload',
-      );
-    }
+    // Bytes with no other copy yet -- a picture added on the web, still on
+    // its way to the server -- must not be evicted before the upload that
+    // is their only other copy has finished with them. The sync engine
+    // unpins once that upload succeeds.
+    await _store.pin(processed.sha256);
+    // Uploaded again even when this device already recorded these bytes as
+    // `synced`: that is only what the server said last time, and it may
+    // have swept them since. A row reaching it without its bytes is a
+    // broken picture on every other device, while a redundant upload costs
+    // one request the server dedupes -- and refreshes the age it sweeps by.
+    //
+    // The blob is recorded before the row, so the row can never be found
+    // pushable before the bytes it needs are known about.
+    await _db.rememberBlob(
+      processed.sha256,
+      byteSize: processed.bytes.length,
+      state: 'pendingUpload',
+    );
     await _db.upsertPhoto(photo);
     return photo;
   }
@@ -112,11 +110,4 @@ class PhotosRepository {
       await _store.remove(photo.sha256);
     }
   }
-
-  /// The recorded state of a blob, or null if this device has no row for
-  /// it. There is no existing reader for a single blob by hash, so this
-  /// stays a small private query rather than growing `SyncWrites`.
-  Future<String?> _blobState(String sha256) async => (await (_db.select(
-    _db.blobs,
-  )..where((t) => t.sha256.equals(sha256))).getSingleOrNull())?.state;
 }

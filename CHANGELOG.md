@@ -9,6 +9,14 @@ the one in `app/pubspec.yaml` without its build number. Entries are grouped
 under Added, Changed, Fixed and Removed, and each one says what changed for
 someone using the app rather than which file moved.
 
+## Unreleased
+
+### Changed
+
+- The mark is a checkmark cut out of a teal disc rather than a clownfish:
+  the launcher icon, the splash screen, the favicon, the web app's icon, the
+  status bar icon reminders post with, and the mark inside the app.
+
 ## 0.5.0 - 2026-09-11
 
 ### Added

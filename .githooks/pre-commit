@@ -42,19 +42,27 @@ if ! command -v flutter > /dev/null || ! command -v dart > /dev/null; then
   exit 0
 fi
 
+# Git runs this hook with GIT_DIR, GIT_INDEX_FILE and friends pointing at
+# this repository. Committing from a worktree, they leak into the Flutter
+# SDK's own `git -C "$FLUTTER_ROOT"` calls, which then read this repo instead
+# of the SDK and fail pub with "Flutter SDK is not available". The toolchain
+# runs without them; this script's own git commands keep them, because a
+# `git commit -a` points GIT_INDEX_FILE at a temporary index.
+sdk() { env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR "$@"; }
+
 echo "pre-commit: checking generated code is current..."
-$l10n   && (cd app && flutter gen-l10n > /dev/null)
-$core   && (cd packages/nemo_core && dart run build_runner build > /dev/null)
+$l10n   && (cd app && sdk flutter gen-l10n > /dev/null)
+$core   && (cd packages/nemo_core && sdk dart run build_runner build > /dev/null)
 if $server; then
-  (cd server && dart run build_runner build > /dev/null)
-  (cd server && dart run drift_dev schema dump \
+  (cd server && sdk dart run build_runner build > /dev/null)
+  (cd server && sdk dart run drift_dev schema dump \
     lib/src/db/server_database.dart drift_schemas/ > /dev/null)
-  (cd server && dart run drift_dev schema generate \
+  (cd server && sdk dart run drift_dev schema generate \
     drift_schemas/ test/generated/ > /dev/null)
 fi
 if $app; then
-  (cd app && dart run build_runner build > /dev/null)
-  (cd app && dart run drift_dev schema dump \
+  (cd app && sdk dart run build_runner build > /dev/null)
+  (cd app && sdk dart run drift_dev schema dump \
     lib/core/db/app_database.dart drift_schemas/ > /dev/null)
 fi
 

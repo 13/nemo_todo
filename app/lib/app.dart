@@ -86,21 +86,12 @@ class _NemoAppState extends ConsumerState<NemoApp> {
       supportedLocales: L.supportedLocales,
       localeResolutionCallback: resolveAppLocale,
       routerConfig: _router,
-      // Wrapped in its own Overlay: this sits above the Router, so nothing
-      // inside it (the achievement banner's IconButton tooltip, notably)
-      // can find the one the Router creates for its own pages.
-      builder: (context, child) => Overlay(
-        initialEntries: [
-          OverlayEntry(
-            builder: (context) => SyncLifecycleObserver(
-              child: CelebrationOverlay(
-                onOpenAchievements: () =>
-                    unawaited(_router.push(Routes.achievements)),
-                child: child ?? const SizedBox.shrink(),
-              ),
-            ),
-          ),
-        ],
+      builder: (context, child) => SyncLifecycleObserver(
+        child: CelebrationOverlay(
+          onOpenAchievements: () =>
+              unawaited(_router.push(Routes.achievements)),
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }

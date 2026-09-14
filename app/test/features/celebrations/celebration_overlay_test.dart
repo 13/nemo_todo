@@ -1,14 +1,26 @@
+import 'dart:async';
+
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/achievements/data/achievements_repository.dart';
+import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/achievements/ui/achievements_screen.dart';
+import 'package:nemo/features/celebrations/data/celebration_sound.dart';
+import 'package:nemo/features/celebrations/ui/celebration_controller.dart';
+import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
+import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/photos/data/photo_store_web.dart';
+import 'package:nemo/features/settings/data/server_build.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
+import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -73,6 +85,23 @@ List<String> recordHaptics(WidgetTester tester) {
     ),
   );
   return haptics;
+}
+
+/// Celebrates whatever a test sends, and records nothing.
+class _ScriptedCelebrations extends CelebrationController {
+  _ScriptedCelebrations(AppDatabase db, this.events)
+    : super(
+        AchievementsRepository(db),
+        now: () => testNow,
+        celebrate: () => true,
+        showAchievements: () => true,
+      );
+
+  @override
+  final Stream<CelebrationEvent> events;
+
+  @override
+  Future<void> backfill() async {}
 }
 
 ConfettiControllerState confetti(WidgetTester tester) => tester
@@ -179,6 +208,72 @@ void main() {
 
     expect(find.byKey(const Key('achievement-banner')), findsNothing);
     expect(confetti(tester), ConfettiControllerState.playing);
+  });
+
+  appTest('a rebuilt builder hands the overlay its new child', (tester) async {
+    final db = testDatabase();
+    addTearDown(db.close);
+    await ListsRepository(
+      db,
+      testClock('seed'),
+      sequentialIds('l'),
+    ).ensureInbox();
+    final boot = await AppBootstrap.load(db);
+    final unlocks = StreamController<CelebrationEvent>.broadcast();
+    addTearDown(unlocks.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        bootstrapProvider.overrideWithValue(boot),
+        nowProvider.overrideWithValue(() => testNow),
+        idGeneratorProvider.overrideWithValue(sequentialIds()),
+        photoStoreProvider.overrideWithValue(MemoryPhotoStore()),
+        celebrationSoundProvider.overrideWithValue(RecordingCelebrationSound()),
+        serverBuildFetcherProvider.overrideWithValue((_) async => null),
+        celebrationControllerProvider.overrideWith(
+          (ref) => _ScriptedCelebrations(db, unlocks.stream),
+        ),
+      ],
+    );
+    final label = ValueNotifier('first');
+    addTearDown(label.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: ValueListenableBuilder<String>(
+          valueListenable: label,
+          builder: (context, text, _) => MaterialApp(
+            localizationsDelegates: L.localizationsDelegates,
+            supportedLocales: L.supportedLocales,
+            home: const SizedBox.shrink(),
+            builder: (context, child) => CelebrationOverlay(
+              onOpenAchievements: () {},
+              child: Text(text),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('first'), findsOneWidget);
+
+    label.value = 'second';
+    await tester.pump();
+    expect(find.text('second'), findsOneWidget);
+    expect(find.text('first'), findsNothing);
+
+    // The banner's close button shows a tooltip, which needs an Overlay the
+    // overlay brings along itself.
+    unlocks.add(AchievementsUnlocked([achievementCatalog.first]));
+    // The stream delivers in a microtask, after the frame that pump drew.
+    await tester.pump();
+    await tester.pump();
+    expect(find.byKey(const Key('achievement-banner')), findsOneWidget);
+    expect(find.byTooltip('Close'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    container.dispose();
   });
 
   appTest('history from before is recorded without a celebration', (

@@ -39,11 +39,16 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
   Timer? _hideBanner;
   Timer? _stopConfetti;
 
+  /// The confetti and the banner, in an [Overlay] of their own: this sits
+  /// outside the navigator's overlay, and the banner's close button shows a
+  /// tooltip. Created once; it reads the state whenever it builds.
+  late final OverlayEntry _layer = OverlayEntry(builder: _buildLayer);
+
   @override
   void initState() {
     super.initState();
     final controller = ref.read(celebrationControllerProvider);
-    _events = controller.events.listen(_show);
+    _subscribe(controller);
     // Whatever is already reached at start was not a tap in this session.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(controller.backfill());
@@ -55,8 +60,19 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
     unawaited(_events?.cancel());
     _hideBanner?.cancel();
     _stopConfetti?.cancel();
+    // The Overlay below has already unmounted, so the entry no longer
+    // reports itself mounted, but it still has to be removed before it
+    // can be disposed; removing from an unmounted Overlay is a no-op.
+    _layer
+      ..remove()
+      ..dispose();
     _confetti.dispose();
     super.dispose();
+  }
+
+  void _subscribe(CelebrationController controller) {
+    unawaited(_events?.cancel());
+    _events = controller.events.listen(_show);
   }
 
   void _show(CelebrationEvent event) {
@@ -82,7 +98,8 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
       unawaited(ref.read(celebrationSoundProvider).play());
     }
     if (event is AchievementsUnlocked) {
-      setState(() => _banner = event.achievements);
+      _banner = event.achievements;
+      _layer.markNeedsBuild();
       _hideBanner?.cancel();
       _hideBanner = Timer(const Duration(seconds: 4), _closeBanner);
     }
@@ -90,25 +107,40 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
 
   void _closeBanner() {
     _hideBanner?.cancel();
-    if (mounted) setState(() => _banner = null);
+    if (!mounted) return;
+    _banner = null;
+    _layer.markNeedsBuild();
   }
 
   @override
   Widget build(BuildContext context) {
     // Rows a sync brought in are recorded quietly once it finishes, so the
     // next tap here does not celebrate another device's progress.
-    ref.listen(syncEngineProvider, (previous, next) {
-      if (previous?.status == SyncStatus.syncing &&
-          next.status != SyncStatus.syncing) {
-        unawaited(ref.read(celebrationControllerProvider).backfill());
-      }
-    });
+    ref
+      ..listen(syncEngineProvider, (previous, next) {
+        if (previous?.status == SyncStatus.syncing &&
+            next.status != SyncStatus.syncing) {
+          unawaited(ref.read(celebrationControllerProvider).backfill());
+        }
+      })
+      ..listen(celebrationControllerProvider, (previous, next) {
+        if (!identical(previous, next)) _subscribe(next);
+      });
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.child,
+        Overlay(initialEntries: [_layer]),
+      ],
+    );
+  }
+
+  Widget _buildLayer(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final banner = _banner;
     return Stack(
       fit: StackFit.expand,
       children: [
-        widget.child,
         Align(
           alignment: Alignment.topCenter,
           child: IgnorePointer(

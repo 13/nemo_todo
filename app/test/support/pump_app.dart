@@ -157,20 +157,10 @@ Future<TestApp> pumpApp(
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           routerConfig: router,
-          // Wrapped in its own Overlay: this sits above the Router, so
-          // nothing inside it (the achievement banner's IconButton
-          // tooltip, notably) can find the one the Router creates for its
-          // own pages.
-          builder: (context, child) => Overlay(
-            initialEntries: [
-              OverlayEntry(
-                builder: (context) => CelebrationOverlay(
-                  onOpenAchievements: () =>
-                      unawaited(router.push(Routes.achievements)),
-                  child: child ?? const SizedBox.shrink(),
-                ),
-              ),
-            ],
+          builder: (context, child) => CelebrationOverlay(
+            onOpenAchievements: () =>
+                unawaited(router.push(Routes.achievements)),
+            child: child ?? const SizedBox.shrink(),
           ),
         ),
       ),

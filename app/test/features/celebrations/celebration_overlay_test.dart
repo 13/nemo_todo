@@ -380,7 +380,7 @@ void main() {
         await seedToday(['First', 'Second'])(db, inbox);
       },
     );
-    // The quiet check at start found nothing reached yet.
+    // Nothing is recorded as reached before the sync.
     expect(await AchievementsRepository(app.db).seen(), isEmpty);
 
     // Another device completed ten tasks.

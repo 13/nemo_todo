@@ -77,5 +77,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(await isDone(app, 'Second'), isFalse);
+    expect(find.byKey(const Key('achievement-banner')), findsNothing);
   });
 }

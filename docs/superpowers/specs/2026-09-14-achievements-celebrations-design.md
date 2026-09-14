@@ -177,7 +177,9 @@ app/assets/sounds/celebrate.mp3: a 1.3 s four-note chime generated with
 ffmpeg and dedicated to the public domain (CC0), recorded in
 app/assets/sounds/LICENSE.txt. MP3 plays on Android and in every
 supported browser, so no second format ships. It plays at a moderate
-volume and respects the device's media volume. Failures are logged and
+volume and respects the device's media volume. It takes transient,
+ducking audio focus, so other audio dips under the chime and resumes
+after it instead of being stopped. Failures are logged and
 swallowed: a missing codec never breaks ticking a task. Tests use a fake.
 
 Sound plays only on `dayCleared` and `achievementUnlocked`, and only

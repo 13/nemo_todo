@@ -1,0 +1,31 @@
+# Weekly update pull requests, grouped so a week costs one review per
+# ecosystem rather than one per package. CI checks each one the way it
+# checks any other pull request.
+#
+# Flutter itself is not here: it is pinned in ci.yml, release.yml and the
+# Dockerfile, and bumped by hand across all three at once.
+version: 2
+updates:
+  # The root pubspec is the workspace; one entry covers the app, the
+  # server and nemo_core.
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly

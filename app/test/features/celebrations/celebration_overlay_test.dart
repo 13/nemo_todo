@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -142,6 +143,43 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     }
     expect(find.byType(AchievementsScreen), findsOneWidget);
+  });
+
+  appTest('confetti is painted even when frames come slower than 60 fps', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      celebrate: true,
+      seed: seedToday(['Only'], kv: {KvKeys.achievements: 'false'}),
+    );
+
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'Only'),
+        matching: find.byType(DoneCheck),
+      ),
+    );
+    // The package steps particles on the wall clock; let real time pass
+    // between frames, as a busy phone or a throttled browser tab would.
+    for (var i = 0; i < 10; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 40)),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    final painter =
+        tester
+                .renderObject<RenderCustomPaint>(
+                  find.descendant(
+                    of: find.byType(ConfettiWidget),
+                    matching: find.byType(CustomPaint),
+                  ),
+                )
+                .foregroundPainter!
+            as ParticlePainter;
+    expect(painter.particles.where((p) => p.active), isNotEmpty);
   });
 
   appTest('a plain tick is a light haptic and nothing else', (tester) async {

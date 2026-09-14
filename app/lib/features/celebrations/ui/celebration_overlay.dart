@@ -152,6 +152,11 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
               minBlastForce: 10,
               maxBlastForce: 30,
               gravity: 0.25,
+              // By default the package emits nothing on any frame slower
+              // than 1/60 s. The frame after play() always is (and every
+              // frame on a busy phone or a throttled browser), so the short
+              // burst never got a single particle out.
+              pauseEmissionOnLowFrameRate: false,
               colors: [
                 scheme.primary,
                 scheme.secondary,

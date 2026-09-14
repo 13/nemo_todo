@@ -11,6 +11,21 @@ someone using the app rather than which file moved.
 
 ## Unreleased
 
+### Added
+
+- Photos on tasks: take one or pick one from the device, and it shows in a
+  strip on the task and as a thumbnail in the list. Photos reach every device
+  and everyone the list is shared with.
+- A photo is shrunk to at most 2048 pixels on its longest side before it
+  leaves the device, and the location and camera details a phone writes into
+  it are removed.
+- When the server refuses a photo -- too large, or out of room -- it stays on
+  the device marked "not uploaded", with a line saying why.
+- The server keeps photos in `NEMO_BLOB_DIR` (default `/data/blobs`), which
+  belongs in backups beside the database. An app from before this version
+  keeps syncing everything else and shows photos once it is updated; this app
+  keeps its photos on the device until an older server is updated too.
+
 ### Changed
 
 - The mark is a checkmark cut out of a teal disc rather than a clownfish:

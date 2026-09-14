@@ -91,8 +91,12 @@ class AchievementsRepository {
     return null;
   }
 
+  /// Adds [ids] to the celebrated set. Writes nothing when all are already
+  /// in it, since every write makes open achievement screens recount.
   Future<void> markSeen(Iterable<String> ids) async {
-    final all = {...?await seen(), ...ids}.toList()..sort();
+    final stored = await seen();
+    if (stored != null && stored.containsAll(ids)) return;
+    final all = {...?stored, ...ids}.toList()..sort();
     await _kv.set(KvKeys.achievementsSeen, jsonEncode(all));
   }
 }

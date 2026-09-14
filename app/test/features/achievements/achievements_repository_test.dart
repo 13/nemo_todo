@@ -99,6 +99,29 @@ void main() {
     expect(await repo.seen(), {'first_done', 'done_10'});
   });
 
+  test('recording ids already celebrated writes nothing', () async {
+    await repo.markSeen(['first_done']);
+    final values = <String?>[];
+    final sub = KvStore(db).watch(KvKeys.achievementsSeen).listen(values.add);
+    addTearDown(sub.cancel);
+    await pumpEventQueue();
+    expect(values, hasLength(1), reason: 'the first value of the watch');
+
+    await repo.markSeen(['first_done']);
+    await pumpEventQueue();
+    expect(values, hasLength(1));
+
+    await repo.markSeen(['done_10']);
+    await pumpEventQueue();
+    expect(values, hasLength(2));
+  });
+
+  test('a damaged celebrated set is rewritten', () async {
+    await KvStore(db).set(KvKeys.achievementsSeen, 'not json');
+    await repo.markSeen(const []);
+    expect(await repo.seen(), isEmpty);
+  });
+
   test('a damaged celebrated set reads as unset', () async {
     await KvStore(db).set(KvKeys.achievementsSeen, 'not json');
     expect(await repo.seen(), isNull);

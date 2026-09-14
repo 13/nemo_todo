@@ -7,6 +7,7 @@ import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/sync/data/blob_transfer.dart';
 import 'package:nemo/features/sync/data/sse_client.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
@@ -293,55 +294,27 @@ class SyncEngine extends _$SyncEngine {
     if (account != null) await kv.set(KvKeys.blobAccount, account);
   }
 
-  /// How many blobs move at once. Two: enough to keep a home connection
-  /// busy, few enough that a sync is not one long upload.
-  static const _blobConcurrency = 2;
+  BlobTransfer _blobs() =>
+      BlobTransfer(ref.read(appDatabaseProvider), ref.read(photoStoreProvider));
 
-  /// Sends the bytes of every picture the server does not have yet.
-  ///
-  /// A blob that lands flips to `synced`, which is what releases its row
-  /// into the push that follows: the server never holds a photo row it
-  /// cannot serve the picture for. A failure is left queued and tried
-  /// again.
+  /// Sends the bytes of every picture the server does not have yet, and
+  /// records what the server said about them.
   Future<void> _uploadPending(SyncClient client) async {
-    final db = ref.read(appDatabaseProvider);
-    final store = ref.read(photoStoreProvider);
-    final pending = await db.pendingBlobs();
-    if (pending.isEmpty) return;
-    var landed = false;
-    final failures = await _forEachLimited(pending.map((b) => b.sha256), (
-      sha256,
-    ) async {
-      final bytes = await store.get(sha256);
-      // The bytes are gone from this device -- a web tab that was reloaded
-      // before the upload finished. The photo row stays held: pushing it
-      // would name a picture nobody can fetch. Adding the same picture
-      // again, or another device uploading it, is what can release it.
-      if (bytes == null) return;
-      await client.uploadBlob(sha256, bytes);
-      await db.markBlobSynced(sha256);
-      landed = true;
-      // Only now does a second copy exist, so only now may the web store
-      // evict these bytes like any others.
-      await store.unpin(sha256);
-    });
+    final outcome = await _blobs().uploadPending(client);
+    if (outcome.retry) _blobRetry = true;
     // A refusal that will not change on its own -- too large, or no room
     // on the server -- is kept until an upload gets through, rather than
     // cleared at the start of every sync only to be found again, or the
     // photo sits there marked "not uploaded" with no reason given.
-    _noteRetryable(failures);
-    final refusal = failures
-        .where((e) => e.status == 413 || e.status == 507)
-        .lastOrNull;
-    if (refusal != null) {
-      state = state.copyWith(photoError: refusal.code);
-    } else if (landed) {
+    if (outcome.refusal != null) {
+      state = state.copyWith(photoError: outcome.refusal!.code);
+    } else if (outcome.landed) {
       state = state.copyWith(clearPhotoError: true);
     }
     // Not left to the end of the sync alone: the push after this can fail,
     // and these bytes are this account's all the same.
     final account = _account();
-    if (landed && account != null) {
+    if (outcome.landed && account != null) {
       await ref.read(kvStoreProvider).set(KvKeys.blobAccount, account);
     }
   }
@@ -354,63 +327,8 @@ class SyncEngine extends _$SyncEngine {
     return '${auth.serverUrl}|${auth.username}';
   }
 
-  /// Fetches the bytes of pictures that arrived as rows, newest first.
   Future<void> _downloadMissing(SyncClient client) async {
-    final db = ref.read(appDatabaseProvider);
-    final store = ref.read(photoStoreProvider);
-    final missing = await db.missingBlobHashes();
-    final failures = await _forEachLimited(missing, (sha256) async {
-      final bytes = await client.downloadBlob(sha256);
-      await store.put(sha256, bytes);
-      await db.rememberBlob(sha256, byteSize: bytes.length, state: 'synced');
-    });
-    _noteRetryable(failures);
-  }
-
-  /// Asks for a retry when the server failed a transfer in a way that may
-  /// pass. Not for 404 -- a server too old to have blob routes, which would
-  /// be polled forever -- nor 413 or 507, which asking again will not change.
-  /// A failure on this device never reaches here: it is logged instead.
-  void _noteRetryable(List<ApiError> failures) {
-    if (failures.any((e) => !const {404, 413, 507}.contains(e.status))) {
-      _blobRetry = true;
-    }
-  }
-
-  /// Runs [action] over [items], [_blobConcurrency] at a time, in order.
-  /// Returns the refusals the server answered with.
-  ///
-  /// One item failing does not stop the rest, nor the sync: pictures are
-  /// independent, and the next sync tries whatever is still missing.
-  Future<List<ApiError>> _forEachLimited(
-    Iterable<String> items,
-    Future<void> Function(String) action,
-  ) async {
-    final queue = items.toList();
-    final refusals = <ApiError>[];
-    Future<void> worker() async {
-      while (queue.isNotEmpty) {
-        final item = queue.removeAt(0);
-        try {
-          await action(item);
-        } on ApiError catch (e) {
-          refusals.add(e);
-        } on Object catch (e, stack) {
-          // Something on this device -- a full disk under the store, the
-          // database refusing a write -- is worth a line in the log, not
-          // failing the tasks' sync over one picture. So is the
-          // ArgumentError `FilePhotoStore.put` documents for a hash that is
-          // not a digest, which a corrupted row can carry: left to escape,
-          // it would fail every sync from then on. Any other Error is a bug
-          // and stays loud.
-          if (e is! Exception && e is! ArgumentError) rethrow;
-          debugPrint('picture $item not moved: $e\n$stack');
-        }
-      }
-    }
-
-    await Future.wait([for (var i = 0; i < _blobConcurrency; i++) worker()]);
-    return refusals;
+    if (await _blobs().downloadMissing(client)) _blobRetry = true;
   }
 
   /// After connecting an account, every local row is offered to the server.
@@ -426,20 +344,7 @@ class SyncEngine extends _$SyncEngine {
       // all again, or it gets rows it can never serve a picture for. A
       // first sign-in has nothing recorded, and nothing to redo.
       if (previous != null && previous != account) {
-        final store = ref.read(photoStoreProvider);
-        // Only bytes this device still holds: a blob marked pending whose
-        // bytes are gone can never be uploaded, and would hold its row back
-        // forever. Left `synced`, the row still reaches the new account,
-        // which simply has no picture for it.
-        final held = [
-          for (final sha256 in await db.syncedBlobHashes())
-            if (await store.get(sha256) != null) sha256,
-        ];
-        await db.resetBlobsToPending(held);
-        for (final sha256 in held) {
-          // Their only copy on the new server is the upload to come.
-          await store.pin(sha256);
-        }
+        await _blobs().repend();
       }
       await kv.set(KvKeys.blobAccount, account);
       // What the last server said about photos says nothing about this

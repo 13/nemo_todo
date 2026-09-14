@@ -154,7 +154,10 @@ class _TaskListViewState extends ConsumerState<TaskListView> {
                 content: Text(l.tasksCompletedSnack),
                 action: SnackBarAction(
                   label: l.commonUndo,
-                  onPressed: () => completeTask(ref, task, done: false),
+                  // The SnackBar outlives this screen, and this `ref` is
+                  // unusable once the list is gone; unticking never
+                  // celebrates, so the repository captured above will do.
+                  onPressed: () => repo.setDone(task.id, done: false),
                 ),
               ),
             );

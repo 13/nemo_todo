@@ -167,6 +167,9 @@ later local tick is not credited with another device's unlock.
 - Confetti ignores pointer events so it never blocks the next tap.
 - The confetti is stopped after its own burst duration by a timer, so its
   state is deterministic under test clocks.
+- The confetti keeps emitting when frames are slower than 60 fps
+  (`pauseEmissionOnLowFrameRate: false`); the package's default drops
+  every particle of a short burst on slow or throttled frames.
 
 ### Sound
 

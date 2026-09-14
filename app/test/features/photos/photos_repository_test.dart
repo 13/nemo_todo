@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
+import 'package:nemo/features/photos/data/photo_pipeline.dart';
+import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/photos/data/photos_repository.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -21,16 +23,24 @@ void main() {
     ),
   );
 
+  // These run under plain `test()`, so the default off-isolate processor
+  // (a real isolate) would work here too -- but spinning one up per case
+  // adds real seconds across this file, so every repository test opts
+  // into the synchronous processor for speed instead.
+  PhotosRepository newRepo(AppDatabase db, PhotoStore store) =>
+      PhotosRepository(
+        db,
+        testClock('a'),
+        sequentialIds('p'),
+        store,
+        process: (raw) async => processPhoto(raw),
+      );
+
   test('adding a photo stores the bytes and queues the row', () async {
     final db = testDatabase();
     addTearDown(db.close);
     final store = MemoryPhotoStore();
-    final repo = PhotosRepository(
-      db,
-      testClock('a'),
-      sequentialIds('p'),
-      store,
-    );
+    final repo = newRepo(db, store);
     await addTask(db);
 
     final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
@@ -48,12 +58,7 @@ void main() {
   test('two photos of the same task keep the order they were added', () async {
     final db = testDatabase();
     addTearDown(db.close);
-    final repo = PhotosRepository(
-      db,
-      testClock('a'),
-      sequentialIds('p'),
-      MemoryPhotoStore(),
-    );
+    final repo = newRepo(db, MemoryPhotoStore());
     await addTask(db);
 
     final first = (await repo.add('t1', smallJpeg(width: 10, height: 10)))!;
@@ -69,12 +74,7 @@ void main() {
       final db = testDatabase();
       addTearDown(db.close);
       final store = MemoryPhotoStore();
-      final repo = PhotosRepository(
-        db,
-        testClock('a'),
-        sequentialIds('p'),
-        store,
-      );
+      final repo = newRepo(db, store);
       await addTask(db);
       final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
@@ -91,12 +91,7 @@ void main() {
     final db = testDatabase();
     addTearDown(db.close);
     final store = MemoryPhotoStore();
-    final repo = PhotosRepository(
-      db,
-      testClock('a'),
-      sequentialIds('p'),
-      store,
-    );
+    final repo = newRepo(db, store);
     await addTask(db);
 
     expect(await repo.add('t1', Uint8List.fromList([1, 2, 3])), isNull);
@@ -113,12 +108,7 @@ void main() {
     () async {
       final db = testDatabase();
       addTearDown(db.close);
-      final repo = PhotosRepository(
-        db,
-        testClock('a'),
-        sequentialIds('p'),
-        MemoryPhotoStore(),
-      );
+      final repo = newRepo(db, MemoryPhotoStore());
       await addTask(db);
 
       final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
@@ -144,12 +134,7 @@ void main() {
     // A bound of one: any put that is not exempt would otherwise knock the
     // added photo's bytes straight out.
     final store = MemoryPhotoStore(maxEntries: 1);
-    final repo = PhotosRepository(
-      db,
-      testClock('a'),
-      sequentialIds('p'),
-      store,
-    );
+    final repo = newRepo(db, store);
     await addTask(db);
 
     final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
@@ -165,12 +150,7 @@ void main() {
     final db = testDatabase();
     addTearDown(db.close);
     final store = MemoryPhotoStore();
-    final repo = PhotosRepository(
-      db,
-      testClock('a'),
-      sequentialIds('p'),
-      store,
-    );
+    final repo = newRepo(db, store);
     await addTask(db);
     final first = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
     await db.markBlobSynced(first.sha256);
@@ -193,12 +173,7 @@ void main() {
     final db = testDatabase();
     addTearDown(db.close);
     final store = MemoryPhotoStore();
-    final repo = PhotosRepository(
-      db,
-      testClock('a'),
-      sequentialIds('p'),
-      store,
-    );
+    final repo = newRepo(db, store);
     await addTask(db);
     final first = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
     await db.markBlobSynced(first.sha256);

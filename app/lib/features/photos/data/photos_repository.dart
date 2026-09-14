@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/features/photos/data/photo_pipeline.dart';
@@ -7,12 +8,25 @@ import 'package:nemo_core/nemo_core.dart';
 
 /// The pictures on a task: adding one, removing one, and finding its bytes.
 class PhotosRepository {
-  PhotosRepository(this._db, this._clock, this._newId, this._store);
+  PhotosRepository(
+    this._db,
+    this._clock,
+    this._newId,
+    this._store, {
+    Future<ProcessedPhoto?> Function(Uint8List raw)? process,
+  }) : _process = process ?? ((raw) => compute(processPhoto, raw));
 
   final AppDatabase _db;
   final HlcClock _clock;
   final String Function() _newId;
   final PhotoStore _store;
+
+  // Off the UI isolate in the app: decoding, baking orientation, resizing
+  // and re-encoding a 12 MP photo can take seconds, and this runs from
+  // "take photo", not from a background job. Injectable because a real
+  // isolate never reports back to a widget test's fake clock, so those
+  // tests supply a synchronous stand-in instead.
+  final Future<ProcessedPhoto?> Function(Uint8List raw) _process;
 
   Stream<List<Photo>> watchByTask(String taskId) =>
       (_db.select(_db.photos)
@@ -44,7 +58,7 @@ class PhotosRepository {
   /// Processes [raw], stores the bytes and queues the row. Returns null
   /// for bytes that are not a picture, writing nothing in that case.
   Future<Photo?> add(String taskId, Uint8List raw) async {
-    final processed = processPhoto(raw);
+    final processed = await _process(raw);
     if (processed == null) return null;
     final last =
         await (_db.select(_db.photos)

@@ -32,6 +32,9 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
     final picked = await ImagePicker().pickImage(source: source);
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
+    // The strip may be gone by the time a large file finishes reading --
+    // e.g. the user backed out of the task while it was still loading.
+    if (!mounted) return;
     setState(() => _adding = true);
     try {
       final photo = await ref

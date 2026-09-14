@@ -60,4 +60,18 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'exposes the not-uploaded label to screen readers for a pending photo',
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      await pump(tester, [
+        pendingPhotoHashesProvider.overrideWith((ref) => Stream.value({hash})),
+      ]);
+      await tester.pump();
+
+      expect(find.bySemanticsLabel('Not uploaded yet'), findsOneWidget);
+      handle.dispose();
+    },
+  );
 }

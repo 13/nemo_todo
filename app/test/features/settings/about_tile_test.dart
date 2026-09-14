@@ -68,6 +68,13 @@ void main() {
       await app.container.read(syncEngineProvider.notifier).syncNow();
     }
     await settleSync(tester);
+    // Settings runs longer than the test's window; the tile is built only
+    // once it is scrolled to.
+    await tester.scrollUntilVisible(
+      find.byType(AboutTile),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
   }
 
   appTest('with no account it names this build alone', (tester) async {

@@ -172,6 +172,76 @@ void main() {
     expect((await app.db.taskById('t1'))!.repeat, 'monthly:last-fri');
   });
 
+  appTest('a custom rule is built in the dialog and named on its chip', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: Routes.task('t1'),
+      seed: (db, inbox) async {
+        await TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        ).create(
+          listId: inbox.id,
+          title: 'Bins',
+          // The second Friday of September.
+          dueAt: DateTime(2026, 9, 11, 8).millisecondsSinceEpoch,
+        );
+      },
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('repeat-custom')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Custom…'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('repeat-custom')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('repeat-interval')), '3');
+    await tester.pumpAndSettle();
+    expect(find.text('Every 3 days'), findsOneWidget, reason: 'the preview');
+    await tester.tap(find.byKey(const Key('repeat-custom-save')));
+    await tester.pumpAndSettle();
+    expect((await app.db.taskById('t1'))!.repeat, 'every:3d');
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('repeat-custom')),
+        matching: find.text('Every 3 days'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('repeat-custom')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('repeat-mode-weekday')));
+    await tester.pumpAndSettle();
+    // Guessed from the due date rather than starting from nothing.
+    expect(find.text('Second Friday of the month'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('repeat-custom-save')));
+    await tester.pumpAndSettle();
+    expect((await app.db.taskById('t1'))!.repeat, 'monthly:2nd-fri');
+
+    // Blanking the interval leaves nothing to save.
+    await tester.tap(find.byKey(const Key('repeat-custom')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('repeat-mode-interval')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('repeat-interval')), '');
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('repeat-custom-save')))
+          .onPressed,
+      isNull,
+    );
+  });
+
   appTest('a rule this version cannot read is shown, not hidden', (
     tester,
   ) async {

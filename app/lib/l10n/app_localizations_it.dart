@@ -680,4 +680,134 @@ class LIt extends L {
   String repeatLastWeekday(String weekday) {
     return 'Ultimo $weekday del mese';
   }
+
+  @override
+  String get repeatCustom => 'Personalizzata…';
+
+  @override
+  String get repeatCustomTitle => 'Ripetizione personalizzata';
+
+  @override
+  String get repeatModeInterval => 'Intervallo';
+
+  @override
+  String get repeatModeWeekday => 'Giorno della settimana nel mese';
+
+  @override
+  String get repeatEvery => 'Ogni';
+
+  @override
+  String get repeatUnitDays => 'giorni';
+
+  @override
+  String get repeatUnitWeeks => 'settimane';
+
+  @override
+  String get repeatUnitMonths => 'mesi';
+
+  @override
+  String get repeatUnitYears => 'anni';
+
+  @override
+  String repeatEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ogni $count giorni',
+      one: 'Ogni giorno',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ogni $count settimane',
+      one: 'Ogni settimana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ogni $count mesi',
+      one: 'Ogni mese',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ogni $count anni',
+      one: 'Ogni anno',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatNthWeekday(String ordinal, String weekday) {
+    String _temp0 = intl.Intl.selectLogic(ordinal, {
+      'first': 'Primo',
+      'second': 'Secondo',
+      'third': 'Terzo',
+      'fourth': 'Quarto',
+      'other': 'Ultimo',
+    });
+    return '$_temp0 $weekday del mese';
+  }
+
+  @override
+  String repeatOrdinal(String ordinal) {
+    String _temp0 = intl.Intl.selectLogic(ordinal, {
+      'first': 'primo',
+      'second': 'secondo',
+      'third': 'terzo',
+      'fourth': 'quarto',
+      'other': 'ultimo',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsData => 'I tuoi dati';
+
+  @override
+  String get settingsExport => 'Esporta attività';
+
+  @override
+  String get settingsExportHint =>
+      'Liste, attività e sottoattività in un file JSON. Le foto non sono incluse.';
+
+  @override
+  String get settingsImport => 'Importa attività';
+
+  @override
+  String get settingsImportHint =>
+      'Aggiunge ciò che un export di nemo contiene e questo dispositivo non ha.';
+
+  @override
+  String get settingsExported => 'Attività esportate.';
+
+  @override
+  String settingsImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count elementi importati.',
+      one: '1 elemento importato.',
+      zero: 'Niente di nuovo da importare.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsImportInvalid => 'Questo file non è un export di nemo.';
 }

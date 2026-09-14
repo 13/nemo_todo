@@ -679,4 +679,134 @@ class LDe extends L {
   String repeatLastWeekday(String weekday) {
     return 'Letzter $weekday im Monat';
   }
+
+  @override
+  String get repeatCustom => 'Eigene…';
+
+  @override
+  String get repeatCustomTitle => 'Eigene Wiederholung';
+
+  @override
+  String get repeatModeInterval => 'Intervall';
+
+  @override
+  String get repeatModeWeekday => 'Wochentag im Monat';
+
+  @override
+  String get repeatEvery => 'Alle';
+
+  @override
+  String get repeatUnitDays => 'Tage';
+
+  @override
+  String get repeatUnitWeeks => 'Wochen';
+
+  @override
+  String get repeatUnitMonths => 'Monate';
+
+  @override
+  String get repeatUnitYears => 'Jahre';
+
+  @override
+  String repeatEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Alle $count Tage',
+      one: 'Täglich',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Alle $count Wochen',
+      one: 'Wöchentlich',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Alle $count Monate',
+      one: 'Monatlich',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Alle $count Jahre',
+      one: 'Jährlich',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String repeatNthWeekday(String ordinal, String weekday) {
+    String _temp0 = intl.Intl.selectLogic(ordinal, {
+      'first': 'Erster',
+      'second': 'Zweiter',
+      'third': 'Dritter',
+      'fourth': 'Vierter',
+      'other': 'Letzter',
+    });
+    return '$_temp0 $weekday im Monat';
+  }
+
+  @override
+  String repeatOrdinal(String ordinal) {
+    String _temp0 = intl.Intl.selectLogic(ordinal, {
+      'first': 'erster',
+      'second': 'zweiter',
+      'third': 'dritter',
+      'fourth': 'vierter',
+      'other': 'letzter',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsData => 'Deine Daten';
+
+  @override
+  String get settingsExport => 'Aufgaben exportieren';
+
+  @override
+  String get settingsExportHint =>
+      'Listen, Aufgaben und Unteraufgaben als JSON-Datei. Fotos sind nicht enthalten.';
+
+  @override
+  String get settingsImport => 'Aufgaben importieren';
+
+  @override
+  String get settingsImportHint =>
+      'Fügt hinzu, was ein nemo-Export enthält und dieses Gerät noch nicht hat.';
+
+  @override
+  String get settingsExported => 'Aufgaben exportiert.';
+
+  @override
+  String settingsImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge importiert.',
+      one: '1 Eintrag importiert.',
+      zero: 'Nichts Neues zu importieren.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsImportInvalid => 'Diese Datei ist kein nemo-Export.';
 }

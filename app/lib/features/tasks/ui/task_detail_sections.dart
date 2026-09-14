@@ -6,6 +6,7 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/tasks/ui/custom_repeat_dialog.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
@@ -161,6 +162,11 @@ class TaskRepeatSection extends StatelessWidget {
     final l = L.of(context);
     final locale = Localizations.localeOf(context).toString();
     final dueAt = task.dueAt;
+    final choices = _repeatChoices(l, locale, dueAt);
+    final rule = task.repeatRule;
+    // A rule the chips do not name -- every three days, the second
+    // Tuesday -- is shown on the custom chip rather than on none of them.
+    final custom = rule != null && choices.every((c) => c.$1 != rule);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -171,12 +177,12 @@ class TaskRepeatSection extends StatelessWidget {
           key: const Key('task-repeat'),
           spacing: 8,
           children: [
-            for (final (rule, label) in _repeatChoices(l, locale, dueAt))
+            for (final (choice, label) in choices)
               ChoiceChip(
-                key: Key(_repeatKey(rule)),
-                selected: task.repeatRule == rule,
+                key: Key(_repeatKey(choice)),
+                selected: rule == choice,
                 showCheckmark: false,
-                avatar: rule == null
+                avatar: choice == null
                     ? null
                     : const Icon(Icons.repeat_rounded, size: 18),
                 label: Text(label),
@@ -184,8 +190,29 @@ class TaskRepeatSection extends StatelessWidget {
                 // so the row waits for one.
                 onSelected: dueAt == null
                     ? null
-                    : (_) => save(task.copyWith(repeat: rule?.encode())),
+                    : (_) => save(task.copyWith(repeat: choice?.encode())),
               ),
+            ChoiceChip(
+              key: const Key('repeat-custom'),
+              selected: custom,
+              showCheckmark: false,
+              avatar: const Icon(Icons.tune_rounded, size: 18),
+              label: Text(
+                custom ? describeRepeat(l, locale, rule) : l.repeatCustom,
+              ),
+              onSelected: dueAt == null
+                  ? null
+                  : (_) async {
+                      final picked = await showCustomRepeatDialog(
+                        context,
+                        due: DateTime.fromMillisecondsSinceEpoch(dueAt),
+                        initial: rule,
+                      );
+                      if (picked != null) {
+                        await save(task.copyWith(repeat: picked.encode()));
+                      }
+                    },
+            ),
             // A rule this version cannot read -- written by a newer app, or
             // by hand -- is shown as it stands rather than as no rule at
             // all, which would say the task does not repeat.

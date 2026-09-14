@@ -1220,6 +1220,144 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Last {weekday} of the month'**
   String repeatLastWeekday(String weekday);
+
+  /// No description provided for @repeatCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get repeatCustom;
+
+  /// No description provided for @repeatCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom repeat'**
+  String get repeatCustomTitle;
+
+  /// No description provided for @repeatModeInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval'**
+  String get repeatModeInterval;
+
+  /// No description provided for @repeatModeWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekday of the month'**
+  String get repeatModeWeekday;
+
+  /// No description provided for @repeatEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Every'**
+  String get repeatEvery;
+
+  /// No description provided for @repeatUnitDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get repeatUnitDays;
+
+  /// No description provided for @repeatUnitWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks'**
+  String get repeatUnitWeeks;
+
+  /// No description provided for @repeatUnitMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'months'**
+  String get repeatUnitMonths;
+
+  /// No description provided for @repeatUnitYears.
+  ///
+  /// In en, this message translates to:
+  /// **'years'**
+  String get repeatUnitYears;
+
+  /// No description provided for @repeatEveryDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Daily} other{Every {count} days}}'**
+  String repeatEveryDays(int count);
+
+  /// No description provided for @repeatEveryWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Weekly} other{Every {count} weeks}}'**
+  String repeatEveryWeeks(int count);
+
+  /// No description provided for @repeatEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Monthly} other{Every {count} months}}'**
+  String repeatEveryMonths(int count);
+
+  /// No description provided for @repeatEveryYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Yearly} other{Every {count} years}}'**
+  String repeatEveryYears(int count);
+
+  /// No description provided for @repeatNthWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'{ordinal, select, first{First} second{Second} third{Third} fourth{Fourth} other{Last}} {weekday} of the month'**
+  String repeatNthWeekday(String ordinal, String weekday);
+
+  /// No description provided for @repeatOrdinal.
+  ///
+  /// In en, this message translates to:
+  /// **'{ordinal, select, first{first} second{second} third{third} fourth{fourth} other{last}}'**
+  String repeatOrdinal(String ordinal);
+
+  /// No description provided for @settingsData.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get settingsData;
+
+  /// No description provided for @settingsExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export tasks'**
+  String get settingsExport;
+
+  /// No description provided for @settingsExportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists, tasks and subtasks as a JSON file. Photos are not included.'**
+  String get settingsExportHint;
+
+  /// No description provided for @settingsImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import tasks'**
+  String get settingsImport;
+
+  /// No description provided for @settingsImportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds what a nemo export holds and this device does not.'**
+  String get settingsImportHint;
+
+  /// No description provided for @settingsExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks exported.'**
+  String get settingsExported;
+
+  /// No description provided for @settingsImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing new to import.} =1{1 item imported.} other{{count} items imported.}}'**
+  String settingsImported(int count);
+
+  /// No description provided for @settingsImportInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not a nemo export.'**
+  String get settingsImportInvalid;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart';
+import 'package:nemo/features/settings/ui/data_tiles.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_settings_section.dart';
 import 'package:nemo/features/updates/ui/update_tile.dart';
@@ -58,6 +59,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SyncSettingsSection(),
+            const DataTiles(),
             const UpdateTile(),
             SectionHeader(title: l.settingsAbout),
             const AboutTile(),

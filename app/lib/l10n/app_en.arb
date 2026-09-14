@@ -347,5 +347,80 @@
         "type": "String"
       }
     }
-  }
+  },
+  "repeatCustom": "Custom…",
+  "repeatCustomTitle": "Custom repeat",
+  "repeatModeInterval": "Interval",
+  "repeatModeWeekday": "Weekday of the month",
+  "repeatEvery": "Every",
+  "repeatUnitDays": "days",
+  "repeatUnitWeeks": "weeks",
+  "repeatUnitMonths": "months",
+  "repeatUnitYears": "years",
+  "repeatEveryDays": "{count, plural, =1{Daily} other{Every {count} days}}",
+  "@repeatEveryDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeatEveryWeeks": "{count, plural, =1{Weekly} other{Every {count} weeks}}",
+  "@repeatEveryWeeks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeatEveryMonths": "{count, plural, =1{Monthly} other{Every {count} months}}",
+  "@repeatEveryMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeatEveryYears": "{count, plural, =1{Yearly} other{Every {count} years}}",
+  "@repeatEveryYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeatNthWeekday": "{ordinal, select, first{First} second{Second} third{Third} fourth{Fourth} other{Last}} {weekday} of the month",
+  "@repeatNthWeekday": {
+    "placeholders": {
+      "ordinal": {
+        "type": "String"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "repeatOrdinal": "{ordinal, select, first{first} second{second} third{third} fourth{fourth} other{last}}",
+  "@repeatOrdinal": {
+    "placeholders": {
+      "ordinal": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsData": "Your data",
+  "settingsExport": "Export tasks",
+  "settingsExportHint": "Lists, tasks and subtasks as a JSON file. Photos are not included.",
+  "settingsImport": "Import tasks",
+  "settingsImportHint": "Adds what a nemo export holds and this device does not.",
+  "settingsExported": "Tasks exported.",
+  "settingsImported": "{count, plural, =0{Nothing new to import.} =1{1 item imported.} other{{count} items imported.}}",
+  "@settingsImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportInvalid": "That file is not a nemo export."
 }

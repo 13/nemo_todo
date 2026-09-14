@@ -93,6 +93,17 @@ jobs:
         run: flutter test --coverage --exclude-tags design
         working-directory: app
 
+      # The runner is on UTC, where every day is 24 hours long, so a date
+      # counted in hours rather than calendar days passes above and goes
+      # wrong for everyone twice a year. Berlin has the change.
+      - name: Test dates in a daylight saving time zone
+        run: |
+          flutter test test/utils/ test/features/achievements/ \
+            test/features/tasks/ test/features/tasks_repository_test.dart
+        working-directory: app
+        env:
+          TZ: Europe/Berlin
+
       - name: Check coverage floor
         run: dart run ../tool/check_coverage.dart 80
         working-directory: app

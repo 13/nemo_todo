@@ -24,6 +24,13 @@ would ship without them, and nothing would say so.
 - Settings has switches for celebrations, their sound and achievements, so
   the app can be kept quiet. They apply to this device only.
 
+### Fixed
+
+- On the two days a year the clocks change, Today, Upcoming, quick add's
+  "tomorrow" and the count of tasks done on time no longer pick the wrong
+  day: a task due late that evening stays in Today, and Upcoming's headings
+  name the right dates.
+
 ## 0.7.0 - 2026-09-14
 
 ### Added

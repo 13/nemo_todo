@@ -433,5 +433,36 @@
       }
     }
   },
-  "settingsImportInvalid": "That file is not a nemo export."
+  "settingsImportInvalid": "That file is not a nemo export.",
+  "aboutBuild": "{channel, select, release{Release build} main{Development build} other{Local build}}",
+  "@aboutBuild": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutBuildNumbered": "{channel, select, release{Release build {number}} main{Development build {number}} other{Local build {number}}}",
+  "@aboutBuildNumbered": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutServerBuild": "Server {details}",
+  "@aboutServerBuild": {
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutCopyDetails": "Copy details",
+  "aboutCopied": "Details copied.",
+  "aboutSourceCode": "Source code",
+  "aboutLegalese": "Local-first tasks, synced with a server you host yourself."
 }

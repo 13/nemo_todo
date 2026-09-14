@@ -809,4 +809,42 @@ class LEn extends L {
 
   @override
   String get settingsImportInvalid => 'That file is not a nemo export.';
+
+  @override
+  String aboutBuild(String channel) {
+    String _temp0 = intl.Intl.selectLogic(channel, {
+      'release': 'Release build',
+      'main': 'Development build',
+      'other': 'Local build',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String aboutBuildNumbered(String channel, String number) {
+    String _temp0 = intl.Intl.selectLogic(channel, {
+      'release': 'Release build $number',
+      'main': 'Development build $number',
+      'other': 'Local build $number',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String aboutServerBuild(String details) {
+    return 'Server $details';
+  }
+
+  @override
+  String get aboutCopyDetails => 'Copy details';
+
+  @override
+  String get aboutCopied => 'Details copied.';
+
+  @override
+  String get aboutSourceCode => 'Source code';
+
+  @override
+  String get aboutLegalese =>
+      'Local-first tasks, synced with a server you host yourself.';
 }

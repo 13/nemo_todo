@@ -815,4 +815,42 @@ class LIt extends L {
 
   @override
   String get settingsImportInvalid => 'Questo file non è un export di nemo.';
+
+  @override
+  String aboutBuild(String channel) {
+    String _temp0 = intl.Intl.selectLogic(channel, {
+      'release': 'Build di rilascio',
+      'main': 'Build di sviluppo',
+      'other': 'Build locale',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String aboutBuildNumbered(String channel, String number) {
+    String _temp0 = intl.Intl.selectLogic(channel, {
+      'release': 'Build di rilascio $number',
+      'main': 'Build di sviluppo $number',
+      'other': 'Build locale $number',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String aboutServerBuild(String details) {
+    return 'Server $details';
+  }
+
+  @override
+  String get aboutCopyDetails => 'Copia dettagli';
+
+  @override
+  String get aboutCopied => 'Dettagli copiati.';
+
+  @override
+  String get aboutSourceCode => 'Codice sorgente';
+
+  @override
+  String get aboutLegalese =>
+      'Attività prima sul dispositivo, sincronizzate con un server che gestisci tu.';
 }

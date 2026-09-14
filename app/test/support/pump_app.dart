@@ -11,6 +11,7 @@ import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
+import 'package:nemo/features/settings/data/server_build.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -93,6 +94,9 @@ Future<TestApp> pumpApp(
       idGeneratorProvider.overrideWithValue(sequentialIds()),
       // Opened in `main` in the app; a connected sync reads it.
       photoStoreProvider.overrideWithValue(photoStore ?? MemoryPhotoStore()),
+      // The About tile asks a connected server how it was built; a test's
+      // server is a fake, and a real request would outlive the test.
+      serverBuildFetcherProvider.overrideWithValue((_) async => null),
       ...overrides.cast(),
     ],
   );

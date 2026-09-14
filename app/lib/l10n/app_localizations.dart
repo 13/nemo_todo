@@ -1364,6 +1364,48 @@ abstract class L {
   /// In en, this message translates to:
   /// **'That file is not a nemo export.'**
   String get settingsImportInvalid;
+
+  /// No description provided for @aboutBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'{channel, select, release{Release build} main{Development build} other{Local build}}'**
+  String aboutBuild(String channel);
+
+  /// No description provided for @aboutBuildNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'{channel, select, release{Release build {number}} main{Development build {number}} other{Local build {number}}}'**
+  String aboutBuildNumbered(String channel, String number);
+
+  /// No description provided for @aboutServerBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Server {details}'**
+  String aboutServerBuild(String details);
+
+  /// No description provided for @aboutCopyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy details'**
+  String get aboutCopyDetails;
+
+  /// No description provided for @aboutCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Details copied.'**
+  String get aboutCopied;
+
+  /// No description provided for @aboutSourceCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Source code'**
+  String get aboutSourceCode;
+
+  /// No description provided for @aboutLegalese.
+  ///
+  /// In en, this message translates to:
+  /// **'Local-first tasks, synced with a server you host yourself.'**
+  String get aboutLegalese;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

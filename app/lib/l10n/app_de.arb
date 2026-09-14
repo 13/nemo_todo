@@ -215,5 +215,12 @@
   "settingsImportHint": "Fügt hinzu, was ein nemo-Export enthält und dieses Gerät noch nicht hat.",
   "settingsExported": "Aufgaben exportiert.",
   "settingsImported": "{count, plural, =0{Nichts Neues zu importieren.} =1{1 Eintrag importiert.} other{{count} Einträge importiert.}}",
-  "settingsImportInvalid": "Diese Datei ist kein nemo-Export."
+  "settingsImportInvalid": "Diese Datei ist kein nemo-Export.",
+  "aboutBuild": "{channel, select, release{Release-Build} main{Entwicklungs-Build} other{Lokaler Build}}",
+  "aboutBuildNumbered": "{channel, select, release{Release-Build {number}} main{Entwicklungs-Build {number}} other{Lokaler Build {number}}}",
+  "aboutServerBuild": "Server {details}",
+  "aboutCopyDetails": "Details kopieren",
+  "aboutCopied": "Details kopiert.",
+  "aboutSourceCode": "Quellcode",
+  "aboutLegalese": "Aufgaben zuerst auf dem Gerät, synchronisiert mit einem Server, den du selbst betreibst."
 }

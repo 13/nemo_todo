@@ -215,5 +215,12 @@
   "settingsImportHint": "Aggiunge ciò che un export di nemo contiene e questo dispositivo non ha.",
   "settingsExported": "Attività esportate.",
   "settingsImported": "{count, plural, =0{Niente di nuovo da importare.} =1{1 elemento importato.} other{{count} elementi importati.}}",
-  "settingsImportInvalid": "Questo file non è un export di nemo."
+  "settingsImportInvalid": "Questo file non è un export di nemo.",
+  "aboutBuild": "{channel, select, release{Build di rilascio} main{Build di sviluppo} other{Build locale}}",
+  "aboutBuildNumbered": "{channel, select, release{Build di rilascio {number}} main{Build di sviluppo {number}} other{Build locale {number}}}",
+  "aboutServerBuild": "Server {details}",
+  "aboutCopyDetails": "Copia dettagli",
+  "aboutCopied": "Dettagli copiati.",
+  "aboutSourceCode": "Codice sorgente",
+  "aboutLegalese": "Attività prima sul dispositivo, sincronizzate con un server che gestisci tu."
 }

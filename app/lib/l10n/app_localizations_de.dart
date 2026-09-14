@@ -814,4 +814,42 @@ class LDe extends L {
 
   @override
   String get settingsImportInvalid => 'Diese Datei ist kein nemo-Export.';
+
+  @override
+  String aboutBuild(String channel) {
+    String _temp0 = intl.Intl.selectLogic(channel, {
+      'release': 'Release-Build',
+      'main': 'Entwicklungs-Build',
+      'other': 'Lokaler Build',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String aboutBuildNumbered(String channel, String number) {
+    String _temp0 = intl.Intl.selectLogic(channel, {
+      'release': 'Release-Build $number',
+      'main': 'Entwicklungs-Build $number',
+      'other': 'Lokaler Build $number',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String aboutServerBuild(String details) {
+    return 'Server $details';
+  }
+
+  @override
+  String get aboutCopyDetails => 'Details kopieren';
+
+  @override
+  String get aboutCopied => 'Details kopiert.';
+
+  @override
+  String get aboutSourceCode => 'Quellcode';
+
+  @override
+  String get aboutLegalese =>
+      'Aufgaben zuerst auf dem Gerät, synchronisiert mit einem Server, den du selbst betreibst.';
 }

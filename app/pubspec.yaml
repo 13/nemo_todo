@@ -36,6 +36,7 @@ dependencies:
   path_provider: ^2.1.5
   riverpod_annotation: ^4.0.7
   timezone: ^0.11.1
+  url_launcher: ^6.3.2
   uuid: ^4.6.0
 
 dev_dependencies:

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nemo/core/build_info.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
+import 'package:nemo/features/settings/data/server_build.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/updates/domain/app_version.dart';
@@ -130,6 +134,139 @@ void main() {
     // The same gap as the web case above, and deliberately silent here.
     expect(find.textContaining('App 0.3.0 · Server 9.9.9'), findsOneWidget);
     expect(find.byKey(const Key('about-stale')), findsNothing);
+  });
+
+  final stamped = BuildInfo(
+    commit: '33f0001abcdef0123',
+    builtAt: DateTime.utc(2026, 9, 14, 7),
+    channel: 'release',
+  );
+
+  Future<void> scrollToButtons(WidgetTester tester) async {
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('about-source')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pump();
+  }
+
+  appTest('names the build: channel, number, day and commit', (tester) async {
+    await pumpApp(
+      tester,
+      initialLocation: Routes.settings,
+      overrides: [
+        buildInfoProvider.overrideWithValue(stamped),
+        buildNumberProvider.overrideWith((_) async => '6'),
+      ],
+    );
+    await scrollToButtons(tester);
+    expect(
+      find.text('Release build 6 · Sep 14, 2026 · 33f0001'),
+      findsOneWidget,
+    );
+    expect(find.byType(NemoLogoTile), findsOneWidget);
+  });
+
+  appTest('a build nobody stamped says it is local and claims no date', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      initialLocation: Routes.settings,
+      overrides: [buildNumberProvider.overrideWith((_) async => '')],
+    );
+    await scrollToButtons(tester);
+    expect(find.text('Local build'), findsOneWidget);
+  });
+
+  appTest('connected, it says how the server was built', (tester) async {
+    await open(
+      tester,
+      overrides: [
+        ...connected(appVersion: const AppVersion(0, 7, 0)),
+        serverBuildProvider.overrideWith(
+          (_) async => ServerBuild(
+            version: '0.7.0',
+            commit: 'abc1234ffff',
+            builtAt: DateTime.utc(2026, 9, 13, 12),
+          ),
+        ),
+      ],
+      serverVersion: '0.7.0',
+    );
+    expect(find.text('Server Sep 13, 2026 · abc1234'), findsOneWidget);
+  });
+
+  appTest('copy details puts a bug report summary on the clipboard', (
+    tester,
+  ) async {
+    final copied = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied.add((call.arguments as Map)['text'] as String);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await pumpApp(
+      tester,
+      initialLocation: Routes.settings,
+      overrides: [
+        buildInfoProvider.overrideWithValue(stamped),
+        buildNumberProvider.overrideWith((_) async => '6'),
+      ],
+    );
+    await scrollToButtons(tester);
+    await tester.tap(find.byKey(const Key('about-copy')));
+    await tester.pumpAndSettle();
+
+    expect(copied.single, contains('(build 6)'));
+    expect(copied.single, contains('channel: release'));
+    expect(copied.single, contains('commit: 33f0001abcdef0123'));
+    expect(copied.single, contains('built: 2026-09-14T07:00:00.000Z'));
+    expect(copied.single, contains('platform: '));
+    expect(find.text('Details copied.'), findsOneWidget);
+  });
+
+  appTest('source code opens the repository', (tester) async {
+    final opened = <Uri>[];
+    await pumpApp(
+      tester,
+      initialLocation: Routes.settings,
+      overrides: [
+        openUrlProvider.overrideWithValue((uri) async {
+          opened.add(uri);
+          return true;
+        }),
+      ],
+    );
+    await scrollToButtons(tester);
+    await tester.tap(find.byKey(const Key('about-source')));
+    await tester.pumpAndSettle();
+    expect(opened, [AboutTile.sourceUrl]);
+  });
+
+  appTest('tapping the tile opens the about dialog, licences and all', (
+    tester,
+  ) async {
+    await pumpApp(tester, initialLocation: Routes.settings);
+    await scrollToButtons(tester);
+    await tester.tap(find.byKey(const Key('about-tile')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Local-first tasks, synced with a server you host yourself.'),
+      findsOneWidget,
+    );
+    expect(find.text('View licenses'), findsOneWidget);
   });
 
   test('behind means both parsed and the server ahead', () {

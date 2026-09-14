@@ -324,6 +324,40 @@ class LEn extends L {
       'Sign out? This browser forgets your tasks; they stay on your server.';
 
   @override
+  String get settingsChangePassword => 'Change password';
+
+  @override
+  String get settingsCurrentPassword => 'Current password';
+
+  @override
+  String get settingsNewPassword => 'New password';
+
+  @override
+  String get settingsPasswordChanged =>
+      'Password changed. Your other devices have been signed out.';
+
+  @override
+  String get settingsDeleteAccount => 'Delete account';
+
+  @override
+  String settingsDeleteAccountConfirm(String server) {
+    return 'This deletes your account on $server. Lists only you use are deleted with it, and each shared list you own goes to another member. This cannot be undone.';
+  }
+
+  @override
+  String get settingsDeleteAccountKeeps => 'Your tasks stay on this device.';
+
+  @override
+  String get settingsDeleteAccountWipes =>
+      'This browser forgets your tasks too.';
+
+  @override
+  String get settingsAccountDeleted => 'Account deleted.';
+
+  @override
+  String get accountErrorWrongPassword => 'That is not your password.';
+
+  @override
   String get settingsSync => 'Sync';
 
   @override

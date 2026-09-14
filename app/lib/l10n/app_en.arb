@@ -142,6 +142,23 @@
   "settingsSignOut": "Sign out",
   "settingsSignOutConfirm": "Sign out? Your tasks stay on this device and stop syncing.",
   "settingsSignOutConfirmWeb": "Sign out? This browser forgets your tasks; they stay on your server.",
+  "settingsChangePassword": "Change password",
+  "settingsCurrentPassword": "Current password",
+  "settingsNewPassword": "New password",
+  "settingsPasswordChanged": "Password changed. Your other devices have been signed out.",
+  "settingsDeleteAccount": "Delete account",
+  "settingsDeleteAccountConfirm": "This deletes your account on {server}. Lists only you use are deleted with it, and each shared list you own goes to another member. This cannot be undone.",
+  "@settingsDeleteAccountConfirm": {
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDeleteAccountKeeps": "Your tasks stay on this device.",
+  "settingsDeleteAccountWipes": "This browser forgets your tasks too.",
+  "settingsAccountDeleted": "Account deleted.",
+  "accountErrorWrongPassword": "That is not your password.",
   "settingsSync": "Sync",
   "settingsSyncNow": "Sync now",
   "settingsLastSync": "Last synced {time}",

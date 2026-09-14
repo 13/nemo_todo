@@ -100,6 +100,28 @@ class SyncClient {
     ),
   );
 
+  /// Sets a new password. The server signs out every other session and
+  /// keeps this one.
+  Future<void> changePassword({
+    required String current,
+    required String next,
+  }) => _send(
+    () => _dio.postUri<Map<String, dynamic>>(
+      uri('/auth/password'),
+      data: {'current': current, 'password': next},
+      options: _options,
+    ),
+  );
+
+  /// Deletes the account this client is signed in to.
+  Future<void> deleteAccount(String password) => _send(
+    () => _dio.deleteUri<Map<String, dynamic>>(
+      uri('/account'),
+      data: {'password': password},
+      options: _options,
+    ),
+  );
+
   Future<void> logout() => _send(
     () => _dio.postUri<Map<String, dynamic>>(
       uri('/auth/logout'),

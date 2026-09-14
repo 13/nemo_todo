@@ -324,6 +324,41 @@ class LDe extends L {
       'Abmelden? Dieser Browser vergisst deine Aufgaben; auf deinem Server bleiben sie.';
 
   @override
+  String get settingsChangePassword => 'Passwort ändern';
+
+  @override
+  String get settingsCurrentPassword => 'Aktuelles Passwort';
+
+  @override
+  String get settingsNewPassword => 'Neues Passwort';
+
+  @override
+  String get settingsPasswordChanged =>
+      'Passwort geändert. Deine anderen Geräte wurden abgemeldet.';
+
+  @override
+  String get settingsDeleteAccount => 'Konto löschen';
+
+  @override
+  String settingsDeleteAccountConfirm(String server) {
+    return 'Damit wird dein Konto auf $server gelöscht. Listen, die nur du nutzt, werden mitgelöscht, und jede geteilte Liste, die dir gehört, geht an ein anderes Mitglied. Das lässt sich nicht rückgängig machen.';
+  }
+
+  @override
+  String get settingsDeleteAccountKeeps =>
+      'Deine Aufgaben bleiben auf diesem Gerät.';
+
+  @override
+  String get settingsDeleteAccountWipes =>
+      'Dieser Browser vergisst deine Aufgaben ebenfalls.';
+
+  @override
+  String get settingsAccountDeleted => 'Konto gelöscht.';
+
+  @override
+  String get accountErrorWrongPassword => 'Das ist nicht dein Passwort.';
+
+  @override
   String get settingsSync => 'Synchronisierung';
 
   @override

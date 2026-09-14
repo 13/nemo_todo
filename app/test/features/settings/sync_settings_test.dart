@@ -89,6 +89,7 @@ void main() {
         }, 'ben');
       },
     );
+    await tester.ensureVisible(find.byKey(const Key('sign-out')));
     await tester.tap(find.byKey(const Key('sign-out')));
     await settleSync(tester);
     await tester.tap(find.byKey(const Key('confirm-sign-out')));
@@ -100,6 +101,89 @@ void main() {
     // only advances while the test pumps, and an awaited stream would wait
     // for a tick that never comes.
     expect(await app.db.select(app.db.listMeta).get(), isEmpty);
+    expect(await KvStore(app.db).get(KvKeys.serverUrl), isNull);
+  });
+
+  Future<TestApp> pumpConnected(WidgetTester tester) => pumpApp(
+    tester,
+    initialLocation: Routes.settings,
+    overrides: connected(),
+    settle: false,
+    seed: (db, inbox) async {
+      final kv = KvStore(db);
+      await kv.set(KvKeys.serverUrl, 'https://nemo.test');
+      await kv.set(KvKeys.username, 'ben');
+    },
+  );
+
+  Future<void> tapTile(WidgetTester tester, String key) async {
+    await tester.ensureVisible(find.byKey(Key(key)));
+    await tester.tap(find.byKey(Key(key)));
+    await settleSync(tester);
+  }
+
+  appTest('changing the password sends both and says it is done', (
+    tester,
+  ) async {
+    await pumpConnected(tester);
+    await tapTile(tester, 'change-password');
+    await tester.enterText(
+      find.byKey(const Key('change-password-current')),
+      'password123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('change-password-new')),
+      'a-new-password',
+    );
+    await tester.tap(find.byKey(const Key('change-password-confirm')));
+    await settleSync(tester);
+
+    expect(client.passwordChanges, ['password123>a-new-password']);
+    expect(
+      find.text('Password changed. Your other devices have been signed out.'),
+      findsOneWidget,
+    );
+    expect(find.text('Signed in as ben on https://nemo.test'), findsOneWidget);
+  });
+
+  appTest('a wrong current password keeps the dialog open and says so', (
+    tester,
+  ) async {
+    await pumpConnected(tester);
+    await tapTile(tester, 'change-password');
+    client.failWith = const ApiError(403, 'wrong_password');
+    await tester.tap(find.byKey(const Key('change-password-confirm')));
+    await settleSync(tester);
+
+    expect(find.text('That is not your password.'), findsOneWidget);
+    expect(find.byKey(const Key('change-password-confirm')), findsOneWidget);
+    client.failWith = null;
+  });
+
+  appTest('deleting the account signs out and keeps the tasks here', (
+    tester,
+  ) async {
+    final app = await pumpConnected(tester);
+    await tapTile(tester, 'delete-account');
+    expect(
+      find.textContaining('This deletes your account on https://nemo.test.'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Your tasks stay on this device.'),
+      findsOneWidget,
+    );
+    await tester.enterText(
+      find.byKey(const Key('delete-account-password')),
+      'password123',
+    );
+    await tester.tap(find.byKey(const Key('delete-account-confirm')));
+    await settleSync(tester);
+
+    expect(client.deletions, ['password123']);
+    expect(find.text('Account deleted.'), findsOneWidget);
+    expect(find.text('Connect to a server'), findsOneWidget);
+    expect(await app.db.listById(app.inbox.id), isNotNull);
     expect(await KvStore(app.db).get(KvKeys.serverUrl), isNull);
   });
 

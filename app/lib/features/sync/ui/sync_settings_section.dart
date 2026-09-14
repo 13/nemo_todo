@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/auth/data/certificate_trust.dart';
+import 'package:nemo/features/auth/ui/account_dialogs.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/certificate_dialog.dart';
+import 'package:nemo/features/sync/data/sync_client.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -44,6 +46,36 @@ class SyncSettingsSection extends ConsumerWidget {
     if (ok != true) return;
     await ref.read(syncEngineProvider.notifier).onSignedOut();
     await ref.read(authControllerProvider.notifier).signOut();
+  }
+
+  SyncClient _client(WidgetRef ref) {
+    final auth = ref.read(authControllerProvider);
+    return ref.read(syncClientFactoryProvider)(auth.serverUrl!, auth.token!);
+  }
+
+  Future<void> _changePassword(BuildContext context, WidgetRef ref) async {
+    final l = L.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    if (!await showChangePasswordDialog(context, _client(ref))) return;
+    messenger.showSnackBar(SnackBar(content: Text(l.settingsPasswordChanged)));
+  }
+
+  /// Once the server has deleted the account, this device is signed out
+  /// the way the sign-out tile signs it out: the tasks stay on Android, and
+  /// the web app forgets them.
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+    final l = L.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final deleted = await showDeleteAccountDialog(
+      context,
+      _client(ref),
+      server: ref.read(authControllerProvider).serverUrl!,
+      wipesDevice: ref.read(authRequiredProvider),
+    );
+    if (!deleted) return;
+    await ref.read(syncEngineProvider.notifier).onSignedOut();
+    await ref.read(authControllerProvider.notifier).signOut();
+    messenger.showSnackBar(SnackBar(content: Text(l.settingsAccountDeleted)));
   }
 
   /// The certificate this server offered and the device refused, if it
@@ -171,10 +203,25 @@ class SyncSettingsSection extends ConsumerWidget {
             ),
           ),
         ListTile(
+          key: const Key('change-password'),
+          leading: const Icon(Icons.password_rounded),
+          title: Text(l.settingsChangePassword),
+          onTap: () => _changePassword(context, ref),
+        ),
+        ListTile(
           key: const Key('sign-out'),
           leading: Icon(Icons.logout_rounded, color: scheme.error),
           title: Text(l.settingsSignOut, style: TextStyle(color: scheme.error)),
           onTap: () => _signOut(context, ref),
+        ),
+        ListTile(
+          key: const Key('delete-account'),
+          leading: Icon(Icons.person_remove_outlined, color: scheme.error),
+          title: Text(
+            l.settingsDeleteAccount,
+            style: TextStyle(color: scheme.error),
+          ),
+          onTap: () => _deleteAccount(context, ref),
         ),
       ],
     );

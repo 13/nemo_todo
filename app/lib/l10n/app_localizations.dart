@@ -639,6 +639,66 @@ abstract class L {
   /// **'Sign out? This browser forgets your tasks; they stay on your server.'**
   String get settingsSignOutConfirmWeb;
 
+  /// No description provided for @settingsChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get settingsChangePassword;
+
+  /// No description provided for @settingsCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get settingsCurrentPassword;
+
+  /// No description provided for @settingsNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get settingsNewPassword;
+
+  /// No description provided for @settingsPasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed. Your other devices have been signed out.'**
+  String get settingsPasswordChanged;
+
+  /// No description provided for @settingsDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get settingsDeleteAccount;
+
+  /// No description provided for @settingsDeleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes your account on {server}. Lists only you use are deleted with it, and each shared list you own goes to another member. This cannot be undone.'**
+  String settingsDeleteAccountConfirm(String server);
+
+  /// No description provided for @settingsDeleteAccountKeeps.
+  ///
+  /// In en, this message translates to:
+  /// **'Your tasks stay on this device.'**
+  String get settingsDeleteAccountKeeps;
+
+  /// No description provided for @settingsDeleteAccountWipes.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser forgets your tasks too.'**
+  String get settingsDeleteAccountWipes;
+
+  /// No description provided for @settingsAccountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted.'**
+  String get settingsAccountDeleted;
+
+  /// No description provided for @accountErrorWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'That is not your password.'**
+  String get accountErrorWrongPassword;
+
   /// No description provided for @settingsSync.
   ///
   /// In en, this message translates to:

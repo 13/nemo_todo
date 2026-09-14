@@ -325,6 +325,41 @@ class LIt extends L {
       'Uscire? Questo browser dimentica le tue attività; sul tuo server restano.';
 
   @override
+  String get settingsChangePassword => 'Cambia password';
+
+  @override
+  String get settingsCurrentPassword => 'Password attuale';
+
+  @override
+  String get settingsNewPassword => 'Nuova password';
+
+  @override
+  String get settingsPasswordChanged =>
+      'Password cambiata. Gli altri tuoi dispositivi sono stati disconnessi.';
+
+  @override
+  String get settingsDeleteAccount => 'Elimina account';
+
+  @override
+  String settingsDeleteAccountConfirm(String server) {
+    return 'Questo elimina il tuo account su $server. Le liste che usi solo tu vengono eliminate con esso, e ogni lista condivisa di tua proprietà passa a un altro membro. L\'operazione non si può annullare.';
+  }
+
+  @override
+  String get settingsDeleteAccountKeeps =>
+      'Le tue attività restano su questo dispositivo.';
+
+  @override
+  String get settingsDeleteAccountWipes =>
+      'Anche questo browser dimentica le tue attività.';
+
+  @override
+  String get settingsAccountDeleted => 'Account eliminato.';
+
+  @override
+  String get accountErrorWrongPassword => 'Questa non è la tua password.';
+
+  @override
   String get settingsSync => 'Sincronizzazione';
 
   @override

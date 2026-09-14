@@ -153,6 +153,29 @@ class FakeSyncClient implements SyncClient {
     unshared.add('$listId:$username');
   }
 
+  /// Password changes asked for, as `current>next`.
+  final List<String> passwordChanges = [];
+
+  /// Passwords account deletions were confirmed with.
+  final List<String> deletions = [];
+
+  @override
+  Future<void> changePassword({
+    required String current,
+    required String next,
+  }) async {
+    final failure = failWith;
+    if (failure != null) throw failure;
+    passwordChanges.add('$current>$next');
+  }
+
+  @override
+  Future<void> deleteAccount(String password) async {
+    final failure = failWith;
+    if (failure != null) throw failure;
+    deletions.add(password);
+  }
+
   @override
   Future<void> logout() async {}
 

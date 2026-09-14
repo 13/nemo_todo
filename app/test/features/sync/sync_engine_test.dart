@@ -525,6 +525,80 @@ void main() {
     expect(await KvStore(db).get(KvKeys.blobAccount), 'https://nemo.test|ben');
   });
 
+  const fastRetry = (
+    initial: Duration(milliseconds: 10),
+    max: Duration(milliseconds: 20),
+  );
+
+  test('an upload the server failed is tried again with the backoff', () async {
+    final c = await container(retry: fastRetry);
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final photo = (await photos().add('t1', smallJpeg()))!;
+    client.blobFailures[photo.sha256] = const ApiError(500, 'internal');
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(client.uploaded, isEmpty);
+    final state = c.read(syncEngineProvider);
+    expect(state.status, SyncStatus.idle, reason: 'the tasks synced fine');
+    expect(state.error, isNull);
+    expect(client.calls, 1);
+
+    // Nothing else asks for a sync: no edit, no resume, no event.
+    client.blobFailures.clear();
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    expect(client.uploaded, [photo.sha256]);
+    expect(client.pushedPhotoHashes, [photo.sha256]);
+  });
+
+  test('a picture too large to store is not retried', () async {
+    final c = await container(retry: fastRetry);
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final photo = (await photos().add('t1', smallJpeg()))!;
+    client.blobFailures[photo.sha256] = const ApiError(413, 'blob_too_large');
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+
+    expect(client.calls, 1, reason: 'asking again gets the same answer');
+  });
+
+  test('a server without picture routes is not polled for them', () async {
+    const hash =
+        'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+    client.responses.add(pulledPhoto(hash));
+    final c = await container(
+      retry: fastRetry,
+      extra: [photoDownloadEagerProvider.overrideWithValue(true)],
+    );
+
+    // The fake answers 404 for bytes it does not hold, as an old server
+    // with no blob routes would.
+    await c.read(syncEngineProvider.notifier).syncNow();
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+
+    expect(client.downloaded, [hash], reason: 'asked once, not again');
+    expect(client.calls, 1);
+  });
+
+  test('a download the server failed is tried again', () async {
+    const hash =
+        'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+    client.responses.add(pulledPhoto(hash));
+    client.blobs[hash] = Uint8List.fromList([1, 2]);
+    client.blobFailures[hash] = const ApiError(503, 'unavailable');
+    final c = await container(
+      retry: fastRetry,
+      extra: [photoDownloadEagerProvider.overrideWithValue(true)],
+    );
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(await db.missingBlobHashes(), [hash]);
+
+    client.blobFailures.clear();
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    expect(await store.get(hash), [1, 2]);
+  });
+
   test('a photo row that cannot be uploaded yet is held back', () async {
     final c = await container();
     client.failWith = const ApiError(507, 'quota_exceeded');

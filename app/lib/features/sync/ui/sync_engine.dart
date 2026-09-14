@@ -69,6 +69,11 @@ class SyncEngine extends _$SyncEngine {
   var _again = false;
   Duration? _retryIn;
 
+  /// Whether a picture failed to move this run in a way that trying again
+  /// could fix. The tasks may still have synced, so this does not make the
+  /// sync an error; it only asks for another run with the usual backoff.
+  var _blobRetry = false;
+
   @override
   SyncState build() {
     final auth = ref.watch(authControllerProvider);
@@ -147,13 +152,18 @@ class SyncEngine extends _$SyncEngine {
     final client = _client();
     if (client == null) return;
     _running = true;
+    _blobRetry = false;
     state = state.copyWith(status: SyncStatus.syncing, clearError: true);
     try {
       do {
         _again = false;
         await _runOnce(client);
       } while (_again);
-      _retryIn = null;
+      if (_blobRetry) {
+        _scheduleRetry();
+      } else {
+        _retryIn = null;
+      }
       state = state.copyWith(status: SyncStatus.idle);
     } on ApiError catch (e) {
       if (e.isUnauthorized) {
@@ -272,6 +282,7 @@ class SyncEngine extends _$SyncEngine {
     // on the server -- is kept until an upload gets through, rather than
     // cleared at the start of every sync only to be found again, or the
     // photo sits there marked "not uploaded" with no reason given.
+    _noteRetryable(failures);
     final refusal = failures
         .where((e) => e.status == 413 || e.status == 507)
         .lastOrNull;
@@ -299,11 +310,22 @@ class SyncEngine extends _$SyncEngine {
     final db = ref.read(appDatabaseProvider);
     final store = ref.read(photoStoreProvider);
     final missing = await db.missingBlobHashes();
-    await _forEachLimited(missing, (sha256) async {
+    final failures = await _forEachLimited(missing, (sha256) async {
       final bytes = await client.downloadBlob(sha256);
       await store.put(sha256, bytes);
       await db.rememberBlob(sha256, byteSize: bytes.length, state: 'synced');
     });
+    _noteRetryable(failures);
+  }
+
+  /// Asks for a retry when the server failed a transfer in a way that may
+  /// pass. Not for 404 -- a server too old to have blob routes, which would
+  /// be polled forever -- nor 413 or 507, which asking again will not change.
+  /// A failure on this device never reaches here: it is logged instead.
+  void _noteRetryable(List<ApiError> failures) {
+    if (failures.any((e) => !const {404, 413, 507}.contains(e.status))) {
+      _blobRetry = true;
+    }
   }
 
   /// Runs [action] over [items], [_blobConcurrency] at a time, in order.

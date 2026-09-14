@@ -126,9 +126,10 @@ void main() {
     // browser that has never been signed in on holds.
     final lists = await app.db.select(app.db.lists).get();
     expect(lists.map((l) => l.isInbox), [true]);
-    expect((await app.db.outboxChanges()).map((c) => c.rowId), [
-      lists.single.id,
-    ]);
+    expect(
+      (await app.db.outboxChanges(includePhotos: true)).map((c) => c.rowId),
+      [lists.single.id],
+    );
     expect(await KvStore(app.db).get(KvKeys.username), isNull);
   });
 }

@@ -104,6 +104,12 @@ abstract class SyncResponse with _$SyncResponse {
     /// What the server says it is running. Empty from a server old enough
     /// not to say, which is not the same as a mismatch.
     @Default('') String serverVersion,
+
+    /// Whether this server takes photo changes. Servers released before
+    /// photos omit it, and answer a push carrying a photo change they
+    /// cannot decode with a 400 for the whole request, so the app holds its
+    /// photo changes until a response says true.
+    @Default(false) bool photos,
   }) = _SyncResponse;
 
   factory SyncResponse.fromJson(Map<String, dynamic> json) =>

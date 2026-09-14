@@ -170,11 +170,17 @@ extension SyncWrites on AppDatabase {
   });
 
   /// The queued rows as they are right now.
-  Future<List<SyncChange>> outboxChanges() async {
+  ///
+  /// Without [includePhotos], photo entries -- upserts and tombstones alike
+  /// -- are neither returned nor dropped. A server from before photos
+  /// cannot decode one, and refuses the whole request over it, so a single
+  /// deleted picture would stop every task from syncing too.
+  Future<List<SyncChange>> outboxChanges({required bool includePhotos}) async {
     final entries = await select(outbox).get();
     final changes = <SyncChange>[];
     for (final entry in entries) {
       final entity = SyncEntity.values.byName(entry.entity);
+      if (entity == SyncEntity.photo && !includePhotos) continue;
       final change = switch (entity) {
         SyncEntity.list => (await listById(entry.rowId)).let(SyncChange.list),
         SyncEntity.task => (await taskById(entry.rowId)).let(SyncChange.task),

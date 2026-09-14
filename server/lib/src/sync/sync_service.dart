@@ -80,6 +80,9 @@ class SyncService {
           cursor: page.cursor,
           hasMore: page.hasMore,
           serverHlc: _clock.now().toString(),
+          // Said on every response, so an app finds out its server was
+          // upgraded, or rolled back, on the very next sync.
+          photos: true,
         ),
         notifyUserIds: notify,
       );

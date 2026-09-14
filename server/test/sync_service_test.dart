@@ -141,6 +141,17 @@ void main() {
   });
   tearDown(() => db.close());
 
+  test('every response says the server takes photos', () async {
+    final ben = await user('ben');
+    // Asked by a client that cannot read photos too: what the server
+    // accepts does not depend on what the client can read.
+    expect((await push(ben, [], photos: false)).photos, isTrue);
+    expect(
+      (await push(ben, [SyncChange.list(list('l1', dev))])).photos,
+      isTrue,
+    );
+  });
+
   test('push then pull returns rows, owner membership and cursor', () async {
     final ben = await user('ben');
     final l = list('l1', dev);

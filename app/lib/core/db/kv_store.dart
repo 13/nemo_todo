@@ -18,6 +18,10 @@ abstract final class KvKeys {
   /// The server and account (`"$serverUrl|$username"`) that last received
   /// this device's picture bytes.
   static const blobAccount = 'blob_account';
+
+  /// `"true"` once the server's last answer said it takes photo changes.
+  /// Unset or anything else means it has not, and photo changes stay queued.
+  static const serverPhotos = 'server_photos';
 }
 
 /// Typed access to the `kv` table.

@@ -265,12 +265,14 @@ void main() {
   test('an edit made during a push stays queued', () async {
     final clock = testClock('device');
     await db.upsertTask(task('t1', clock.now().toString(), title: 'first'));
-    final queued = await db.outboxChanges();
+    final queued = await db.outboxChanges(includePhotos: true);
     await db.upsertTask(task('t1', clock.now().toString(), title: 'second'));
     await db.ackOutbox(queued);
     expect(await db.outboxCount(), 1);
     expect(
-      ((await db.outboxChanges()).single as SyncChangeTask).row.title,
+      ((await db.outboxChanges(includePhotos: true)).single as SyncChangeTask)
+          .row
+          .title,
       'second',
     );
   });
@@ -523,6 +525,103 @@ void main() {
     expect(client.uploaded, isEmpty);
     expect(client.pushedPhotoHashes, [photo.sha256]);
     expect(await KvStore(db).get(KvKeys.blobAccount), 'https://nemo.test|ben');
+  });
+
+  /// A task, and a picture added and then deleted, on a device whose server
+  /// has no photo support: the upload was refused, and the delete forgot
+  /// the blob, so only the flag holds the tombstone back.
+  Future<({ProviderContainer c, Photo photo})> deletedOnOldServer() async {
+    client
+      ..photos = false
+      ..rejectPhotoChanges = true;
+    final c = await container();
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    final repo = photos();
+    final photo = (await repo.add('t1', smallJpeg()))!;
+    client.blobFailures[photo.sha256] = const ApiError(404, 'not_found');
+    await c.read(syncEngineProvider.notifier).syncNow();
+    await repo.delete(photo.id);
+    await db.upsertTask(task('t2', testClock('a').now().toString()));
+    return (c: c, photo: photo);
+  }
+
+  test('a server without photos gets no photo change, and the tasks', () async {
+    final (:c, :photo) = await deletedOnOldServer();
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.pushedPhotoHashes, isEmpty);
+    expect(client.pushes.expand((p) => p).map((x) => x.rowId), contains('t2'));
+    final state = c.read(syncEngineProvider);
+    expect(state.status, SyncStatus.idle);
+    expect(state.error, isNull);
+    expect(await KvStore(db).get(KvKeys.serverPhotos), 'false');
+    expect((await db.select(db.outbox).get()).map((e) => e.rowId), [
+      photo.id,
+    ], reason: 'the tombstone waits for a server that can take it');
+  });
+
+  test('once the server says it takes photos, the held ones go out', () async {
+    final (:c, :photo) = await deletedOnOldServer();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    client
+      ..photos = true
+      ..rejectPhotoChanges = false;
+    final before = client.calls;
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    final pushed = client.pushes
+        .skip(before)
+        .expand((p) => p)
+        .whereType<SyncChangePhoto>();
+    expect(pushed.single.row.id, photo.id);
+    expect(pushed.single.row.deletedAt, isNotNull);
+    expect(client.calls - before, 2, reason: 'in the same sync, not the next');
+    expect(await db.outboxCount(), 0);
+    expect(await KvStore(db).get(KvKeys.serverPhotos), 'true');
+  });
+
+  test('a server rolled back to one without photos is noticed', () async {
+    await KvStore(db).set(KvKeys.serverPhotos, 'true');
+    final c = await container();
+    await db.upsertTask(task('t1', testClock('a').now().toString()));
+    await photos().add('t1', smallJpeg());
+    client
+      ..photos = false
+      ..rejectPhotoChanges = true;
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(c.read(syncEngineProvider).error, 'bad_request');
+    expect(await KvStore(db).get(KvKeys.serverPhotos), 'false');
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+    expect(await db.taskById('t1'), isNotNull);
+    expect(client.pushes.last.map((x) => x.rowId), [
+      't1',
+    ], reason: 'the tasks are no longer stuck behind the photo');
+  });
+
+  test('signing in to a server without photos pushes no photo rows', () async {
+    await syncedPicture('https://nemo.test|ben');
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    // Left over from the server this device talked to before.
+    await KvStore(db).set(KvKeys.serverPhotos, 'true');
+    client
+      ..photos = false
+      ..rejectPhotoChanges = true;
+    final c = await container();
+
+    await c.read(syncEngineProvider.notifier).onSignedIn();
+
+    expect(client.pushedPhotoHashes, isEmpty);
+    expect(
+      client.pushes.expand((p) => p).map((x) => x.rowId),
+      containsAll(['l1', 't1']),
+    );
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
   });
 
   const fastRetry = (

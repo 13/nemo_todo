@@ -38,7 +38,7 @@ void main() {
     );
     expect((await db.listById('l1'))!.name, 'renamed');
     expect(await db.outboxCount(), 1);
-    final changes = await db.outboxChanges();
+    final changes = await db.outboxChanges(includePhotos: true);
     expect((changes.single as SyncChangeList).row.name, 'renamed');
     expect(
       await KvStore(db).get(KvKeys.hlcLast),
@@ -103,7 +103,7 @@ void main() {
   test('ackOutbox skips rows edited after the push', () async {
     final t = task('t1', 'l1');
     await db.upsertTask(t);
-    final pushed = await db.outboxChanges();
+    final pushed = await db.outboxChanges(includePhotos: true);
     await db.upsertTask(
       t.copyWith(title: 'edited', updatedAt: clock.now().toString()),
     );
@@ -113,7 +113,7 @@ void main() {
       1,
       reason: 'the later edit must still be pushed',
     );
-    await db.ackOutbox(await db.outboxChanges());
+    await db.ackOutbox(await db.outboxChanges(includePhotos: true));
     expect(await db.outboxCount(), 0);
   });
 
@@ -158,7 +158,9 @@ void main() {
     await db.enqueueAll();
     expect(await db.outboxCount(), 2);
     await db.dropOutbox(SyncEntity.task, 't1');
-    expect((await db.outboxChanges()).map((c) => c.rowId), ['l1']);
+    expect((await db.outboxChanges(includePhotos: true)).map((c) => c.rowId), [
+      'l1',
+    ]);
   });
 
   test(
@@ -220,7 +222,8 @@ void main() {
       );
 
       expect(
-        (await db.outboxChanges()).whereType<SyncChangePhoto>(),
+        (await db.outboxChanges(includePhotos: true))
+            .whereType<SyncChangePhoto>(),
         isEmpty,
         reason: 'the server would hold a row whose bytes it cannot serve',
       );
@@ -228,9 +231,62 @@ void main() {
 
       await db.markBlobSynced(hash);
       expect(
-        (await db.outboxChanges()).whereType<SyncChangePhoto>().single.row.id,
+        (await db.outboxChanges(includePhotos: true))
+            .whereType<SyncChangePhoto>()
+            .single
+            .row
+            .id,
         'p1',
       );
+    },
+  );
+
+  test(
+    'photo entries stay queued, unsent, for a server without photos',
+    () async {
+      final clock = testClock('a');
+      const hash =
+          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+      final stamp = clock.now().toString();
+      await db.upsertTask(
+        Task(
+          id: 't1',
+          listId: 'l1',
+          title: 'T',
+          sortKey: 'V',
+          updatedAt: stamp,
+        ),
+      );
+      Photo photo(String id, {bool deleted = false}) {
+        final at = clock.now().toString();
+        return Photo(
+          id: id,
+          taskId: 't1',
+          sha256: hash,
+          byteSize: 12,
+          width: 4,
+          height: 3,
+          sortKey: 'V',
+          updatedAt: at,
+          deletedAt: deleted ? at : null,
+        );
+      }
+
+      // A tombstone whose blob row is already gone: nothing holds it back
+      // but the flag.
+      await db.upsertPhoto(photo('p1', deleted: true));
+      // Queued, but its row is gone: without photos it is not even looked
+      // at, so it is not dropped either.
+      await db.upsertPhoto(photo('p2'));
+      await (db.delete(db.photos)..where((t) => t.id.equals('p2'))).go();
+
+      final without = await db.outboxChanges(includePhotos: false);
+      expect(without.map((c) => c.rowId), ['t1']);
+      expect(await db.outboxCount(), 3, reason: 'nothing was dropped');
+
+      final withPhotos = await db.outboxChanges(includePhotos: true);
+      expect(withPhotos.map((c) => c.rowId), unorderedEquals(['t1', 'p1']));
+      expect(await db.outboxCount(), 2, reason: 'the orphan goes as before');
     },
   );
 

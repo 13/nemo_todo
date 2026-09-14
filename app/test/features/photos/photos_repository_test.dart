@@ -100,7 +100,11 @@ void main() {
     // so nothing queued to push either.
     expect(await db.pendingBlobs(), isEmpty);
     expect(await repo.watchByTask('t1').first, isEmpty);
-    expect((await db.outboxChanges()).whereType<SyncChangePhoto>(), isEmpty);
+    expect(
+      (await db.outboxChanges(includePhotos: true))
+          .whereType<SyncChangePhoto>(),
+      isEmpty,
+    );
   });
 
   test(
@@ -114,7 +118,8 @@ void main() {
       final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
 
       expect(
-        (await db.outboxChanges()).whereType<SyncChangePhoto>(),
+        (await db.outboxChanges(includePhotos: true))
+            .whereType<SyncChangePhoto>(),
         isEmpty,
         reason: 'the server would hold a row whose bytes it cannot serve',
       );
@@ -122,7 +127,11 @@ void main() {
       await db.markBlobSynced(photo.sha256);
 
       expect(
-        (await db.outboxChanges()).whereType<SyncChangePhoto>().single.row.id,
+        (await db.outboxChanges(includePhotos: true))
+            .whereType<SyncChangePhoto>()
+            .single
+            .row
+            .id,
         photo.id,
       );
     },
@@ -174,10 +183,11 @@ void main() {
       isNotNull,
       reason: 'pinned again until that upload lands',
     );
-    Future<List<String>> pushable() async => (await db.outboxChanges())
-        .whereType<SyncChangePhoto>()
-        .map((c) => c.row.id)
-        .toList();
+    Future<List<String>> pushable() async =>
+        (await db.outboxChanges(includePhotos: true))
+            .whereType<SyncChangePhoto>()
+            .map((c) => c.row.id)
+            .toList();
     expect(await pushable(), isEmpty, reason: 'both rows name those bytes');
 
     await db.markBlobSynced(first.sha256);

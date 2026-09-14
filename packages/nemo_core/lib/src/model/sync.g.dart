@@ -136,6 +136,7 @@ _SyncResponse _$SyncResponseFromJson(Map<String, dynamic> json) =>
           const <String, List<ListMember>>{},
       hasMore: json['has_more'] as bool? ?? false,
       serverVersion: json['server_version'] as String? ?? '',
+      photos: json['photos'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$SyncResponseToJson(_SyncResponse instance) =>
@@ -149,4 +150,5 @@ Map<String, dynamic> _$SyncResponseToJson(_SyncResponse instance) =>
       ),
       'has_more': instance.hasMore,
       'server_version': instance.serverVersion,
+      'photos': instance.photos,
     };

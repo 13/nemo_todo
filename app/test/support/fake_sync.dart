@@ -24,6 +24,14 @@ class FakeSyncClient implements SyncClient {
   ApiError? failWith;
   int calls = 0;
 
+  /// What every answer says about taking photo changes, scripted ones
+  /// included. False plays a server from before photos.
+  bool photos = true;
+
+  /// When set, `/sync` refuses a push carrying a photo change the way a
+  /// server from before photos does: a 400 for the whole request.
+  bool rejectPhotoChanges = false;
+
   /// Runs while a push is in flight, so a test can make the device edit a
   /// row after its changes were collected but before the answer arrives.
   Future<void> Function()? duringSync;
@@ -97,7 +105,11 @@ class FakeSyncClient implements SyncClient {
     await duringSync?.call();
     final failure = failWith;
     if (failure != null) throw failure;
-    return responses.isEmpty
+    if (rejectPhotoChanges &&
+        request.changes.any((c) => c.entity == SyncEntity.photo)) {
+      throw const ApiError(400, 'bad_request');
+    }
+    final response = responses.isEmpty
         ? SyncResponse(
             cursor: request.cursor,
             members: memberMap,
@@ -108,6 +120,7 @@ class FakeSyncClient implements SyncClient {
             ).toString(),
           )
         : responses.removeAt(0);
+    return response.copyWith(photos: photos);
   }
 
   @override

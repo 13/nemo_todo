@@ -45,6 +45,22 @@ void main() {
     expect(back.copyWith(photos: false), old);
   });
 
+  test('a response says whether the server takes photos, default not', () {
+    // Servers released before photos send no such key, and cannot decode
+    // a photo change: the app must treat them as not taking any.
+    final old = SyncResponse.fromJson({'cursor': 3, 'server_hlc': 'h'});
+    expect(old.photos, isFalse);
+
+    const res = SyncResponse(cursor: 3, serverHlc: 'h', photos: true);
+    final json = jsonDecode(jsonEncode(res.toJson())) as Map<String, dynamic>;
+    expect(json['photos'], isTrue);
+    final back = SyncResponse.fromJson(json);
+    expect(back, res);
+    expect(back.photos, isTrue);
+    expect(back, isNot(old));
+    expect(back.copyWith(photos: false), old);
+  });
+
   test('a request carrying keys this build does not know still decodes', () {
     // A newer app talking to an older server relies on unknown keys being
     // ignored rather than refused.

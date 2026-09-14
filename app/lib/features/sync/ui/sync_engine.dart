@@ -197,12 +197,44 @@ class SyncEngine extends _$SyncEngine {
     await _uploadPending(client);
     while (hasMore) {
       final cursor = int.tryParse(await kv.get(KvKeys.cursor) ?? '0') ?? 0;
+      // A server from before photos refuses the whole request over a photo
+      // change it cannot decode, tasks and all, and every later request
+      // carries the same queue. So photo changes wait until the server has
+      // said it takes them.
+      final serverPhotos = await kv.get(KvKeys.serverPhotos) == 'true';
       // Only the first request of a round carries the queue; later pages
       // are pure pulls.
-      final changes = pushed ? <SyncChange>[] : await db.outboxChanges();
-      final response = await client.sync(
-        SyncRequest(cursor: cursor, changes: changes, photos: true),
-      );
+      final changes = pushed
+          ? <SyncChange>[]
+          : await db.outboxChanges(includePhotos: serverPhotos);
+      final SyncResponse response;
+      try {
+        response = await client.sync(
+          SyncRequest(cursor: cursor, changes: changes, photos: true),
+        );
+      } on ApiError catch (e) {
+        // What a server rolled back to a release without photos answers a
+        // photo change with. Left saying true, the next request would carry
+        // the same change and be refused the same way, forever; this way
+        // the retry goes without photos, and the answer to it says again
+        // whether the server takes them.
+        if (e.status == 400 && e.code == 'bad_request') {
+          await kv.set(KvKeys.serverPhotos, 'false');
+        }
+        rethrow;
+      }
+      await kv.set(KvKeys.serverPhotos, '${response.photos}');
+      // The server has just said it takes photos, and this request did not
+      // carry the ones waiting for that: go round again now rather than at
+      // the next edit. Only for photos that would actually be sent -- a row
+      // still waiting on its upload would send the loop round for nothing.
+      if (!pushed &&
+          !serverPhotos &&
+          response.photos &&
+          (await db.outboxChanges(includePhotos: true))
+              .any((c) => c.entity == SyncEntity.photo)) {
+        _again = true;
+      }
       pushed = true;
       await db.ackOutbox(changes);
       for (final rejected in response.rejected) {
@@ -384,6 +416,10 @@ class SyncEngine extends _$SyncEngine {
         }
       }
       await kv.set(KvKeys.blobAccount, account);
+      // What the last server said about photos says nothing about this
+      // one. Unsaid, the first request holds photo changes back and its
+      // answer settles it, instead of an older server refusing the lot.
+      await kv.set(KvKeys.serverPhotos, null);
     }
     await db.enqueueAll();
     await syncNow();

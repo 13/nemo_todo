@@ -276,6 +276,14 @@ class SyncEngine extends _$SyncEngine {
     final now = ref.read(nowProvider)();
     await kv.set(KvKeys.lastSyncAt, '${now.millisecondsSinceEpoch}');
     state = state.copyWith(lastSyncAt: now);
+    // Whatever this device holds as `synced` -- uploaded or downloaded --
+    // is now known to be this account's. Recorded after every sync, not
+    // only at sign-in or when an upload lands: a device that was signed in
+    // before it was upgraded, and only ever downloads, would otherwise
+    // record nothing, and a later switch of account would not know to
+    // upload its pictures again.
+    final account = _account();
+    if (account != null) await kv.set(KvKeys.blobAccount, account);
   }
 
   /// How many blobs move at once. Two: enough to keep a home connection
@@ -323,6 +331,8 @@ class SyncEngine extends _$SyncEngine {
     } else if (landed) {
       state = state.copyWith(clearPhotoError: true);
     }
+    // Not left to the end of the sync alone: the push after this can fail,
+    // and these bytes are this account's all the same.
     final account = _account();
     if (landed && account != null) {
       await ref.read(kvStoreProvider).set(KvKeys.blobAccount, account);

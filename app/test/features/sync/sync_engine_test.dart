@@ -45,6 +45,7 @@ void main() {
   Future<ProviderContainer> container({
     bool connected = true,
     RetryPolicy? retry,
+    String username = 'ben',
     // Riverpod does not export the type of its overrides; see pumpApp.
     List<Object> extra = const [],
   }) async {
@@ -53,12 +54,12 @@ void main() {
         if (retry != null) syncRetryPolicyProvider.overrideWithValue(retry),
         appDatabaseProvider.overrideWithValue(db),
         bootstrapProvider.overrideWithValue(
-          const AppBootstrap(
+          AppBootstrap(
             nodeId: 'device',
             hlcLast: null,
             themeMode: ThemeMode.system,
             serverUrl: 'https://nemo.test',
-            username: 'ben',
+            username: username,
           ),
         ),
         nowProvider.overrideWithValue(() => testNow),
@@ -526,6 +527,38 @@ void main() {
     expect(client.pushedPhotoHashes, [photo.sha256]);
     expect(await KvStore(db).get(KvKeys.blobAccount), 'https://nemo.test|ben');
   });
+
+  test(
+    'a device that only ever downloaded pictures still knows whose they '
+    'are, and uploads them before a different account gets the rows',
+    () async {
+      const hash =
+          '1111111111111111111111111111111111111111111111111111111111111111';
+      client.responses.add(pulledPhoto(hash));
+      client.blobs[hash] = Uint8List.fromList([1, 2, 3]);
+      // Signed in before the app was upgraded, so no sign-in ever recorded
+      // the account, and nothing was uploaded to record it either.
+      final first = await container(
+        extra: [photoDownloadEagerProvider.overrideWithValue(true)],
+      );
+      await first.read(syncEngineProvider.notifier).syncNow();
+      expect((await db.select(db.blobs).get()).single.state, 'synced');
+      expect(
+        await KvStore(db).get(KvKeys.blobAccount),
+        'https://nemo.test|ben',
+      );
+      first.dispose();
+
+      // Anna signs in on the same device, against a server without the bytes.
+      client = FakeSyncClient([]);
+      final second = await container(username: 'anna');
+      await second.read(syncEngineProvider.notifier).onSignedIn();
+
+      expect(client.uploaded, [hash]);
+      expect(client.pushedPhotoHashes, [hash]);
+      expect(client.uploadedBefore(hash), isTrue);
+    },
+  );
 
   /// A task, and a picture added and then deleted, on a device whose server
   /// has no photo support: the upload was refused, and the delete forgot

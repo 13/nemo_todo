@@ -146,7 +146,7 @@ an alpha channel. `assets/logo` holds the sources; every launcher and web
 icon is rendered from them, so the mark is edited in one place:
 
 ```bash
-tool/generate_icons.sh    # needs rsvg-convert (librsvg)
+tool/generate_icons.sh    # needs rsvg-convert (librsvg) and magick (ImageMagick)
 tool/check_icons.sh       # fails if one is missing or still Flutter's own
 ```
 

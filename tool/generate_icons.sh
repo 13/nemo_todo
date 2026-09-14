@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Renders every launcher and web icon from the SVG masters in assets/logo.
-# Needs rsvg-convert (librsvg). Run from anywhere:
+# Needs rsvg-convert (librsvg) and magick (ImageMagick). Run from anywhere:
 #   tool/generate_icons.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -13,8 +13,17 @@ command -v rsvg-convert > /dev/null || {
   echo "rsvg-convert not found; install librsvg" >&2
   exit 1
 }
+command -v magick > /dev/null || {
+  echo "magick not found; install ImageMagick" >&2
+  exit 1
+}
 
-render() { rsvg-convert -w "$2" -h "$2" "$1" -o "$3"; }
+# rsvg-convert writes creation metadata and a middling compression level;
+# neither does anything for an icon but add bytes to every build.
+render() {
+  rsvg-convert -w "$2" -h "$2" "$1" -o "$3"
+  magick "$3" -strip -define png:compression-level=9 "$3"
+}
 
 # Android legacy launcher icon, one per density.
 for entry in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do

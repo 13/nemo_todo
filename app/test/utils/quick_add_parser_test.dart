@@ -33,6 +33,29 @@ void main() {
     expect(parse('Standup Monday').dueAt, dayStartMsFrom(now, 7));
   });
 
+  test('tomorrow and weekdays land on midnight across a clock change', () {
+    // Europe's clocks go back on Sunday 25 October 2026; run with
+    // TZ=Europe/Berlin to exercise the change.
+    final sunday = DateTime(2026, 10, 25, 10);
+    DateTime? due(String text) {
+      final ms = parseQuickAdd(text, now: sunday, locale: 'en').dueAt;
+      return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+    }
+
+    expect(due('Milk tomorrow'), DateTime(2026, 10, 26));
+    expect(due('Bins friday'), DateTime(2026, 10, 30));
+    expect(
+      DateTime.fromMillisecondsSinceEpoch(
+        parseQuickAdd(
+          'Milk tomorrow',
+          now: DateTime(2026, 3, 29, 10),
+          locale: 'en',
+        ).dueAt!,
+      ),
+      DateTime(2026, 3, 30),
+    );
+  });
+
   test('a date word inside the title is part of the title', () {
     final q = parse('Buy the Sunday paper');
     expect(q.title, 'Buy the Sunday paper');

@@ -103,6 +103,29 @@ void main() {
     },
   );
 
+  test('today runs to midnight on the day the clocks go back', () async {
+    // 25 October 2026 lasts 25 hours in Europe; run with TZ=Europe/Berlin.
+    final sunday = DateTime(2026, 10, 25, 12);
+    await tasks.create(
+      listId: inbox,
+      title: 'late evening',
+      dueAt: composeDue(sunday, hour: 23, minute: 30),
+      dueHasTime: true,
+    );
+    await tasks.create(
+      listId: inbox,
+      title: 'monday',
+      dueAt: DateTime(2026, 10, 26).millisecondsSinceEpoch,
+    );
+
+    expect((await tasks.watchToday(sunday).first).map((t) => t.title), [
+      'late evening',
+    ]);
+    expect((await tasks.watchUpcoming(sunday).first).map((t) => t.title), [
+      'monday',
+    ]);
+  });
+
   test('tasks of a deleted list disappear from today and search', () async {
     final lists = ListsRepository(db, testClock('x'), sequentialIds('l'));
     final work = await lists.create(name: 'Work');

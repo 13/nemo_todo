@@ -53,7 +53,7 @@ class UpcomingScreen extends ConsumerWidget {
                 title: dayHeader(
                   l,
                   locale,
-                  startOfDay(now).add(Duration(days: days)),
+                  DateTime(now.year, now.month, now.day + days),
                   now,
                 ),
                 tasks: byDay[days]!,

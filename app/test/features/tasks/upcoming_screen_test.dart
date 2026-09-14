@@ -46,6 +46,33 @@ void main() {
     expect(find.text('No date'), findsNothing);
   });
 
+  appTest('day headers name the right date across a clock change', (
+    tester,
+  ) async {
+    // 25 October 2026 lasts 25 hours in Europe; run with TZ=Europe/Berlin.
+    final sunday = DateTime(2026, 10, 25, 12);
+    await pumpApp(
+      tester,
+      initialLocation: Routes.upcoming,
+      now: sunday,
+      seed: (db, inbox) async {
+        await TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => sunday,
+        ).create(
+          listId: inbox.id,
+          title: 'Tuesday task',
+          dueAt: DateTime(2026, 10, 27).millisecondsSinceEpoch,
+        );
+      },
+    );
+    expect(find.text('Tuesday task'), findsOneWidget);
+    expect(find.text('Tue, Oct 27'), findsOneWidget);
+  });
+
   appTest('empty state and quick add defaults to tomorrow', (tester) async {
     final app = await pumpApp(tester, initialLocation: Routes.upcoming);
     expect(find.textContaining('No upcoming tasks'), findsOneWidget);

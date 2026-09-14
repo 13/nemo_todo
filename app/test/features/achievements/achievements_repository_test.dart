@@ -68,6 +68,19 @@ void main() {
     expect(await repo.todayIsClear(), isTrue);
   });
 
+  test('Today is not clear while a late task on a long day is open', () async {
+    // 25 October 2026 lasts 25 hours in Europe; run with TZ=Europe/Berlin.
+    final sunday = DateTime(2026, 10, 25, 12);
+    await tasks.create(
+      listId: inbox,
+      title: 'Late',
+      dueAt: composeDue(sunday, hour: 23, minute: 30),
+      dueHasTime: true,
+    );
+    final onSunday = AchievementsRepository(db, now: () => sunday);
+    expect(await onSunday.todayIsClear(), isFalse);
+  });
+
   test('a cleared day is counted once', () async {
     await repo.recordClearedDay();
     await repo.recordClearedDay();

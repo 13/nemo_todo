@@ -82,6 +82,8 @@ Future<TestApp> pumpApp(
   // so they start off unless a test is about them.
   bool celebrate = false,
   CelebrationSound? sound,
+  // The app's clock; [testNow] unless a test is about a particular day.
+  DateTime? now,
 }) async {
   final db = testDatabase();
   addTearDown(db.close);
@@ -105,7 +107,7 @@ Future<TestApp> pumpApp(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
       bootstrapProvider.overrideWithValue(boot),
-      nowProvider.overrideWithValue(() => testNow),
+      nowProvider.overrideWithValue(() => now ?? testNow),
       idGeneratorProvider.overrideWithValue(sequentialIds()),
       // Opened in `main` in the app; a connected sync reads it.
       photoStoreProvider.overrideWithValue(photoStore ?? MemoryPhotoStore()),

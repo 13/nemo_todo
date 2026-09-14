@@ -946,4 +946,31 @@ class LIt extends L {
   @override
   String get achievementChecklist5Description =>
       'Completa un\'attività con 5 o più sottoattività';
+
+  @override
+  String get achievementsTitle => 'Traguardi';
+
+  @override
+  String achievementsUnlockedCount(int unlocked, int total) {
+    return '$unlocked di $total sbloccati';
+  }
+
+  @override
+  String achievementsProgress(int value, int target) {
+    return '$value / $target';
+  }
+
+  @override
+  String get achievementsUnlocked => 'Sbloccato';
+
+  @override
+  String achievementsStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count giorni di fila',
+      one: '1 giorno di fila',
+    );
+    return '$_temp0';
+  }
 }

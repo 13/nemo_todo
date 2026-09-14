@@ -944,4 +944,31 @@ class LDe extends L {
   @override
   String get achievementChecklist5Description =>
       'Erledige eine Aufgabe mit 5 oder mehr Unteraufgaben';
+
+  @override
+  String get achievementsTitle => 'Erfolge';
+
+  @override
+  String achievementsUnlockedCount(int unlocked, int total) {
+    return '$unlocked von $total freigeschaltet';
+  }
+
+  @override
+  String achievementsProgress(int value, int target) {
+    return '$value / $target';
+  }
+
+  @override
+  String get achievementsUnlocked => 'Freigeschaltet';
+
+  @override
+  String achievementsStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage in Folge',
+      one: '1 Tag in Folge',
+    );
+    return '$_temp0';
+  }
 }

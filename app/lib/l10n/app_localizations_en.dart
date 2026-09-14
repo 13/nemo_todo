@@ -936,4 +936,31 @@ class LEn extends L {
   @override
   String get achievementChecklist5Description =>
       'Complete a task with 5 or more subtasks';
+
+  @override
+  String get achievementsTitle => 'Achievements';
+
+  @override
+  String achievementsUnlockedCount(int unlocked, int total) {
+    return '$unlocked of $total unlocked';
+  }
+
+  @override
+  String achievementsProgress(int value, int target) {
+    return '$value / $target';
+  }
+
+  @override
+  String get achievementsUnlocked => 'Unlocked';
+
+  @override
+  String achievementsStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day streak',
+      one: '1-day streak',
+    );
+    return '$_temp0';
+  }
 }

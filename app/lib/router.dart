@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/router/transitions.dart';
+import 'package:nemo/features/achievements/ui/achievements_screen.dart';
 import 'package:nemo/features/auth/ui/account_screen.dart';
 import 'package:nemo/features/auth/ui/starting_screen.dart';
 import 'package:nemo/features/lists/ui/list_detail_screen.dart';
@@ -21,6 +22,7 @@ abstract final class Routes {
   static const search = '/search';
   static const settings = '/settings';
   static const account = '/settings/account';
+  static const achievements = '/settings/achievements';
 
   /// Where the web app waits while it looks for a stored session, and
   /// where it sends anyone it does not find one for.
@@ -116,6 +118,11 @@ abstract final class AppRouter {
             path: 'account',
             pageBuilder: (_, s) =>
                 fadeThroughPage(child: const AccountScreen(), state: s),
+          ),
+          GoRoute(
+            path: 'achievements',
+            pageBuilder: (_, s) =>
+                fadeThroughPage(child: const AchievementsScreen(), state: s),
           ),
         ],
       ),

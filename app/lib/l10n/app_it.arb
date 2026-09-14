@@ -244,5 +244,10 @@
   "achievementOnTime25Title": "Puntuale",
   "achievementOnTime25Description": "Completa 25 attività prima della scadenza",
   "achievementChecklist5Title": "Maestro delle checklist",
-  "achievementChecklist5Description": "Completa un'attività con 5 o più sottoattività"
+  "achievementChecklist5Description": "Completa un'attività con 5 o più sottoattività",
+  "achievementsTitle": "Traguardi",
+  "achievementsUnlockedCount": "{unlocked} di {total} sbloccati",
+  "achievementsProgress": "{value} / {target}",
+  "achievementsUnlocked": "Sbloccato",
+  "achievementsStreak": "{count, plural, =1{1 giorno di fila} other{{count} giorni di fila}}"
 }

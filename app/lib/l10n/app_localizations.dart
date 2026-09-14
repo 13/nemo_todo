@@ -1568,6 +1568,36 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Complete a task with 5 or more subtasks'**
   String get achievementChecklist5Description;
+
+  /// No description provided for @achievementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievementsTitle;
+
+  /// No description provided for @achievementsUnlockedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{unlocked} of {total} unlocked'**
+  String achievementsUnlockedCount(int unlocked, int total);
+
+  /// No description provided for @achievementsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} / {target}'**
+  String achievementsProgress(int value, int target);
+
+  /// No description provided for @achievementsUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked'**
+  String get achievementsUnlocked;
+
+  /// No description provided for @achievementsStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1-day streak} other{{count}-day streak}}'**
+  String achievementsStreak(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

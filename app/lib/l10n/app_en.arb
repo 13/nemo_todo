@@ -504,5 +504,19 @@
   "achievementOnTime25Title": "Punctual",
   "achievementOnTime25Description": "Complete 25 tasks before they are due",
   "achievementChecklist5Title": "Checklist master",
-  "achievementChecklist5Description": "Complete a task with 5 or more subtasks"
+  "achievementChecklist5Description": "Complete a task with 5 or more subtasks",
+  "achievementsTitle": "Achievements",
+  "achievementsUnlockedCount": "{unlocked} of {total} unlocked",
+  "@achievementsUnlockedCount": {
+    "placeholders": {"unlocked": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "achievementsProgress": "{value} / {target}",
+  "@achievementsProgress": {
+    "placeholders": {"value": {"type": "int"}, "target": {"type": "int"}}
+  },
+  "achievementsUnlocked": "Unlocked",
+  "achievementsStreak": "{count, plural, =1{1-day streak} other{{count}-day streak}}",
+  "@achievementsStreak": {
+    "placeholders": {"count": {"type": "int"}}
+  }
 }

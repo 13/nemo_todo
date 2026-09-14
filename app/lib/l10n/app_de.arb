@@ -244,5 +244,10 @@
   "achievementOnTime25Title": "Pünktlich",
   "achievementOnTime25Description": "Erledige 25 Aufgaben vor ihrer Fälligkeit",
   "achievementChecklist5Title": "Checklisten-Profi",
-  "achievementChecklist5Description": "Erledige eine Aufgabe mit 5 oder mehr Unteraufgaben"
+  "achievementChecklist5Description": "Erledige eine Aufgabe mit 5 oder mehr Unteraufgaben",
+  "achievementsTitle": "Erfolge",
+  "achievementsUnlockedCount": "{unlocked} von {total} freigeschaltet",
+  "achievementsProgress": "{value} / {target}",
+  "achievementsUnlocked": "Freigeschaltet",
+  "achievementsStreak": "{count, plural, =1{1 Tag in Folge} other{{count} Tage in Folge}}"
 }

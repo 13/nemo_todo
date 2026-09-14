@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:nemo/core/db/app_tables.dart';
+import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/db/sync_tables.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -42,6 +43,11 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(photos);
         await m.create(photosTaskId);
         await m.createTable(blobs);
+        // While this device ran a build without photos, the server skipped
+        // photo changes for it and moved its cursor past them. Starting the
+        // change log over -- the path every first sync takes -- is what
+        // brings those pictures back; rows it already holds merge as no-ops.
+        await (delete(kv)..where((t) => t.key.equals(KvKeys.cursor))).go();
       }
     },
     beforeOpen: (details) async {

@@ -13,6 +13,22 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## Unreleased
+
+### Added
+
+- About in Settings shows the logo, which build this is -- a release, a
+  development build from main, or a local one -- with its build number, the
+  day it was built and the commit it came from, and the same for the server
+  it is connected to.
+- Tapping About opens the app's details and the licences of the software it
+  is built on.
+- "Copy details" puts the app and server versions, commits, build dates and
+  platform on the clipboard for a bug report, without the server's address.
+- "Source code" opens the project on GitHub.
+- The server reports the commit and build date on `/healthz` beside its
+  version: `{"status":"ok","version":"0.7.0","commit":"…","builtAt":"…"}`.
+
 ## 0.6.0 - 2026-09-14
 
 ### Added

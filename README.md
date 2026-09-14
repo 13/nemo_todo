@@ -242,22 +242,37 @@ The server reports its own version, so "is the thing I am talking to the
 thing I just deployed?" has an answer that does not involve guessing:
 
 ```bash
-curl -s https://nemo.example/healthz     # {"status":"ok","version":"0.5.0"}
+curl -s https://nemo.example/healthz
+# {"status":"ok","version":"0.7.0","commit":"33f0001…","builtAt":"2026-09-14T07:00:00Z"}
 ```
 
 That endpoint needs no account and sits outside `/api/v1`, so it answers
 even when the web app will not start. The same version rides on every sync,
-and Settings shows it beside the app's own:
+and About in Settings shows it beside the app's own, with how each was
+built:
 
 ```
 nemo
-App 0.5.0 · Server 0.5.0
+App 0.7.0 · Server 0.7.0
+Release build 7 · Sep 14, 2026 · 33f0001
+Server Sep 14, 2026 · 33f0001
 ```
 
 A browser can hold a page in cache long after the server has moved on, and
 then the two disagree; the web app says so and tells you to reload. The
-number is baked into the image at build time from the release tag, so a
-container you built yourself reports `dev`.
+version, commit and build date are baked in at build time -- the release
+workflow and CI pass them to the Dockerfile and to `flutter build` -- so a
+container or app you built yourself reports `dev`, says "Local build", and
+claims no date or commit rather than inventing one. To stamp your own:
+
+```bash
+docker build --build-arg NEMO_VERSION=0.7.0 \
+  --build-arg NEMO_COMMIT=$(git rev-parse HEAD) \
+  --build-arg NEMO_BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t nemo .
+```
+
+"Copy details" under About puts all of that on the clipboard, without the
+server's address, for pasting into a bug report.
 
 Forgotten password:
 

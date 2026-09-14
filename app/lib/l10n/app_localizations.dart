@@ -471,6 +471,12 @@ abstract class L {
   /// **'The server has no room for more pictures.'**
   String get photosServerFull;
 
+  /// No description provided for @photosPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {index} of {count}'**
+  String photosPhoto(int index, int count);
+
   /// No description provided for @photosNotUploaded.
   ///
   /// In en, this message translates to:

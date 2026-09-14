@@ -217,6 +217,11 @@ class LDe extends L {
   String get photosServerFull => 'Der Server hat keinen Platz mehr für Bilder.';
 
   @override
+  String photosPhoto(int index, int count) {
+    return 'Foto $index von $count';
+  }
+
+  @override
   String get photosNotUploaded => 'Noch nicht hochgeladen';
 
   @override

@@ -116,17 +116,23 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
               for (var i = 0; i < photos.length; i++)
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    key: Key('photo-${photos[i].id}'),
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () => showPhotoViewer(
-                      context,
-                      taskId: widget.taskId,
-                      index: i,
-                    ),
-                    child: PhotoThumbnail(
-                      sha256: photos[i].sha256,
-                      size: _size,
+                  // A picture has no text of its own, so a screen reader
+                  // would announce an unnamed button without this.
+                  child: Semantics(
+                    button: true,
+                    label: l.photosPhoto(i + 1, photos.length),
+                    child: InkWell(
+                      key: Key('photo-${photos[i].id}'),
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () => showPhotoViewer(
+                        context,
+                        taskId: widget.taskId,
+                        index: i,
+                      ),
+                      child: PhotoThumbnail(
+                        sha256: photos[i].sha256,
+                        size: _size,
+                      ),
                     ),
                   ),
                 ),

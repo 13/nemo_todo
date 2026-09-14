@@ -85,6 +85,9 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('photo-p1')), findsOneWidget);
+    // Named for a screen reader, followed by the "not uploaded" badge this
+    // unsynced picture carries, which reads as part of the same button.
+    expect(find.bySemanticsLabel(RegExp(r'^Photo 1 of 1\b')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('photo-p1')));
     await tester.pumpAndSettle();

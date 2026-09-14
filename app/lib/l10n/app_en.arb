@@ -83,6 +83,17 @@
   "photosNotAnImage": "That file is not a picture.",
   "photosTooLarge": "That picture is too large for this server.",
   "photosServerFull": "The server has no room for more pictures.",
+  "photosPhoto": "Photo {index} of {count}",
+  "@photosPhoto": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "photosNotUploaded": "Not uploaded yet",
   "tasksList": "List",
   "tasksDeleteConfirm": "Delete this task?",

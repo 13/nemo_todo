@@ -62,6 +62,7 @@
   "photosNotAnImage": "Questo file non è un'immagine.",
   "photosTooLarge": "Questa immagine è troppo grande per questo server.",
   "photosServerFull": "Il server non ha più spazio per le immagini.",
+  "photosPhoto": "Foto {index} di {count}",
   "photosNotUploaded": "Non ancora caricato",
   "tasksList": "Lista",
   "tasksDeleteConfirm": "Eliminare questa attività?",

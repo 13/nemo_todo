@@ -47,6 +47,8 @@ would ship without them, and nothing would say so.
 - The mark is a checkmark cut out of a teal disc rather than a clownfish:
   the launcher icon, the splash screen, the favicon, the web app's icon, the
   status bar icon reminders post with, and the mark inside the app.
+- A screen reader names each photo on a task -- "Photo 2 of 3" -- instead of
+  announcing a button with no name.
 
 ## 0.5.0 - 2026-09-11
 

@@ -1,5 +1,8 @@
 name: nemo_server
 description: nemo sync server. Serves the API and the built web app.
+# Not the version the server reports. That is NEMO_VERSION, which the release
+# workflow sets from the tag, and the tag has to match app/pubspec.yaml: the
+# app and server ship together under one number. Nothing reads this one.
 version: 0.1.0
 publish_to: none
 resolution: workspace

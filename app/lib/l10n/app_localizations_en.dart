@@ -217,6 +217,11 @@ class LEn extends L {
   String get photosServerFull => 'The server has no room for more pictures.';
 
   @override
+  String photosPhoto(int index, int count) {
+    return 'Photo $index of $count';
+  }
+
+  @override
   String get photosNotUploaded => 'Not uploaded yet';
 
   @override

@@ -62,6 +62,7 @@
   "photosNotAnImage": "Diese Datei ist kein Bild.",
   "photosTooLarge": "Dieses Bild ist zu groß für diesen Server.",
   "photosServerFull": "Der Server hat keinen Platz mehr für Bilder.",
+  "photosPhoto": "Foto {index} von {count}",
   "photosNotUploaded": "Noch nicht hochgeladen",
   "tasksList": "Liste",
   "tasksDeleteConfirm": "Diese Aufgabe löschen?",

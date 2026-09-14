@@ -218,6 +218,11 @@ class LIt extends L {
   String get photosServerFull => 'Il server non ha più spazio per le immagini.';
 
   @override
+  String photosPhoto(int index, int count) {
+    return 'Foto $index di $count';
+  }
+
+  @override
   String get photosNotUploaded => 'Non ancora caricato';
 
   @override

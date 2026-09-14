@@ -13,12 +13,15 @@ host yourself.
 - Photos on a task, taken with the camera or picked from the device, synced
   to your other devices and to everyone a list is shared with.
 - Tasks that repeat -- daily, weekdays only, weekly, fortnightly, monthly,
-  the last Friday of the month, yearly: ticking one off puts the next one
-  on the list.
+  the last Friday of the month, yearly, or a rule of your own such as every
+  three days or the second Tuesday: ticking one off puts the next one on the
+  list.
 - Connect it to your server later and everything already on the device is
   uploaded. Signing out of the Android app keeps your tasks on it.
 - Lists can be shared with other accounts on the same server, and handed
   over to one of them.
+- Settings changes your password, deletes your account, and exports your
+  lists and tasks to a JSON file that can be imported again.
 - The web app is the same app: identical screens, with a navigation rail
   instead of a bottom bar on wide windows, and a task opening beside the
   list rather than over it once there is room for both. It is served by
@@ -307,13 +310,25 @@ swept as orphans once the retention window passes. Restoring the database is
 putting it back as `/data/nemo.db` with the server stopped; restore the blob
 directory to the same path alongside it.
 
+The export in the app's Settings is not a substitute: it is one person's
+lists, tasks and subtasks, without photos, accounts or sharing. It is for
+taking your own tasks somewhere else, or back after deleting them.
+
 ## Security notes
 
 - Sessions are opaque random tokens; only their hashes are stored, they
   expire after 30 days, and an active session renews itself. Expired ones
   are swept at startup and every six hours, so a device that never comes
   back does not leave a row behind for ever.
-- Passwords are hashed with bcrypt. Sign-up is rate limited per address.
+- Passwords are hashed with bcrypt. Sign-up and sign-in are rate limited
+  per address. The counts live in the server's memory, so a restart starts
+  them over; that is fine for one server, and worth knowing if it restarts
+  often.
+- Changing a password needs the current one and signs out every other
+  session. Deleting an account needs the password too; it removes the
+  account's sessions and the lists nobody else is on, and hands each shared
+  list it owned to the member first by username. `nemo_server
+  reset-password` remains the way in for someone who has forgotten theirs.
 - On Android the session token lives in the platform keystore. On the web
   there is no such vault: it ends up in browser storage, readable by any
   script that manages to run on the page. The served app sets a strict

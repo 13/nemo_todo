@@ -29,6 +29,18 @@ would ship without them, and nothing would say so.
   belongs in backups beside the database. An app from before this version
   keeps syncing everything else and shows photos once it is updated; this app
   keeps its photos on the device until an older server is updated too.
+- Settings changes your password, which signs out your other devices but
+  not the one you are holding.
+- Settings deletes your account, once you have typed your password. Lists
+  only you use go with it; a shared list you own goes to the member first by
+  username, and the others keep working in it. The Android app keeps your
+  tasks on the device afterwards, as signing out does. Both need a server
+  from this version; everything else still syncs with an older one.
+- A "Custom…" repeat: every so many days, weeks, months or years, or a
+  weekday of the month such as the second Tuesday.
+- Settings exports your lists, tasks and subtasks to a JSON file and imports
+  one again. An import adds only what is missing or was deleted, and never
+  overwrites a task edited since. Photos are not part of the file.
 
 ### Changed
 

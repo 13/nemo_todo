@@ -10,6 +10,8 @@ host yourself.
   are, next to the settings button.
 - Lists with colours and icons, due dates with reminders, subtasks, notes,
   tags and four priorities, plus Today, Upcoming and search views.
+- Photos on a task, taken with the camera or picked from the device, synced
+  to your other devices and to everyone a list is shared with.
 - Tasks that repeat -- daily, weekdays only, weekly, fortnightly, monthly,
   the last Friday of the month, yearly: ticking one off puts the next one
   on the list.
@@ -73,6 +75,14 @@ any other change. The server keeps one change-log row per record, so the log
 never outgrows the data. While the app is open it holds a lightweight
 server-sent-events stream: the server only says "something changed" and the
 app runs a normal sync.
+
+Photo rows sync the same way as everything else, but their bytes travel
+separately, addressed by hash rather than carried inside the row. Bytes
+upload before the row that names them, so no device ever pulls a row it
+cannot then fetch. On Android, missing bytes download eagerly after each
+pull; on the web they are fetched only when a photo is actually shown.
+Either way, a photo is re-encoded on the device before any of this, which
+also strips its EXIF data.
 
 `docs/superpowers/specs/2026-09-07-nemo-design.md` has the details.
 
@@ -213,6 +223,9 @@ front of it; nothing in the container terminates TLS.
 | `NEMO_CORS_ORIGINS` | Comma-separated origins allowed to call the API, for development |
 | `NEMO_TRUSTED_PROXY_HOPS` | How many proxies of yours sit in front, default 0 |
 | `NEMO_VERSION` | What the server calls itself; baked into the published image, `dev` otherwise |
+| `NEMO_BLOB_DIR` | Where photo bytes are stored, default `/data/blobs` |
+| `NEMO_MAX_BLOB_BYTES` | Largest single photo accepted, default 5242880 (5 MB) |
+| `NEMO_ACCOUNT_QUOTA_BYTES` | Total photo bytes one account may store, default 524288000 (500 MB) |
 
 If you put a TLS proxy in front of the server, set `NEMO_TRUSTED_PROXY_HOPS`
 to the number of proxies it passes through. The per-address limit on the
@@ -264,6 +277,13 @@ It is safe to run on a schedule. A device that was offline for the whole
 window is still told to drop the row -- the purge leaves the instruction
 behind, just not the data -- so nothing it holds comes back to life.
 
+The same run also clears out tombstoned photo rows once they are past the
+window, and sweeps blob files that no row names once those are older than
+it too. That delay exists because bytes arrive before the row that names
+them: a photo mid-upload has no row yet and must not be swept as an orphan
+for that reason alone. Re-uploading a photo's bytes while its row is still
+held resets that file's age.
+
 ### Backups
 
 The database is one SQLite file in the `nemo_data` volume, and copying it
@@ -277,8 +297,15 @@ docker compose exec nemo nemo_server backup /data/nemo-$(date +%F).db
 docker compose cp nemo:/data/nemo-$(date +%F).db .
 ```
 
-That file is the whole thing: tasks, accounts, sharing and the change log.
-Restoring is putting it back as `/data/nemo.db` with the server stopped.
+That file is the whole thing: tasks, accounts, sharing and the change log --
+except photos, whose bytes live as plain files under `NEMO_BLOB_DIR`
+(`/data/blobs` inside the container, already on the `nemo_data` volume by
+default). Back up that directory together with the database, not instead of
+it: a database restored without its blob files leaves photos that 404
+forever, and blob files restored without the rows that name them are simply
+swept as orphans once the retention window passes. Restoring the database is
+putting it back as `/data/nemo.db` with the server stopped; restore the blob
+directory to the same path alongside it.
 
 ## Security notes
 
@@ -294,6 +321,12 @@ Restoring is putting it back as `/data/nemo.db` with the server stopped.
   accordingly.
 - A device whose clock is more than an hour ahead of the server is refused
   rather than allowed to win every conflict for ever.
+- Photos are re-encoded on the device before they ever leave it, which
+  drops their EXIF data -- location, camera serial -- along with it. Access
+  to a photo's bytes follows list membership, the same as the row that
+  names it, and a hash the caller cannot see gets a 404 -- the same answer
+  as one that does not exist, so no response reveals whether a picture
+  exists.
 
 ## Android
 

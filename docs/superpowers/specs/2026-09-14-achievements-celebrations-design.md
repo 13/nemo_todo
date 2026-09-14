@@ -99,18 +99,18 @@ Streak achievements use `bestStreak`, so once reached they stay unlocked.
   unlocked achievements in full colour with their title, locked ones in
   `onSurfaceVariant` with a progress bar and "7 / 10". A header shows
   "4 of 10 unlocked" and the current streak.
-- Route `/achievements` in `router.dart`, reached from a tile in the new
+- Route `/settings/achievements` in `router.dart`, reached from a tile in the new
   Settings section. The tile is hidden when Achievements is switched off.
 
 ## Celebrations
 
 ### Controller
 
-`features/celebrations/ui/celebration_controller.dart` is a
-`keepAlive` Riverpod notifier. The task tile's `DoneCheck` and the task
-detail screen call a shared helper, `completeTask(ref, id, done:)`,
-which awaits `setDone` and, when `done` is true, calls
-`CelebrationController.onCompleted(taskId)`.
+`features/celebrations/ui/celebration_controller.dart` holds a
+`CelebrationController` in a long-lived `Provider`. The task tile's
+`DoneCheck`, the task detail screen and swipe-to-complete call a shared
+helper, `completeTask(ref, task, done:)`, which awaits `setDone` and,
+when `done` is true, calls `CelebrationController.onCompleted(task)`.
 
 `onCompleted` does, in order:
 
@@ -151,11 +151,11 @@ later local tick is not credited with another device's unlock.
   bigger tiers, when Celebrations is on. It does nothing on the web.
 - `ui/celebration_overlay.dart` is inserted through `MaterialApp.builder`
   above the router. It listens to the controller and:
-  - on `dayCleared` or `achievementUnlocked`, plays a confetti burst from
-    the top centre for about 1.5 s, using colours from the theme's colour
-    scheme;
+  - on `dayCleared` or `achievementUnlocked`, plays a short confetti burst
+    (0.6 s emission) from the top centre, using colours from the theme's
+    colour scheme;
   - on `achievementUnlocked`, shows a dismissible banner with the icon and
-    title, tappable to open `/achievements`; several unlocks at once show
+    title, tappable to open `/settings/achievements`; several unlocks at once show
     one banner, "3 achievements unlocked";
   - wraps the banner in `Semantics(liveRegion: true)` so screen readers
     announce it.
@@ -173,9 +173,9 @@ later local tick is not credited with another device's unlock.
 `features/celebrations/data/celebration_sound.dart` defines
 `CelebrationSound` with `Future<void> play()`. The real implementation
 uses audioplayers with one bundled asset,
-app/assets/sounds/celebrate.mp3: a 1.3 s four-note chime generated with
+`app/assets/sounds/celebrate.mp3`: a 1.3 s four-note chime generated with
 ffmpeg and dedicated to the public domain (CC0), recorded in
-app/assets/sounds/LICENSE.txt. MP3 plays on Android and in every
+`app/assets/sounds/LICENSE.txt`. MP3 plays on Android and in every
 supported browser, so no second format ships. It plays at a moderate
 volume and respects the device's media volume. It takes transient,
 ducking audio focus, so other audio dips under the chime and resumes
@@ -240,7 +240,7 @@ plural forms, and the ten achievement titles and descriptions.
   celebrated by a later local tick.
 - `test/features/celebrations/celebration_overlay_test.dart`: confetti
   shows for big tiers, is absent under `disableAnimations`, the banner
-  still appears and opens `/achievements`; sound fake called only when
+  still appears and opens `/settings/achievements`; sound fake called only when
   enabled.
 - `test/features/settings/settings_screen_test.dart`: the three switches
   persist to `kv`, Sound is disabled while Celebrations is off, the

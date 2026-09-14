@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
@@ -9,6 +10,7 @@ import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/tasks/ui/custom_repeat_dialog.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo/utils/format.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -381,6 +383,7 @@ class _TaskTagsSectionState extends State<TaskTagsSection> {
               InputChip(
                 key: Key('tag-$tag'),
                 label: Text(tag),
+                onPressed: () => context.push(Routes.tag(tag)),
                 onDeleted: () => widget.save(
                   task.copyWith(
                     tags: task.tags.where((t) => t != tag).toList(),

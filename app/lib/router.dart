@@ -8,6 +8,7 @@ import 'package:nemo/features/lists/ui/lists_screen.dart';
 import 'package:nemo/features/lists/ui/members_screen.dart';
 import 'package:nemo/features/settings/ui/settings_screen.dart';
 import 'package:nemo/features/tasks/ui/search_screen.dart';
+import 'package:nemo/features/tasks/ui/tag_screen.dart';
 import 'package:nemo/features/tasks/ui/task_detail_screen.dart';
 import 'package:nemo/features/tasks/ui/today_screen.dart';
 import 'package:nemo/features/tasks/ui/upcoming_screen.dart';
@@ -28,6 +29,7 @@ abstract final class Routes {
   static String list(String id) => '/lists/$id';
   static String members(String id) => '/lists/$id/members';
   static String task(String id) => '/tasks/$id';
+  static String tag(String tag) => '/tags/${Uri.encodeComponent(tag)}';
 }
 
 abstract final class AppRouter {
@@ -81,6 +83,13 @@ abstract final class AppRouter {
             path: Routes.search,
             pageBuilder: (_, s) =>
                 fadeThroughPage(child: const SearchScreen(), state: s),
+          ),
+          GoRoute(
+            path: '/tags/:tag',
+            pageBuilder: (_, s) => fadeThroughPage(
+              child: TagScreen(tag: s.pathParameters['tag']!),
+              state: s,
+            ),
           ),
         ],
       ),

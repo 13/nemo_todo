@@ -847,4 +847,29 @@ class LEn extends L {
   @override
   String get aboutLegalese =>
       'Local-first tasks, synced with a server you host yourself.';
+
+  @override
+  String tagEmpty(String tag) {
+    return 'No tasks tagged #$tag.';
+  }
+
+  @override
+  String get rescheduleTitle => 'Move to';
+
+  @override
+  String get rescheduleNextWeek => 'Next week';
+
+  @override
+  String get reschedulePick => 'Pick a date…';
+
+  @override
+  String rescheduleMoved(String when) {
+    return 'Moved to $when.';
+  }
+
+  @override
+  String get rescheduleCleared => 'Date cleared.';
+
+  @override
+  String get tasksAddHintSmart => 'Add a task — try “tomorrow #shop !high”';
 }

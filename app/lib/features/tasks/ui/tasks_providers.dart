@@ -46,6 +46,10 @@ Stream<List<Task>> searchTasks(Ref ref, String query) =>
     ref.watch(tasksRepositoryProvider).search(query);
 
 @riverpod
+Stream<List<Task>> tasksByTag(Ref ref, String tag) =>
+    ref.watch(tasksRepositoryProvider).watchByTag(tag);
+
+@riverpod
 Stream<int> openTaskCount(Ref ref, String listId) =>
     ref.watch(tasksRepositoryProvider).watchOpenCount(listId);
 

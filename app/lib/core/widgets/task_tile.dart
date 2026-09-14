@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/due_chip.dart';
@@ -9,14 +10,23 @@ import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// One task in a list: round check, title, and a row of small facts.
 class TaskTile extends ConsumerWidget {
-  const TaskTile({required this.task, this.showList = false, super.key});
+  const TaskTile({
+    required this.task,
+    this.showList = false,
+    this.onLongPress,
+    super.key,
+  });
 
   final Task task;
   final bool showList;
+
+  /// Offered where a long press is not already the start of a drag.
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,7 +62,12 @@ class TaskTile extends ConsumerWidget {
           label: '${progress.done}/${progress.total}',
         ),
       for (final tag in task.tags)
-        MetaChip(icon: Icons.tag_rounded, label: tag),
+        InkWell(
+          key: Key('tile-tag-${task.id}-$tag'),
+          borderRadius: BorderRadius.circular(6),
+          onTap: () => context.push(Routes.tag(tag)),
+          child: MetaChip(icon: Icons.tag_rounded, label: tag),
+        ),
     ];
     final titleStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
       decoration: task.done ? TextDecoration.lineThrough : null,
@@ -61,6 +76,7 @@ class TaskTile extends ConsumerWidget {
     );
     return InkWell(
       onTap: () => openTask(context, ref, task.id),
+      onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

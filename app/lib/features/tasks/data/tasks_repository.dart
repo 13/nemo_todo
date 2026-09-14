@@ -68,6 +68,22 @@ class TasksRepository {
     );
   }
 
+  /// Every visible task carrying [tag], open first.
+  ///
+  /// The column holds the tags as a JSON array, so the query narrows by
+  /// text and the exact match is made here: `LIKE` would also take `shop`
+  /// for `shopping`, and reads `_` in a tag as any character.
+  Stream<List<Task>> watchByTag(String tag) =>
+      _visible(_db.tasks.tags.like('%$tag%'), [
+        OrderingTerm.asc(_db.tasks.done),
+        OrderingTerm.asc(_db.tasks.title),
+      ]).map(
+        (tasks) => [
+          for (final t in tasks)
+            if (t.tags.contains(tag)) t,
+        ],
+      );
+
   Stream<int> watchOpenCount(String listId) {
     final count = _db.tasks.id.count();
     final query = _db.selectOnly(_db.tasks)

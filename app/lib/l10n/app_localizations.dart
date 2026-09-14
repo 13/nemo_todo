@@ -1406,6 +1406,48 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Local-first tasks, synced with a server you host yourself.'**
   String get aboutLegalese;
+
+  /// No description provided for @tagEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks tagged #{tag}.'**
+  String tagEmpty(String tag);
+
+  /// No description provided for @rescheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to'**
+  String get rescheduleTitle;
+
+  /// No description provided for @rescheduleNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get rescheduleNextWeek;
+
+  /// No description provided for @reschedulePick.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date…'**
+  String get reschedulePick;
+
+  /// No description provided for @rescheduleMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {when}.'**
+  String rescheduleMoved(String when);
+
+  /// No description provided for @rescheduleCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Date cleared.'**
+  String get rescheduleCleared;
+
+  /// No description provided for @tasksAddHintSmart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a task — try “tomorrow #shop !high”'**
+  String get tasksAddHintSmart;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

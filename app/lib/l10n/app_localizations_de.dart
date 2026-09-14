@@ -852,4 +852,30 @@ class LDe extends L {
   @override
   String get aboutLegalese =>
       'Aufgaben zuerst auf dem Gerät, synchronisiert mit einem Server, den du selbst betreibst.';
+
+  @override
+  String tagEmpty(String tag) {
+    return 'Keine Aufgaben mit #$tag.';
+  }
+
+  @override
+  String get rescheduleTitle => 'Verschieben auf';
+
+  @override
+  String get rescheduleNextWeek => 'Nächste Woche';
+
+  @override
+  String get reschedulePick => 'Datum wählen…';
+
+  @override
+  String rescheduleMoved(String when) {
+    return 'Verschoben auf $when.';
+  }
+
+  @override
+  String get rescheduleCleared => 'Datum entfernt.';
+
+  @override
+  String get tasksAddHintSmart =>
+      'Aufgabe hinzufügen – z. B. „morgen #einkauf !hoch“';
 }

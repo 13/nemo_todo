@@ -66,6 +66,8 @@ class ShellScreen extends ConsumerWidget {
     if (location.startsWith(Routes.upcoming)) return 1;
     if (location.startsWith(Routes.lists)) return 2;
     if (location.startsWith(Routes.search)) return 3;
+    // Following a tag is a kind of search.
+    if (location.startsWith('/tags/')) return 3;
     return 0;
   }
 

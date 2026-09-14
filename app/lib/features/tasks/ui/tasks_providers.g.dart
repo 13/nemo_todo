@@ -302,6 +302,80 @@ final class SearchTasksFamily extends $Family
   String toString() => r'searchTasksProvider';
 }
 
+@ProviderFor(tasksByTag)
+final tasksByTagProvider = TasksByTagFamily._();
+
+final class TasksByTagProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Task>>,
+          List<Task>,
+          Stream<List<Task>>
+        >
+    with $FutureModifier<List<Task>>, $StreamProvider<List<Task>> {
+  TasksByTagProvider._({
+    required TasksByTagFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'tasksByTagProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$tasksByTagHash();
+
+  @override
+  String toString() {
+    return r'tasksByTagProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Task>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Task>> create(Ref ref) {
+    final argument = this.argument as String;
+    return tasksByTag(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TasksByTagProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$tasksByTagHash() => r'f05cbfa932631ffa563b1237735c97f972af8269';
+
+final class TasksByTagFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<List<Task>>, String> {
+  TasksByTagFamily._()
+    : super(
+        retry: null,
+        name: r'tasksByTagProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  TasksByTagProvider call(String tag) =>
+      TasksByTagProvider._(argument: tag, from: this);
+
+  @override
+  String toString() => r'tasksByTagProvider';
+}
+
 @ProviderFor(openTaskCount)
 final openTaskCountProvider = OpenTaskCountFamily._();
 

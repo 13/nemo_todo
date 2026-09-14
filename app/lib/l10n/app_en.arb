@@ -464,5 +464,26 @@
   "aboutCopyDetails": "Copy details",
   "aboutCopied": "Details copied.",
   "aboutSourceCode": "Source code",
-  "aboutLegalese": "Local-first tasks, synced with a server you host yourself."
+  "aboutLegalese": "Local-first tasks, synced with a server you host yourself.",
+  "tagEmpty": "No tasks tagged #{tag}.",
+  "@tagEmpty": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "rescheduleTitle": "Move to",
+  "rescheduleNextWeek": "Next week",
+  "reschedulePick": "Pick a date…",
+  "rescheduleMoved": "Moved to {when}.",
+  "@rescheduleMoved": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "rescheduleCleared": "Date cleared.",
+  "tasksAddHintSmart": "Add a task — try “tomorrow #shop !high”"
 }

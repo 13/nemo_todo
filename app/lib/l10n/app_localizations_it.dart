@@ -853,4 +853,30 @@ class LIt extends L {
   @override
   String get aboutLegalese =>
       'Attività prima sul dispositivo, sincronizzate con un server che gestisci tu.';
+
+  @override
+  String tagEmpty(String tag) {
+    return 'Nessuna attività con #$tag.';
+  }
+
+  @override
+  String get rescheduleTitle => 'Sposta a';
+
+  @override
+  String get rescheduleNextWeek => 'La prossima settimana';
+
+  @override
+  String get reschedulePick => 'Scegli una data…';
+
+  @override
+  String rescheduleMoved(String when) {
+    return 'Spostata a $when.';
+  }
+
+  @override
+  String get rescheduleCleared => 'Data rimossa.';
+
+  @override
+  String get tasksAddHintSmart =>
+      'Aggiungi un\'attività – prova “domani #spesa !alta”';
 }

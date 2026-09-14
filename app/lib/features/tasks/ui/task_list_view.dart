@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
+import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -86,7 +87,12 @@ class _TaskListViewState extends ConsumerState<TaskListView> {
       itemCount: tasks.length,
       itemBuilder: (context, i) => _dismissible(
         tasks[i],
-        TaskTile(task: tasks[i], showList: widget.showList),
+        TaskTile(
+          task: tasks[i],
+          showList: widget.showList,
+          // In a reorderable list a long press picks the row up instead.
+          onLongPress: () => showRescheduleSheet(context, ref, tasks[i]),
+        ),
       ),
     ),
   );

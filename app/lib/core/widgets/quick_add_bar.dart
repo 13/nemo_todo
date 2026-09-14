@@ -8,6 +8,7 @@ import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo/utils/format.dart';
+import 'package:nemo/utils/quick_add_parser.dart';
 
 /// Bottom bar that turns a typed title into a task in one step.
 ///
@@ -58,8 +59,15 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   }
 
   Future<void> _submit() async {
-    final title = _controller.text.trim();
-    if (title.isEmpty) return;
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+    // What the line itself says wins over the chips: typing "tomorrow" is
+    // a later, more deliberate choice than a chip left as it was.
+    final parsed = parseQuickAdd(
+      text,
+      now: ref.read(nowProvider)(),
+      locale: Localizations.localeOf(context).toString(),
+    );
     final lists = ref.read(allListsProvider).value ?? const [];
     final listId =
         _listId ??
@@ -70,9 +78,10 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
         .read(tasksRepositoryProvider)
         .create(
           listId: listId,
-          title: title,
-          dueAt: _dueAt,
-          priority: _priority,
+          title: parsed.title,
+          dueAt: parsed.dueAt ?? _dueAt,
+          priority: parsed.priority ?? _priority,
+          tags: parsed.tags,
         );
     if (!mounted) return;
     _controller.clear();
@@ -129,7 +138,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _submit(),
                       decoration: InputDecoration(
-                        hintText: l.tasksAddHint,
+                        hintText: l.tasksAddHintSmart,
                         prefixIcon: const Icon(Icons.add_rounded),
                       ),
                     ),

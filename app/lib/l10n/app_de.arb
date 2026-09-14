@@ -222,5 +222,12 @@
   "aboutCopyDetails": "Details kopieren",
   "aboutCopied": "Details kopiert.",
   "aboutSourceCode": "Quellcode",
-  "aboutLegalese": "Aufgaben zuerst auf dem Gerät, synchronisiert mit einem Server, den du selbst betreibst."
+  "aboutLegalese": "Aufgaben zuerst auf dem Gerät, synchronisiert mit einem Server, den du selbst betreibst.",
+  "tagEmpty": "Keine Aufgaben mit #{tag}.",
+  "rescheduleTitle": "Verschieben auf",
+  "rescheduleNextWeek": "Nächste Woche",
+  "reschedulePick": "Datum wählen…",
+  "rescheduleMoved": "Verschoben auf {when}.",
+  "rescheduleCleared": "Datum entfernt.",
+  "tasksAddHintSmart": "Aufgabe hinzufügen – z. B. „morgen #einkauf !hoch“"
 }

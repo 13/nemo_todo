@@ -222,5 +222,12 @@
   "aboutCopyDetails": "Copia dettagli",
   "aboutCopied": "Dettagli copiati.",
   "aboutSourceCode": "Codice sorgente",
-  "aboutLegalese": "Attività prima sul dispositivo, sincronizzate con un server che gestisci tu."
+  "aboutLegalese": "Attività prima sul dispositivo, sincronizzate con un server che gestisci tu.",
+  "tagEmpty": "Nessuna attività con #{tag}.",
+  "rescheduleTitle": "Sposta a",
+  "rescheduleNextWeek": "La prossima settimana",
+  "reschedulePick": "Scegli una data…",
+  "rescheduleMoved": "Spostata a {when}.",
+  "rescheduleCleared": "Data rimossa.",
+  "tasksAddHintSmart": "Aggiungi un'attività – prova “domani #spesa !alta”"
 }

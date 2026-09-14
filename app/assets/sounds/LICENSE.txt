@@ -1,0 +1,6 @@
+celebrate.mp3 was generated for nemo with ffmpeg's aevalsrc filter (four
+sine tones, C5 E5 G5 C6, with exponential decay; the command is in
+docs/superpowers/plans/2026-09-14-achievements-celebrations.md, Task 6).
+
+It is dedicated to the public domain under CC0 1.0:
+https://creativecommons.org/publicdomain/zero/1.0/

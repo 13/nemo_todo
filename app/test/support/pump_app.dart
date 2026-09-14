@@ -9,6 +9,7 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
+import 'package:nemo/features/celebrations/data/celebration_sound.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
@@ -18,6 +19,7 @@ import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
+import 'fake_celebrations.dart';
 import 'test_db.dart';
 
 /// Containers [pumpApp] built for the test running right now, so [appTest]
@@ -76,6 +78,7 @@ Future<TestApp> pumpApp(
   // what follows, which a banner over the app bar would get in the way of,
   // so they start off unless a test is about them.
   bool celebrate = false,
+  CelebrationSound? sound,
 }) async {
   final db = testDatabase();
   addTearDown(db.close);
@@ -103,6 +106,10 @@ Future<TestApp> pumpApp(
       idGeneratorProvider.overrideWithValue(sequentialIds()),
       // Opened in `main` in the app; a connected sync reads it.
       photoStoreProvider.overrideWithValue(photoStore ?? MemoryPhotoStore()),
+      // The audio plugin has no test implementation.
+      celebrationSoundProvider.overrideWithValue(
+        sound ?? RecordingCelebrationSound(),
+      ),
       // The About tile asks a connected server how it was built; a test's
       // server is a fake, and a real request would outlive the test.
       serverBuildFetcherProvider.overrideWithValue((_) async => null),

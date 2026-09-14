@@ -157,6 +157,41 @@ class AuthService {
     )..where((t) => t.userId.equals(user.id))).go();
   }
 
+  /// Replaces the password of [userId], who has to know the current one,
+  /// and signs out every other session. The one asking, [keepToken], stays
+  /// signed in: changing a password on a phone should not cost that phone
+  /// its own connection.
+  Future<void> changePassword(
+    String userId, {
+    required String current,
+    required String next,
+    required String keepToken,
+  }) async {
+    _checkPassword(next);
+    await confirmPassword(userId, current);
+    await (_db.update(_db.users)..where((t) => t.id.equals(userId))).write(
+      UsersCompanion(passwordHash: Value(await _hash(next, bcryptRounds))),
+    );
+    final kept = hashToken(keepToken);
+    await (_db.delete(_db.sessions)..where(
+          (t) => t.userId.equals(userId) & t.tokenHash.equals(kept).not(),
+        ))
+        .go();
+  }
+
+  /// Throws unless [password] is [userId]'s.
+  ///
+  /// 403 rather than 401: the session is fine, and a client reads 401 as
+  /// "signed out" and drops it.
+  Future<void> confirmPassword(String userId, String password) async {
+    final user = await (_db.select(
+      _db.users,
+    )..where((t) => t.id.equals(userId))).getSingleOrNull();
+    if (user == null || !await _verify(password, user.passwordHash)) {
+      throw const ApiException(403, 'wrong_password');
+    }
+  }
+
   String _normalise(String username) => username.trim().toLowerCase();
 
   void _checkPassword(String password) {

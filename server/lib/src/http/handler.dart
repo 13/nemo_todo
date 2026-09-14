@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/src/api_exception.dart';
+import 'package:nemo_server/src/auth/account_service.dart';
 import 'package:nemo_server/src/auth/auth_service.dart';
 import 'package:nemo_server/src/auth/rate_limiter.dart';
 import 'package:nemo_server/src/blobs/blob_service.dart';
@@ -39,6 +40,7 @@ Handler createHandler({
         now: now,
       );
   final membersService = members ?? MembersService(db);
+  final accountService = AccountService(db);
   final blobService =
       blobs ??
       BlobService(
@@ -73,6 +75,25 @@ Handler createHandler({
   final api = Router()
     ..post('/auth/logout', (Request request) async {
       await authService.logout(request.token);
+      return jsonResponse({'ok': true});
+    })
+    ..post('/auth/password', (Request request) async {
+      final body = await readJson(request);
+      await authService.changePassword(
+        request.user.id,
+        current: stringField(body, 'current') ?? '',
+        next: stringField(body, 'password') ?? '',
+        keepToken: request.token,
+      );
+      return jsonResponse({'ok': true});
+    })
+    ..delete('/account', (Request request) async {
+      final body = await readJson(request);
+      await authService.confirmPassword(
+        request.user.id,
+        stringField(body, 'password') ?? '',
+      );
+      eventHub.notify(await accountService.delete(request.user.id));
       return jsonResponse({'ok': true});
     })
     ..get(

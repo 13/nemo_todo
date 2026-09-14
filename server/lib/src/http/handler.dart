@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/src/api_exception.dart';
 import 'package:nemo_server/src/auth/auth_service.dart';
@@ -103,14 +105,15 @@ Handler createHandler({
       if (declared != null && declared > config.maxBlobBytes) {
         throw const ApiException(413, 'blob_too_large');
       }
-      final bytes = <int>[];
+      // One byte per byte: a growable List<int> spends eight on each.
+      final builder = BytesBuilder(copy: false);
       await for (final chunk in request.read()) {
-        bytes.addAll(chunk);
-        if (bytes.length > config.maxBlobBytes) {
+        builder.add(chunk);
+        if (builder.length > config.maxBlobBytes) {
           throw const ApiException(413, 'blob_too_large');
         }
       }
-      await blobService.put(request.user.id, hash, bytes);
+      await blobService.put(request.user.id, hash, builder.takeBytes());
       return jsonResponse({'ok': true});
     })
     ..get('/blobs/<hash>', (Request request, String hash) async {

@@ -9,6 +9,7 @@ import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -253,6 +254,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 prefixIcon: const Icon(Icons.notes_rounded),
               ),
             ),
+            const SizedBox(height: 20),
+            _Label(l.tasksPhotos),
+            PhotoStrip(taskId: task.id),
             const SizedBox(height: 20),
             _Label(l.tasksDue),
             Wrap(

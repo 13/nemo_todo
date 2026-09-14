@@ -5,6 +5,8 @@ import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/due_chip.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
+import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -25,6 +27,10 @@ class TaskTile extends ConsumerWidget {
     final list = showList
         ? ref.watch(listByIdProvider(task.listId)).value
         : null;
+    final photos = ref.watch(photoCountsProvider).value?[task.id] ?? 0;
+    final firstPhoto = photos == 0
+        ? null
+        : ref.watch(photosByTaskProvider(task.id)).value?.firstOrNull;
     final dueAt = task.dueAt;
     final meta = <Widget>[
       if (dueAt != null)
@@ -85,6 +91,40 @@ class TaskTile extends ConsumerWidget {
                 ],
               ),
             ),
+            if (firstPhoto != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8, right: 4),
+                child: Stack(
+                  key: Key('tile-photo-${task.id}'),
+                  children: [
+                    PhotoThumbnail(sha256: firstPhoto.sha256, size: 40),
+                    if (photos > 1)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: scheme.surface.withValues(alpha: 0.85),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(6),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            child: Text(
+                              '+${photos - 1}',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             if (task.priority > 0)
               Padding(
                 padding: const EdgeInsets.only(top: 10, right: 4),

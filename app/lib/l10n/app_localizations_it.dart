@@ -196,6 +196,31 @@ class LIt extends L {
   String get tasksSubtaskHint => 'Aggiungi sottoattività';
 
   @override
+  String get tasksPhotos => 'Foto';
+
+  @override
+  String get photosTakePhoto => 'Scatta foto';
+
+  @override
+  String get photosChoose => 'Scegli dalla galleria';
+
+  @override
+  String get photosAdd => 'Aggiungi foto';
+
+  @override
+  String get photosNotAnImage => 'Questo file non è un\'immagine.';
+
+  @override
+  String get photosTooLarge =>
+      'Questa immagine è troppo grande per questo server.';
+
+  @override
+  String get photosServerFull => 'Il server non ha più spazio per le immagini.';
+
+  @override
+  String get photosNotUploaded => 'Non ancora caricato';
+
+  @override
   String get tasksList => 'Lista';
 
   @override

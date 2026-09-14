@@ -429,6 +429,54 @@ abstract class L {
   /// **'Add subtask'**
   String get tasksSubtaskHint;
 
+  /// No description provided for @tasksPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get tasksPhotos;
+
+  /// No description provided for @photosTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get photosTakePhoto;
+
+  /// No description provided for @photosChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get photosChoose;
+
+  /// No description provided for @photosAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get photosAdd;
+
+  /// No description provided for @photosNotAnImage.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not a picture.'**
+  String get photosNotAnImage;
+
+  /// No description provided for @photosTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That picture is too large for this server.'**
+  String get photosTooLarge;
+
+  /// No description provided for @photosServerFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The server has no room for more pictures.'**
+  String get photosServerFull;
+
+  /// No description provided for @photosNotUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not uploaded yet'**
+  String get photosNotUploaded;
+
   /// No description provided for @tasksList.
   ///
   /// In en, this message translates to:

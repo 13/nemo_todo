@@ -9,6 +9,7 @@ import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -68,6 +69,7 @@ Future<TestApp> pumpApp(
   // Screens showing sync status animate a progress indicator, which never
   // lets `pumpAndSettle` return. Those tests pump a fixed number of frames.
   bool settle = true,
+  PhotoStore? photoStore,
 }) async {
   final db = testDatabase();
   addTearDown(db.close);
@@ -90,7 +92,7 @@ Future<TestApp> pumpApp(
       nowProvider.overrideWithValue(() => testNow),
       idGeneratorProvider.overrideWithValue(sequentialIds()),
       // Opened in `main` in the app; a connected sync reads it.
-      photoStoreProvider.overrideWithValue(MemoryPhotoStore()),
+      photoStoreProvider.overrideWithValue(photoStore ?? MemoryPhotoStore()),
       ...overrides.cast(),
     ],
   );

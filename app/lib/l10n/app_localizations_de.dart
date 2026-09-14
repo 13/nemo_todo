@@ -196,6 +196,30 @@ class LDe extends L {
   String get tasksSubtaskHint => 'Teilaufgabe hinzufügen';
 
   @override
+  String get tasksPhotos => 'Fotos';
+
+  @override
+  String get photosTakePhoto => 'Foto aufnehmen';
+
+  @override
+  String get photosChoose => 'Aus Galerie wählen';
+
+  @override
+  String get photosAdd => 'Foto hinzufügen';
+
+  @override
+  String get photosNotAnImage => 'Diese Datei ist kein Bild.';
+
+  @override
+  String get photosTooLarge => 'Dieses Bild ist zu groß für diesen Server.';
+
+  @override
+  String get photosServerFull => 'Der Server hat keinen Platz mehr für Bilder.';
+
+  @override
+  String get photosNotUploaded => 'Noch nicht hochgeladen';
+
+  @override
   String get tasksList => 'Liste';
 
   @override

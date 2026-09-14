@@ -39,6 +39,11 @@ void main() {
     expect(task!.title, 'Final');
     expect(task.notes, 'second');
 
+    // The photo strip made the screen taller than the viewport, so the
+    // priority row -- already built, this `ListView` is not lazy -- sits
+    // out of the fold until scrolled to.
+    await tester.ensureVisible(find.text('High'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('High'));
     await tester.pumpAndSettle();
     expect((await app.db.taskById('t1'))!.priority, 3);

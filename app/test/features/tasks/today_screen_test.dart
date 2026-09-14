@@ -82,6 +82,13 @@ void main() {
     await tester.tap(find.text('Open me'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('task-title')), findsOneWidget);
+    // The photo strip made the screen taller than the viewport, so the
+    // priority row is not built until it is scrolled to.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('task-priority')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.byKey(const Key('task-priority')), findsOneWidget);
   });
 }

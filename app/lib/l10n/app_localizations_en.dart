@@ -196,6 +196,30 @@ class LEn extends L {
   String get tasksSubtaskHint => 'Add subtask';
 
   @override
+  String get tasksPhotos => 'Photos';
+
+  @override
+  String get photosTakePhoto => 'Take photo';
+
+  @override
+  String get photosChoose => 'Choose from gallery';
+
+  @override
+  String get photosAdd => 'Add photo';
+
+  @override
+  String get photosNotAnImage => 'That file is not a picture.';
+
+  @override
+  String get photosTooLarge => 'That picture is too large for this server.';
+
+  @override
+  String get photosServerFull => 'The server has no room for more pictures.';
+
+  @override
+  String get photosNotUploaded => 'Not uploaded yet';
+
+  @override
   String get tasksList => 'List';
 
   @override

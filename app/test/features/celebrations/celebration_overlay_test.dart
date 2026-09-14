@@ -13,18 +13,22 @@ import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/achievements/data/achievements_repository.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/achievements/ui/achievements_screen.dart';
+import 'package:nemo/features/auth/data/auth_storage.dart';
+import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/celebrations/data/celebration_sound.dart';
 import 'package:nemo/features/celebrations/ui/celebration_controller.dart';
 import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/settings/data/server_build.dart';
+import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/fake_celebrations.dart';
+import '../../support/fake_sync.dart';
 import '../../support/pump_app.dart';
 import '../../support/test_db.dart';
 
@@ -274,6 +278,73 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     container.dispose();
+  });
+
+  appTest("a sync's unlocks are recorded before the next tick", (tester) async {
+    final client = FakeSyncClient([]);
+    final app = await pumpApp(
+      tester,
+      celebrate: true,
+      settle: false,
+      overrides: [
+        authStorageProvider.overrideWithValue(MemoryAuthStorage('secret')),
+        syncClientFactoryProvider.overrideWithValue((_, _) => client),
+        sseClientFactoryProvider.overrideWithValue((_, _, _) => null),
+      ],
+      seed: (db, inbox) async {
+        final kv = KvStore(db);
+        await kv.set(KvKeys.serverUrl, 'https://nemo.test');
+        await kv.set(KvKeys.username, 'ben');
+        await seedToday(['First', 'Second'])(db, inbox);
+      },
+    );
+    // The quiet check at start found nothing reached yet.
+    expect(await AchievementsRepository(app.db).seen(), isEmpty);
+
+    // Another device completed ten tasks.
+    client.responses.add(
+      SyncResponse(
+        cursor: 1,
+        serverHlc: Hlc(
+          millis: testNowMs + 1000,
+          counter: 0,
+          node: 'srv',
+        ).toString(),
+        changes: [
+          for (var i = 0; i < 10; i++)
+            SyncChange.task(
+              Task(
+                id: 'remote-$i',
+                listId: app.inbox.id,
+                title: 'Remote $i',
+                sortKey: 'V$i',
+                updatedAt: Hlc(
+                  millis: testNowMs + 500,
+                  counter: i,
+                  node: 'other',
+                ).toString(),
+                done: true,
+                doneAt: testNowMs - const Duration(hours: 1).inMilliseconds,
+              ),
+            ),
+        ],
+      ),
+    );
+    unawaited(app.container.read(syncEngineProvider.notifier).syncNow());
+    await settleSync(tester);
+    expect(
+      (await app.db.select(app.db.tasks).get()).where((t) => t.done),
+      hasLength(10),
+    );
+
+    // 'Second' stays open, so Today is not cleared by this tick.
+    await tickOff(tester, 'First');
+
+    expect(find.byKey(const Key('achievement-banner')), findsNothing);
+    expect(
+      await AchievementsRepository(app.db).seen(),
+      containsAll(['first_done', 'done_10']),
+    );
   });
 
   appTest('history from before is recorded without a celebration', (

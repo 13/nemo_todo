@@ -28,6 +28,22 @@ would ship without them, and nothing would say so.
 - "Source code" opens the project on GitHub.
 - The server reports the commit and build date on `/healthz` beside its
   version: `{"status":"ok","version":"0.7.0","commit":"…","builtAt":"…"}`.
+- Tapping a tag, on a task in a list or on the task itself, shows every task
+  with that tag across all lists.
+- A long press on a task in Today, Upcoming, search or a tag moves it to
+  today, tomorrow, next week or a picked day, or clears its date, with undo.
+  In a list of your own a long press still picks the task up to reorder it.
+- Quick add reads the line you type: `Milk #shop !high tomorrow` adds "Milk",
+  tagged `shop`, at high priority, due tomorrow. A date word counts only at
+  the end, so "Buy the Sunday paper" stays a title; German and Italian date
+  and priority words work in those languages.
+
+### Fixed
+
+- Sharing a list sends the photos already on it to the new member. Before,
+  someone who had used the app since those photos were added never got them;
+  and removing a member now takes the photos off their device along with the
+  tasks.
 
 ## 0.6.0 - 2026-09-14
 

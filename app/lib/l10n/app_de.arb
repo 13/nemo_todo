@@ -258,5 +258,7 @@
   "achievementsProgress": "{value} / {target}",
   "achievementsUnlocked": "Freigeschaltet",
   "achievementsStreak": "{count, plural, =1{1 Tag in Folge} other{{count} Tage in Folge}}",
-  "achievementsLoadError": "Erfolge konnten nicht geladen werden."
+  "achievementsLoadError": "Erfolge konnten nicht geladen werden.",
+  "achievementUnlockedBanner": "Erfolg freigeschaltet",
+  "achievementsUnlockedMany": "{count, plural, other{{count} Erfolge freigeschaltet}}"
 }

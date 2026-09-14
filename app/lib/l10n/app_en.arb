@@ -527,5 +527,10 @@
   "@achievementsStreak": {
     "placeholders": {"count": {"type": "int"}}
   },
-  "achievementsLoadError": "Achievements could not be loaded."
+  "achievementsLoadError": "Achievements could not be loaded.",
+  "achievementUnlockedBanner": "Achievement unlocked",
+  "achievementsUnlockedMany": "{count, plural, other{{count} achievements unlocked}}",
+  "@achievementsUnlockedMany": {
+    "placeholders": {"count": {"type": "int"}}
+  }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,7 @@ import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/celebrations/data/celebration_sound.dart';
+import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
@@ -154,6 +157,21 @@ Future<TestApp> pumpApp(
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           routerConfig: router,
+          // Wrapped in its own Overlay: this sits above the Router, so
+          // nothing inside it (the achievement banner's IconButton
+          // tooltip, notably) can find the one the Router creates for its
+          // own pages.
+          builder: (context, child) => Overlay(
+            initialEntries: [
+              OverlayEntry(
+                builder: (context) => CelebrationOverlay(
+                  onOpenAchievements: () =>
+                      unawaited(router.push(Routes.achievements)),
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ),

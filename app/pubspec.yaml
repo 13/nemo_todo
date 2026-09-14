@@ -10,6 +10,7 @@ environment:
 dependencies:
   audioplayers: ^6.8.1
   collection: ^1.19.0
+  confetti: ^0.8.0
   crypto: ^3.0.7
   device_info_plus: ^13.2.0
   dio: ^5.11.1

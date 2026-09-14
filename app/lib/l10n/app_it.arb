@@ -258,5 +258,7 @@
   "achievementsProgress": "{value} / {target}",
   "achievementsUnlocked": "Sbloccato",
   "achievementsStreak": "{count, plural, =1{1 giorno di fila} other{{count} giorni di fila}}",
-  "achievementsLoadError": "Impossibile caricare i traguardi."
+  "achievementsLoadError": "Impossibile caricare i traguardi.",
+  "achievementUnlockedBanner": "Traguardo sbloccato",
+  "achievementsUnlockedMany": "{count, plural, other{{count} traguardi sbloccati}}"
 }

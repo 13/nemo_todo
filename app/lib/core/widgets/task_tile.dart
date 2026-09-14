@@ -9,6 +9,7 @@ import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
+import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/router.dart';
@@ -88,6 +89,7 @@ class TaskTile extends ConsumerWidget {
               done: task.done,
               color: nemo.priority(task.priority),
               onChanged: (done) => completeTask(ref, task, done: done),
+              celebrate: ref.watch(celebrationsEnabledProvider),
             ),
             const SizedBox(width: 4),
             Expanded(
@@ -157,43 +159,131 @@ class TaskTile extends ConsumerWidget {
 }
 
 /// Round animated checkbox; the ring takes the priority colour.
-class DoneCheck extends StatelessWidget {
+///
+/// With [celebrate], ticking it on bounces and sends a ring outwards,
+/// unless the platform asks for reduced motion.
+class DoneCheck extends StatefulWidget {
   const DoneCheck({
     required this.done,
     required this.onChanged,
     this.color,
+    this.celebrate = false,
     super.key,
   });
 
   final bool done;
   final Color? color;
   final ValueChanged<bool> onChanged;
+  final bool celebrate;
+
+  @override
+  State<DoneCheck> createState() => _DoneCheckState();
+}
+
+class _DoneCheckState extends State<DoneCheck>
+    with SingleTickerProviderStateMixin {
+  late final _bounce = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  );
+
+  late final Animation<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween<double>(
+        begin: 1,
+        end: 1.25,
+      ).chain(CurveTween(curve: Curves.easeOut)),
+      weight: 40,
+    ),
+    TweenSequenceItem(
+      tween: Tween<double>(
+        begin: 1.25,
+        end: 1,
+      ).chain(CurveTween(curve: Curves.easeIn)),
+      weight: 60,
+    ),
+  ]).animate(_bounce);
+
+  @override
+  void dispose() {
+    _bounce.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    if (!widget.done &&
+        widget.celebrate &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      _bounce.forward(from: 0);
+    }
+    widget.onChanged(!widget.done);
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final ring = color ?? scheme.outline;
+    final ring = widget.color ?? scheme.outline;
+    final done = widget.done;
     return Semantics(
       checked: done,
       button: true,
       child: InkResponse(
-        onTap: () => onChanged(!done),
+        onTap: _toggle,
         radius: 22,
         child: Padding(
           padding: const EdgeInsets.all(8),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: done ? scheme.primary : Colors.transparent,
-              border: Border.all(color: done ? scheme.primary : ring, width: 2),
-            ),
-            child: done
-                ? Icon(Icons.check_rounded, size: 16, color: scheme.onPrimary)
-                : null,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedBuilder(
+                animation: _bounce,
+                builder: (context, _) {
+                  final t = _bounce.value;
+                  if (t == 0 || t == 1) {
+                    return const SizedBox(width: 24, height: 24);
+                  }
+                  return Transform.scale(
+                    scale: 1 + t,
+                    child: Opacity(
+                      opacity: 1 - t,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: scheme.primary, width: 2),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ScaleTransition(
+                scale: _scale,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: done ? scheme.primary : Colors.transparent,
+                    border: Border.all(
+                      color: done ? scheme.primary : ring,
+                      width: 2,
+                    ),
+                  ),
+                  child: done
+                      ? Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: scheme.onPrimary,
+                        )
+                      : null,
+                ),
+              ),
+            ],
           ),
         ),
       ),

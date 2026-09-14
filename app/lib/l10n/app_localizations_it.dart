@@ -1002,4 +1002,17 @@ class LIt extends L {
 
   @override
   String get achievementsLoadError => 'Impossibile caricare i traguardi.';
+
+  @override
+  String get achievementUnlockedBanner => 'Traguardo sbloccato';
+
+  @override
+  String achievementsUnlockedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count traguardi sbloccati',
+    );
+    return '$_temp0';
+  }
 }

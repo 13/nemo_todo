@@ -7,6 +7,7 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
+import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
@@ -85,8 +86,22 @@ class _NemoAppState extends ConsumerState<NemoApp> {
       supportedLocales: L.supportedLocales,
       localeResolutionCallback: resolveAppLocale,
       routerConfig: _router,
-      builder: (context, child) =>
-          SyncLifecycleObserver(child: child ?? const SizedBox.shrink()),
+      // Wrapped in its own Overlay: this sits above the Router, so nothing
+      // inside it (the achievement banner's IconButton tooltip, notably)
+      // can find the one the Router creates for its own pages.
+      builder: (context, child) => Overlay(
+        initialEntries: [
+          OverlayEntry(
+            builder: (context) => SyncLifecycleObserver(
+              child: CelebrationOverlay(
+                onOpenAchievements: () =>
+                    unawaited(_router.push(Routes.achievements)),
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1652,6 +1652,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Achievements could not be loaded.'**
   String get achievementsLoadError;
+
+  /// No description provided for @achievementUnlockedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement unlocked'**
+  String get achievementUnlockedBanner;
+
+  /// No description provided for @achievementsUnlockedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} achievements unlocked}}'**
+  String achievementsUnlockedMany(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

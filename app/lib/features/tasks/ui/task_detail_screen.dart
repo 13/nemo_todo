@@ -8,6 +8,7 @@ import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
+import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_detail_sections.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
@@ -166,6 +167,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     done: task.done,
                     color: nemo.priority(task.priority),
                     onChanged: (done) => completeTask(ref, task, done: done),
+                    celebrate: ref.watch(celebrationsEnabledProvider),
                   ),
                 ),
                 Expanded(

@@ -1001,4 +1001,17 @@ class LDe extends L {
 
   @override
   String get achievementsLoadError => 'Erfolge konnten nicht geladen werden.';
+
+  @override
+  String get achievementUnlockedBanner => 'Erfolg freigeschaltet';
+
+  @override
+  String achievementsUnlockedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Erfolge freigeschaltet',
+    );
+    return '$_temp0';
+  }
 }

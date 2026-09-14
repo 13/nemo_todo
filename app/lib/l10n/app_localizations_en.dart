@@ -991,4 +991,17 @@ class LEn extends L {
 
   @override
   String get achievementsLoadError => 'Achievements could not be loaded.';
+
+  @override
+  String get achievementUnlockedBanner => 'Achievement unlocked';
+
+  @override
+  String achievementsUnlockedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count achievements unlocked',
+    );
+    return '$_temp0';
+  }
 }

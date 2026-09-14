@@ -50,6 +50,18 @@ fi
 # `git commit -a` points GIT_INDEX_FILE at a temporary index.
 sdk() { env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR "$@"; }
 
+# What the generators own, and what state each of those files is in before
+# they run. Anything already modified beforehand belongs to the author's
+# work in progress -- often the next commit -- and is none of this commit's
+# business; only a file the generators change here says this commit is stale.
+generated='\.(g|freezed)\.dart$|app/lib/l10n/app_localizations|drift_schemas/.*\.json$|server/test/generated/'
+snapshot() {
+  git diff --name-only | grep -E "$generated" | sort | while read -r f; do
+    echo "$f $(git hash-object "$f" 2>/dev/null || echo gone)"
+  done
+}
+before=$(snapshot || true)
+
 echo "pre-commit: checking generated code is current..."
 $l10n   && (cd app && sdk flutter gen-l10n > /dev/null)
 $core   && (cd packages/nemo_core && sdk dart run build_runner build > /dev/null)
@@ -66,10 +78,9 @@ if $app; then
     lib/core/db/app_database.dart drift_schemas/ > /dev/null)
 fi
 
-# Only what a generator writes counts. Anything else dirty in the tree is
-# the author's own business and none of this hook's.
-generated='\.(g|freezed)\.dart$|app/lib/l10n/app_localizations|drift_schemas/.*\.json$|server/test/generated/'
-stale=$(git diff --name-only | grep -E "$generated" || true)
+after=$(snapshot || true)
+stale=$(comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$after") \
+  | sed 's/ [^ ]*$//' | grep -v '^$' || true)
 
 if [ -n "$stale" ]; then
   echo "" >&2

@@ -22,6 +22,8 @@ class TestServer {
     DateTime Function()? now,
     RateLimiter? limiter,
     String version = 'dev',
+    String? commit,
+    String? builtAt,
     int maxBlobBytes = 5 * 1024 * 1024,
     int accountQuotaBytes = 500 * 1024 * 1024,
   }) async {
@@ -41,6 +43,8 @@ class TestServer {
         allowSignup: allowSignup,
         corsOrigins: corsOrigins,
         version: version,
+        commit: commit,
+        builtAt: builtAt,
         blobDir: blobDir.path,
         maxBlobBytes: maxBlobBytes,
         accountQuotaBytes: accountQuotaBytes,

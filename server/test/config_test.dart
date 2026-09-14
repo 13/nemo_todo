@@ -12,6 +12,8 @@ void main() {
     expect(c.nodeId, 'server');
     expect(c.trustedProxyHops, 0, reason: 'no proxy is assumed in front');
     expect(c.version, 'dev', reason: 'a build nobody stamped is a dev build');
+    expect(c.commit, isNull);
+    expect(c.builtAt, isNull);
   });
 
   test('reads every variable', () {
@@ -24,6 +26,8 @@ void main() {
       'NEMO_NODE_ID': 'srv1',
       'NEMO_TRUSTED_PROXY_HOPS': '1',
       'NEMO_VERSION': '0.4.0',
+      'NEMO_COMMIT': '33f0001abc',
+      'NEMO_BUILD_DATE': '2026-09-14T07:00:00Z',
     });
     expect(c.port, 9000);
     expect(c.dbPath, '/tmp/x.db');
@@ -33,6 +37,8 @@ void main() {
     expect(c.nodeId, 'srv1');
     expect(c.trustedProxyHops, 1);
     expect(c.version, '0.4.0');
+    expect(c.commit, '33f0001abc');
+    expect(c.builtAt, '2026-09-14T07:00:00Z');
     expect(Config.fromEnv({'NEMO_ALLOW_SIGNUP': 'TRUE'}).allowSignup, isTrue);
     expect(Config.fromEnv({'NEMO_ALLOW_SIGNUP': 'maybe'}).allowSignup, isNull);
   });

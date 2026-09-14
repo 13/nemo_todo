@@ -9,6 +9,8 @@ class Config {
     this.nodeId = 'server',
     this.trustedProxyHops = 0,
     this.version = 'dev',
+    this.commit,
+    this.builtAt,
     this.blobDir = '/data/blobs',
     this.maxBlobBytes = 5 * 1024 * 1024,
     this.accountQuotaBytes = 500 * 1024 * 1024,
@@ -42,6 +44,8 @@ class Config {
       nodeId: read('NEMO_NODE_ID') ?? 'server',
       trustedProxyHops: hops == null ? 0 : int.parse(hops),
       version: read('NEMO_VERSION') ?? 'dev',
+      commit: read('NEMO_COMMIT'),
+      builtAt: read('NEMO_BUILD_DATE'),
       blobDir: read('NEMO_BLOB_DIR') ?? '/data/blobs',
       maxBlobBytes:
           int.tryParse(read('NEMO_MAX_BLOB_BYTES') ?? '') ?? 5 * 1024 * 1024,
@@ -64,6 +68,11 @@ class Config {
   /// reported to anyone who asks. `dev` when nobody said, which is what a
   /// build from a working copy is.
   final String version;
+
+  /// The commit the image was built from, and when, both stamped in by the
+  /// workflows beside [version]. Null for a build nobody stamped.
+  final String? commit;
+  final String? builtAt;
 
   /// How many proxies of our own sit in front of the server. Zero means the
   /// server is reached directly, so `x-forwarded-for` is whatever the client

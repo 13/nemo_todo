@@ -201,7 +201,14 @@ Handler createHandler({
     // start.
     ..get(
       '/healthz',
-      (Request _) => jsonResponse({'status': 'ok', 'version': config.version}),
+      (Request _) => jsonResponse({
+        'status': 'ok',
+        'version': config.version,
+        // Left out rather than sent empty when nobody stamped them, so the
+        // answer from a working copy stays what it always was.
+        if (config.commit != null) 'commit': config.commit,
+        if (config.builtAt != null) 'builtAt': config.builtAt,
+      }),
     )
     ..post(
       '/api/v1/auth/signup',

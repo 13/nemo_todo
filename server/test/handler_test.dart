@@ -55,6 +55,23 @@ void main() {
     expect((await server.get('/api/other')).statusCode, 404);
   });
 
+  test(
+    'health names the commit and build date once they are stamped',
+    () async {
+      server = await TestServer.start(
+        version: '0.7.0',
+        commit: '33f0001abc',
+        builtAt: '2026-09-14T07:00:00Z',
+      );
+      expect(json(await server.get('/healthz')), {
+        'status': 'ok',
+        'version': '0.7.0',
+        'commit': '33f0001abc',
+        'builtAt': '2026-09-14T07:00:00Z',
+      });
+    },
+  );
+
   test('auth endpoints are rate limited per client', () async {
     server = await TestServer.start(limiter: RateLimiter(max: 2));
     await server.signup('ben');

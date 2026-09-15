@@ -39,6 +39,9 @@ Future<void> main() async {
       ),
     );
   } on Object catch (error) {
+    // The error screen reads no providers; there is deliberately no scope
+    // here, because the providers it would hold are what failed to start.
+    // ignore: riverpod_lint/missing_provider_scope
     runApp(StartupErrorApp(error: error));
   }
 }

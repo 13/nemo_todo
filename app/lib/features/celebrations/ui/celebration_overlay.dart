@@ -101,7 +101,11 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
       _banner = event.achievements;
       _layer.markNeedsBuild();
       _hideBanner?.cancel();
-      _hideBanner = Timer(const Duration(seconds: 4), _closeBanner);
+      // Reaching the banner with a screen reader or switch access takes
+      // longer than a glance, so there it stays until it is closed.
+      if (!MediaQuery.accessibleNavigationOf(context)) {
+        _hideBanner = Timer(const Duration(seconds: 4), _closeBanner);
+      }
     }
   }
 

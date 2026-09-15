@@ -445,4 +445,41 @@ void main() {
       containsAll(['first_done']),
     );
   });
+
+  appTest('the banner hides itself after four seconds', (tester) async {
+    await pumpApp(
+      tester,
+      celebrate: true,
+      seed: seedToday(['First', 'Second']),
+    );
+    await tickOff(tester, 'First');
+    expect(find.byKey(const Key('achievement-banner')), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump();
+
+    expect(find.byKey(const Key('achievement-banner')), findsNothing);
+  });
+
+  appTest('with accessible navigation the banner waits to be closed', (
+    tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(accessibleNavigation: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await pumpApp(
+      tester,
+      celebrate: true,
+      seed: seedToday(['First', 'Second']),
+    );
+    await tickOff(tester, 'First');
+
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump();
+    expect(find.byKey(const Key('achievement-banner')), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pump();
+    expect(find.byKey(const Key('achievement-banner')), findsNothing);
+  });
 }

@@ -26,8 +26,17 @@ void main() {
     });
 
     test('equal stamps share a hash and are one set entry', () {
-      const a = Hlc(millis: 5, counter: 1, node: 'n');
-      const b = Hlc(millis: 5, counter: 1, node: 'n');
+      // Built without `const` so the two instances are not canonicalized
+      // into the same object: identical(a, b) must be false, or the
+      // equality/hashCode assertions below would pass even if `operator ==`
+      // and `hashCode` were deleted from Hlc.
+      // ignore: prefer_const_constructors
+      final a = Hlc(millis: 5, counter: 1, node: 'n');
+      // Same reason as above: must stay a separate instance from `a`.
+      // ignore: prefer_const_constructors
+      final b = Hlc(millis: 5, counter: 1, node: 'n');
+      expect(identical(a, b), isFalse);
+      expect(a, b);
       expect(a.hashCode, b.hashCode);
       expect({a, b}, hasLength(1));
     });

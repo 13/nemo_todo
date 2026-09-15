@@ -210,28 +210,66 @@ void main() {
 
   group('identity', () {
     test('equal rules hash equally and print their encoding', () {
-      const everyThreeDays = EveryRepeat(3, RepeatUnit.day);
-      expect(
-        everyThreeDays.hashCode,
-        const EveryRepeat(3, RepeatUnit.day).hashCode,
-      );
-      expect(everyThreeDays.toString(), 'Repeat(every:3d)');
+      // Every pair below is built without `const` so the two instances are
+      // not canonicalized into the same object (identical(a, b) is false):
+      // a const expression compared with an identical const expression
+      // compares an object with itself, and would still pass even if
+      // `operator ==` and `hashCode` were deleted.
+      // Must not be canonicalized with the next instance.
+      // ignore: prefer_const_constructors
+      final everyThreeDaysA = EveryRepeat(3, RepeatUnit.day);
+      // Same reason: kept separate from `everyThreeDaysA`.
+      // ignore: prefer_const_constructors
+      final everyThreeDaysB = EveryRepeat(3, RepeatUnit.day);
+      expect(identical(everyThreeDaysA, everyThreeDaysB), isFalse);
+      expect(everyThreeDaysA, everyThreeDaysB);
+      expect(everyThreeDaysA.hashCode, everyThreeDaysB.hashCode);
+      expect(everyThreeDaysA.toString(), 'Repeat(every:3d)');
+      // A differing value, not canonicalized either.
+      // ignore: prefer_const_constructors
+      expect(everyThreeDaysA, isNot(EveryRepeat(4, RepeatUnit.day)));
 
-      expect(const WeekdaysRepeat().hashCode, const WeekdaysRepeat().hashCode);
-      expect(const WeekdaysRepeat().toString(), 'Repeat(weekdays)');
+      // Must not be canonicalized with the next instance.
+      // ignore: prefer_const_constructors
+      final weekdaysA = WeekdaysRepeat();
+      // Same reason: kept separate from `weekdaysA`.
+      // ignore: prefer_const_constructors
+      final weekdaysB = WeekdaysRepeat();
+      expect(identical(weekdaysA, weekdaysB), isFalse);
+      expect(weekdaysA, weekdaysB);
+      expect(weekdaysA.hashCode, weekdaysB.hashCode);
+      expect(weekdaysA.toString(), 'Repeat(weekdays)');
+      // A different rule kind, not canonicalized either.
+      // ignore: prefer_const_constructors
+      expect(weekdaysA, isNot(EveryRepeat(1, RepeatUnit.day)));
 
-      const lastFriday = NthWeekdayRepeat(
+      // Must not be canonicalized with the next instance.
+      // ignore: prefer_const_constructors
+      final lastFridayA = NthWeekdayRepeat(
         ordinal: NthWeekdayRepeat.last,
         weekday: DateTime.friday,
       );
-      expect(
-        lastFriday.hashCode,
-        const NthWeekdayRepeat(
-          ordinal: NthWeekdayRepeat.last,
-          weekday: DateTime.friday,
-        ).hashCode,
+      // Same reason: kept separate from `lastFridayA`.
+      // ignore: prefer_const_constructors
+      final lastFridayB = NthWeekdayRepeat(
+        ordinal: NthWeekdayRepeat.last,
+        weekday: DateTime.friday,
       );
-      expect(lastFriday.toString(), 'Repeat(monthly:last-fri)');
+      expect(identical(lastFridayA, lastFridayB), isFalse);
+      expect(lastFridayA, lastFridayB);
+      expect(lastFridayA.hashCode, lastFridayB.hashCode);
+      expect(lastFridayA.toString(), 'Repeat(monthly:last-fri)');
+      expect(
+        lastFridayA,
+        isNot(
+          // A differing value, not canonicalized either.
+          // ignore: prefer_const_constructors
+          NthWeekdayRepeat(
+            ordinal: NthWeekdayRepeat.last,
+            weekday: DateTime.thursday,
+          ),
+        ),
+      );
     });
   });
 }

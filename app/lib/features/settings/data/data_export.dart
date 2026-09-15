@@ -1,30 +1,53 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo_core/nemo_core.dart';
 
-/// Lists, tasks and subtasks as a file a person can keep, and back again.
+/// What an export produced.
+class ExportResult {
+  const ExportResult(this.bytes, {required this.photosLeftOut});
+
+  /// The zip to save.
+  final Uint8List bytes;
+
+  /// Photos whose bytes this device does not hold -- on the web they are
+  /// fetched when shown and not kept -- and so are missing from the file.
+  final int photosLeftOut;
+}
+
+/// Lists, tasks, subtasks and their photos as a file a person can keep, and
+/// back again.
 ///
-/// Photos stay out: their bytes would make a file of megabytes out of one of
-/// kilobytes, and the server's own backup already holds them.
+/// The file is a zip: the rows as JSON in [jsonEntry], and each picture's
+/// bytes under [photoEntry], named by their hash like everywhere else.
 class DataExport {
   DataExport(
     this._db,
-    this._clock, {
+    this._clock,
+    this._photos, {
     this.reminders = const NoopReminderScheduler(),
   });
 
   static const format = 'nemo-export';
-  static const version = 1;
+
+  /// 1 was a bare JSON file without photos; it still imports.
+  static const version = 2;
+  static const jsonEntry = 'nemo-export.json';
+  static String photoEntry(String sha256) => 'photos/$sha256';
 
   final AppDatabase _db;
   final HlcClock _clock;
+  final PhotoStore _photos;
   final ReminderScheduler reminders;
 
-  /// Everything alive on this device, as JSON.
-  Future<String> export({required DateTime now}) async {
+  /// Everything alive on this device, as a zip.
+  Future<ExportResult> export({required DateTime now}) async {
     final lists = await (_db.select(
       _db.lists,
     )..where((t) => t.deletedAt.isNull())).get();
@@ -42,17 +65,41 @@ class DataExport {
       )..where((t) => t.deletedAt.isNull())).get())
         if (taskIds.contains(s.taskId)) s,
     ];
-    return const JsonEncoder.withIndent('  ').convert({
+    final photos = <Photo>[];
+    final pictures = <String, Uint8List>{};
+    var leftOut = 0;
+    for (final photo in await (_db.select(
+      _db.photos,
+    )..where((t) => t.deletedAt.isNull())).get()) {
+      if (!taskIds.contains(photo.taskId)) continue;
+      final bytes = pictures[photo.sha256] ?? await _photos.get(photo.sha256);
+      if (bytes == null) {
+        leftOut++;
+        continue;
+      }
+      photos.add(photo);
+      pictures[photo.sha256] = bytes;
+    }
+    final json = const JsonEncoder.withIndent('  ').convert({
       'format': format,
       'version': version,
       'exportedAt': now.toUtc().toIso8601String(),
       'lists': [for (final l in lists) l.toJson()],
       'tasks': [for (final t in tasks) t.toJson()],
       'subtasks': [for (final s in subtasks) s.toJson()],
+      'photos': [for (final p in photos) p.toJson()],
     });
+    final archive = Archive()..addFile(ArchiveFile.string(jsonEntry, json));
+    for (final entry in pictures.entries) {
+      archive.addFile(ArchiveFile.bytes(photoEntry(entry.key), entry.value));
+    }
+    return ExportResult(
+      ZipEncoder().encodeBytes(archive),
+      photosLeftOut: leftOut,
+    );
   }
 
-  /// Adds whatever [text] holds that this device does not, and answers how
+  /// Adds whatever [bytes] holds that this device does not, and answers how
   /// many rows that was. Throws [FormatException] for anything that is not
   /// an export this version can read, before writing a single row.
   ///
@@ -61,18 +108,18 @@ class DataExport {
   /// may have been edited since. A row that is missing, or was deleted, comes
   /// back -- which is the point of importing -- with a fresh stamp, so the
   /// sync carries it to the server instead of losing to the deletion.
-  Future<int> import(String text) async {
-    final (lists, tasks, subtasks) = _parse(text);
+  Future<int> import(Uint8List bytes) async {
+    final parsed = _parse(bytes);
     return await _db.transaction(() async {
       var added = 0;
-      for (final list in lists) {
+      for (final list in parsed.lists) {
         if (_live(await _db.listById(list.id))) continue;
         await _db.upsertList(
           list.copyWith(updatedAt: _stamp(), deletedAt: null),
         );
         added++;
       }
-      for (final task in tasks) {
+      for (final task in parsed.tasks) {
         if (!_live(await _db.listById(task.listId))) continue;
         if (_live(await _db.taskById(task.id))) continue;
         final restored = task.copyWith(updatedAt: _stamp(), deletedAt: null);
@@ -80,11 +127,34 @@ class DataExport {
         await reminders.sync(restored);
         added++;
       }
-      for (final subtask in subtasks) {
+      for (final subtask in parsed.subtasks) {
         if (!_live(await _db.taskById(subtask.taskId))) continue;
         if (_live(await _db.subtaskById(subtask.id))) continue;
         await _db.upsertSubtask(
           subtask.copyWith(updatedAt: _stamp(), deletedAt: null),
+        );
+        added++;
+      }
+      for (final photo in parsed.photos) {
+        if (!_live(await _db.taskById(photo.taskId))) continue;
+        if (_live(await _db.photoById(photo.id))) continue;
+        final bytes = parsed.pictures[photo.sha256];
+        // A picture that is missing, or is not what its row says it is, is
+        // left out rather than restored as a broken image.
+        if (bytes == null || sha256.convert(bytes).toString() != photo.sha256) {
+          continue;
+        }
+        // The same order adding a photo uses: bytes known and protected
+        // before the row, so a sync never sends the row ahead of them.
+        await _photos.put(photo.sha256, bytes);
+        await _photos.pin(photo.sha256);
+        await _db.rememberBlob(
+          photo.sha256,
+          byteSize: bytes.length,
+          state: 'pendingUpload',
+        );
+        await _db.upsertPhoto(
+          photo.copyWith(updatedAt: _stamp(), deletedAt: null),
         );
         added++;
       }
@@ -96,8 +166,26 @@ class DataExport {
 
   static bool _live(SyncRow? row) => row != null && row.deletedAt == null;
 
-  static (List<TaskList>, List<Task>, List<Subtask>) _parse(String text) {
+  static _Parsed _parse(Uint8List bytes) {
     try {
+      final String text;
+      final pictures = <String, Uint8List>{};
+      if (_isZip(bytes)) {
+        final archive = ZipDecoder().decodeBytes(bytes);
+        final json = archive.findFile(jsonEntry)?.readBytes();
+        if (json == null) throw const FormatException('not a nemo export');
+        text = utf8.decode(json);
+        const prefix = 'photos/';
+        for (final file in archive.files) {
+          if (!file.name.startsWith(prefix) || file.name.endsWith('/')) {
+            continue;
+          }
+          final data = file.readBytes();
+          if (data != null) pictures[file.name.substring(prefix.length)] = data;
+        }
+      } else {
+        text = utf8.decode(bytes);
+      }
       final json = jsonDecode(text);
       if (json is! Map<String, dynamic> ||
           json['format'] != format ||
@@ -110,9 +198,11 @@ class DataExport {
           row as Map<String, dynamic>,
       ];
       return (
-        [for (final r in rows('lists')) TaskList.fromJson(r)],
-        [for (final r in rows('tasks')) Task.fromJson(r)],
-        [for (final r in rows('subtasks')) Subtask.fromJson(r)],
+        lists: [for (final r in rows('lists')) TaskList.fromJson(r)],
+        tasks: [for (final r in rows('tasks')) Task.fromJson(r)],
+        subtasks: [for (final r in rows('subtasks')) Subtask.fromJson(r)],
+        photos: [for (final r in rows('photos')) Photo.fromJson(r)],
+        pictures: pictures,
       );
     } on FormatException {
       rethrow;
@@ -121,4 +211,20 @@ class DataExport {
       throw FormatException('not a nemo export: $e');
     }
   }
+
+  /// A zip file starts with the local file header signature `PK\x03\x04`.
+  static bool _isZip(Uint8List bytes) =>
+      bytes.length >= 4 &&
+      bytes[0] == 0x50 &&
+      bytes[1] == 0x4b &&
+      bytes[2] == 0x03 &&
+      bytes[3] == 0x04;
 }
+
+typedef _Parsed = ({
+  List<TaskList> lists,
+  List<Task> tasks,
+  List<Subtask> subtasks,
+  List<Photo> photos,
+  Map<String, Uint8List> pictures,
+});

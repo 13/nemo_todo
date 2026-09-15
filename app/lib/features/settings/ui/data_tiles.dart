@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -28,7 +27,7 @@ class PickerDataFiles implements DataFiles {
       await FilePicker.saveFile(
         fileName: name,
         bytes: bytes,
-        mimeType: 'application/json',
+        mimeType: 'application/zip',
       ) !=
       null;
 
@@ -36,7 +35,7 @@ class PickerDataFiles implements DataFiles {
   Future<Uint8List?> open() async {
     final file = await FilePicker.pickFile(
       type: FileType.custom,
-      allowedExtensions: const ['json'],
+      allowedExtensions: const ['zip', 'json'],
     );
     if (file == null) return null;
     return await file.readAsBytes();
@@ -49,6 +48,7 @@ final dataExportProvider = Provider<DataExport>(
   (ref) => DataExport(
     ref.watch(appDatabaseProvider),
     ref.watch(hlcClockProvider),
+    ref.watch(photoStoreProvider),
     reminders: ref.watch(reminderSchedulerProvider),
   ),
 );
@@ -61,12 +61,10 @@ class DataTiles extends ConsumerWidget {
     final l = L.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final now = ref.read(nowProvider)();
-    final text = await ref.read(dataExportProvider).export(now: now);
+    final result = await ref.read(dataExportProvider).export(now: now);
     String two(int n) => n.toString().padLeft(2, '0');
-    final name = 'nemo-${now.year}-${two(now.month)}-${two(now.day)}.json';
-    final saved = await ref
-        .read(dataFilesProvider)
-        .save(name, utf8.encode(text));
+    final name = 'nemo-${now.year}-${two(now.month)}-${two(now.day)}.zip';
+    final saved = await ref.read(dataFilesProvider).save(name, result.bytes);
     if (saved) _tell(messenger, l.settingsExported);
   }
 
@@ -77,9 +75,7 @@ class DataTiles extends ConsumerWidget {
     if (bytes == null) return;
     final String message;
     try {
-      final added = await ref
-          .read(dataExportProvider)
-          .import(utf8.decode(bytes));
+      final added = await ref.read(dataExportProvider).import(bytes);
       // An export carries its own Inbox, and this device has one too.
       await ref.read(listsRepositoryProvider).mergeDuplicateInboxes();
       message = l.settingsImported(added);

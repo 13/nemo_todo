@@ -8,6 +8,7 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  archive: ^4.3.0
   audioplayers: ^6.8.1
   collection: ^1.19.0
   confetti: ^0.8.0

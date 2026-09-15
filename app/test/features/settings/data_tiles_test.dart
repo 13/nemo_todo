@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:archive/archive.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,13 +53,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  appTest('export saves a dated file holding the tasks', (tester) async {
+  appTest('export saves a dated zip holding the tasks', (tester) async {
     await pump(tester);
     await tap(tester, 'export-data');
 
-    final bytes = files.saved['nemo-2026-09-07.json'];
+    final bytes = files.saved['nemo-2026-09-07.zip'];
     expect(bytes, isNotNull);
-    expect(utf8.decode(bytes!), contains('Water the plants'));
+    final json = ZipDecoder()
+        .decodeBytes(bytes!)
+        .findFile('nemo-export.json')!
+        .readBytes()!;
+    expect(utf8.decode(json), contains('Water the plants'));
     expect(find.text('Tasks exported.'), findsOneWidget);
   });
 

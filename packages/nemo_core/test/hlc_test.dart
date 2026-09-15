@@ -24,6 +24,13 @@ void main() {
       expect(c > b, isTrue);
       expect(a.toString().compareTo(b.toString()), lessThan(0));
     });
+
+    test('equal stamps share a hash and are one set entry', () {
+      const a = Hlc(millis: 5, counter: 1, node: 'n');
+      const b = Hlc(millis: 5, counter: 1, node: 'n');
+      expect(a.hashCode, b.hashCode);
+      expect({a, b}, hasLength(1));
+    });
   });
 
   group('HlcClock', () {
@@ -89,6 +96,18 @@ void main() {
         const Hlc(millis: 100, counter: 3, node: 'other'),
       );
       expect(r.counter, 8);
+    });
+
+    test('receive counts on from its own stamp when it is ahead of both', () {
+      final clock = HlcClock(
+        node: 'me',
+        now: () => DateTime.fromMillisecondsSinceEpoch(100),
+        last: const Hlc(millis: 500, counter: 3, node: 'me'),
+      );
+      final stamp = clock.receive(
+        const Hlc(millis: 200, counter: 9, node: 'them'),
+      );
+      expect(stamp, const Hlc(millis: 500, counter: 4, node: 'me'));
     });
   });
 }

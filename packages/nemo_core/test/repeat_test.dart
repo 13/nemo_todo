@@ -207,4 +207,31 @@ void main() {
       expect(result.weekday, DateTime.friday);
     });
   });
+
+  group('identity', () {
+    test('equal rules hash equally and print their encoding', () {
+      const everyThreeDays = EveryRepeat(3, RepeatUnit.day);
+      expect(
+        everyThreeDays.hashCode,
+        const EveryRepeat(3, RepeatUnit.day).hashCode,
+      );
+      expect(everyThreeDays.toString(), 'Repeat(every:3d)');
+
+      expect(const WeekdaysRepeat().hashCode, const WeekdaysRepeat().hashCode);
+      expect(const WeekdaysRepeat().toString(), 'Repeat(weekdays)');
+
+      const lastFriday = NthWeekdayRepeat(
+        ordinal: NthWeekdayRepeat.last,
+        weekday: DateTime.friday,
+      );
+      expect(
+        lastFriday.hashCode,
+        const NthWeekdayRepeat(
+          ordinal: NthWeekdayRepeat.last,
+          weekday: DateTime.friday,
+        ).hashCode,
+      );
+      expect(lastFriday.toString(), 'Repeat(monthly:last-fri)');
+    });
+  });
 }

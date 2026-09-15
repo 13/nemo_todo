@@ -49,4 +49,18 @@ void main() {
     expect(Subtask.fromJson(s.toJson()), s);
     expect(s.isDeleted, isFalse);
   });
+
+  test('a task reads its repeat rule and ignores one it cannot read', () {
+    const task = Task(
+      id: 't1',
+      listId: 'l1',
+      title: 'Water the plants',
+      sortKey: 'V',
+      updatedAt: '0000000000001-0000-n',
+      repeat: 'weekly',
+    );
+    expect(task.repeatRule, Repeats.weekly);
+    expect(task.copyWith(repeat: 'every:3x').repeatRule, isNull);
+    expect(task.copyWith(repeat: null).repeatRule, isNull);
+  });
 }

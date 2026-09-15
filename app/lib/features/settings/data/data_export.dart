@@ -91,7 +91,15 @@ class DataExport {
     });
     final archive = Archive()..addFile(ArchiveFile.string(jsonEntry, json));
     for (final entry in pictures.entries) {
-      archive.addFile(ArchiveFile.bytes(photoEntry(entry.key), entry.value));
+      // Pictures are already compressed (JPEG); deflating them again barely
+      // shrinks them further and costs time, so they are stored as-is.
+      archive.addFile(
+        ArchiveFile.noCompress(
+          photoEntry(entry.key),
+          entry.value.length,
+          entry.value,
+        ),
+      );
     }
     return ExportResult(
       ZipEncoder().encodeBytes(archive),

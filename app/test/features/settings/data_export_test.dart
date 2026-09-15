@@ -203,11 +203,14 @@ void main() {
       [photo.sha256],
     );
     final archive = ZipDecoder().decodeBytes(result.bytes);
-    expect(archive.findFile(DataExport.photoEntry(photo.sha256))!.readBytes(), [
-      1,
-      2,
-      3,
-    ]);
+    final pictureEntry = archive.findFile(DataExport.photoEntry(photo.sha256))!;
+    expect(pictureEntry.readBytes(), [1, 2, 3]);
+    expect(
+      pictureEntry.compression,
+      CompressionType.none,
+      reason: 'stored, not deflated again -- pictures barely shrink',
+    );
+    expect(archive.findFile(DataExport.jsonEntry)!.readBytes(), isNotNull);
   });
 
   test('a fresh device gets the photos back, queued for upload', () async {

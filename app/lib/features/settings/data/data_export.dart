@@ -110,56 +110,85 @@ class DataExport {
   /// sync carries it to the server instead of losing to the deletion.
   Future<int> import(Uint8List bytes) async {
     final parsed = _parse(bytes);
-    return await _db.transaction(() async {
-      var added = 0;
-      for (final list in parsed.lists) {
-        if (_live(await _db.listById(list.id))) continue;
-        await _db.upsertList(
-          list.copyWith(updatedAt: _stamp(), deletedAt: null),
-        );
-        added++;
-      }
-      for (final task in parsed.tasks) {
-        if (!_live(await _db.listById(task.listId))) continue;
-        if (_live(await _db.taskById(task.id))) continue;
-        final restored = task.copyWith(updatedAt: _stamp(), deletedAt: null);
-        await _db.upsertTask(restored);
-        await reminders.sync(restored);
-        added++;
-      }
-      for (final subtask in parsed.subtasks) {
-        if (!_live(await _db.taskById(subtask.taskId))) continue;
-        if (_live(await _db.subtaskById(subtask.id))) continue;
-        await _db.upsertSubtask(
-          subtask.copyWith(updatedAt: _stamp(), deletedAt: null),
-        );
-        added++;
-      }
-      for (final photo in parsed.photos) {
-        if (!_live(await _db.taskById(photo.taskId))) continue;
-        if (_live(await _db.photoById(photo.id))) continue;
-        final bytes = parsed.pictures[photo.sha256];
-        // A picture that is missing, or is not what its row says it is, is
-        // left out rather than restored as a broken image.
-        if (bytes == null || sha256.convert(bytes).toString() != photo.sha256) {
-          continue;
+    final putHashes = <String>[];
+    try {
+      return await _db.transaction(() async {
+        var added = 0;
+        for (final list in parsed.lists) {
+          if (_live(await _db.listById(list.id))) continue;
+          await _db.upsertList(
+            list.copyWith(updatedAt: _stamp(), deletedAt: null),
+          );
+          added++;
         }
-        // The same order adding a photo uses: bytes known and protected
-        // before the row, so a sync never sends the row ahead of them.
-        await _photos.put(photo.sha256, bytes);
-        await _photos.pin(photo.sha256);
-        await _db.rememberBlob(
-          photo.sha256,
-          byteSize: bytes.length,
-          state: 'pendingUpload',
-        );
-        await _db.upsertPhoto(
-          photo.copyWith(updatedAt: _stamp(), deletedAt: null),
-        );
-        added++;
+        for (final task in parsed.tasks) {
+          if (!_live(await _db.listById(task.listId))) continue;
+          if (_live(await _db.taskById(task.id))) continue;
+          final restored = task.copyWith(updatedAt: _stamp(), deletedAt: null);
+          await _db.upsertTask(restored);
+          await reminders.sync(restored);
+          added++;
+        }
+        for (final subtask in parsed.subtasks) {
+          if (!_live(await _db.taskById(subtask.taskId))) continue;
+          if (_live(await _db.subtaskById(subtask.id))) continue;
+          await _db.upsertSubtask(
+            subtask.copyWith(updatedAt: _stamp(), deletedAt: null),
+          );
+          added++;
+        }
+        for (final photo in parsed.photos) {
+          if (!_live(await _db.taskById(photo.taskId))) continue;
+          if (_live(await _db.photoById(photo.id))) continue;
+          final bytes = parsed.pictures[photo.sha256];
+          // A picture that is missing, or is not what its row says it is, is
+          // left out rather than restored as a broken image.
+          if (bytes == null ||
+              sha256.convert(bytes).toString() != photo.sha256) {
+            continue;
+          }
+          // The same order adding a photo uses: bytes known and protected
+          // before the row, so a sync never sends the row ahead of them.
+          await _photos.put(photo.sha256, bytes);
+          putHashes.add(photo.sha256);
+          await _photos.pin(photo.sha256);
+          await _db.rememberBlob(
+            photo.sha256,
+            byteSize: bytes.length,
+            state: 'pendingUpload',
+          );
+          await _db.upsertPhoto(
+            photo.copyWith(updatedAt: _stamp(), deletedAt: null),
+          );
+          added++;
+        }
+        return added;
+      });
+    } on Object catch (error, stack) {
+      // The transaction rolled back the rows, but not any bytes this
+      // attempt put -- clean up whichever of those no other row now
+      // accounts for, so a failed import never leaves orphaned bytes
+      // pinned in memory or on disk.
+      for (final hash in putHashes) {
+        final row = await (_db.select(
+          _db.blobs,
+        )..where((b) => b.sha256.equals(hash))).getSingleOrNull();
+        // A row now exists: the device already knew these bytes before this
+        // import (a synced download, or a photo added earlier). Leave them.
+        if (row != null) continue;
+        try {
+          await _photos.unpin(hash);
+        } on Object {
+          // A cleanup failure must never hide the original error below.
+        }
+        try {
+          await _photos.remove(hash);
+        } on Object {
+          // Same as above.
+        }
       }
-      return added;
-    });
+      Error.throwWithStackTrace(error, stack);
+    }
   }
 
   String _stamp() => _clock.now().toString();

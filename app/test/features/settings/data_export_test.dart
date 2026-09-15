@@ -9,6 +9,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/settings/data/data_export.dart';
 import 'package:nemo/features/tasks/data/subtasks_repository.dart';
@@ -16,6 +17,36 @@ import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/test_db.dart';
+
+/// Wraps a [MemoryPhotoStore] and throws from [pin] on its [throwOnCall]th
+/// call, so an import can be made to fail deterministically partway through
+/// its photo loop.
+class _ThrowingPinStore implements PhotoStore {
+  _ThrowingPinStore(this._inner, {required this.throwOnCall});
+
+  final MemoryPhotoStore _inner;
+  final int throwOnCall;
+  var _pinCalls = 0;
+
+  @override
+  Future<void> put(String sha256, Uint8List bytes) => _inner.put(sha256, bytes);
+
+  @override
+  Future<Uint8List?> get(String sha256) => _inner.get(sha256);
+
+  @override
+  Future<void> remove(String sha256) => _inner.remove(sha256);
+
+  @override
+  Future<void> pin(String sha256) async {
+    _pinCalls++;
+    if (_pinCalls == throwOnCall) throw StateError('pin failed');
+    await _inner.pin(sha256);
+  }
+
+  @override
+  Future<void> unpin(String sha256) => _inner.unpin(sha256);
+}
 
 void main() {
   late AppDatabase db;
@@ -216,6 +247,46 @@ void main() {
       freshStore,
     ).import(result.bytes);
     expect(again, 0, reason: 'importing twice adds nothing');
+  });
+
+  test('an import that fails partway cleans up the bytes it put', () async {
+    await seed(db);
+    final report = await taskId(db, 'Report');
+    final milk = await taskId(db, 'Milk');
+    // Processed in this order (plain rowid order): `first` succeeds fully,
+    // then `preExisting`'s `pin` is the throwing store's second call and
+    // fails, aborting the transaction before `second` is ever reached.
+    final first = await photoOn(report, [1, 2, 3]);
+    final preExisting = await photoOn(milk, [7, 8, 9]);
+    await photoOn(report, [4, 5, 6]);
+    final result = await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow);
+
+    final fresh = testDatabase();
+    addTearDown(fresh.close);
+    final freshStore = MemoryPhotoStore();
+    // What the device already held for that hash before this import ever
+    // ran -- a synced download, or a photo added earlier.
+    await freshStore.put(preExisting.sha256, Uint8List.fromList([7, 8, 9]));
+    await fresh.rememberBlob(preExisting.sha256, byteSize: 3, state: 'synced');
+    final throwing = _ThrowingPinStore(freshStore, throwOnCall: 2);
+
+    await expectLater(
+      DataExport(fresh, testClock('b'), throwing).import(result.bytes),
+      throwsA(isA<StateError>()),
+    );
+
+    expect(await fresh.select(fresh.photos).get(), isEmpty);
+    expect(await fresh.select(fresh.blobs).get(), hasLength(1));
+    expect(await freshStore.get(first.sha256), isNull, reason: 'cleaned up');
+    expect(await freshStore.get(preExisting.sha256), [
+      7,
+      8,
+      9,
+    ], reason: 'a row already existed for it, so it was left alone');
   });
 
   test('a photo whose bytes are not here is left out and counted', () async {

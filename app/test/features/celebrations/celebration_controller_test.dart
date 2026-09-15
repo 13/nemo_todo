@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
@@ -10,6 +12,38 @@ import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/test_db.dart';
+
+/// Holds the first `seen()` read after [arm] until [release], so a test can
+/// put a backfill exactly between a tap's write and its check.
+///
+/// The gate the next `seen()` call should take ([_armed]) is tracked apart
+/// from the one an in-flight call is actually waiting on ([_pending]):
+/// consuming [_armed] has to happen before the await so a second, racing
+/// caller is not also held, but [release] still needs a live reference
+/// after that, or it would have nothing left to complete.
+class _GatedRepository extends AchievementsRepository {
+  // The parameter is private in the super constructor (`this._db`), so it
+  // cannot share its name across libraries.
+  // ignore: matching_super_parameters
+  _GatedRepository(super.db, {super.now});
+
+  Completer<void>? _armed;
+  Completer<void>? _pending;
+
+  void arm() => _armed = Completer<void>();
+  void release() => _pending?.complete();
+
+  @override
+  Future<Set<String>?> seen() async {
+    final gate = _armed;
+    if (gate != null) {
+      _armed = null;
+      _pending = gate;
+      await gate.future;
+    }
+    return await super.seen();
+  }
+}
 
 void main() {
   late AppDatabase db;
@@ -150,11 +184,50 @@ void main() {
           backfill = controller.backfill();
         },
       );
+      expect(backfill, isNotNull);
       await backfill;
       await pumpEventQueue();
 
       expect(events, hasLength(1));
       expect(unlockedIds(events.single), ['first_done']);
+    },
+  );
+
+  test(
+    'a backfill landing between a tap and its check waits its turn',
+    () async {
+      final gated = _GatedRepository(db, now: () => testNow);
+      final gatedController = CelebrationController(
+        gated,
+        now: () => testNow,
+        celebrate: () => true,
+        showAchievements: () => true,
+      );
+      addTearDown(gatedController.dispose);
+      final gatedEvents = <CelebrationEvent>[];
+      gatedController.events.listen(gatedEvents.add);
+      await gatedController.backfill();
+
+      final a = await add('A');
+      gated.arm();
+      Future<void>? backfill;
+      final tap = gatedController.onCompleted(
+        a,
+        write: () async {
+          await tasks.setDone(a.id, done: true);
+          backfill = gatedController.backfill();
+        },
+      );
+      // Give a backfill that is not made to wait every chance to run first.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      gated.release();
+      await tap;
+      expect(backfill, isNotNull);
+      await backfill;
+      await pumpEventQueue();
+
+      expect(gatedEvents, hasLength(1));
+      expect(unlockedIds(gatedEvents.single), ['first_done']);
     },
   );
 }

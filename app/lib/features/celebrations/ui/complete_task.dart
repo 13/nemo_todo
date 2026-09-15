@@ -19,6 +19,8 @@ Future<void> completeTask(
     await tasks.setDone(task.id, done: false);
     return;
   }
+  // The write runs in the controller's turn, so it may wait briefly behind
+  // a backfill already queued.
   await celebrations.onCompleted(
     task,
     write: () => tasks.setDone(task.id, done: true),

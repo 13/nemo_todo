@@ -13,6 +13,13 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.9.1 - 2026-09-15
+
+### Fixed
+
+- An import from Settings that fails part way no longer leaves its
+  pictures behind on the device.
+
 ## 0.9.0 - 2026-09-15
 
 ### Added

@@ -183,6 +183,23 @@ void main() {
       );
     }
     expect(await db.select(db.lists).get(), isEmpty);
+
+    // A malformed file that is a zip, and carries a real picture alongside
+    // its bad row, is refused the same way -- never touching the store.
+    final hash = sha256.convert([1, 2, 3]).toString();
+    final badZip = Archive()
+      ..addFile(
+        ArchiveFile.string(
+          DataExport.jsonEntry,
+          '{"format":"nemo-export","version":1,"tasks":[{"id":1}]}',
+        ),
+      )
+      ..addFile(ArchiveFile.bytes(DataExport.photoEntry(hash), [1, 2, 3]));
+    await expectLater(
+      export.import(ZipEncoder().encodeBytes(badZip)),
+      throwsFormatException,
+    );
+    expect(await store.get(hash), isNull);
   });
 
   test('the export is a zip holding the rows and the pictures', () async {
@@ -212,6 +229,75 @@ void main() {
     );
     expect(archive.findFile(DataExport.jsonEntry)!.readBytes(), isNotNull);
   });
+
+  test('the json entry is always first in the export zip', () async {
+    await seed(db);
+    await photoOn(await taskId(db, 'Report'), [1, 2, 3]);
+    final result = await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow);
+
+    final archive = ZipDecoder().decodeBytes(result.bytes);
+    expect(archive.files.first.name, DataExport.jsonEntry);
+  });
+
+  test(
+    'one picture shared by two photos is stored once, on both rows',
+    () async {
+      await seed(db);
+      final report = await taskId(db, 'Report');
+      final milk = await taskId(db, 'Milk');
+      final onReport = await photoOn(report, [1, 2, 3]);
+      // Same bytes, so the same hash -- built by hand, since `photoOn`
+      // derives its id from the hash and would collide with `onReport`.
+      final onMilk = Photo(
+        id: 'photo-second',
+        taskId: milk,
+        sha256: onReport.sha256,
+        byteSize: onReport.byteSize,
+        width: 1,
+        height: 1,
+        sortKey: 'W',
+        updatedAt: testClock('a').now().toString(),
+      );
+      await db.upsertPhoto(onMilk);
+
+      final result = await DataExport(
+        db,
+        testClock('a'),
+        store,
+      ).export(now: testNow);
+
+      expect(
+        [for (final f in ZipDecoder().decodeBytes(result.bytes).files) f.name]
+            .where((n) => n.startsWith('photos/')),
+        [DataExport.photoEntry(onReport.sha256)],
+        reason: 'one entry for the shared hash',
+      );
+      final json = exportJson(result.bytes);
+      expect(json['photos'], hasLength(2));
+
+      final fresh = testDatabase();
+      addTearDown(fresh.close);
+      final freshStore = MemoryPhotoStore();
+      final added = await DataExport(
+        fresh,
+        testClock('b'),
+        freshStore,
+      ).import(result.bytes);
+
+      expect(added, 7, reason: '5 rows and 2 photo rows');
+      expect(await fresh.select(fresh.photos).get(), hasLength(2));
+      expect(
+        await fresh.select(fresh.blobs).get(),
+        hasLength(1),
+        reason: 'the bytes are stored once',
+      );
+      expect(await freshStore.get(onReport.sha256), [1, 2, 3]);
+    },
+  );
 
   test('a fresh device gets the photos back, queued for upload', () async {
     await seed(db);
@@ -430,6 +516,48 @@ void main() {
     expect(await fresh.select(fresh.photos).get(), isEmpty);
   });
 
+  test('a photo on a task deleted here, and missing from the file, is not '
+      'imported', () async {
+    await seed(db);
+    final photo = await photoOn(await taskId(db, 'Report'), [1, 2, 3]);
+    final result = await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow);
+    final json = exportJson(result.bytes);
+    // As if the file were an older snapshot from before "Report" existed.
+    (json['tasks'] as List).removeWhere((t) => (t as Map)['title'] == 'Report');
+    final original = ZipDecoder().decodeBytes(result.bytes);
+    final edited = Archive()
+      ..addFile(ArchiveFile.string(DataExport.jsonEntry, jsonEncode(json)));
+    for (final file in original.files) {
+      if (file.name.startsWith('photos/')) {
+        edited.addFile(ArchiveFile.bytes(file.name, file.readBytes()!));
+      }
+    }
+
+    final fresh = testDatabase();
+    addTearDown(fresh.close);
+    // The destination already has this task -- deleted.
+    await seed(fresh);
+    final freshClock = testClock('b');
+    final stamp = freshClock.now().toString();
+    final report = (await fresh.taskById(await taskId(fresh, 'Report')))!;
+    await fresh.upsertTask(report.copyWith(deletedAt: stamp, updatedAt: stamp));
+
+    final freshStore = MemoryPhotoStore();
+    final added = await DataExport(
+      fresh,
+      freshClock,
+      freshStore,
+    ).import(ZipEncoder().encodeBytes(edited));
+
+    expect(added, 0, reason: 'the lists, tasks and subtasks are already here');
+    expect(await fresh.select(fresh.photos).get(), isEmpty);
+    expect(await freshStore.get(photo.sha256), isNull);
+  });
+
   test('a zip without the export, or a newer version, is refused', () async {
     final exporter = DataExport(db, testClock('a'), store);
     final empty = ZipEncoder().encodeBytes(
@@ -438,18 +566,21 @@ void main() {
     await expectLater(exporter.import(empty), throwsFormatException);
 
     await seed(db);
+    final photo = await photoOn(await taskId(db, 'Report'), [4, 5, 6]);
     final result = await exporter.export(now: testNow);
     final v3 = exportJson(result.bytes)..['version'] = 3;
     final fresh = testDatabase();
     addTearDown(fresh.close);
+    final freshStore = MemoryPhotoStore();
     await expectLater(
       DataExport(
         fresh,
         testClock('b'),
-        MemoryPhotoStore(),
+        freshStore,
       ).import(Uint8List.fromList(utf8.encode(jsonEncode(v3)))),
       throwsFormatException,
     );
     expect(await fresh.select(fresh.tasks).get(), isEmpty);
+    expect(await freshStore.get(photo.sha256), isNull);
   });
 }

@@ -10,7 +10,7 @@ class LIt extends L {
   LIt([String locale = 'it']) : super(locale);
 
   @override
-  String get appName => 'nemo';
+  String get appName => 'nemo todo';
 
   @override
   String get commonSave => 'Salva';

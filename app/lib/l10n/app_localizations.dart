@@ -102,7 +102,7 @@ abstract class L {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'nemo'**
+  /// **'nemo todo'**
   String get appName;
 
   /// No description provided for @commonSave.

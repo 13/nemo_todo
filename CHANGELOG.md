@@ -24,6 +24,12 @@ would ship without them, and nothing would say so.
 - Settings has switches for celebrations, their sound and achievements, so
   the app can be kept quiet. They apply to this device only.
 
+### Changed
+
+- The app is called nemo todo on the home screen, in the app switcher, in
+  the browser tab and in About. A web app already added to a home screen
+  may keep its old label until it is added again.
+
 ### Fixed
 
 - On the two days a year the clocks change, Today, Upcoming, quick add's

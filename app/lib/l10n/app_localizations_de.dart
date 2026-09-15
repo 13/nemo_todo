@@ -10,7 +10,7 @@ class LDe extends L {
   LDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appName => 'nemo';
+  String get appName => 'nemo todo';
 
   @override
   String get commonSave => 'Speichern';

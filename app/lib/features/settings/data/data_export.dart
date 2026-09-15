@@ -192,7 +192,15 @@ class DataExport {
           _db.blobs,
         )..where((b) => b.sha256.equals(hash))).getSingleOrNull();
         // A row now exists: the device already knew these bytes before this
-        // import (a synced download, or a photo added earlier). Leave them.
+        // import (a synced download, or a photo added earlier). Leave them
+        // pinned on purpose -- this import cannot tell whether the hash was
+        // already pinned (a photo still waiting to upload), and unpinning it
+        // could drop the only protection its bytes have.
+        //
+        // This check and the removal below are not atomic with other
+        // writers: a concurrent add or download landing on the same bytes
+        // between them could lose those bytes. Accepted, because it takes
+        // identical bytes arriving within milliseconds of a failed import.
         if (row != null) continue;
         try {
           await _photos.unpin(hash);

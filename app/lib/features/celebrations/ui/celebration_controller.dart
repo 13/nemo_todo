@@ -55,9 +55,29 @@ class CelebrationController {
 
   Stream<CelebrationEvent> get events => _events.stream;
 
-  /// After [task] was ticked off by a tap. Never throws: the task is
-  /// already done, and a celebration going wrong must not say otherwise.
-  Future<void> onCompleted(Task task) async {
+  Future<void> _turn = Future<void>.value();
+
+  /// Runs [step] after every step already asked for, so a completion and a
+  /// backfill never interleave. The chain survives a step that throws; the
+  /// caller of that step still sees the error.
+  Future<void> _inTurn(Future<void> Function() step) {
+    final next = _turn.then((_) => step());
+    _turn = next.then<void>((_) {}, onError: (Object _) {});
+    return next;
+  }
+
+  /// After [task] was ticked off by a tap. [write] -- the tap's own write --
+  /// runs in the same turn as the check, so a backfill asked for while it
+  /// runs (a sync finishing) cannot record this tap's unlock first and
+  /// swallow its banner. A failing [write] throws to the caller; a
+  /// celebration going wrong never does.
+  Future<void> onCompleted(Task task, {Future<void> Function()? write}) =>
+      _inTurn(() async {
+        if (write != null) await write();
+        await _celebrate(task);
+      });
+
+  Future<void> _celebrate(Task task) async {
     try {
       final dueAt = task.dueAt;
       final wasInToday = dueAt != null && dueAt < dayStartMsFrom(_now(), 1);
@@ -95,14 +115,14 @@ class CelebrationController {
   /// Records everything already reached as celebrated, without a sound.
   ///
   /// Run at start and after every sync: nothing reached by then was a tap
-  /// on this device, because a tap is celebrated the moment it happens.
-  Future<void> backfill() async {
+  /// on this device, because a tap is celebrated in the turn it happens.
+  Future<void> backfill() => _inTurn(() async {
     try {
       await _repo.markSeen((await _reached()).map((a) => a.id));
     } on Object catch (error, stack) {
       debugPrint('Achievement backfill failed: $error\n$stack');
     }
-  }
+  });
 
   Future<List<Achievement>> _reached() async => [
     for (final p in await _repo.progress())

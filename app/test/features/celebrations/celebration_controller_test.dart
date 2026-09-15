@@ -136,4 +136,25 @@ void main() {
     expect(events.single, isA<TickCelebration>());
     expect(await repo.seen(), {'first_done'});
   });
+
+  test(
+    'a backfill asked for during a tap does not swallow its unlock',
+    () async {
+      final a = await add('A');
+      Future<void>? backfill;
+      await controller.onCompleted(
+        a,
+        write: () async {
+          await tasks.setDone(a.id, done: true);
+          // A sync finishing right after the write asks for a backfill.
+          backfill = controller.backfill();
+        },
+      );
+      await backfill;
+      await pumpEventQueue();
+
+      expect(events, hasLength(1));
+      expect(unlockedIds(events.single), ['first_done']);
+    },
+  );
 }

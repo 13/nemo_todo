@@ -15,6 +15,12 @@ Future<void> completeTask(
 }) async {
   final tasks = ref.read(tasksRepositoryProvider);
   final celebrations = ref.read(celebrationControllerProvider);
-  await tasks.setDone(task.id, done: done);
-  if (done) await celebrations.onCompleted(task);
+  if (!done) {
+    await tasks.setDone(task.id, done: false);
+    return;
+  }
+  await celebrations.onCompleted(
+    task,
+    write: () => tasks.setDone(task.id, done: true),
+  );
 }

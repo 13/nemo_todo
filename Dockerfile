@@ -44,7 +44,7 @@ RUN tool/fetch_web_assets.sh \
 # `dart build cli` rather than `dart compile exe`: the sqlite3 package ships
 # a build hook, and only this command runs hooks and bundles the resulting
 # native library next to the executable.
-FROM dart:3.13.2-sdk AS server-build
+FROM dart:3.13.3-sdk AS server-build
 WORKDIR /src
 # A workspace root listing the Flutter app would make `dart pub get` refuse
 # to run, so this stage declares a root with only the two packages it

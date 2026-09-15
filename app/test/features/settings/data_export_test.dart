@@ -184,22 +184,36 @@ void main() {
     }
     expect(await db.select(db.lists).get(), isEmpty);
 
-    // A malformed file that is a zip, and carries a real picture alongside
-    // its bad row, is refused the same way -- never touching the store.
-    final hash = sha256.convert([1, 2, 3]).toString();
-    final badZip = Archive()
-      ..addFile(
-        ArchiveFile.string(
-          DataExport.jsonEntry,
-          '{"format":"nemo-export","version":1,"tasks":[{"id":1}]}',
-        ),
-      )
-      ..addFile(ArchiveFile.bytes(DataExport.photoEntry(hash), [1, 2, 3]));
+    // A malformed row inside an otherwise real export -- whose photo row
+    // and bytes are both genuinely present -- is refused the same way,
+    // and the photo is never stored either.
+    await seed(db);
+    final photo = await photoOn(await taskId(db, 'Report'), [1, 2, 3]);
+    final result = await export.export(now: testNow);
+    final badJson = exportJson(result.bytes);
+    ((badJson['tasks'] as List).firstWhere(
+      (t) => (t as Map)['title'] == 'Report',
+    ) as Map).remove('title');
+    final badArchive = Archive()
+      ..addFile(ArchiveFile.string(DataExport.jsonEntry, jsonEncode(badJson)));
+    for (final file in ZipDecoder().decodeBytes(result.bytes).files) {
+      if (file.name.startsWith('photos/')) {
+        badArchive.addFile(ArchiveFile.bytes(file.name, file.readBytes()!));
+      }
+    }
+    final freshForBadRow = testDatabase();
+    addTearDown(freshForBadRow.close);
+    final storeForBadRow = MemoryPhotoStore();
     await expectLater(
-      export.import(ZipEncoder().encodeBytes(badZip)),
+      DataExport(
+        freshForBadRow,
+        testClock('b'),
+        storeForBadRow,
+      ).import(ZipEncoder().encodeBytes(badArchive)),
       throwsFormatException,
     );
-    expect(await store.get(hash), isNull);
+    expect(await freshForBadRow.select(freshForBadRow.tasks).get(), isEmpty);
+    expect(await storeForBadRow.get(photo.sha256), isNull);
   });
 
   test('the export is a zip holding the rows and the pictures', () async {
@@ -560,27 +574,52 @@ void main() {
 
   test('a zip without the export, or a newer version, is refused', () async {
     final exporter = DataExport(db, testClock('a'), store);
+    // No row could ever name this hash -- there is no json entry at all --
+    // but the entry still guards against a photo being stored before the
+    // json is even found.
+    final emptyHash = sha256.convert([1, 2, 3]).toString();
     final empty = ZipEncoder().encodeBytes(
-      Archive()..addFile(ArchiveFile.string('readme.txt', 'hello')),
+      Archive()
+        ..addFile(ArchiveFile.string('readme.txt', 'hello'))
+        ..addFile(
+          ArchiveFile.bytes(DataExport.photoEntry(emptyHash), [1, 2, 3]),
+        ),
     );
-    await expectLater(exporter.import(empty), throwsFormatException);
+    final freshForEmpty = testDatabase();
+    addTearDown(freshForEmpty.close);
+    final storeForEmpty = MemoryPhotoStore();
+    await expectLater(
+      DataExport(freshForEmpty, testClock('b'), storeForEmpty).import(empty),
+      throwsFormatException,
+    );
+    expect(await storeForEmpty.get(emptyHash), isNull);
 
     await seed(db);
     final photo = await photoOn(await taskId(db, 'Report'), [4, 5, 6]);
     final result = await exporter.export(now: testNow);
-    final v3 = exportJson(result.bytes)..['version'] = 3;
-    final fresh = testDatabase();
-    addTearDown(fresh.close);
-    final freshStore = MemoryPhotoStore();
+
+    // Version 3, inside a real export whose photo row and bytes are both
+    // genuinely present -- refused before either is stored.
+    final v3Json = exportJson(result.bytes)..['version'] = 3;
+    final v3Archive = Archive()
+      ..addFile(ArchiveFile.string(DataExport.jsonEntry, jsonEncode(v3Json)));
+    for (final file in ZipDecoder().decodeBytes(result.bytes).files) {
+      if (file.name.startsWith('photos/')) {
+        v3Archive.addFile(ArchiveFile.bytes(file.name, file.readBytes()!));
+      }
+    }
+    final freshForV3 = testDatabase();
+    addTearDown(freshForV3.close);
+    final storeForV3 = MemoryPhotoStore();
     await expectLater(
       DataExport(
-        fresh,
+        freshForV3,
         testClock('b'),
-        freshStore,
-      ).import(Uint8List.fromList(utf8.encode(jsonEncode(v3)))),
+        storeForV3,
+      ).import(ZipEncoder().encodeBytes(v3Archive)),
       throwsFormatException,
     );
-    expect(await fresh.select(fresh.tasks).get(), isEmpty);
-    expect(await freshStore.get(photo.sha256), isNull);
+    expect(await freshForV3.select(freshForV3.tasks).get(), isEmpty);
+    expect(await storeForV3.get(photo.sha256), isNull);
   });
 }

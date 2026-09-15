@@ -65,7 +65,13 @@ class DataTiles extends ConsumerWidget {
     String two(int n) => n.toString().padLeft(2, '0');
     final name = 'nemo-${now.year}-${two(now.month)}-${two(now.day)}.zip';
     final saved = await ref.read(dataFilesProvider).save(name, result.bytes);
-    if (saved) _tell(messenger, l.settingsExported);
+    if (!saved) return;
+    _tell(
+      messenger,
+      result.photosLeftOut == 0
+          ? l.settingsExported
+          : l.settingsExportedWithoutPhotos(result.photosLeftOut),
+    );
   }
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {

@@ -213,7 +213,7 @@
   "repeatOrdinal": "{ordinal, select, first{erster} second{zweiter} third{dritter} fourth{vierter} other{letzter}}",
   "settingsData": "Deine Daten",
   "settingsExport": "Aufgaben exportieren",
-  "settingsExportHint": "Listen, Aufgaben und Unteraufgaben als JSON-Datei. Fotos sind nicht enthalten.",
+  "settingsExportHint": "Listen, Aufgaben, Unteraufgaben und Fotos als ZIP-Datei.",
   "settingsImport": "Aufgaben importieren",
   "settingsImportHint": "Fügt hinzu, was ein nemo-Export enthält und dieses Gerät noch nicht hat.",
   "settingsExported": "Aufgaben exportiert.",
@@ -260,5 +260,6 @@
   "achievementsStreak": "{count, plural, =1{1 Tag in Folge} other{{count} Tage in Folge}}",
   "achievementsLoadError": "Erfolge konnten nicht geladen werden.",
   "achievementUnlockedBanner": "Erfolg freigeschaltet",
-  "achievementsUnlockedMany": "{count, plural, other{{count} Erfolge freigeschaltet}}"
+  "achievementsUnlockedMany": "{count, plural, other{{count} Erfolge freigeschaltet}}",
+  "settingsExportedWithoutPhotos": "{count, plural, =1{Aufgaben exportiert. 1 Foto ist nicht auf diesem Gerät und fehlt.} other{Aufgaben exportiert. {count} Fotos sind nicht auf diesem Gerät und fehlen.}}"
 }

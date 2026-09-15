@@ -808,7 +808,7 @@ class LEn extends L {
 
   @override
   String get settingsExportHint =>
-      'Lists, tasks and subtasks as a JSON file. Photos are not included.';
+      'Lists, tasks, subtasks and photos as a zip file.';
 
   @override
   String get settingsImport => 'Import tasks';
@@ -1001,6 +1001,18 @@ class LEn extends L {
       count,
       locale: localeName,
       other: '$count achievements unlocked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsExportedWithoutPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Tasks exported. $count photos are not on this device and were left out.',
+      one: 'Tasks exported. 1 photo is not on this device and was left out.',
     );
     return '$_temp0';
   }

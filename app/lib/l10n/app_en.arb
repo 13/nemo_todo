@@ -428,7 +428,7 @@
   },
   "settingsData": "Your data",
   "settingsExport": "Export tasks",
-  "settingsExportHint": "Lists, tasks and subtasks as a JSON file. Photos are not included.",
+  "settingsExportHint": "Lists, tasks, subtasks and photos as a zip file.",
   "settingsImport": "Import tasks",
   "settingsImportHint": "Adds what a nemo export holds and this device does not.",
   "settingsExported": "Tasks exported.",
@@ -531,6 +531,10 @@
   "achievementUnlockedBanner": "Achievement unlocked",
   "achievementsUnlockedMany": "{count, plural, other{{count} achievements unlocked}}",
   "@achievementsUnlockedMany": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "settingsExportedWithoutPhotos": "{count, plural, =1{Tasks exported. 1 photo is not on this device and was left out.} other{Tasks exported. {count} photos are not on this device and were left out.}}",
+  "@settingsExportedWithoutPhotos": {
     "placeholders": {"count": {"type": "int"}}
   }
 }

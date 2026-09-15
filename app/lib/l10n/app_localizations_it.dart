@@ -815,7 +815,7 @@ class LIt extends L {
 
   @override
   String get settingsExportHint =>
-      'Liste, attività e sottoattività in un file JSON. Le foto non sono incluse.';
+      'Liste, attività, sottoattività e foto in un file ZIP.';
 
   @override
   String get settingsImport => 'Importa attività';
@@ -1012,6 +1012,18 @@ class LIt extends L {
       count,
       locale: localeName,
       other: '$count traguardi sbloccati',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsExportedWithoutPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Attività esportate. $count foto non sono su questo dispositivo e sono state escluse.',
+      one: 'Attività esportate. 1 foto non è su questo dispositivo ed è stata esclusa.',
     );
     return '$_temp0';
   }

@@ -1380,7 +1380,7 @@ abstract class L {
   /// No description provided for @settingsExportHint.
   ///
   /// In en, this message translates to:
-  /// **'Lists, tasks and subtasks as a JSON file. Photos are not included.'**
+  /// **'Lists, tasks, subtasks and photos as a zip file.'**
   String get settingsExportHint;
 
   /// No description provided for @settingsImport.
@@ -1664,6 +1664,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'{count, plural, other{{count} achievements unlocked}}'**
   String achievementsUnlockedMany(int count);
+
+  /// No description provided for @settingsExportedWithoutPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Tasks exported. 1 photo is not on this device and was left out.} other{Tasks exported. {count} photos are not on this device and were left out.}}'**
+  String settingsExportedWithoutPhotos(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

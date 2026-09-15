@@ -815,7 +815,7 @@ class LDe extends L {
 
   @override
   String get settingsExportHint =>
-      'Listen, Aufgaben und Unteraufgaben als JSON-Datei. Fotos sind nicht enthalten.';
+      'Listen, Aufgaben, Unteraufgaben und Fotos als ZIP-Datei.';
 
   @override
   String get settingsImport => 'Aufgaben importieren';
@@ -1011,6 +1011,18 @@ class LDe extends L {
       count,
       locale: localeName,
       other: '$count Erfolge freigeschaltet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsExportedWithoutPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Aufgaben exportiert. $count Fotos sind nicht auf diesem Gerät und fehlen.',
+      one: 'Aufgaben exportiert. 1 Foto ist nicht auf diesem Gerät und fehlt.',
     );
     return '$_temp0';
   }

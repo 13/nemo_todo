@@ -213,7 +213,7 @@
   "repeatOrdinal": "{ordinal, select, first{primo} second{secondo} third{terzo} fourth{quarto} other{ultimo}}",
   "settingsData": "I tuoi dati",
   "settingsExport": "Esporta attività",
-  "settingsExportHint": "Liste, attività e sottoattività in un file JSON. Le foto non sono incluse.",
+  "settingsExportHint": "Liste, attività, sottoattività e foto in un file ZIP.",
   "settingsImport": "Importa attività",
   "settingsImportHint": "Aggiunge ciò che un export di nemo contiene e questo dispositivo non ha.",
   "settingsExported": "Attività esportate.",
@@ -260,5 +260,6 @@
   "achievementsStreak": "{count, plural, =1{1 giorno di fila} other{{count} giorni di fila}}",
   "achievementsLoadError": "Impossibile caricare i traguardi.",
   "achievementUnlockedBanner": "Traguardo sbloccato",
-  "achievementsUnlockedMany": "{count, plural, other{{count} traguardi sbloccati}}"
+  "achievementsUnlockedMany": "{count, plural, other{{count} traguardi sbloccati}}",
+  "settingsExportedWithoutPhotos": "{count, plural, =1{Attività esportate. 1 foto non è su questo dispositivo ed è stata esclusa.} other{Attività esportate. {count} foto non sono su questo dispositivo e sono state escluse.}}"
 }

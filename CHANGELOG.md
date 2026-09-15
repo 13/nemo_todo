@@ -15,6 +15,12 @@ would ship without them, and nothing would say so.
 
 ## Unreleased
 
+### Added
+
+- Exporting from Settings now includes the photos: the file is a zip with
+  the pictures beside the tasks, and importing it brings them back. Exports
+  made before still import.
+
 ### Fixed
 
 - The achievement banner no longer hides after four seconds for people

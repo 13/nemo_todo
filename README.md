@@ -22,6 +22,8 @@ host yourself.
   when Today is cleared, and ten achievements to unlock, from the first
   task done to a 30-day streak. Settings turns celebrations, their sound
   and achievements off one by one, for a quieter, more professional app.
+  In Safari the sound may stay silent: Safari plays sound only right after
+  a tap, and the chime comes a moment later.
 - Connect it to your server later and everything already on the device is
   uploaded. Signing out of the Android app keeps your tasks on it.
 - Lists can be shared with other accounts on the same server, and handed

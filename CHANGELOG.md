@@ -13,6 +13,16 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## Unreleased
+
+### Fixed
+
+- The achievement banner no longer hides after four seconds for people
+  moving through the app with a screen reader or switch access; it waits
+  until it is closed.
+- An achievement unlocked by a tap can no longer go uncelebrated because a
+  sync finished at the same moment.
+
 ## 0.8.0 - 2026-09-15
 
 ### Added

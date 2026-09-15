@@ -184,6 +184,8 @@ volume and respects the device's media volume. It takes transient,
 ducking audio focus, so other audio dips under the chime and resumes
 after it instead of being stopped. Failures are logged and
 swallowed: a missing codec never breaks ticking a task. Tests use a fake.
+Safari plays sound only in direct response to a tap; the chime starts after
+the controller's queries, so Safari may refuse it and it stays silent there.
 
 Sound plays only on `dayCleared` and `achievementUnlocked`, and only
 when both Celebrations and Sound are on. On the web a tick is a user

@@ -362,6 +362,39 @@ void main() {
     expect(await fresh.select(fresh.photos).get(), isEmpty);
   });
 
+  test(
+    'an untracked entry under photos/ does not stop the real photo',
+    () async {
+      await seed(db);
+      final photo = await photoOn(await taskId(db, 'Report'), [1, 2, 3]);
+      final result = await DataExport(
+        db,
+        testClock('a'),
+        store,
+      ).export(now: testNow);
+      final withExtra = Archive();
+      for (final file in ZipDecoder().decodeBytes(result.bytes).files) {
+        withExtra.addFile(ArchiveFile.bytes(file.name, file.readBytes()!));
+      }
+      // No row names this hash -- it should simply be ignored, not read.
+      withExtra.addFile(
+        ArchiveFile.bytes(DataExport.photoEntry('no-such-hash'), [0]),
+      );
+
+      final fresh = testDatabase();
+      addTearDown(fresh.close);
+      final freshStore = MemoryPhotoStore();
+      final added = await DataExport(
+        fresh,
+        testClock('b'),
+        freshStore,
+      ).import(ZipEncoder().encodeBytes(withExtra));
+
+      expect(added, 6, reason: '5 rows and the real photo');
+      expect(await freshStore.get(photo.sha256), [1, 2, 3]);
+    },
+  );
+
   test('a photo of a task the file does not hold is not imported', () async {
     await seed(db);
     await photoOn(await taskId(db, 'Report'), [1, 2, 3]);

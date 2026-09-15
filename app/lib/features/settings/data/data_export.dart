@@ -140,9 +140,19 @@ class DataExport {
         for (final photo in parsed.photos) {
           if (!_live(await _db.taskById(photo.taskId))) continue;
           if (_live(await _db.photoById(photo.id))) continue;
-          final bytes = parsed.pictures[photo.sha256];
-          // A picture that is missing, or is not what its row says it is, is
-          // left out rather than restored as a broken image.
+          final file = parsed.pictures[photo.sha256];
+          if (file == null) continue;
+          // Read only now that the row is actually going to be imported --
+          // most entries in a large export never reach this point.
+          Uint8List? bytes;
+          try {
+            bytes = file.readBytes();
+          } on Object {
+            bytes = null;
+          }
+          // A picture that is missing, fails to read, or is not what its
+          // row says it is, is left out rather than restored as a broken
+          // image.
           if (bytes == null ||
               sha256.convert(bytes).toString() != photo.sha256) {
             continue;
@@ -198,7 +208,7 @@ class DataExport {
   static _Parsed _parse(Uint8List bytes) {
     try {
       final String text;
-      final pictures = <String, Uint8List>{};
+      final pictures = <String, ArchiveFile>{};
       if (_isZip(bytes)) {
         final archive = ZipDecoder().decodeBytes(bytes);
         final json = archive.findFile(jsonEntry)?.readBytes();
@@ -209,8 +219,9 @@ class DataExport {
           if (!file.name.startsWith(prefix) || file.name.endsWith('/')) {
             continue;
           }
-          final data = file.readBytes();
-          if (data != null) pictures[file.name.substring(prefix.length)] = data;
+          // Just the name and the (still-compressed) file handle -- its
+          // bytes are read later, only for a row that is actually imported.
+          pictures[file.name.substring(prefix.length)] = file;
         }
       } else {
         text = utf8.decode(bytes);
@@ -255,5 +266,5 @@ typedef _Parsed = ({
   List<Task> tasks,
   List<Subtask> subtasks,
   List<Photo> photos,
-  Map<String, Uint8List> pictures,
+  Map<String, ArchiveFile> pictures,
 });

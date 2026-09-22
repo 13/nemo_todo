@@ -43,6 +43,12 @@ int? parseMinutes(String input) {
 const int _maxExactInt = 9007199254740991;
 
 int? _hoursAndMinutes(int hours, int minutes) {
+  // `minutes` is bounded on its own first: the guard below only bounds
+  // `hours` against what is left of the ceiling after `minutes`, so with
+  // `hours` at 0 (the bare-number path) it never bounded `minutes` at
+  // all -- `9007199254740993` (2^53 + 1) parsed clean on the VM but not
+  // under dart2js, the same native/web split this guard exists to close.
+  if (minutes > _maxExactInt) return null;
   if (hours > (_maxExactInt - minutes) ~/ 60) return null;
   return hours * 60 + minutes;
 }
@@ -107,8 +113,17 @@ String formatMinutes(
 /// 100` matches that; `simpleCurrency`'s own formatting instead applies
 /// each currency's *real* exponent, which is not always 2 -- JPY has none,
 /// so a 1250-minor-unit amount would render as `¥13`, not `¥12.50`.
-/// Unreachable today because the currency picker only offers two-decimal
-/// codes, but silently wrong the moment that list grows.
+///
+/// Reachable today: the currency defaults to the *device's* currency
+/// (`defaultCurrencyCode` in `core/providers.dart`), not to a value the
+/// picker offers, and `CurrencyTile` deliberately keeps whatever code is
+/// already held even when it is off its own short list. A `ja-JP` device
+/// defaults to JPY with the picker never touched, so a cost typed as
+/// `12.50` and stored as 1250 redisplays in the collapsed summary as
+/// `¥13`. Cosmetic, not a data loss -- the stored minor-unit value is
+/// untouched -- but wrong on screen for any zero- or three-decimal
+/// currency (JPY, KRW, ISK, CLF, ...) until this assumes the currency's
+/// real exponent instead of hardcoding 2.
 String formatMoney(
   int minor, {
   required String currency,

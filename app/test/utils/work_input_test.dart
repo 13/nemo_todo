@@ -51,6 +51,22 @@ void main() {
       expect(parseMinutes('150119987579016:31'), 9007199254740991);
       expect(parseMinutes('150119987579016:32'), isNull);
     });
+
+    test('refuses a bare-minutes value past the exact-JS ceiling too', () {
+      // `_hoursAndMinutes` used to bound only `hours` against what the
+      // ceiling had left after `minutes`; with `hours` at 0 (this path,
+      // the only one a bare number takes) that guard never fired, so
+      // minutes up to 2^53 + 59 slipped through unbounded. That split
+      // native from web the same way the int64 boundary above did:
+      // `parseMinutes('9007199254740993')` returned 9007199254740993 on
+      // the VM but a rounded 9007199254740992 under dart2js.
+      expect(parseMinutes('9007199254740991'), 9007199254740991); // 2^53 - 1
+      expect(parseMinutes('9007199254740992'), isNull); // 2^53, first inexact
+      expect(
+        parseMinutes('9007199254740993'),
+        isNull,
+      ); // reviewer's VM/web split
+    });
   });
 
   group('parseMinorUnits', () {

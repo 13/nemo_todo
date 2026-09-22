@@ -817,6 +817,26 @@ void main() {
     ], reason: 'the list is no longer stuck behind the note');
   });
 
+  test('once the server says it takes notes, the held one goes out', () async {
+    final (:c, :note) = await noteOnOldServer();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    client
+      ..notes = true
+      ..rejectNoteChanges = false;
+    final before = client.calls;
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    final pushed = client.pushes
+        .skip(before)
+        .expand((p) => p)
+        .whereType<SyncChangeNote>();
+    expect(pushed.single.row.id, note.id);
+    expect(client.calls - before, 2, reason: 'in the same sync, not the next');
+    expect(await db.outboxCount(), 0);
+    expect(await KvStore(db).get(KvKeys.serverNotes), 'true');
+  });
+
   test('signing in to a server without photos pushes no photo rows', () async {
     await syncedPicture('https://nemo.test|ben');
     await db.upsertList(list('l1', testClock('a').now().toString()));

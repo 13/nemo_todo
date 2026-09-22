@@ -95,9 +95,21 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
       // the `parseMinorUnits` regression this mirrors), silently changing
       // the stored amount on a redisplay nobody asked for.
       final separator = NumberFormat.decimalPattern(locale).symbols.DECIMAL_SEP;
-      final shown = cost == null
-          ? ''
-          : '${cost ~/ 100}$separator${(cost % 100).toString().padLeft(2, '0')}';
+      // `~/` truncates toward zero but `%` never goes negative (Dart's
+      // `%` is Euclidean), so splitting a negative `cost` straight into
+      // those two -- `-1205 ~/ 100` is -12, `-1205 % 100` is 95 -- would
+      // print "-12.95" for -12.05. Not reachable through this app today
+      // (`parseMinorUnits` refuses a leading `-`, and nothing else writes
+      // `costMinor`), but a peer on the same sync log is free to, so the
+      // sign is split off and applied to the absolute value instead of
+      // documenting the gap away.
+      final shown = switch (cost) {
+        null => '',
+        final c when c < 0 =>
+          '-${-c ~/ 100}$separator${(-c % 100).toString().padLeft(2, '0')}',
+        final c =>
+          '${c ~/ 100}$separator${(c % 100).toString().padLeft(2, '0')}',
+      };
       if (_cost.text != shown) _cost.text = shown;
     }
   }

@@ -202,4 +202,50 @@ void main() {
 
     expect(find.text('12.50'), findsOneWidget);
   });
+
+  testWidgets(
+    'a stored cost renders at full precision, not a double round-trip',
+    (tester) async {
+      // `(cost / 100).toStringAsFixed(2)` -- the expression this replaced
+      // -- passes every other test in this file too, because 1250 / 100 is
+      // exactly 12.50 in a double. It only disagrees with the integer
+      // arithmetic at a value a double can no longer represent exactly;
+      // 8999999999998001 is the same value work_input_test.dart pins on
+      // the parse side (`parseMinorUnits('89999999999980.01')`), so this
+      // pins the same amount on the display side. Against the old
+      // expression this renders '89999999999980.02', not '...01'.
+      final harness = await pumpApp(tester, initialLocation: '/tasks/t1');
+      await harness.seedList('l1', 'Home');
+      await harness.seedTask('t1', 'l1', title: 'Fix the tap');
+      await harness.db.upsertTask(
+        (await harness.db.taskById('t1'))!
+            .copyWith(costMinor: 8999999999998001),
+      );
+      await tester.pumpAndSettle();
+
+      await scrollIntoView(tester, find.byKey(const Key('task-cost')));
+
+      expect(find.text('89999999999980.01'), findsOneWidget);
+    },
+  );
+
+  testWidgets('a negative stored cost redisplays with the sign in the right '
+      'place', (tester) async {
+    // `~/` truncates toward zero but Dart's `%` never goes negative, so
+    // splitting a negative cost straight into those two prints the wrong
+    // amount (-1205 would print as "-12.95"). Not reachable by typing --
+    // `parseMinorUnits` refuses a leading '-' -- but a peer's synced row
+    // is free to write one, and a re-save should not scramble it further.
+    final harness = await pumpApp(tester, initialLocation: '/tasks/t1');
+    await harness.seedList('l1', 'Home');
+    await harness.seedTask('t1', 'l1', title: 'Fix the tap');
+    await harness.db.upsertTask(
+      (await harness.db.taskById('t1'))!.copyWith(costMinor: -1205),
+    );
+    await tester.pumpAndSettle();
+
+    await scrollIntoView(tester, find.byKey(const Key('task-cost')));
+
+    expect(find.text('-12.05'), findsOneWidget);
+  });
 }

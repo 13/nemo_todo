@@ -32,9 +32,10 @@ class NotesRepository {
   Stream<List<Note>> search(String query) {
     final q = query.trim();
     if (q.isEmpty) return Stream.value(const []);
-    final pattern = '%${q.replaceAll('%', r'\%')}%';
+    final pattern = _likePattern(q);
     return _visible(
-      _db.notes.title.like(pattern) | _db.notes.body.like(pattern),
+      _db.notes.title.like(pattern, escapeChar: _likeEscapeChar) |
+          _db.notes.body.like(pattern, escapeChar: _likeEscapeChar),
       _joinOrder,
     );
   }
@@ -123,3 +124,21 @@ class NotesRepository {
     OrderingTerm.asc(_db.notes.sortKey),
   ];
 }
+
+/// The escape character declared to drift's `like()` below -- SQLite's
+/// `LIKE` has no default one, so without this a backslash in the pattern
+/// is just a literal character and `%` or `_` typed by the user still act
+/// as wildcards. Kept in step with `TasksRepository`'s copy of the same
+/// helpers.
+const _likeEscapeChar = r'\';
+
+/// Wraps [q] as a substring match, escaping `%` and `_` -- SQLite's
+/// multi-character and single-character `LIKE` wildcards -- and the escape
+/// character itself, so a literal occurrence of any of the three in the
+/// query matches only itself.
+String _likePattern(String q) => '%${_escapeLike(q)}%';
+
+String _escapeLike(String q) => q
+    .replaceAll(_likeEscapeChar, _likeEscapeChar * 2)
+    .replaceAll('%', '$_likeEscapeChar%')
+    .replaceAll('_', '${_likeEscapeChar}_');

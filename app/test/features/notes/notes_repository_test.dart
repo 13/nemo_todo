@@ -109,6 +109,22 @@ void main() {
     expect([for (final n in notes) n.title], ['Bread']);
   });
 
+  test('search treats a literal % or _ as itself, not a wildcard', () async {
+    await repository.create(listId: 'l1', title: '50% off');
+    await repository.create(listId: 'l1', title: '50 something off');
+    await repository.create(listId: 'l1', title: 'a_b');
+    await repository.create(listId: 'l1', title: 'axb');
+
+    expect(
+      [for (final n in await repository.search('50%').first) n.title],
+      ['50% off'],
+    );
+    expect(
+      [for (final n in await repository.search('a_b').first) n.title],
+      ['a_b'],
+    );
+  });
+
   test('search does not surface a note whose list is deleted', () async {
     final live = TaskList(
       id: 'l1',

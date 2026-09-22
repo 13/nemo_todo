@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/features/notes/ui/note_body_view.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
+import 'package:nemo/l10n/app_localizations.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester, String body, List<Object> overrides) =>
@@ -11,6 +12,8 @@ void main() {
         ProviderScope(
           overrides: overrides.cast(),
           child: MaterialApp(
+            localizationsDelegates: L.localizationsDelegates,
+            supportedLocales: L.supportedLocales,
             home: Scaffold(body: NoteBodyView(body: body)),
           ),
         ),
@@ -63,5 +66,24 @@ void main() {
     tapLink(tester);
 
     expect(opened, isEmpty);
+  });
+
+  testWidgets('an empty body shows a dimmed hint, not a blank area', (
+    tester,
+  ) async {
+    await pump(tester, '', []);
+
+    final l = L.of(tester.element(find.byType(NoteBodyView)));
+    expect(find.text(l.notePreviewEmpty), findsOneWidget);
+    expect(find.byType(SelectableText), findsNothing);
+  });
+
+  testWidgets('a body that is only whitespace also shows the hint', (
+    tester,
+  ) async {
+    await pump(tester, '   \n  ', []);
+
+    final l = L.of(tester.element(find.byType(NoteBodyView)));
+    expect(find.text(l.notePreviewEmpty), findsOneWidget);
   });
 }

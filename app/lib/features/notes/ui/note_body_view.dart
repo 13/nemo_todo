@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
+import 'package:nemo/l10n/app_localizations.dart';
 
 /// A note's body, drawn.
 ///
@@ -18,19 +19,32 @@ class NoteBodyView extends ConsumerWidget {
   final String body;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => MarkdownBody(
-    data: body,
-    selectable: true,
-    // Same launcher About uses, so this test-doubles the same way and a
-    // household never has an in-app note quietly open `file:` or
-    // `mailto:` links, let alone something a note's markdown made up.
-    onTapLink: (text, href, title) {
-      if (href == null) return;
-      final uri = Uri.tryParse(href);
-      if (uri == null || !(uri.isScheme('http') || uri.isScheme('https'))) {
-        return;
-      }
-      unawaited(ref.read(openUrlProvider)(uri));
-    },
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    // An empty note is a legitimate state -- a placeholder for a recipe
+    // not yet typed up -- not an error, so read mode says so rather than
+    // showing nothing where the body would be. Reuses the same string the
+    // list tiles already fall back to for an empty preview.
+    if (body.trim().isEmpty) {
+      return Text(
+        L.of(context).notePreviewEmpty,
+        style: Theme.of(context).textTheme.bodyMedium
+            ?.copyWith(color: Theme.of(context).hintColor),
+      );
+    }
+    return MarkdownBody(
+      data: body,
+      selectable: true,
+      // Same launcher About uses, so this test-doubles the same way and a
+      // household never has an in-app note quietly open `file:` or
+      // `mailto:` links, let alone something a note's markdown made up.
+      onTapLink: (text, href, title) {
+        if (href == null) return;
+        final uri = Uri.tryParse(href);
+        if (uri == null || !(uri.isScheme('http') || uri.isScheme('https'))) {
+          return;
+        }
+        unawaited(ref.read(openUrlProvider)(uri));
+      },
+    );
+  }
 }

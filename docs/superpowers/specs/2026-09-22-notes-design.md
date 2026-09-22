@@ -84,16 +84,29 @@ parent:
 ```dart
 enum PhotoParent { task, note }
 
-required PhotoParent parentKind,
-required String parentId,
+/// What [parentId] names. Absent on the wire from a client or server
+/// released before notes, which only ever meant a task.
+@Default(PhotoParent.task) PhotoParent parentKind,
+
+/// The task or note this picture hangs on, depending on [parentKind].
+/// Still spelled `task_id` on the wire, because renaming a live field
+/// would break every client that has not been updated.
+@JsonKey(name: 'task_id') required String parentId,
 ```
 
-`toJson` writes `parent_kind` and `parent_id`, and additionally writes
-`task_id` when the parent is a task. `fromJson` reads `parent_kind` when
-it is there, and falls back to `task_id` as a task parent when it is not.
-An export or a server from before this change therefore still reads, and
-a client from before this change still understands every task photo it is
-sent.
+The *wire* keeps the name it already has: `parentId` is annotated
+`@JsonKey(name: 'task_id')`, and `parentKind` serialises as `parent_kind`
+with a default of `task` when the key is absent. So a task photo travels
+as exactly the JSON it travels as today, a payload from before this
+change reads as a task parent without any special case, and only the
+Dart-side name and the new discriminator are new. A note photo does put a
+note id in a field spelled `task_id`, which is the price of not renaming
+a live wire field; the field carries a comment saying so, and no client
+that cannot read notes is ever sent one.
+
+Keeping the serialisation fully generated matters here: hand-written
+`toJson`/`fromJson` on a freezed union member is the kind of thing that
+silently drifts from the row class the next time a field is added.
 
 ## Sync protocol
 
@@ -255,9 +268,10 @@ hash pipeline is untouched — a note picture is the same content-addressed
 blob a task picture is.
 
 New l10n keys, in `app_en.arb`, `app_de.arb` and `app_it.arb`:
-`navNotes`, `notesEmptyTitle`, `notesEmptyBody`, `noteNewTitle`,
-`noteTitleHint`, `noteBodyHint`, `notePinned`, `noteUnpin`,
-`noteDeleted`, `noteMoveToList`, `noteEditToggle`, `notePreviewEmpty`.
+`navNotes`, `notesEmpty`, `noteNewTitle`, `noteTitleHint`,
+`noteBodyHint`, `notePinned`, `noteUnpin`, `noteDeleted`,
+`noteMoveToList`, `noteEditToggle`, `noteReadToggle`,
+`notePreviewEmpty`, `searchTasksHeader`, `searchNotesHeader`.
 The existing `searchHint` is retouched to name notes as a place rather
 than only a field of a task.
 
@@ -291,9 +305,9 @@ rest.
 
 ## Testing
 
-**nemo_core.** `Note` JSON round trip. `Photo` JSON round trip both ways:
-the dual emission for a task parent, a note parent, and a legacy payload
-carrying only `task_id`.
+**nemo_core.** `Note` JSON round trip. `Photo` JSON round trip for a task
+parent and a note parent, and a payload carrying `task_id` with no
+`parent_kind` reading back as a task parent.
 
 **Migration.** Generated step-by-step tests for app 3 → 4 and server
 4 → 5, asserting an existing photo keeps its parent across the backfill.

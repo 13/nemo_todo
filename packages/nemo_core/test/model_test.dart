@@ -63,4 +63,44 @@ void main() {
     expect(task.copyWith(repeat: 'every:3x').repeatRule, isNull);
     expect(task.copyWith(repeat: null).repeatRule, isNull);
   });
+
+  test('a task carries what it took, and what it costs to omit', () {
+    const task = Task(
+      id: 't1',
+      listId: 'l1',
+      title: 'Fix the tap',
+      solution: 'New washer, 12 mm',
+      timeSpentMinutes: 90,
+      costMinor: 1250,
+      sortKey: 'V',
+      updatedAt: '0000000000001-0000-n',
+    );
+
+    final json = jsonDecode(jsonEncode(task.toJson())) as Map<String, dynamic>;
+
+    expect(json['solution'], 'New washer, 12 mm');
+    expect(json['time_spent_minutes'], 90);
+    expect(json['cost_minor'], 1250);
+    expect(Task.fromJson(json), task);
+  });
+
+  test('a task from before these fields reads as empty and unrecorded', () {
+    final json = {
+      'id': 't1',
+      'list_id': 'l1',
+      'title': 'Fix the tap',
+      'sort_key': 'V',
+      'updated_at': '0000000000001-0000-n',
+    };
+
+    final task = Task.fromJson(json);
+
+    expect(task.solution, '');
+    expect(
+      task.timeSpentMinutes,
+      isNull,
+      reason: 'nobody recorded a time, which is not the same as zero',
+    );
+    expect(task.costMinor, isNull);
+  });
 }

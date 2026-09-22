@@ -24,6 +24,19 @@ abstract class Task with _$Task implements SyncRow {
     @Default(0) int priority,
     @Default(<String>[]) List<String> tags,
 
+    /// How the task was solved, in the person's own words. Empty rather
+    /// than null, like [notes], so no reader needs a null check.
+    @Default('') String solution,
+
+    /// Whole minutes. Null means nobody recorded a time, which is not the
+    /// same as recording that it took none.
+    int? timeSpentMinutes,
+
+    /// What it cost, in the minor unit of the currency the app is set to.
+    /// An integer, so the amount survives sync, export and SQLite
+    /// unrounded. Null means nothing was recorded.
+    int? costMinor,
+
     /// A [Repeat] rule as text, or null for a task that happens once. Kept
     /// as text so a rule from a newer version travels through this one and
     /// through the server intact instead of being dropped.

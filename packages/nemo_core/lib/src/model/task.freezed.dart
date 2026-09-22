@@ -16,7 +16,14 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Task {
 
- String get id; String get listId; String get title; String get sortKey; String get updatedAt; String get notes; bool get done; int? get doneAt; int? get dueAt; bool get dueHasTime; bool get remind; int get priority; List<String> get tags;/// A [Repeat] rule as text, or null for a task that happens once. Kept
+ String get id; String get listId; String get title; String get sortKey; String get updatedAt; String get notes; bool get done; int? get doneAt; int? get dueAt; bool get dueHasTime; bool get remind; int get priority; List<String> get tags;/// How the task was solved, in the person's own words. Empty rather
+/// than null, like [notes], so no reader needs a null check.
+ String get solution;/// Whole minutes. Null means nobody recorded a time, which is not the
+/// same as recording that it took none.
+ int? get timeSpentMinutes;/// What it cost, in the minor unit of the currency the app is set to.
+/// An integer, so the amount survives sync, export and SQLite
+/// unrounded. Null means nothing was recorded.
+ int? get costMinor;/// A [Repeat] rule as text, or null for a task that happens once. Kept
 /// as text so a rule from a newer version travels through this one and
 /// through the server intact instead of being dropped.
  String? get repeat; String? get deletedAt;
@@ -33,20 +40,20 @@ $TaskCopyWith<Task> get copyWith => _$TaskCopyWithImpl<Task>(this as Task, _$ide
 @override
 bool operator ==(Object other) {
   final _this = this as Task;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Task&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.listId, _this.listId) || other.listId == _this.listId)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&(identical(other.done, _this.done) || other.done == _this.done)&&(identical(other.doneAt, _this.doneAt) || other.doneAt == _this.doneAt)&&(identical(other.dueAt, _this.dueAt) || other.dueAt == _this.dueAt)&&(identical(other.dueHasTime, _this.dueHasTime) || other.dueHasTime == _this.dueHasTime)&&(identical(other.remind, _this.remind) || other.remind == _this.remind)&&(identical(other.priority, _this.priority) || other.priority == _this.priority)&&const DeepCollectionEquality().equals(other.tags, _this.tags)&&(identical(other.repeat, _this.repeat) || other.repeat == _this.repeat)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Task&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.listId, _this.listId) || other.listId == _this.listId)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&(identical(other.done, _this.done) || other.done == _this.done)&&(identical(other.doneAt, _this.doneAt) || other.doneAt == _this.doneAt)&&(identical(other.dueAt, _this.dueAt) || other.dueAt == _this.dueAt)&&(identical(other.dueHasTime, _this.dueHasTime) || other.dueHasTime == _this.dueHasTime)&&(identical(other.remind, _this.remind) || other.remind == _this.remind)&&(identical(other.priority, _this.priority) || other.priority == _this.priority)&&const DeepCollectionEquality().equals(other.tags, _this.tags)&&(identical(other.solution, _this.solution) || other.solution == _this.solution)&&(identical(other.timeSpentMinutes, _this.timeSpentMinutes) || other.timeSpentMinutes == _this.timeSpentMinutes)&&(identical(other.costMinor, _this.costMinor) || other.costMinor == _this.costMinor)&&(identical(other.repeat, _this.repeat) || other.repeat == _this.repeat)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Task;
-  return Object.hash(runtimeType,_this.id,_this.listId,_this.title,_this.sortKey,_this.updatedAt,_this.notes,_this.done,_this.doneAt,_this.dueAt,_this.dueHasTime,_this.remind,_this.priority,const DeepCollectionEquality().hash(_this.tags),_this.repeat,_this.deletedAt);
+  return Object.hash(runtimeType,_this.id,_this.listId,_this.title,_this.sortKey,_this.updatedAt,_this.notes,_this.done,_this.doneAt,_this.dueAt,_this.dueHasTime,_this.remind,_this.priority,const DeepCollectionEquality().hash(_this.tags),_this.solution,_this.timeSpentMinutes,_this.costMinor,_this.repeat,_this.deletedAt);
 }
 
 @override
 String toString() {
   final _this = this as Task;
-  return 'Task(id: ${_this.id}, listId: ${_this.listId}, title: ${_this.title}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, notes: ${_this.notes}, done: ${_this.done}, doneAt: ${_this.doneAt}, dueAt: ${_this.dueAt}, dueHasTime: ${_this.dueHasTime}, remind: ${_this.remind}, priority: ${_this.priority}, tags: ${_this.tags}, repeat: ${_this.repeat}, deletedAt: ${_this.deletedAt})';
+  return 'Task(id: ${_this.id}, listId: ${_this.listId}, title: ${_this.title}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, notes: ${_this.notes}, done: ${_this.done}, doneAt: ${_this.doneAt}, dueAt: ${_this.dueAt}, dueHasTime: ${_this.dueHasTime}, remind: ${_this.remind}, priority: ${_this.priority}, tags: ${_this.tags}, solution: ${_this.solution}, timeSpentMinutes: ${_this.timeSpentMinutes}, costMinor: ${_this.costMinor}, repeat: ${_this.repeat}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -57,7 +64,7 @@ abstract mixin class $TaskCopyWith<$Res>  {
   factory $TaskCopyWith(Task value, $Res Function(Task) _then) = _$TaskCopyWithImpl;
 @useResult
 $Res call({
- String id, String listId, String title, String sortKey, String updatedAt, String notes, bool done, int? doneAt, int? dueAt, bool dueHasTime, bool remind, int priority, List<String> tags, String? repeat, String? deletedAt
+ String id, String listId, String title, String sortKey, String updatedAt, String notes, bool done, int? doneAt, int? dueAt, bool dueHasTime, bool remind, int priority, List<String> tags, String solution, int? timeSpentMinutes, int? costMinor, String? repeat, String? deletedAt
 });
 
 
@@ -74,7 +81,7 @@ class _$TaskCopyWithImpl<$Res>
 
 /// Create a copy of Task
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? sortKey = null,Object? updatedAt = null,Object? notes = null,Object? done = null,Object? doneAt = freezed,Object? dueAt = freezed,Object? dueHasTime = null,Object? remind = null,Object? priority = null,Object? tags = null,Object? repeat = freezed,Object? deletedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? sortKey = null,Object? updatedAt = null,Object? notes = null,Object? done = null,Object? doneAt = freezed,Object? dueAt = freezed,Object? dueHasTime = null,Object? remind = null,Object? priority = null,Object? tags = null,Object? solution = null,Object? timeSpentMinutes = freezed,Object? costMinor = freezed,Object? repeat = freezed,Object? deletedAt = freezed,}) {
   return _then(Task(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,listId: null == listId ? _self.listId : listId // ignore: cast_nullable_to_non_nullable
@@ -89,7 +96,10 @@ as int?,dueHasTime: null == dueHasTime ? _self.dueHasTime : dueHasTime // ignore
 as bool,remind: null == remind ? _self.remind : remind // ignore: cast_nullable_to_non_nullable
 as bool,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as int,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,repeat: freezed == repeat ? _self.repeat : repeat // ignore: cast_nullable_to_non_nullable
+as List<String>,solution: null == solution ? _self.solution : solution // ignore: cast_nullable_to_non_nullable
+as String,timeSpentMinutes: freezed == timeSpentMinutes ? _self.timeSpentMinutes : timeSpentMinutes // ignore: cast_nullable_to_non_nullable
+as int?,costMinor: freezed == costMinor ? _self.costMinor : costMinor // ignore: cast_nullable_to_non_nullable
+as int?,repeat: freezed == repeat ? _self.repeat : repeat // ignore: cast_nullable_to_non_nullable
 as String?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -176,10 +186,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String notes,  bool done,  int? doneAt,  int? dueAt,  bool dueHasTime,  bool remind,  int priority,  List<String> tags,  String? repeat,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String notes,  bool done,  int? doneAt,  int? dueAt,  bool dueHasTime,  bool remind,  int priority,  List<String> tags,  String solution,  int? timeSpentMinutes,  int? costMinor,  String? repeat,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Task() when $default != null:
-return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.notes,_that.done,_that.doneAt,_that.dueAt,_that.dueHasTime,_that.remind,_that.priority,_that.tags,_that.repeat,_that.deletedAt);case _:
+return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.notes,_that.done,_that.doneAt,_that.dueAt,_that.dueHasTime,_that.remind,_that.priority,_that.tags,_that.solution,_that.timeSpentMinutes,_that.costMinor,_that.repeat,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -197,10 +207,10 @@ return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String notes,  bool done,  int? doneAt,  int? dueAt,  bool dueHasTime,  bool remind,  int priority,  List<String> tags,  String? repeat,  String? deletedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String notes,  bool done,  int? doneAt,  int? dueAt,  bool dueHasTime,  bool remind,  int priority,  List<String> tags,  String solution,  int? timeSpentMinutes,  int? costMinor,  String? repeat,  String? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Task():
-return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.notes,_that.done,_that.doneAt,_that.dueAt,_that.dueHasTime,_that.remind,_that.priority,_that.tags,_that.repeat,_that.deletedAt);case _:
+return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.notes,_that.done,_that.doneAt,_that.dueAt,_that.dueHasTime,_that.remind,_that.priority,_that.tags,_that.solution,_that.timeSpentMinutes,_that.costMinor,_that.repeat,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -217,10 +227,10 @@ return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String notes,  bool done,  int? doneAt,  int? dueAt,  bool dueHasTime,  bool remind,  int priority,  List<String> tags,  String? repeat,  String? deletedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String notes,  bool done,  int? doneAt,  int? dueAt,  bool dueHasTime,  bool remind,  int priority,  List<String> tags,  String solution,  int? timeSpentMinutes,  int? costMinor,  String? repeat,  String? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Task() when $default != null:
-return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.notes,_that.done,_that.doneAt,_that.dueAt,_that.dueHasTime,_that.remind,_that.priority,_that.tags,_that.repeat,_that.deletedAt);case _:
+return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.notes,_that.done,_that.doneAt,_that.dueAt,_that.dueHasTime,_that.remind,_that.priority,_that.tags,_that.solution,_that.timeSpentMinutes,_that.costMinor,_that.repeat,_that.deletedAt);case _:
   return null;
 
 }
@@ -232,7 +242,7 @@ return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,
 @JsonSerializable()
 
 class _Task extends Task {
-  const _Task({required this.id, required this.listId, required this.title, required this.sortKey, required this.updatedAt, this.notes = '', this.done = false, this.doneAt, this.dueAt, this.dueHasTime = false, this.remind = false, this.priority = 0,  List<String> tags = const <String>[], this.repeat, this.deletedAt}): _tags = tags,super._();
+  const _Task({required this.id, required this.listId, required this.title, required this.sortKey, required this.updatedAt, this.notes = '', this.done = false, this.doneAt, this.dueAt, this.dueHasTime = false, this.remind = false, this.priority = 0,  List<String> tags = const <String>[], this.solution = '', this.timeSpentMinutes, this.costMinor, this.repeat, this.deletedAt}): _tags = tags,super._();
   factory _Task.fromJson(Map<String, dynamic> json) => _$TaskFromJson(json);
 
 @override final  String id;
@@ -254,6 +264,16 @@ class _Task extends Task {
   return EqualUnmodifiableListView(_tags);
 }
 
+/// How the task was solved, in the person's own words. Empty rather
+/// than null, like [notes], so no reader needs a null check.
+@override@JsonKey() final  String solution;
+/// Whole minutes. Null means nobody recorded a time, which is not the
+/// same as recording that it took none.
+@override final  int? timeSpentMinutes;
+/// What it cost, in the minor unit of the currency the app is set to.
+/// An integer, so the amount survives sync, export and SQLite
+/// unrounded. Null means nothing was recorded.
+@override final  int? costMinor;
 /// A [Repeat] rule as text, or null for a task that happens once. Kept
 /// as text so a rule from a newer version travels through this one and
 /// through the server intact instead of being dropped.
@@ -273,18 +293,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Task&&(identical(other.id, id) || other.id == id)&&(identical(other.listId, listId) || other.listId == listId)&&(identical(other.title, title) || other.title == title)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.done, done) || other.done == done)&&(identical(other.doneAt, doneAt) || other.doneAt == doneAt)&&(identical(other.dueAt, dueAt) || other.dueAt == dueAt)&&(identical(other.dueHasTime, dueHasTime) || other.dueHasTime == dueHasTime)&&(identical(other.remind, remind) || other.remind == remind)&&(identical(other.priority, priority) || other.priority == priority)&&const DeepCollectionEquality().equals(other.tags, _tags)&&(identical(other.repeat, repeat) || other.repeat == repeat)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Task&&(identical(other.id, id) || other.id == id)&&(identical(other.listId, listId) || other.listId == listId)&&(identical(other.title, title) || other.title == title)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.done, done) || other.done == done)&&(identical(other.doneAt, doneAt) || other.doneAt == doneAt)&&(identical(other.dueAt, dueAt) || other.dueAt == dueAt)&&(identical(other.dueHasTime, dueHasTime) || other.dueHasTime == dueHasTime)&&(identical(other.remind, remind) || other.remind == remind)&&(identical(other.priority, priority) || other.priority == priority)&&const DeepCollectionEquality().equals(other.tags, _tags)&&(identical(other.solution, solution) || other.solution == solution)&&(identical(other.timeSpentMinutes, timeSpentMinutes) || other.timeSpentMinutes == timeSpentMinutes)&&(identical(other.costMinor, costMinor) || other.costMinor == costMinor)&&(identical(other.repeat, repeat) || other.repeat == repeat)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,listId,title,sortKey,updatedAt,notes,done,doneAt,dueAt,dueHasTime,remind,priority,const DeepCollectionEquality().hash(_tags),repeat,deletedAt);
+    return Object.hash(runtimeType,id,listId,title,sortKey,updatedAt,notes,done,doneAt,dueAt,dueHasTime,remind,priority,const DeepCollectionEquality().hash(_tags),solution,timeSpentMinutes,costMinor,repeat,deletedAt);
 }
 
 @override
 String toString() {
-    return 'Task(id: $id, listId: $listId, title: $title, sortKey: $sortKey, updatedAt: $updatedAt, notes: $notes, done: $done, doneAt: $doneAt, dueAt: $dueAt, dueHasTime: $dueHasTime, remind: $remind, priority: $priority, tags: $tags, repeat: $repeat, deletedAt: $deletedAt)';
+    return 'Task(id: $id, listId: $listId, title: $title, sortKey: $sortKey, updatedAt: $updatedAt, notes: $notes, done: $done, doneAt: $doneAt, dueAt: $dueAt, dueHasTime: $dueHasTime, remind: $remind, priority: $priority, tags: $tags, solution: $solution, timeSpentMinutes: $timeSpentMinutes, costMinor: $costMinor, repeat: $repeat, deletedAt: $deletedAt)';
 }
 
 
@@ -295,7 +315,7 @@ abstract mixin class _$TaskCopyWith<$Res> implements $TaskCopyWith<$Res> {
   factory _$TaskCopyWith(_Task value, $Res Function(_Task) _then) = __$TaskCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String listId, String title, String sortKey, String updatedAt, String notes, bool done, int? doneAt, int? dueAt, bool dueHasTime, bool remind, int priority, List<String> tags, String? repeat, String? deletedAt
+ String id, String listId, String title, String sortKey, String updatedAt, String notes, bool done, int? doneAt, int? dueAt, bool dueHasTime, bool remind, int priority, List<String> tags, String solution, int? timeSpentMinutes, int? costMinor, String? repeat, String? deletedAt
 });
 
 
@@ -312,7 +332,7 @@ class __$TaskCopyWithImpl<$Res>
 
 /// Create a copy of Task
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? sortKey = null,Object? updatedAt = null,Object? notes = null,Object? done = null,Object? doneAt = freezed,Object? dueAt = freezed,Object? dueHasTime = null,Object? remind = null,Object? priority = null,Object? tags = null,Object? repeat = freezed,Object? deletedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? sortKey = null,Object? updatedAt = null,Object? notes = null,Object? done = null,Object? doneAt = freezed,Object? dueAt = freezed,Object? dueHasTime = null,Object? remind = null,Object? priority = null,Object? tags = null,Object? solution = null,Object? timeSpentMinutes = freezed,Object? costMinor = freezed,Object? repeat = freezed,Object? deletedAt = freezed,}) {
   return _then(_Task(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,listId: null == listId ? _self.listId : listId // ignore: cast_nullable_to_non_nullable
@@ -327,7 +347,10 @@ as int?,dueHasTime: null == dueHasTime ? _self.dueHasTime : dueHasTime // ignore
 as bool,remind: null == remind ? _self.remind : remind // ignore: cast_nullable_to_non_nullable
 as bool,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as int,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,repeat: freezed == repeat ? _self.repeat : repeat // ignore: cast_nullable_to_non_nullable
+as List<String>,solution: null == solution ? _self.solution : solution // ignore: cast_nullable_to_non_nullable
+as String,timeSpentMinutes: freezed == timeSpentMinutes ? _self.timeSpentMinutes : timeSpentMinutes // ignore: cast_nullable_to_non_nullable
+as int?,costMinor: freezed == costMinor ? _self.costMinor : costMinor // ignore: cast_nullable_to_non_nullable
+as int?,repeat: freezed == repeat ? _self.repeat : repeat // ignore: cast_nullable_to_non_nullable
 as String?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

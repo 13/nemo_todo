@@ -812,4 +812,33 @@ void main() {
 
     expect(await freshStore.get(picture.sha256), [1, 2, 3]);
   });
+
+  test('the export carries what a task took', () async {
+    await seed(db);
+    final id = await taskId(db, 'Report');
+    await db.upsertTask(
+      (await db.taskById(id))!.copyWith(
+        solution: 'New washer, 12 mm',
+        timeSpentMinutes: 90,
+        costMinor: 1250,
+      ),
+    );
+
+    final bytes = (await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow)).bytes;
+
+    final fresh = testDatabase();
+    await DataExport(fresh, testClock('b'), MemoryPhotoStore()).import(bytes);
+    final restored = (await fresh.select(fresh.tasks).get()).firstWhere(
+      (t) => t.title == 'Report',
+    );
+
+    expect(restored.solution, 'New washer, 12 mm');
+    expect(restored.timeSpentMinutes, 90);
+    expect(restored.costMinor, 1250);
+    await fresh.close();
+  });
 }

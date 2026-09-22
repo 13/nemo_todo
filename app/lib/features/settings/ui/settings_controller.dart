@@ -52,3 +52,15 @@ class AchievementsEnabled extends _$AchievementsEnabled {
     await ref.read(kvStoreProvider).set(KvKeys.achievements, '$enabled');
   }
 }
+
+/// Which currency the amounts on a task are written in.
+@Riverpod(keepAlive: true)
+class CurrencyCode extends _$CurrencyCode {
+  @override
+  String build() => ref.watch(bootstrapProvider).currency;
+
+  Future<void> set(String code) async {
+    state = code;
+    await ref.read(kvStoreProvider).set(KvKeys.currency, code);
+  }
+}

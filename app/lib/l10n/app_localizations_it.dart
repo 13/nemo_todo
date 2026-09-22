@@ -451,6 +451,12 @@ class LIt extends L {
   }
 
   @override
+  String get settingsTasks => 'Attività';
+
+  @override
+  String get settingsCurrency => 'Valuta';
+
+  @override
   String get settingsCelebrations => 'Festeggiamenti e traguardi';
 
   @override

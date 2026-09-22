@@ -449,6 +449,12 @@ class LEn extends L {
   }
 
   @override
+  String get settingsTasks => 'Tasks';
+
+  @override
+  String get settingsCurrency => 'Currency';
+
+  @override
   String get settingsCelebrations => 'Celebrations & achievements';
 
   @override

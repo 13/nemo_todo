@@ -450,6 +450,12 @@ class LDe extends L {
   }
 
   @override
+  String get settingsTasks => 'Aufgaben';
+
+  @override
+  String get settingsCurrency => 'Währung';
+
+  @override
   String get settingsCelebrations => 'Feiern & Erfolge';
 
   @override

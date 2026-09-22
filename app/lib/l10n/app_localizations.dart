@@ -819,6 +819,18 @@ abstract class L {
   /// **'Version {version}'**
   String settingsVersion(String version);
 
+  /// No description provided for @settingsTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get settingsTasks;
+
+  /// No description provided for @settingsCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get settingsCurrency;
+
   /// No description provided for @settingsCelebrations.
   ///
   /// In en, this message translates to:

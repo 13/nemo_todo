@@ -120,6 +120,8 @@
   "settingsServerNewer": "Questa pagina è più vecchia del server. Ricaricala per avere la versione attuale.",
   "settingsAbout": "Informazioni",
   "settingsVersion": "Versione {version}",
+  "settingsTasks": "Attività",
+  "settingsCurrency": "Valuta",
   "settingsCelebrations": "Festeggiamenti e traguardi",
   "settingsCelebrationsEnabled": "Festeggiamenti",
   "settingsCelebrationsEnabledHint": "Coriandoli, animazioni e vibrazione quando completi le attività",

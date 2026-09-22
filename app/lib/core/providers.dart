@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
@@ -22,6 +23,7 @@ class AppBootstrap {
     this.celebrations = true,
     this.celebrationSound = false,
     this.achievements = true,
+    this.currency = 'EUR',
   });
 
   final String nodeId;
@@ -51,6 +53,10 @@ class AppBootstrap {
   /// Achievements, their banners and the Settings tile.
   final bool achievements;
 
+  /// ISO 4217 code for the amounts on a task; the device's own locale
+  /// decides the default the first time.
+  final String currency;
+
   static Future<AppBootstrap> load(AppDatabase db) async {
     final kv = KvStore(db);
     var nodeId = await kv.get(KvKeys.nodeId);
@@ -73,7 +79,29 @@ class AppBootstrap {
       celebrations: await kv.get(KvKeys.celebrations) != 'false',
       celebrationSound: await kv.get(KvKeys.celebrationSound) == 'true',
       achievements: await kv.get(KvKeys.achievements) != 'false',
+      currency: await kv.get(KvKeys.currency) ?? defaultCurrencyCode(),
     );
+  }
+}
+
+/// What the device's own locale spends in, for the first run. Falls back
+/// to EUR when the locale names no currency.
+String defaultCurrencyCode() {
+  try {
+    return NumberFormat.simpleCurrency(locale: Intl.getCurrentLocale())
+            .currencyName ??
+        'EUR';
+    // `NumberFormat.simpleCurrency` throws this -- not an `Exception` --
+    // for a locale it cannot verify (`intl`'s `verifiedLocale` gives up
+    // this way once its own fallbacks fail). The locale comes from the
+    // device, not from this code, so it is not a programming mistake to
+    // guard against here: an unknown locale gets a default the user can
+    // change, which beats a crash on the first frame.
+    // ignore: avoid_catching_errors
+  } on ArgumentError {
+    return 'EUR';
+  } on Exception {
+    return 'EUR';
   }
 }
 

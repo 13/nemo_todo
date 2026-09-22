@@ -120,6 +120,8 @@
   "settingsServerNewer": "Diese Seite ist älter als der Server. Lade sie neu, um den aktuellen Stand zu bekommen.",
   "settingsAbout": "Über",
   "settingsVersion": "Version {version}",
+  "settingsTasks": "Aufgaben",
+  "settingsCurrency": "Währung",
   "settingsCelebrations": "Feiern & Erfolge",
   "settingsCelebrationsEnabled": "Feiern",
   "settingsCelebrationsEnabledHint": "Konfetti, Animationen und Vibration beim Erledigen von Aufgaben",

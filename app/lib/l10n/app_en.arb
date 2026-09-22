@@ -234,6 +234,8 @@
       }
     }
   },
+  "settingsTasks": "Tasks",
+  "settingsCurrency": "Currency",
   "settingsCelebrations": "Celebrations & achievements",
   "settingsCelebrationsEnabled": "Celebrations",
   "settingsCelebrationsEnabledHint": "Confetti, animations and haptics when you complete tasks",

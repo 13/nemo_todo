@@ -86,10 +86,18 @@ class AppBootstrap {
 
 /// What the device's own locale spends in, for the first run. Falls back
 /// to EUR when the locale names no currency.
+///
+/// Reads the locale from [PlatformDispatcher] rather than `Intl`:
+/// `Intl.getCurrentLocale()` only reflects `Intl.defaultLocale` /
+/// `Intl.systemLocale`, and nothing in this app, the generated l10n or
+/// `flutter_localizations` ever sets either -- `AppBootstrap.load` runs
+/// before any localization delegate could -- so it would always read back
+/// `intl`'s own package default (`en_US`) and every device would see USD.
 String defaultCurrencyCode() {
   try {
-    return NumberFormat.simpleCurrency(locale: Intl.getCurrentLocale())
-            .currencyName ??
+    return NumberFormat.simpleCurrency(
+          locale: PlatformDispatcher.instance.locale.toLanguageTag(),
+        ).currencyName ??
         'EUR';
     // `NumberFormat.simpleCurrency` throws this -- not an `Exception` --
     // for a locale it cannot verify (`intl`'s `verifiedLocale` gives up

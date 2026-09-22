@@ -1065,6 +1065,12 @@ class LDe extends L {
       'Noch keine Notizen. Eine Notiz behält, was in keine Aufgabe passt: das Rezept, die Adresse, den Absatz.';
 
   @override
+  String get notesPinned => 'Angeheftet';
+
+  @override
+  String get notesOthers => 'Andere';
+
+  @override
   String get noteNewTitle => 'Neue Notiz';
 
   @override

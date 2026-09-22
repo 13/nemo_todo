@@ -1055,6 +1055,12 @@ class LEn extends L {
       'No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.';
 
   @override
+  String get notesPinned => 'Pinned';
+
+  @override
+  String get notesOthers => 'Others';
+
+  @override
   String get noteNewTitle => 'New note';
 
   @override

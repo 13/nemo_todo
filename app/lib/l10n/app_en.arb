@@ -549,6 +549,8 @@
     "placeholders": {"count": {"type": "int"}}
   },
   "notesEmpty": "No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.",
+  "notesPinned": "Pinned",
+  "notesOthers": "Others",
   "noteNewTitle": "New note",
   "noteTitleHint": "Title",
   "noteBodyHint": "Write something",

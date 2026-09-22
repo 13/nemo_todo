@@ -87,6 +87,7 @@ extension SeedTestApp on TestApp {
     required String title,
     String body = '',
     bool pinned = false,
+    String? updatedAt,
   }) => db.upsertNote(
     Note(
       id: id,
@@ -95,7 +96,7 @@ extension SeedTestApp on TestApp {
       body: body,
       pinned: pinned,
       sortKey: 'V',
-      updatedAt: testClock('a').now().toString(),
+      updatedAt: updatedAt ?? testClock('a').now().toString(),
     ),
   );
 

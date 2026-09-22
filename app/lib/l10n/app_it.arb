@@ -274,6 +274,8 @@
   "achievementsUnlockedMany": "{count, plural, other{{count} traguardi sbloccati}}",
   "settingsExportedWithoutPhotos": "{count, plural, =1{Attività esportate. 1 foto non è su questo dispositivo ed è stata esclusa.} other{Attività esportate. {count} foto non sono su questo dispositivo e sono state escluse.}}",
   "notesEmpty": "Ancora nessuna nota. Una nota conserva ciò che un'attività non può: la ricetta, l'indirizzo, il paragrafo.",
+  "notesPinned": "Fissate",
+  "notesOthers": "Altre",
   "noteNewTitle": "Nuova nota",
   "noteTitleHint": "Titolo",
   "noteBodyHint": "Scrivi qualcosa",

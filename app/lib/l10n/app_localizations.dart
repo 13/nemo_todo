@@ -1743,6 +1743,18 @@ abstract class L {
   /// **'No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.'**
   String get notesEmpty;
 
+  /// No description provided for @notesPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get notesPinned;
+
+  /// No description provided for @notesOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get notesOthers;
+
   /// No description provided for @noteNewTitle.
   ///
   /// In en, this message translates to:

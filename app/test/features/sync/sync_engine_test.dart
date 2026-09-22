@@ -12,6 +12,7 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/auth/data/auth_storage.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/notes/data/notes_repository.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/photos/data/photos_repository.dart';
 import 'package:nemo/features/sync/data/sync_client.dart';
@@ -761,6 +762,59 @@ void main() {
     expect(client.pushes.last.map((x) => x.rowId), [
       't1',
     ], reason: 'the tasks are no longer stuck behind the photo');
+  });
+
+  NotesRepository notes() =>
+      NotesRepository(db, testClock('a'), sequentialIds('n'));
+
+  /// A list, and a note on it, on a device whose server has no note
+  /// support: the note is queued but never leaves.
+  Future<({ProviderContainer c, Note note})> noteOnOldServer() async {
+    client
+      ..notes = false
+      ..rejectNoteChanges = true;
+    final c = await container();
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    final note = await notes().create(listId: 'l1', title: 'N');
+    await c.read(syncEngineProvider.notifier).syncNow();
+    await db.upsertTask(task('t2', testClock('a').now().toString()));
+    return (c: c, note: note);
+  }
+
+  test('a server without notes gets no note change, and the tasks', () async {
+    final (:c, :note) = await noteOnOldServer();
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.pushes.expand((p) => p).whereType<SyncChangeNote>(), isEmpty);
+    expect(client.pushes.expand((p) => p).map((x) => x.rowId), contains('t2'));
+    final state = c.read(syncEngineProvider);
+    expect(state.status, SyncStatus.idle);
+    expect(state.error, isNull);
+    expect(await KvStore(db).get(KvKeys.serverNotes), 'false');
+    expect((await db.select(db.outbox).get()).map((e) => e.rowId), [
+      note.id,
+    ], reason: 'the note waits for a server that can take it');
+  });
+
+  test('a server rolled back to one without notes is noticed', () async {
+    await KvStore(db).set(KvKeys.serverNotes, 'true');
+    final c = await container();
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    await notes().create(listId: 'l1', title: 'N');
+    client
+      ..notes = false
+      ..rejectNoteChanges = true;
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(c.read(syncEngineProvider).error, 'bad_request');
+    expect(await KvStore(db).get(KvKeys.serverNotes), 'false');
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+    expect(client.pushes.last.map((x) => x.rowId), [
+      'l1',
+    ], reason: 'the list is no longer stuck behind the note');
   });
 
   test('signing in to a server without photos pushes no photo rows', () async {

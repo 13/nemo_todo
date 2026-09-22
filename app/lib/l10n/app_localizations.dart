@@ -561,6 +561,18 @@ abstract class L {
   /// **'Search tasks, notes and tags'**
   String get searchHint;
 
+  /// No description provided for @searchTasksHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get searchTasksHeader;
+
+  /// No description provided for @searchNotesHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get searchNotesHeader;
+
   /// No description provided for @searchEmpty.
   ///
   /// In en, this message translates to:

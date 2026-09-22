@@ -281,6 +281,12 @@ class LIt extends L {
   String get searchHint => 'Cerca attività, note e tag';
 
   @override
+  String get searchTasksHeader => 'Attività';
+
+  @override
+  String get searchNotesHeader => 'Note';
+
+  @override
   String get searchEmpty => 'Scrivi per cercare in tutte le liste.';
 
   @override

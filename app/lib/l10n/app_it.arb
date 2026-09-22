@@ -77,6 +77,8 @@
   "dateInDays": "{count, plural, =1{Tra 1 giorno} other{Tra {count} giorni}}",
   "dateDaysAgo": "{count, plural, =1{1 giorno fa} other{{count} giorni fa}}",
   "searchHint": "Cerca attività, note e tag",
+  "searchTasksHeader": "Attività",
+  "searchNotesHeader": "Note",
   "searchEmpty": "Scrivi per cercare in tutte le liste.",
   "searchNoResults": "Nessuna attività corrisponde a \"{query}\".",
   "settingsTitle": "Impostazioni",

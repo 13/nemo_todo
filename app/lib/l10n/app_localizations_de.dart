@@ -280,6 +280,12 @@ class LDe extends L {
   String get searchHint => 'Aufgaben, Notizen und Tags durchsuchen';
 
   @override
+  String get searchTasksHeader => 'Aufgaben';
+
+  @override
+  String get searchNotesHeader => 'Notizen';
+
+  @override
   String get searchEmpty => 'Tippe, um in allen Listen zu suchen.';
 
   @override

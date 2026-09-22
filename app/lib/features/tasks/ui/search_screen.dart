@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
+import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/router.dart';
+import 'package:nemo_core/nemo_core.dart';
 
-/// Full-text search over titles, notes and tags of every list.
+/// Full-text search over titles, notes and tags of every list, and over
+/// note titles and bodies.
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -30,6 +36,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final results = ref.watch(searchTasksProvider(_query));
+    // Resolves fast against the same local database; while it is still
+    // loading the section is simply absent, the way NotesScreen already
+    // treats `allNotesProvider` before its first emission.
+    final notes = ref.watch(noteSearchProvider(_query)).value ?? const <Note>[];
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -57,22 +67,89 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ? EmptyState(icon: Icons.search_rounded, message: l.searchEmpty)
           : AsyncBody(
               value: results,
-              data: (items) => items.isEmpty
+              data: (items) => items.isEmpty && notes.isEmpty
                   ? EmptyState(
                       icon: Icons.search_off_rounded,
                       message: l.searchNoResults(_query),
                     )
-                  : TaskListView(
-                      showList: true,
-                      sections: [
-                        TaskSection(
-                          title: l.tasksOpen,
-                          tasks: items.where((t) => !t.done).toList(),
-                        ),
+                  // Tasks and notes are two headed sections, each hidden
+                  // when its own side of the search turned up nothing.
+                  : Column(
+                      children: [
+                        if (items.isNotEmpty)
+                          Expanded(
+                            child: TaskListView(
+                              showList: true,
+                              sections: [
+                                TaskSection(
+                                  title: l.searchTasksHeader,
+                                  tasks: items.where((t) => !t.done).toList(),
+                                ),
+                              ],
+                              completed: items.where((t) => t.done).toList(),
+                            ),
+                          ),
+                        if (notes.isNotEmpty)
+                          Expanded(child: _NoteResults(notes: notes)),
                       ],
-                      completed: items.where((t) => t.done).toList(),
                     ),
             ),
+    );
+  }
+}
+
+/// The note half of a search result: a header and the matching notes,
+/// tapping one of them opening it the way `/notes` does.
+class _NoteResults extends StatelessWidget {
+  const _NoteResults({required this.notes});
+
+  final List<Note> notes;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Column(
+      children: [
+        SectionHeader(
+          key: const Key('search-notes-header'),
+          title: l.searchNotesHeader,
+          count: notes.length,
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: notes.length,
+            itemBuilder: (context, i) => _NoteResultTile(note: notes[i]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Mirrors the tile `NotesScreen` uses, so a note reads the same way
+/// wherever it is listed.
+class _NoteResultTile extends StatelessWidget {
+  const _NoteResultTile({required this.note});
+
+  final Note note;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final preview = note.body.trim();
+    return ListTile(
+      key: Key('search-note-tile-${note.id}'),
+      title: Text(note.title),
+      // The preview is the markdown source, not rendered: a heading or an
+      // image in a note would otherwise set the height of a row in a list
+      // of results.
+      subtitle: Text(
+        preview.isEmpty ? l.notePreviewEmpty : preview,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: note.pinned ? const Icon(Icons.push_pin, size: 18) : null,
+      onTap: () => context.push(Routes.note(note.id)),
     );
   }
 }

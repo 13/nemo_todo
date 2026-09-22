@@ -77,6 +77,8 @@
   "dateInDays": "{count, plural, =1{In 1 Tag} other{In {count} Tagen}}",
   "dateDaysAgo": "{count, plural, =1{Vor 1 Tag} other{Vor {count} Tagen}}",
   "searchHint": "Aufgaben, Notizen und Tags durchsuchen",
+  "searchTasksHeader": "Aufgaben",
+  "searchNotesHeader": "Notizen",
   "searchEmpty": "Tippe, um in allen Listen zu suchen.",
   "searchNoResults": "Keine Aufgaben passen zu „{query}“.",
   "settingsTitle": "Einstellungen",

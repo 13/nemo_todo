@@ -33,4 +33,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No tasks match "zzz".'), findsOneWidget);
   });
+
+  appTest('search finds a note by its body', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: Routes.search);
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: '500 g flour');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('search-field')), 'flour');
+    await tester.pumpAndSettle();
+
+    // Scoped to the results header, not the bottom navigation bar's own
+    // "Notes" destination label, which `find.text('Notes')` alone would
+    // also match at this window size.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('search-notes-header')),
+        matching: find.text('Notes'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Bread'), findsOneWidget);
+  });
 }

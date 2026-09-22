@@ -280,6 +280,12 @@ class LEn extends L {
   String get searchHint => 'Search tasks, notes and tags';
 
   @override
+  String get searchTasksHeader => 'Tasks';
+
+  @override
+  String get searchNotesHeader => 'Notes';
+
+  @override
   String get searchEmpty => 'Type to search across all lists.';
 
   @override

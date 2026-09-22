@@ -122,6 +122,8 @@
     }
   },
   "searchHint": "Search tasks, notes and tags",
+  "searchTasksHeader": "Tasks",
+  "searchNotesHeader": "Notes",
   "searchEmpty": "Type to search across all lists.",
   "searchNoResults": "No tasks match \"{query}\".",
   "@searchNoResults": {

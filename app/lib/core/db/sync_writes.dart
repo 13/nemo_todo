@@ -102,9 +102,14 @@ extension SyncWrites on AppDatabase {
           final subtaskIds = (await (select(
             subtasks,
           )..where((t) => t.taskId.isIn(taskIds))).get()).map((s) => s.id);
-          final photoIds = (await (select(
-            photos,
-          )..where((t) => t.taskId.isIn(taskIds))).get()).map((p) => p.id);
+          final photoIds =
+              (await (select(photos)..where(
+                        (t) =>
+                            t.parentKind.equalsValue(PhotoParent.task) &
+                            t.parentId.isIn(taskIds),
+                      ))
+                      .get())
+                  .map((p) => p.id);
           await (delete(outbox)..where(
                 (t) =>
                     (t.entity.equals(SyncEntity.task.name) &
@@ -116,7 +121,12 @@ extension SyncWrites on AppDatabase {
               ))
               .go();
           await (delete(subtasks)..where((t) => t.taskId.isIn(taskIds))).go();
-          await (delete(photos)..where((t) => t.taskId.isIn(taskIds))).go();
+          await (delete(photos)..where(
+                (t) =>
+                    t.parentKind.equalsValue(PhotoParent.task) &
+                    t.parentId.isIn(taskIds),
+              ))
+              .go();
         }
         await (delete(tasks)..where((t) => t.listId.equals(id))).go();
         await (delete(lists)..where((t) => t.id.equals(id))).go();
@@ -125,9 +135,14 @@ extension SyncWrites on AppDatabase {
         final subtaskIds = (await (select(
           subtasks,
         )..where((t) => t.taskId.equals(id))).get()).map((s) => s.id);
-        final photoIds = (await (select(
-          photos,
-        )..where((t) => t.taskId.equals(id))).get()).map((p) => p.id);
+        final photoIds =
+            (await (select(photos)..where(
+                      (t) =>
+                          t.parentKind.equalsValue(PhotoParent.task) &
+                          t.parentId.equals(id),
+                    ))
+                    .get())
+                .map((p) => p.id);
         await (delete(outbox)..where(
               (t) =>
                   (t.entity.equals(SyncEntity.subtask.name) &
@@ -137,7 +152,12 @@ extension SyncWrites on AppDatabase {
             ))
             .go();
         await (delete(subtasks)..where((t) => t.taskId.equals(id))).go();
-        await (delete(photos)..where((t) => t.taskId.equals(id))).go();
+        await (delete(photos)..where(
+              (t) =>
+                  t.parentKind.equalsValue(PhotoParent.task) &
+                  t.parentId.equals(id),
+            ))
+            .go();
         await (delete(tasks)..where((t) => t.id.equals(id))).go();
       case SyncEntity.subtask:
         await (delete(subtasks)..where((t) => t.id.equals(id))).go();
@@ -316,8 +336,11 @@ extension SyncWrites on AppDatabase {
   Future<Photo?> photoById(String id) =>
       (select(photos)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<Photo>> photosOfTask(String taskId) =>
-      (select(photos)..where((t) => t.taskId.equals(taskId))).get();
+  Future<List<Photo>> photosOfParent(PhotoParent kind, String id) =>
+      (select(photos)..where(
+            (t) => t.parentKind.equalsValue(kind) & t.parentId.equals(id),
+          ))
+          .get();
 
   /// Records that this device holds bytes for [sha256].
   Future<void> rememberBlob(

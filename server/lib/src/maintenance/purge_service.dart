@@ -215,9 +215,11 @@ class PurgeService {
   Future<List<Photo>> _childPhotos(Iterable<String> taskIds) async {
     final ids = taskIds.toList();
     if (ids.isEmpty) return const [];
-    return await (_db.select(
-      _db.photos,
-    )..where((t) => t.taskId.isIn(ids))).get();
+    return await (_db.select(_db.photos)..where(
+          (t) =>
+              t.parentKind.equalsValue(PhotoParent.task) & t.parentId.isIn(ids),
+        ))
+        .get();
   }
 
   /// The list a revoke should be addressed to.
@@ -241,8 +243,8 @@ class PurgeService {
 
   Future<String> _listOfPhoto(String id) async {
     final row = await _db.photoById(id);
-    if (row != null) {
-      final task = await _db.taskById(row.taskId);
+    if (row != null && row.parentKind == PhotoParent.task) {
+      final task = await _db.taskById(row.parentId);
       if (task != null) return task.listId;
     }
     return await _loggedListId(SyncEntity.photo, id);

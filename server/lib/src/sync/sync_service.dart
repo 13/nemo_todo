@@ -162,7 +162,9 @@ class SyncService {
         await _db.into(_db.tasks).insertOnConflictUpdate(row.toInsertable());
         _accept(row.updatedAt);
         final subtasks = moved ? await _db.subtasksOfTask(row.id) : <Subtask>[];
-        final taskPhotos = moved ? await _db.photosOfTask(row.id) : <Photo>[];
+        final taskPhotos = moved
+            ? await _db.photosOfParent(PhotoParent.task, row.id)
+            : <Photo>[];
         if (moved) {
           await _db.logRevoke(SyncEntity.task, row.id, listId: oldListId);
           for (final sub in subtasks) {
@@ -225,15 +227,15 @@ class SyncService {
         // photo naming the wrong task, it is an attempt to make `fileFor`
         // resolve outside the blob directory once the row is fetched back.
         if (!BlobStore.isValidHash(row.sha256)) return 'invalid_row';
-        final task = await _db.taskById(row.taskId);
+        final task = await _db.taskById(row.parentId);
         if (task == null) return 'unknown_task';
         if (!roles.containsKey(task.listId)) return 'forbidden';
         final skew = _checkHlc(row.updatedAt);
         if (skew != null) return skew;
         final existing = await _db.photoById(row.id);
-        final oldTask = existing == null || existing.taskId == row.taskId
+        final oldTask = existing == null || existing.parentId == row.parentId
             ? null
-            : await _db.taskById(existing.taskId);
+            : await _db.taskById(existing.parentId);
         final oldListId = oldTask?.listId;
         final moved = oldListId != null && oldListId != task.listId;
         if (moved && !roles.containsKey(oldListId)) return 'forbidden';

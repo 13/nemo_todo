@@ -71,7 +71,10 @@ class DataExport {
     for (final photo in await (_db.select(
       _db.photos,
     )..where((t) => t.deletedAt.isNull())).get()) {
-      if (!taskIds.contains(photo.taskId)) continue;
+      if (photo.parentKind != PhotoParent.task ||
+          !taskIds.contains(photo.parentId)) {
+        continue;
+      }
       final bytes = pictures[photo.sha256] ?? await _photos.get(photo.sha256);
       if (bytes == null) {
         leftOut++;
@@ -146,7 +149,12 @@ class DataExport {
           added++;
         }
         for (final photo in parsed.photos) {
-          if (!_live(await _db.taskById(photo.taskId))) continue;
+          // This export format only ever carries task photos; a note photo
+          // is not something version 2 can have written.
+          if (photo.parentKind != PhotoParent.task ||
+              !_live(await _db.taskById(photo.parentId))) {
+            continue;
+          }
           if (_live(await _db.photoById(photo.id))) continue;
           final file = parsed.pictures[photo.sha256];
           if (file == null) continue;

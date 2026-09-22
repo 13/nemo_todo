@@ -42,7 +42,10 @@ class TaskTile extends ConsumerWidget {
     final photos = ref.watch(photoCountsProvider).value?[task.id] ?? 0;
     final firstPhoto = photos == 0
         ? null
-        : ref.watch(photosByTaskProvider(task.id)).value?.firstOrNull;
+        : ref
+              .watch(photosByParentProvider(PhotoParent.task, task.id))
+              .value
+              ?.firstOrNull;
     final dueAt = task.dueAt;
     final meta = <Widget>[
       if (dueAt != null)

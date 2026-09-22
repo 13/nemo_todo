@@ -99,7 +99,7 @@ void main() {
     await db.rememberBlob(hash, byteSize: bytes.length, state: 'synced');
     final photo = Photo(
       id: 'photo-${hash.substring(0, 8)}',
-      taskId: taskId,
+      parentId: taskId,
       sha256: hash,
       byteSize: bytes.length,
       width: 1,
@@ -268,7 +268,7 @@ void main() {
       // derives its id from the hash and would collide with `onReport`.
       final onMilk = Photo(
         id: 'photo-second',
-        taskId: milk,
+        parentId: milk,
         sha256: onReport.sha256,
         byteSize: onReport.byteSize,
         width: 1,

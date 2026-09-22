@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift_dev/api/migrations_native.dart';
+import 'package:nemo_core/nemo_core.dart';
 import 'package:nemo_server/nemo_server.dart';
 import 'package:test/test.dart';
 
@@ -23,11 +24,11 @@ void main() {
   });
 
   test('migrates a database from every earlier version', () async {
-    for (final from in [1, 2, 3]) {
+    for (final from in [1, 2, 3, 4]) {
       final verifier = SchemaVerifier(GeneratedHelper());
       final connection = await verifier.startAt(from);
       final db = ServerDatabase(connection);
-      await verifier.migrateAndValidate(db, 4);
+      await verifier.migrateAndValidate(db, 5);
       await db.close();
     }
   });
@@ -36,7 +37,7 @@ void main() {
     final verifier = SchemaVerifier(GeneratedHelper());
     final connection = await verifier.startAt(1);
     final db = ServerDatabase(connection);
-    await verifier.migrateAndValidate(db, 4);
+    await verifier.migrateAndValidate(db, 5);
     final indexes =
         (await db
                 .customSelect(
@@ -47,8 +48,26 @@ void main() {
             .toList();
     expect(
       indexes,
-      containsAll(['list_members_user_id', 'sync_log_row', 'photos_task_id']),
+      containsAll(['list_members_user_id', 'sync_log_row', 'photos_parent']),
     );
+    await db.close();
+  });
+
+  test('a photo keeps its parent across the v5 migration', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(4);
+    schema.rawDatabase.execute(
+      'insert into photos (id, task_id, sha256, byte_size, width, height, '
+      'sort_key, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
+      ['p1', 't1', 'a' * 64, 10, 2, 1, 'V', '0000000000001-0000-n'],
+    );
+    final db = ServerDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 5);
+
+    final row = await db.photoById('p1');
+
+    expect(row!.parentKind, PhotoParent.task);
+    expect(row.parentId, 't1');
     await db.close();
   });
 }

@@ -9,10 +9,10 @@ part of 'photos_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(photosByTask)
-final photosByTaskProvider = PhotosByTaskFamily._();
+@ProviderFor(photosByParent)
+final photosByParentProvider = PhotosByParentFamily._();
 
-final class PhotosByTaskProvider
+final class PhotosByParentProvider
     extends
         $FunctionalProvider<
           AsyncValue<List<Photo>>,
@@ -20,25 +20,25 @@ final class PhotosByTaskProvider
           Stream<List<Photo>>
         >
     with $FutureModifier<List<Photo>>, $StreamProvider<List<Photo>> {
-  PhotosByTaskProvider._({
-    required PhotosByTaskFamily super.from,
-    required String super.argument,
+  PhotosByParentProvider._({
+    required PhotosByParentFamily super.from,
+    required (PhotoParent, String) super.argument,
   }) : super(
          retry: null,
-         name: r'photosByTaskProvider',
+         name: r'photosByParentProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$photosByTaskHash();
+  String debugGetCreateSourceHash() => _$photosByParentHash();
 
   @override
   String toString() {
-    return r'photosByTaskProvider'
+    return r'photosByParentProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -49,13 +49,13 @@ final class PhotosByTaskProvider
 
   @override
   Stream<List<Photo>> create(Ref ref) {
-    final argument = this.argument as String;
-    return photosByTask(ref, argument);
+    final argument = this.argument as (PhotoParent, String);
+    return photosByParent(ref, argument.$1, argument.$2);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PhotosByTaskProvider && other.argument == argument;
+    return other is PhotosByParentProvider && other.argument == argument;
   }
 
   @override
@@ -64,24 +64,24 @@ final class PhotosByTaskProvider
   }
 }
 
-String _$photosByTaskHash() => r'1e2ef33c407f5cebe72f715f2285c3c67fbd6ced';
+String _$photosByParentHash() => r'a5c24c64c5e9379ea315d80daafe383f7d1cdb27';
 
-final class PhotosByTaskFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<List<Photo>>, String> {
-  PhotosByTaskFamily._()
+final class PhotosByParentFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<List<Photo>>, (PhotoParent, String)> {
+  PhotosByParentFamily._()
     : super(
         retry: null,
-        name: r'photosByTaskProvider',
+        name: r'photosByParentProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  PhotosByTaskProvider call(String taskId) =>
-      PhotosByTaskProvider._(argument: taskId, from: this);
+  PhotosByParentProvider call(PhotoParent kind, String id) =>
+      PhotosByParentProvider._(argument: (kind, id), from: this);
 
   @override
-  String toString() => r'photosByTaskProvider';
+  String toString() => r'photosByParentProvider';
 }
 
 @ProviderFor(photoCounts)

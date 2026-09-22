@@ -126,7 +126,9 @@ class Device {
           case SyncEntity.task:
             tasks.remove(id);
             subtasks.removeWhere((_, s) => s.taskId == id);
-            photos.removeWhere((_, p) => p.taskId == id);
+            photos.removeWhere(
+              (_, p) => p.parentKind == PhotoParent.task && p.parentId == id,
+            );
           case SyncEntity.subtask:
             subtasks.remove(id);
           case SyncEntity.photo:

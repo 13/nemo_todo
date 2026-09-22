@@ -84,7 +84,10 @@ class MembersService {
             forUserId: target.id,
           );
         }
-        for (final photo in await _db.photosOfTask(task.id)) {
+        for (final photo in await _db.photosOfParent(
+          PhotoParent.task,
+          task.id,
+        )) {
           await _db.logRevoke(
             SyncEntity.photo,
             photo.id,
@@ -166,7 +169,7 @@ class MembersService {
       // Photos too: a member whose cursor is already past a photo's own
       // entry would otherwise never hear of a picture added before they
       // joined, and one who leaves would keep the rows.
-      for (final photo in await _db.photosOfTask(task.id)) {
+      for (final photo in await _db.photosOfParent(PhotoParent.task, task.id)) {
         await _db.logUpsert(SyncEntity.photo, photo.id, listId);
       }
     }

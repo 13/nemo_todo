@@ -16,7 +16,14 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Photo {
 
- String get id; String get taskId;/// Lowercase hex SHA-256 of the processed bytes.
+ String get id;/// The task or note this picture hangs on, depending on [parentKind].
+///
+/// Still spelled `task_id` on the wire. Renaming it would break every
+/// client that has not been updated, and a client that cannot read
+/// notes is never sent a photo whose parent is one.
+@JsonKey(name: 'task_id') String get parentId;/// Absent on the wire from a client or server released before notes,
+/// where it could only ever have meant a task.
+ PhotoParent get parentKind;/// Lowercase hex SHA-256 of the processed bytes.
  String get sha256; int get byteSize; int get width; int get height; String get sortKey; String get updatedAt; String? get deletedAt;
 /// Create a copy of Photo
 /// with the given fields replaced by the non-null parameter values.
@@ -31,20 +38,20 @@ $PhotoCopyWith<Photo> get copyWith => _$PhotoCopyWithImpl<Photo>(this as Photo, 
 @override
 bool operator ==(Object other) {
   final _this = this as Photo;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Photo&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.taskId, _this.taskId) || other.taskId == _this.taskId)&&(identical(other.sha256, _this.sha256) || other.sha256 == _this.sha256)&&(identical(other.byteSize, _this.byteSize) || other.byteSize == _this.byteSize)&&(identical(other.width, _this.width) || other.width == _this.width)&&(identical(other.height, _this.height) || other.height == _this.height)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Photo&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.parentKind, _this.parentKind) || other.parentKind == _this.parentKind)&&(identical(other.sha256, _this.sha256) || other.sha256 == _this.sha256)&&(identical(other.byteSize, _this.byteSize) || other.byteSize == _this.byteSize)&&(identical(other.width, _this.width) || other.width == _this.width)&&(identical(other.height, _this.height) || other.height == _this.height)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Photo;
-  return Object.hash(runtimeType,_this.id,_this.taskId,_this.sha256,_this.byteSize,_this.width,_this.height,_this.sortKey,_this.updatedAt,_this.deletedAt);
+  return Object.hash(runtimeType,_this.id,_this.parentId,_this.parentKind,_this.sha256,_this.byteSize,_this.width,_this.height,_this.sortKey,_this.updatedAt,_this.deletedAt);
 }
 
 @override
 String toString() {
   final _this = this as Photo;
-  return 'Photo(id: ${_this.id}, taskId: ${_this.taskId}, sha256: ${_this.sha256}, byteSize: ${_this.byteSize}, width: ${_this.width}, height: ${_this.height}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, deletedAt: ${_this.deletedAt})';
+  return 'Photo(id: ${_this.id}, parentId: ${_this.parentId}, parentKind: ${_this.parentKind}, sha256: ${_this.sha256}, byteSize: ${_this.byteSize}, width: ${_this.width}, height: ${_this.height}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -55,7 +62,7 @@ abstract mixin class $PhotoCopyWith<$Res>  {
   factory $PhotoCopyWith(Photo value, $Res Function(Photo) _then) = _$PhotoCopyWithImpl;
 @useResult
 $Res call({
- String id, String taskId, String sha256, int byteSize, int width, int height, String sortKey, String updatedAt, String? deletedAt
+ String id,@JsonKey(name: 'task_id') String parentId, PhotoParent parentKind, String sha256, int byteSize, int width, int height, String sortKey, String updatedAt, String? deletedAt
 });
 
 
@@ -72,11 +79,12 @@ class _$PhotoCopyWithImpl<$Res>
 
 /// Create a copy of Photo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? taskId = null,Object? sha256 = null,Object? byteSize = null,Object? width = null,Object? height = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? parentId = null,Object? parentKind = null,Object? sha256 = null,Object? byteSize = null,Object? width = null,Object? height = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
   return _then(Photo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,taskId: null == taskId ? _self.taskId : taskId // ignore: cast_nullable_to_non_nullable
-as String,sha256: null == sha256 ? _self.sha256 : sha256 // ignore: cast_nullable_to_non_nullable
+as String,parentId: null == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
+as String,parentKind: null == parentKind ? _self.parentKind : parentKind // ignore: cast_nullable_to_non_nullable
+as PhotoParent,sha256: null == sha256 ? _self.sha256 : sha256 // ignore: cast_nullable_to_non_nullable
 as String,byteSize: null == byteSize ? _self.byteSize : byteSize // ignore: cast_nullable_to_non_nullable
 as int,width: null == width ? _self.width : width // ignore: cast_nullable_to_non_nullable
 as int,height: null == height ? _self.height : height // ignore: cast_nullable_to_non_nullable
@@ -168,10 +176,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String taskId,  String sha256,  int byteSize,  int width,  int height,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'task_id')  String parentId,  PhotoParent parentKind,  String sha256,  int byteSize,  int width,  int height,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Photo() when $default != null:
-return $default(_that.id,_that.taskId,_that.sha256,_that.byteSize,_that.width,_that.height,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+return $default(_that.id,_that.parentId,_that.parentKind,_that.sha256,_that.byteSize,_that.width,_that.height,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -189,10 +197,10 @@ return $default(_that.id,_that.taskId,_that.sha256,_that.byteSize,_that.width,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String taskId,  String sha256,  int byteSize,  int width,  int height,  String sortKey,  String updatedAt,  String? deletedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'task_id')  String parentId,  PhotoParent parentKind,  String sha256,  int byteSize,  int width,  int height,  String sortKey,  String updatedAt,  String? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Photo():
-return $default(_that.id,_that.taskId,_that.sha256,_that.byteSize,_that.width,_that.height,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+return $default(_that.id,_that.parentId,_that.parentKind,_that.sha256,_that.byteSize,_that.width,_that.height,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +217,10 @@ return $default(_that.id,_that.taskId,_that.sha256,_that.byteSize,_that.width,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String taskId,  String sha256,  int byteSize,  int width,  int height,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'task_id')  String parentId,  PhotoParent parentKind,  String sha256,  int byteSize,  int width,  int height,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Photo() when $default != null:
-return $default(_that.id,_that.taskId,_that.sha256,_that.byteSize,_that.width,_that.height,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+return $default(_that.id,_that.parentId,_that.parentKind,_that.sha256,_that.byteSize,_that.width,_that.height,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
   return null;
 
 }
@@ -224,11 +232,19 @@ return $default(_that.id,_that.taskId,_that.sha256,_that.byteSize,_that.width,_t
 @JsonSerializable()
 
 class _Photo extends Photo {
-  const _Photo({required this.id, required this.taskId, required this.sha256, required this.byteSize, required this.width, required this.height, required this.sortKey, required this.updatedAt, this.deletedAt}): super._();
+  const _Photo({required this.id, @JsonKey(name: 'task_id') required this.parentId, this.parentKind = PhotoParent.task, required this.sha256, required this.byteSize, required this.width, required this.height, required this.sortKey, required this.updatedAt, this.deletedAt}): super._();
   factory _Photo.fromJson(Map<String, dynamic> json) => _$PhotoFromJson(json);
 
 @override final  String id;
-@override final  String taskId;
+/// The task or note this picture hangs on, depending on [parentKind].
+///
+/// Still spelled `task_id` on the wire. Renaming it would break every
+/// client that has not been updated, and a client that cannot read
+/// notes is never sent a photo whose parent is one.
+@override@JsonKey(name: 'task_id') final  String parentId;
+/// Absent on the wire from a client or server released before notes,
+/// where it could only ever have meant a task.
+@override@JsonKey() final  PhotoParent parentKind;
 /// Lowercase hex SHA-256 of the processed bytes.
 @override final  String sha256;
 @override final  int byteSize;
@@ -251,18 +267,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Photo&&(identical(other.id, id) || other.id == id)&&(identical(other.taskId, taskId) || other.taskId == taskId)&&(identical(other.sha256, sha256) || other.sha256 == sha256)&&(identical(other.byteSize, byteSize) || other.byteSize == byteSize)&&(identical(other.width, width) || other.width == width)&&(identical(other.height, height) || other.height == height)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Photo&&(identical(other.id, id) || other.id == id)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.parentKind, parentKind) || other.parentKind == parentKind)&&(identical(other.sha256, sha256) || other.sha256 == sha256)&&(identical(other.byteSize, byteSize) || other.byteSize == byteSize)&&(identical(other.width, width) || other.width == width)&&(identical(other.height, height) || other.height == height)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,taskId,sha256,byteSize,width,height,sortKey,updatedAt,deletedAt);
+    return Object.hash(runtimeType,id,parentId,parentKind,sha256,byteSize,width,height,sortKey,updatedAt,deletedAt);
 }
 
 @override
 String toString() {
-    return 'Photo(id: $id, taskId: $taskId, sha256: $sha256, byteSize: $byteSize, width: $width, height: $height, sortKey: $sortKey, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+    return 'Photo(id: $id, parentId: $parentId, parentKind: $parentKind, sha256: $sha256, byteSize: $byteSize, width: $width, height: $height, sortKey: $sortKey, updatedAt: $updatedAt, deletedAt: $deletedAt)';
 }
 
 
@@ -273,7 +289,7 @@ abstract mixin class _$PhotoCopyWith<$Res> implements $PhotoCopyWith<$Res> {
   factory _$PhotoCopyWith(_Photo value, $Res Function(_Photo) _then) = __$PhotoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String taskId, String sha256, int byteSize, int width, int height, String sortKey, String updatedAt, String? deletedAt
+ String id,@JsonKey(name: 'task_id') String parentId, PhotoParent parentKind, String sha256, int byteSize, int width, int height, String sortKey, String updatedAt, String? deletedAt
 });
 
 
@@ -290,11 +306,12 @@ class __$PhotoCopyWithImpl<$Res>
 
 /// Create a copy of Photo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? taskId = null,Object? sha256 = null,Object? byteSize = null,Object? width = null,Object? height = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? parentId = null,Object? parentKind = null,Object? sha256 = null,Object? byteSize = null,Object? width = null,Object? height = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
   return _then(_Photo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,taskId: null == taskId ? _self.taskId : taskId // ignore: cast_nullable_to_non_nullable
-as String,sha256: null == sha256 ? _self.sha256 : sha256 // ignore: cast_nullable_to_non_nullable
+as String,parentId: null == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
+as String,parentKind: null == parentKind ? _self.parentKind : parentKind // ignore: cast_nullable_to_non_nullable
+as PhotoParent,sha256: null == sha256 ? _self.sha256 : sha256 // ignore: cast_nullable_to_non_nullable
 as String,byteSize: null == byteSize ? _self.byteSize : byteSize // ignore: cast_nullable_to_non_nullable
 as int,width: null == width ? _self.width : width // ignore: cast_nullable_to_non_nullable
 as int,height: null == height ? _self.height : height // ignore: cast_nullable_to_non_nullable

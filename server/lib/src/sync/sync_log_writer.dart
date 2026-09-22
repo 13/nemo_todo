@@ -97,15 +97,21 @@ extension SyncLogWriter on ServerDatabase {
   Future<Photo?> photoById(String id) =>
       (select(photos)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<Photo>> photosOfTask(String taskId) =>
-      (select(photos)..where((t) => t.taskId.equals(taskId))).get();
+  Future<List<Photo>> photosOfParent(PhotoParent kind, String id) =>
+      (select(photos)..where(
+            (t) => t.parentKind.equalsValue(kind) & t.parentId.equals(id),
+          ))
+          .get();
 
   /// Whether [userId] is a member of any list holding a live photo that
   /// names [sha256]. Losing a share loses the pictures with the tasks.
+  ///
+  /// Only a task photo can be reached this way: a note photo has no task to
+  /// join through, and note membership is not this task's concern.
   Future<bool> canSeeBlob(String userId, String sha256) async {
     final row = await customSelect(
       'select 1 from photos p '
-      'join tasks t on t.id = p.task_id '
+      "join tasks t on t.id = p.parent_id and p.parent_kind = 'task' "
       'join list_members m on m.list_id = t.list_id '
       'where p.sha256 = ? and p.deleted_at is null and m.user_id = ? '
       'limit 1',

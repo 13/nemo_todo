@@ -6,7 +6,8 @@ import 'package:nemo/features/photos/data/photo_pipeline.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo_core/nemo_core.dart';
 
-/// The pictures on a task: adding one, removing one, and finding its bytes.
+/// The pictures on a task or a note: adding one, removing one, and finding
+/// its bytes.
 class PhotosRepository {
   PhotosRepository(
     this._db,
@@ -28,23 +29,33 @@ class PhotosRepository {
   // tests supply a synchronous stand-in instead.
   final Future<ProcessedPhoto?> Function(Uint8List raw) _process;
 
-  Stream<List<Photo>> watchByTask(String taskId) =>
+  Stream<List<Photo>> watchByParent(PhotoParent kind, String id) =>
       (_db.select(_db.photos)
-            ..where((t) => t.taskId.equals(taskId) & t.deletedAt.isNull())
+            ..where(
+              (t) =>
+                  t.parentKind.equalsValue(kind) &
+                  t.parentId.equals(id) &
+                  t.deletedAt.isNull(),
+            )
             ..orderBy([(t) => OrderingTerm.asc(t.sortKey)]))
           .watch();
 
-  /// How many live pictures each task has, for the list tiles.
+  /// How many live pictures each task has, for the list tiles. Note photos
+  /// are not counted here: this feeds the task list tiles alone.
   Stream<Map<String, int>> watchCounts() =>
-      (_db.select(_db.photos)..where((t) => t.deletedAt.isNull())).watch().map((
-        rows,
-      ) {
-        final counts = <String, int>{};
-        for (final row in rows) {
-          counts[row.taskId] = (counts[row.taskId] ?? 0) + 1;
-        }
-        return counts;
-      });
+      (_db.select(_db.photos)..where(
+            (t) =>
+                t.deletedAt.isNull() &
+                t.parentKind.equalsValue(PhotoParent.task),
+          ))
+          .watch()
+          .map((rows) {
+            final counts = <String, int>{};
+            for (final row in rows) {
+              counts[row.parentId] = (counts[row.parentId] ?? 0) + 1;
+            }
+            return counts;
+          });
 
   Future<Uint8List?> bytes(String sha256) => _store.get(sha256);
 
@@ -57,18 +68,24 @@ class PhotosRepository {
 
   /// Processes [raw], stores the bytes and queues the row. Returns null
   /// for bytes that are not a picture, writing nothing in that case.
-  Future<Photo?> add(String taskId, Uint8List raw) async {
+  Future<Photo?> add(PhotoParent kind, String parentId, Uint8List raw) async {
     final processed = await _process(raw);
     if (processed == null) return null;
     final last =
         await (_db.select(_db.photos)
-              ..where((t) => t.taskId.equals(taskId) & t.deletedAt.isNull())
+              ..where(
+                (t) =>
+                    t.parentKind.equalsValue(kind) &
+                    t.parentId.equals(parentId) &
+                    t.deletedAt.isNull(),
+              )
               ..orderBy([(t) => OrderingTerm.desc(t.sortKey)])
               ..limit(1))
             .getSingleOrNull();
     final photo = Photo(
       id: _newId(),
-      taskId: taskId,
+      parentKind: kind,
+      parentId: parentId,
       sha256: processed.sha256,
       byteSize: processed.bytes.length,
       width: processed.width,
@@ -104,8 +121,9 @@ class PhotosRepository {
     if (photo == null) return;
     final stamp = _clock.now().toString();
     await _db.upsertPhoto(photo.copyWith(updatedAt: stamp, deletedAt: stamp));
-    // The same picture may hang off another task -- the hash is the bytes,
-    // not the attachment -- so the bytes only go when nothing names them.
+    // The same picture may hang off another task or note -- the hash is the
+    // bytes, not the attachment -- so the bytes only go when nothing names
+    // them.
     if (await _db.forgetUnusedBlob(photo.sha256)) {
       await _store.remove(photo.sha256);
     }

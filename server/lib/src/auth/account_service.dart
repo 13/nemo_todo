@@ -86,7 +86,12 @@ class AccountService {
       await (_db.delete(
         _db.subtasks,
       )..where((t) => t.taskId.isIn(taskIds))).go();
-      await (_db.delete(_db.photos)..where((t) => t.taskId.isIn(taskIds))).go();
+      await (_db.delete(_db.photos)..where(
+            (t) =>
+                t.parentKind.equalsValue(PhotoParent.task) &
+                t.parentId.isIn(taskIds),
+          ))
+          .go();
       await (_db.delete(_db.tasks)..where((t) => t.id.isIn(taskIds))).go();
     }
     await (_db.delete(_db.lists)..where((t) => t.id.equals(listId))).go();

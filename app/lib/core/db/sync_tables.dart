@@ -60,11 +60,13 @@ class Subtasks extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
-@TableIndex(name: 'photos_task_id', columns: {#taskId})
+@TableIndex(name: 'photos_parent', columns: {#parentKind, #parentId})
 @UseRowClass(Photo, generateInsertable: true)
 class Photos extends Table {
   TextColumn get id => text()();
-  TextColumn get taskId => text()();
+  TextColumn get parentId => text()();
+  TextColumn get parentKind =>
+      textEnum<PhotoParent>().withDefault(const Constant('task'))();
   TextColumn get sha256 => text()();
   IntColumn get byteSize => integer()();
   IntColumn get width => integer()();

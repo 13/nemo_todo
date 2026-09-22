@@ -3,23 +3,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo_core/nemo_core.dart';
 
-/// Opens the task's pictures full screen, starting at [index].
+/// Opens the parent's pictures full screen, starting at [index].
 Future<void> showPhotoViewer(
   BuildContext context, {
-  required String taskId,
+  required PhotoParent parentKind,
+  required String parentId,
   required int index,
 }) => Navigator.of(context).push<void>(
   MaterialPageRoute(
-    builder: (_) => _PhotoViewer(taskId: taskId, initialIndex: index),
+    builder: (_) => _PhotoViewer(
+      parentKind: parentKind,
+      parentId: parentId,
+      initialIndex: index,
+    ),
     fullscreenDialog: true,
   ),
 );
 
 class _PhotoViewer extends ConsumerStatefulWidget {
-  const _PhotoViewer({required this.taskId, required this.initialIndex});
+  const _PhotoViewer({
+    required this.parentKind,
+    required this.parentId,
+    required this.initialIndex,
+  });
 
-  final String taskId;
+  final PhotoParent parentKind;
+  final String parentId;
   final int initialIndex;
 
   @override
@@ -40,7 +51,10 @@ class _PhotoViewerState extends ConsumerState<_PhotoViewer> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final photos =
-        ref.watch(photosByTaskProvider(widget.taskId)).value ?? const [];
+        ref
+            .watch(photosByParentProvider(widget.parentKind, widget.parentId))
+            .value ??
+        const [];
     // The last picture deleted leaves nothing to look at.
     if (photos.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

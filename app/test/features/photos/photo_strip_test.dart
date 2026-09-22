@@ -63,7 +63,7 @@ void main() {
       // Seeding runs inside `appTest`'s fake-async zone, where a real
       // isolate's `compute` never reports back.
       process: (raw) async => processPhoto(raw),
-    ).add('t1', smallJpeg());
+    ).add(PhotoParent.task, 't1', smallJpeg());
   }
 
   appTest('the strip shows a task photo and deletes it from the viewer', (

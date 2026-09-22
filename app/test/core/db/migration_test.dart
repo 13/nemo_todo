@@ -5,6 +5,8 @@ import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/db/sync_writes.dart';
+import 'package:nemo_core/nemo_core.dart';
 
 import '../../generated/schema.dart';
 import '../../support/test_db.dart';
@@ -26,11 +28,11 @@ void main() {
   });
 
   test('migrates a database from every earlier version', () async {
-    for (final from in [1, 2]) {
+    for (final from in [1, 2, 3]) {
       final verifier = SchemaVerifier(GeneratedHelper());
       final connection = await verifier.startAt(from);
       final db = AppDatabase(connection);
-      await verifier.migrateAndValidate(db, 3);
+      await verifier.migrateAndValidate(db, 4);
       await db.close();
     }
   });
@@ -39,7 +41,7 @@ void main() {
     final verifier = SchemaVerifier(GeneratedHelper());
     final connection = await verifier.startAt(1);
     final db = AppDatabase(connection);
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
     final indexes =
         (await db
                 .customSelect(
@@ -48,7 +50,7 @@ void main() {
                 .get())
             .map((r) => r.read<String>('name'))
             .toList();
-    expect(indexes, contains('photos_task_id'));
+    expect(indexes, contains('photos_parent'));
     await db.close();
   });
 
@@ -65,7 +67,7 @@ void main() {
         'ben',
       ]);
     final db = AppDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
 
     final kv = KvStore(db);
     expect(
@@ -76,6 +78,24 @@ void main() {
           'build without photos',
     );
     expect(await kv.get(KvKeys.username), 'ben', reason: 'only the cursor');
+    await db.close();
+  });
+
+  test('a photo keeps its parent across the v4 migration', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(3);
+    schema.rawDatabase.execute(
+      'insert into photos (id, task_id, sha256, byte_size, width, height, '
+      'sort_key, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
+      ['p1', 't1', 'a' * 64, 10, 2, 1, 'V', '0000000000001-0000-n'],
+    );
+    final db = AppDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 4);
+
+    final row = await db.photoById('p1');
+
+    expect(row!.parentKind, PhotoParent.task);
+    expect(row.parentId, 't1');
     await db.close();
   });
 }

@@ -211,7 +211,7 @@ void main() {
       await db.upsertPhoto(
         Photo(
           id: 'p1',
-          taskId: 't1',
+          parentId: 't1',
           sha256: hash,
           byteSize: 12,
           width: 4,
@@ -261,7 +261,7 @@ void main() {
         final at = clock.now().toString();
         return Photo(
           id: id,
-          taskId: 't1',
+          parentId: 't1',
           sha256: hash,
           byteSize: 12,
           width: 4,
@@ -311,7 +311,7 @@ void main() {
         SyncChange.photo(
           Photo(
             id: 'p1',
-            taskId: 't1',
+            parentId: 't1',
             sha256: hash,
             byteSize: 9,
             width: 2,
@@ -350,7 +350,7 @@ void main() {
     );
     Photo photo(String id, String sha256, String stamp) => Photo(
       id: id,
-      taskId: 't1',
+      parentId: 't1',
       sha256: sha256,
       byteSize: 9,
       width: 2,

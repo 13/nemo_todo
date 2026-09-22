@@ -455,7 +455,7 @@ void main() {
         SyncChange.photo(
           Photo(
             id: 'p1',
-            taskId: 't1',
+            parentId: 't1',
             sha256: hash,
             byteSize: 3,
             width: 1,
@@ -471,7 +471,7 @@ void main() {
   test('bytes are uploaded before the row that names them is pushed', () async {
     final c = await container();
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    final photo = (await photos().add('t1', smallJpeg()))!;
+    final photo = (await photos().add(PhotoParent.task, 't1', smallJpeg()))!;
 
     await c.read(syncEngineProvider.notifier).syncNow();
 
@@ -492,7 +492,7 @@ void main() {
   /// with its row waiting to be offered again by a sign-in.
   Future<Photo> syncedPicture(String account) async {
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    final photo = (await photos().add('t1', smallJpeg()))!;
+    final photo = (await photos().add(PhotoParent.task, 't1', smallJpeg()))!;
     await db.markBlobSynced(photo.sha256);
     await store.unpin(photo.sha256);
     await db.clearOutbox();
@@ -586,8 +586,16 @@ void main() {
       store = MemoryPhotoStore(maxEntries: 2);
       await db.upsertTask(task('t1', testClock('a').now().toString()));
       final repo = photos();
-      final held = (await repo.add('t1', smallJpeg(width: 10)))!;
-      final gone = (await repo.add('t1', smallJpeg(width: 30)))!;
+      final held = (await repo.add(
+        PhotoParent.task,
+        't1',
+        smallJpeg(width: 10),
+      ))!;
+      final gone = (await repo.add(
+        PhotoParent.task,
+        't1',
+        smallJpeg(width: 30),
+      ))!;
       for (final p in [held, gone]) {
         await db.markBlobSynced(p.sha256);
         await store.unpin(p.sha256);
@@ -634,7 +642,7 @@ void main() {
     await db.upsertList(list('l1', testClock('a').now().toString()));
     await db.upsertTask(task('t1', testClock('a').now().toString()));
     final repo = photos();
-    final photo = (await repo.add('t1', smallJpeg()))!;
+    final photo = (await repo.add(PhotoParent.task, 't1', smallJpeg()))!;
     client.blobFailures[photo.sha256] = const ApiError(404, 'not_found');
     await c.read(syncEngineProvider.notifier).syncNow();
     await repo.delete(photo.id);
@@ -687,7 +695,7 @@ void main() {
       ..rejectPhotoChanges = true;
     final c = await container();
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    final photo = (await photos().add('t1', smallJpeg()))!;
+    final photo = (await photos().add(PhotoParent.task, 't1', smallJpeg()))!;
 
     await c.read(syncEngineProvider.notifier).syncNow();
     await c.read(syncEngineProvider.notifier).syncNow();
@@ -721,7 +729,7 @@ void main() {
     await KvStore(db).set(KvKeys.serverPhotos, 'true');
     final c = await container();
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    await photos().add('t1', smallJpeg());
+    await photos().add(PhotoParent.task, 't1', smallJpeg());
     client
       ..photos = false
       ..rejectPhotoChanges = true;
@@ -761,7 +769,7 @@ void main() {
   test('an upload the server failed is tried again with the backoff', () async {
     final c = await container(retry: fastRetry);
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    final photo = (await photos().add('t1', smallJpeg()))!;
+    final photo = (await photos().add(PhotoParent.task, 't1', smallJpeg()))!;
     client.blobFailures[photo.sha256] = const ApiError(500, 'internal');
 
     await c.read(syncEngineProvider.notifier).syncNow();
@@ -781,7 +789,7 @@ void main() {
   test('a picture too large to store is not retried', () async {
     final c = await container(retry: fastRetry);
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    final photo = (await photos().add('t1', smallJpeg()))!;
+    final photo = (await photos().add(PhotoParent.task, 't1', smallJpeg()))!;
     client.blobFailures[photo.sha256] = const ApiError(413, 'blob_too_large');
 
     await c.read(syncEngineProvider.notifier).syncNow();
@@ -831,7 +839,7 @@ void main() {
     final c = await container();
     client.failWith = const ApiError(507, 'quota_exceeded');
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    await photos().add('t1', smallJpeg());
+    await photos().add(PhotoParent.task, 't1', smallJpeg());
 
     await c.read(syncEngineProvider.notifier).syncNow();
 
@@ -847,7 +855,7 @@ void main() {
     await db.upsertTask(task('t1', testClock('a').now().toString()));
     final repo = photos();
     for (final width in [10, 20, 30, 40]) {
-      await repo.add('t1', smallJpeg(width: width));
+      await repo.add(PhotoParent.task, 't1', smallJpeg(width: width));
     }
 
     await c.read(syncEngineProvider.notifier).syncNow();
@@ -864,8 +872,16 @@ void main() {
     final c = await container();
     await db.upsertTask(task('t1', testClock('a').now().toString()));
     final repo = photos();
-    final broken = (await repo.add('t1', smallJpeg(width: 10)))!;
-    final fine = (await repo.add('t1', smallJpeg(width: 30)))!;
+    final broken = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 10),
+    ))!;
+    final fine = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 30),
+    ))!;
     client.blobFailures[broken.sha256] = const FileSystemException(
       'No space left on device',
     );
@@ -898,7 +914,7 @@ void main() {
   test('a refused picture is reported until one gets through', () async {
     final c = await container();
     await db.upsertTask(task('t1', testClock('a').now().toString()));
-    final photo = (await photos().add('t1', smallJpeg()))!;
+    final photo = (await photos().add(PhotoParent.task, 't1', smallJpeg()))!;
     client.blobFailures[photo.sha256] = const ApiError(507, 'quota_exceeded');
 
     await c.read(syncEngineProvider.notifier).syncNow();
@@ -923,7 +939,7 @@ void main() {
       store = MemoryPhotoStore(maxEntries: 1);
       final c = await container();
       await db.upsertTask(task('t1', testClock('a').now().toString()));
-      final photo = (await photos().add('t1', smallJpeg()))!;
+      final photo = (await photos().add(PhotoParent.task, 't1', smallJpeg()))!;
       Future<void> crowd() async {
         for (var i = 0; i < 3; i++) {
           await store.put('filler$i', Uint8List.fromList([i]));

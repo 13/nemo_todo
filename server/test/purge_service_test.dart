@@ -309,7 +309,7 @@ void main() {
           .insert(
             Photo(
               id: 'p1',
-              taskId: 't1',
+              parentId: 't1',
               sha256: 'a' * 64,
               byteSize: 3,
               width: 1,
@@ -495,7 +495,7 @@ void main() {
           .insert(
             Photo(
               id: 'p1',
-              taskId: 't1',
+              parentId: 't1',
               sha256: y,
               byteSize: 3,
               width: 1,
@@ -579,7 +579,7 @@ void main() {
           .insert(
             Photo(
               id: 'p1',
-              taskId: 't1',
+              parentId: 't1',
               sha256: 'a' * 64,
               byteSize: 3,
               width: 1,

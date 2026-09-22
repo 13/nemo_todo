@@ -135,7 +135,7 @@ void main() {
   test('a photo change survives a round trip through JSON', () {
     const photo = Photo(
       id: 'p1',
-      taskId: 't1',
+      parentId: 't1',
       sha256:
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       byteSize: 4096,
@@ -158,7 +158,7 @@ void main() {
   test('a photo merges by its stamp like any other row', () {
     const older = Photo(
       id: 'p1',
-      taskId: 't1',
+      parentId: 't1',
       sha256:
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       byteSize: 10,

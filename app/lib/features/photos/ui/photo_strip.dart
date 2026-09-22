@@ -8,12 +8,18 @@ import 'package:nemo/features/photos/ui/photo_viewer.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo_core/nemo_core.dart';
 
-/// The pictures on a task, with a button to add another.
+/// The pictures on a task or a note, with a button to add another.
 class PhotoStrip extends ConsumerStatefulWidget {
-  const PhotoStrip({required this.taskId, super.key});
+  const PhotoStrip({
+    required this.parentKind,
+    required this.parentId,
+    super.key,
+  });
 
-  final String taskId;
+  final PhotoParent parentKind;
+  final String parentId;
 
   @override
   ConsumerState<PhotoStrip> createState() => _PhotoStripState();
@@ -39,7 +45,7 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
     try {
       final photo = await ref
           .read(photosRepositoryProvider)
-          .add(widget.taskId, bytes);
+          .add(widget.parentKind, widget.parentId, bytes);
       if (photo == null && context.mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l.photosNotAnImage)));
@@ -89,7 +95,10 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final photos =
-        ref.watch(photosByTaskProvider(widget.taskId)).value ?? const [];
+        ref
+            .watch(photosByParentProvider(widget.parentKind, widget.parentId))
+            .value ??
+        const [];
     final refusal = _refusal(
       l,
       ref.watch(syncEngineProvider.select((s) => s.photoError)),
@@ -126,7 +135,8 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
                       borderRadius: BorderRadius.circular(10),
                       onTap: () => showPhotoViewer(
                         context,
-                        taskId: widget.taskId,
+                        parentKind: widget.parentKind,
+                        parentId: widget.parentId,
                         index: i,
                       ),
                       child: PhotoThumbnail(

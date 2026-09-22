@@ -1382,15 +1382,27 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  static const VerificationMeta _parentIdMeta = const VerificationMeta(
+    'parentId',
+  );
   @override
-  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
-    'task_id',
+  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+    'parent_id',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  @override
+  late final GeneratedColumnWithTypeConverter<PhotoParent, String> parentKind =
+      GeneratedColumn<String>(
+        'parent_kind',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('task'),
+      ).withConverter<PhotoParent>($PhotosTable.$converterparentKind);
   static const VerificationMeta _sha256Meta = const VerificationMeta('sha256');
   @override
   late final GeneratedColumn<String> sha256 = GeneratedColumn<String>(
@@ -1465,7 +1477,8 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    taskId,
+    parentId,
+    parentKind,
     sha256,
     byteSize,
     width,
@@ -1491,13 +1504,13 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('task_id')) {
+    if (data.containsKey('parent_id')) {
       context.handle(
-        _taskIdMeta,
-        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+        _parentIdMeta,
+        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
       );
     } else if (isInserting) {
-      context.missing(_taskIdMeta);
+      context.missing(_parentIdMeta);
     }
     if (data.containsKey('sha256')) {
       context.handle(
@@ -1566,10 +1579,16 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      taskId: attachedDatabase.typeMapping.read(
+      parentId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}task_id'],
+        data['${effectivePrefix}parent_id'],
       )!,
+      parentKind: $PhotosTable.$converterparentKind.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}parent_kind'],
+        )!,
+      ),
       sha256: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sha256'],
@@ -1605,11 +1624,15 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
   $PhotosTable createAlias(String alias) {
     return $PhotosTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<PhotoParent, String, String> $converterparentKind =
+      const EnumNameConverter<PhotoParent>(PhotoParent.values);
 }
 
 class PhotosCompanion extends UpdateCompanion<Photo> {
   final Value<String> id;
-  final Value<String> taskId;
+  final Value<String> parentId;
+  final Value<PhotoParent> parentKind;
   final Value<String> sha256;
   final Value<int> byteSize;
   final Value<int> width;
@@ -1620,7 +1643,8 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   final Value<int> rowid;
   const PhotosCompanion({
     this.id = const Value.absent(),
-    this.taskId = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.parentKind = const Value.absent(),
     this.sha256 = const Value.absent(),
     this.byteSize = const Value.absent(),
     this.width = const Value.absent(),
@@ -1632,7 +1656,8 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   });
   PhotosCompanion.insert({
     required String id,
-    required String taskId,
+    required String parentId,
+    this.parentKind = const Value.absent(),
     required String sha256,
     required int byteSize,
     required int width,
@@ -1642,7 +1667,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       taskId = Value(taskId),
+       parentId = Value(parentId),
        sha256 = Value(sha256),
        byteSize = Value(byteSize),
        width = Value(width),
@@ -1651,7 +1676,8 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
        updatedAt = Value(updatedAt);
   static Insertable<Photo> custom({
     Expression<String>? id,
-    Expression<String>? taskId,
+    Expression<String>? parentId,
+    Expression<String>? parentKind,
     Expression<String>? sha256,
     Expression<int>? byteSize,
     Expression<int>? width,
@@ -1663,7 +1689,8 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (taskId != null) 'task_id': taskId,
+      if (parentId != null) 'parent_id': parentId,
+      if (parentKind != null) 'parent_kind': parentKind,
       if (sha256 != null) 'sha256': sha256,
       if (byteSize != null) 'byte_size': byteSize,
       if (width != null) 'width': width,
@@ -1677,7 +1704,8 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
 
   PhotosCompanion copyWith({
     Value<String>? id,
-    Value<String>? taskId,
+    Value<String>? parentId,
+    Value<PhotoParent>? parentKind,
     Value<String>? sha256,
     Value<int>? byteSize,
     Value<int>? width,
@@ -1689,7 +1717,8 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   }) {
     return PhotosCompanion(
       id: id ?? this.id,
-      taskId: taskId ?? this.taskId,
+      parentId: parentId ?? this.parentId,
+      parentKind: parentKind ?? this.parentKind,
       sha256: sha256 ?? this.sha256,
       byteSize: byteSize ?? this.byteSize,
       width: width ?? this.width,
@@ -1707,8 +1736,13 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (taskId.present) {
-      map['task_id'] = Variable<String>(taskId.value);
+    if (parentId.present) {
+      map['parent_id'] = Variable<String>(parentId.value);
+    }
+    if (parentKind.present) {
+      map['parent_kind'] = Variable<String>(
+        $PhotosTable.$converterparentKind.toSql(parentKind.value),
+      );
     }
     if (sha256.present) {
       map['sha256'] = Variable<String>(sha256.value);
@@ -1741,7 +1775,8 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   String toString() {
     return (StringBuffer('PhotosCompanion(')
           ..write('id: $id, ')
-          ..write('taskId: $taskId, ')
+          ..write('parentId: $parentId, ')
+          ..write('parentKind: $parentKind, ')
           ..write('sha256: $sha256, ')
           ..write('byteSize: $byteSize, ')
           ..write('width: $width, ')
@@ -1762,7 +1797,8 @@ class _$PhotoInsertable implements Insertable<Photo> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     return PhotosCompanion(
       id: Value(_object.id),
-      taskId: Value(_object.taskId),
+      parentId: Value(_object.parentId),
+      parentKind: Value(_object.parentKind),
       sha256: Value(_object.sha256),
       byteSize: Value(_object.byteSize),
       width: Value(_object.width),
@@ -3410,9 +3446,9 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     'subtasks_task_id',
     'CREATE INDEX subtasks_task_id ON subtasks (task_id)',
   );
-  late final Index photosTaskId = Index(
-    'photos_task_id',
-    'CREATE INDEX photos_task_id ON photos (task_id)',
+  late final Index photosParent = Index(
+    'photos_parent',
+    'CREATE INDEX photos_parent ON photos (parent_kind, parent_id)',
   );
   late final Index listMembersUserId = Index(
     'list_members_user_id',
@@ -3446,7 +3482,7 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     blobs,
     tasksListId,
     subtasksTaskId,
-    photosTaskId,
+    photosParent,
     listMembersUserId,
     syncLogListId,
     syncLogForUserId,
@@ -4366,7 +4402,8 @@ typedef $$SubtasksTableProcessedTableManager =
     >;
 typedef $$PhotosTableCreateCompanionBuilder = PhotosCompanion Function({
   required String id,
-  required String taskId,
+  required String parentId,
+  Value<PhotoParent> parentKind,
   required String sha256,
   required int byteSize,
   required int width,
@@ -4378,7 +4415,8 @@ typedef $$PhotosTableCreateCompanionBuilder = PhotosCompanion Function({
 });
 typedef $$PhotosTableUpdateCompanionBuilder = PhotosCompanion Function({
   Value<String> id,
-  Value<String> taskId,
+  Value<String> parentId,
+  Value<PhotoParent> parentKind,
   Value<String> sha256,
   Value<int> byteSize,
   Value<int> width,
@@ -4403,9 +4441,15 @@ class $$PhotosTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get taskId => $composableBuilder(
-    column: $table.taskId,
+  ColumnFilters<String> get parentId => $composableBuilder(
+    column: $table.parentId,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<PhotoParent, PhotoParent, String>
+  get parentKind => $composableBuilder(
+    column: $table.parentKind,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<String> get sha256 => $composableBuilder(
@@ -4458,8 +4502,13 @@ class $$PhotosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get taskId => $composableBuilder(
-    column: $table.taskId,
+  ColumnOrderings<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get parentKind => $composableBuilder(
+    column: $table.parentKind,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4511,8 +4560,14 @@ class $$PhotosTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get taskId =>
-      $composableBuilder(column: $table.taskId, builder: (column) => column);
+  GeneratedColumn<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<PhotoParent, String> get parentKind =>
+      $composableBuilder(
+        column: $table.parentKind,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<String> get sha256 =>
       $composableBuilder(column: $table.sha256, builder: (column) => column);
@@ -4565,7 +4620,8 @@ class $$PhotosTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String> taskId = const Value.absent(),
+                Value<String> parentId = const Value.absent(),
+                Value<PhotoParent> parentKind = const Value.absent(),
                 Value<String> sha256 = const Value.absent(),
                 Value<int> byteSize = const Value.absent(),
                 Value<int> width = const Value.absent(),
@@ -4576,7 +4632,8 @@ class $$PhotosTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => PhotosCompanion(
                 id: id,
-                taskId: taskId,
+                parentId: parentId,
+                parentKind: parentKind,
                 sha256: sha256,
                 byteSize: byteSize,
                 width: width,
@@ -4589,7 +4646,8 @@ class $$PhotosTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                required String taskId,
+                required String parentId,
+                Value<PhotoParent> parentKind = const Value.absent(),
                 required String sha256,
                 required int byteSize,
                 required int width,
@@ -4600,7 +4658,8 @@ class $$PhotosTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => PhotosCompanion.insert(
                 id: id,
-                taskId: taskId,
+                parentId: parentId,
+                parentKind: parentKind,
                 sha256: sha256,
                 byteSize: byteSize,
                 width: width,

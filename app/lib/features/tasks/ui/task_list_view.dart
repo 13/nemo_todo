@@ -19,7 +19,12 @@ class TaskSection {
 /// Sections of task tiles with swipe-to-complete, swipe-to-delete and
 /// (for a single open section) long-press reordering. Completed tasks are
 /// folded into a collapsible section.
-class TaskListView extends ConsumerStatefulWidget {
+///
+/// A thin wrapper around [TaskListSlivers]: it owns its own
+/// [CustomScrollView]. A caller that needs to mix these tiles into a larger
+/// scroll view — see the search screen — uses [TaskListSlivers] directly
+/// instead.
+class TaskListView extends StatelessWidget {
   const TaskListView({
     required this.sections,
     this.completed = const [],
@@ -36,10 +41,45 @@ class TaskListView extends ConsumerStatefulWidget {
   final Widget? header;
 
   @override
-  ConsumerState<TaskListView> createState() => _TaskListViewState();
+  Widget build(BuildContext context) => CustomScrollView(
+    slivers: [
+      TaskListSlivers(
+        sections: sections,
+        completed: completed,
+        showList: showList,
+        reorderable: reorderable,
+        header: header,
+      ),
+    ],
+  );
 }
 
-class _TaskListViewState extends ConsumerState<TaskListView> {
+/// The slivers [TaskListView] renders, split out so a caller that already
+/// owns a [CustomScrollView] — like the search screen, which lays tasks and
+/// notes out as one continuous scroll instead of two independently
+/// scrolling panes — can embed them directly rather than nesting a second
+/// scroll view inside the first.
+class TaskListSlivers extends ConsumerStatefulWidget {
+  const TaskListSlivers({
+    required this.sections,
+    this.completed = const [],
+    this.showList = false,
+    this.reorderable = false,
+    this.header,
+    super.key,
+  });
+
+  final List<TaskSection> sections;
+  final List<Task> completed;
+  final bool showList;
+  final bool reorderable;
+  final Widget? header;
+
+  @override
+  ConsumerState<TaskListSlivers> createState() => _TaskListSliversState();
+}
+
+class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
   var _showCompleted = false;
 
   @override
@@ -79,7 +119,7 @@ class _TaskListViewState extends ConsumerState<TaskListView> {
       if (_showCompleted) slivers.add(_plain(widget.completed));
     }
     slivers.add(const SliverPadding(padding: EdgeInsets.only(bottom: 24)));
-    return CustomScrollView(slivers: slivers);
+    return SliverMainAxisGroup(slivers: slivers);
   }
 
   Widget _plain(List<Task> tasks) => SliverPadding(

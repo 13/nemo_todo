@@ -72,25 +72,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       icon: Icons.search_off_rounded,
                       message: l.searchNoResults(_query),
                     )
-                  // Tasks and notes are two headed sections, each hidden
-                  // when its own side of the search turned up nothing.
-                  : Column(
-                      children: [
+                  // Tasks and then notes, one after another in a single
+                  // scroll, each headed section hidden when its own side of
+                  // the search turned up nothing.
+                  : CustomScrollView(
+                      slivers: [
                         if (items.isNotEmpty)
-                          Expanded(
-                            child: TaskListView(
-                              showList: true,
-                              sections: [
-                                TaskSection(
-                                  title: l.searchTasksHeader,
-                                  tasks: items.where((t) => !t.done).toList(),
-                                ),
-                              ],
-                              completed: items.where((t) => t.done).toList(),
-                            ),
+                          TaskListSlivers(
+                            showList: true,
+                            sections: [
+                              TaskSection(
+                                title: l.searchTasksHeader,
+                                tasks: items.where((t) => !t.done).toList(),
+                              ),
+                            ],
+                            completed: items.where((t) => t.done).toList(),
                           ),
-                        if (notes.isNotEmpty)
-                          Expanded(child: _NoteResults(notes: notes)),
+                        if (notes.isNotEmpty) ..._noteResultSlivers(notes, l),
                       ],
                     ),
             ),
@@ -98,33 +96,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
-/// The note half of a search result: a header and the matching notes,
-/// tapping one of them opening it the way `/notes` does.
-class _NoteResults extends StatelessWidget {
-  const _NoteResults({required this.notes});
-
-  final List<Note> notes;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    return Column(
-      children: [
-        SectionHeader(
-          key: const Key('search-notes-header'),
-          title: l.searchNotesHeader,
-          count: notes.length,
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: notes.length,
-            itemBuilder: (context, i) => _NoteResultTile(note: notes[i]),
-          ),
-        ),
-      ],
-    );
-  }
-}
+/// The note half of a search result: a header sliver and the matching
+/// notes, tapping one of them opening it the way `/notes` does.
+List<Widget> _noteResultSlivers(List<Note> notes, L l) => [
+  SliverToBoxAdapter(
+    child: SectionHeader(
+      key: const Key('search-notes-header'),
+      title: l.searchNotesHeader,
+      count: notes.length,
+    ),
+  ),
+  SliverList.builder(
+    itemCount: notes.length,
+    itemBuilder: (context, i) => _NoteResultTile(note: notes[i]),
+  ),
+];
 
 /// Mirrors the tile `NotesScreen` uses, so a note reads the same way
 /// wherever it is listed.

@@ -202,46 +202,79 @@ class SyncEngine extends _$SyncEngine {
     if (!uploadsHeld) await _uploadPending(client);
     while (hasMore) {
       final cursor = int.tryParse(await kv.get(KvKeys.cursor) ?? '0') ?? 0;
-      // A server from before photos refuses the whole request over a photo
-      // change it cannot decode, tasks and all, and every later request
-      // carries the same queue. So photo changes wait until the server has
-      // said it takes them.
+      // A server from before photos, or before notes, refuses the whole
+      // request over a change it cannot decode, everything else in the
+      // push along with it, and every later request carries the same
+      // queue. So each kind of change waits until the server has said it
+      // takes it.
       final serverPhotos = await kv.get(KvKeys.serverPhotos) == 'true';
+      final serverNotes = await kv.get(KvKeys.serverNotes) == 'true';
       // Only the first request of a round carries the queue; later pages
       // are pure pulls.
       final changes = pushed
           ? <SyncChange>[]
-          : await db.outboxChanges(includePhotos: serverPhotos);
+          : await db.outboxChanges(
+              includePhotos: serverPhotos,
+              includeNotes: serverNotes,
+            );
       final SyncResponse response;
       try {
         response = await client.sync(
-          SyncRequest(cursor: cursor, changes: changes, photos: true),
+          SyncRequest(
+            cursor: cursor,
+            changes: changes,
+            photos: true,
+            notes: true,
+          ),
         );
       } on ApiError catch (e) {
-        // What a server rolled back to a release without photos answers a
-        // photo change with. Left saying true, the next request would carry
-        // the same change and be refused the same way, forever; this way
-        // the retry goes without photos, and the answer to it says again
-        // whether the server takes them.
+        // What a server rolled back to a release without photos, or
+        // without notes, answers a change of that kind with. Left saying
+        // true, the next request would carry the same change and be
+        // refused the same way, forever; this way the retry goes without
+        // it, and the answer to it says again whether the server takes it.
+        // The response never says which of the two changes it choked on,
+        // so both are held back until the next answer sorts them out.
         if (e.status == 400 && e.code == 'bad_request') {
           await kv.set(KvKeys.serverPhotos, 'false');
+          await kv.set(KvKeys.serverNotes, 'false');
         }
         rethrow;
       }
       await kv.set(KvKeys.serverPhotos, '${response.photos}');
-      // The server has just said it takes photos, and this request did not
-      // carry the ones waiting for that: go round again now rather than at
-      // the next edit. Only for photos that would actually be sent -- a row
-      // still waiting on its upload would send the loop round for nothing --
-      // unless the upload itself was what this round held back, in which
-      // case the bytes are what round two would send.
-      if (!pushed &&
-          response.photos &&
-          ((uploadsHeld && (await db.pendingBlobs()).isNotEmpty) ||
-              (!serverPhotos &&
-                  (await db.outboxChanges(includePhotos: true))
-                      .any((c) => c.entity == SyncEntity.photo)))) {
-        _again = true;
+      await kv.set(KvKeys.serverNotes, '${response.notes}');
+      // Only checked on the first page of a round: later pages are pure
+      // pulls, with nothing queued to have been held back from them.
+      if (!pushed) {
+        // The server has just said it takes photos, and this request did
+        // not carry the ones waiting for that: go round again now rather
+        // than at the next edit. Only for photos that would actually be
+        // sent -- a row still waiting on its upload would send the loop
+        // round for nothing -- unless the upload itself was what this
+        // round held back, in which case the bytes are what round two
+        // would send.
+        final photoRoundNeeded =
+            response.photos &&
+            ((uploadsHeld && (await db.pendingBlobs()).isNotEmpty) ||
+                (!serverPhotos &&
+                    (await db.outboxChanges(
+                      includePhotos: true,
+                      includeNotes: true,
+                    )).any((c) => c.entity == SyncEntity.photo)));
+        // Same idea for notes: the server has just said it takes them, and
+        // this request's queue was built before that was known, so a note
+        // held back is worth sending now rather than waiting for the next
+        // edit. A queued picture on a note with nothing else queued does
+        // not trigger this -- it still goes out, just a round later, once
+        // something else asks for a round or the next edit does.
+        final noteRoundNeeded =
+            response.notes &&
+            !serverNotes &&
+            (await db.outboxChanges(
+              includePhotos: true,
+              includeNotes: true,
+            )).any((c) => c.entity == SyncEntity.note);
+        if (photoRoundNeeded || noteRoundNeeded) _again = true;
       }
       pushed = true;
       await db.ackOutbox(changes);
@@ -347,10 +380,12 @@ class SyncEngine extends _$SyncEngine {
         await _blobs().repend();
       }
       await kv.set(KvKeys.blobAccount, account);
-      // What the last server said about photos says nothing about this
-      // one. Unsaid, the first request holds photo changes back and its
-      // answer settles it, instead of an older server refusing the lot.
+      // What the last server said about photos, or notes, says nothing
+      // about this one. Unsaid, the first request holds those changes back
+      // and its answer settles it, instead of an older server refusing
+      // the lot.
       await kv.set(KvKeys.serverPhotos, null);
+      await kv.set(KvKeys.serverNotes, null);
     }
     await db.enqueueAll();
     await syncNow();

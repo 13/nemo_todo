@@ -7,6 +7,8 @@ import 'package:nemo/features/auth/ui/starting_screen.dart';
 import 'package:nemo/features/lists/ui/list_detail_screen.dart';
 import 'package:nemo/features/lists/ui/lists_screen.dart';
 import 'package:nemo/features/lists/ui/members_screen.dart';
+import 'package:nemo/features/notes/ui/note_detail_screen.dart';
+import 'package:nemo/features/notes/ui/notes_screen.dart';
 import 'package:nemo/features/settings/ui/settings_screen.dart';
 import 'package:nemo/features/tasks/ui/search_screen.dart';
 import 'package:nemo/features/tasks/ui/tag_screen.dart';
@@ -19,6 +21,7 @@ abstract final class Routes {
   static const today = '/today';
   static const upcoming = '/upcoming';
   static const lists = '/lists';
+  static const notes = '/notes';
   static const search = '/search';
   static const settings = '/settings';
   static const account = '/settings/account';
@@ -31,6 +34,7 @@ abstract final class Routes {
   static String list(String id) => '/lists/$id';
   static String members(String id) => '/lists/$id/members';
   static String task(String id) => '/tasks/$id';
+  static String note(String id) => '/notes/$id';
   static String tag(String tag) => '/tags/${Uri.encodeComponent(tag)}';
 }
 
@@ -82,6 +86,11 @@ abstract final class AppRouter {
             ),
           ),
           GoRoute(
+            path: Routes.notes,
+            pageBuilder: (_, s) =>
+                fadeThroughPage(child: const NotesScreen(), state: s),
+          ),
+          GoRoute(
             path: Routes.search,
             pageBuilder: (_, s) =>
                 fadeThroughPage(child: const SearchScreen(), state: s),
@@ -99,6 +108,13 @@ abstract final class AppRouter {
         path: '/tasks/:id',
         pageBuilder: (_, s) => fadeThroughPage(
           child: TaskDetailScreen(taskId: s.pathParameters['id']!),
+          state: s,
+        ),
+      ),
+      GoRoute(
+        path: '/notes/:id',
+        pageBuilder: (_, s) => fadeThroughPage(
+          child: NoteDetailScreen(noteId: s.pathParameters['id']!),
           state: s,
         ),
       ),

@@ -139,9 +139,10 @@ class ListsRepository {
   /// The tasks used to be left alive and merely hidden behind the deleted
   /// list. Hidden is not deleted: their reminders stayed scheduled, so a
   /// deleted list went on posting notifications for tasks nobody could see
-  /// or open. Every row the cascade takes down carries the list's own
-  /// stamp, which is what lets [restore] revive exactly those rows and not
-  /// the ones deleted before them.
+  /// or open. Every row the cascade takes down -- tasks, their subtasks,
+  /// and the list's notes -- carries the list's own stamp, which is what
+  /// lets [restore] revive exactly those rows and not the ones deleted
+  /// before them.
   Future<void> delete(String id) async {
     final list = await _db.listById(id);
     if (list == null || list.isInbox) return;
@@ -156,6 +157,9 @@ class ListsRepository {
           sub.copyWith(updatedAt: stamp, deletedAt: stamp),
         );
       }
+    }
+    for (final note in await _liveNotes(id)) {
+      await _db.upsertNote(note.copyWith(updatedAt: stamp, deletedAt: stamp));
     }
   }
 
@@ -181,6 +185,11 @@ class ListsRepository {
         );
       }
     }
+    for (final note in await _notesDeletedAt(id, tombstone)) {
+      await _db.upsertNote(
+        note.copyWith(updatedAt: _clock.now().toString(), deletedAt: null),
+      );
+    }
   }
 
   Future<List<Task>> _liveTasks(String listId) => (_db.select(
@@ -191,6 +200,10 @@ class ListsRepository {
     _db.subtasks,
   )..where((t) => t.taskId.equals(taskId) & t.deletedAt.isNull())).get();
 
+  Future<List<Note>> _liveNotes(String listId) => (_db.select(
+    _db.notes,
+  )..where((t) => t.listId.equals(listId) & t.deletedAt.isNull())).get();
+
   Future<List<Task>> _tasksDeletedAt(String listId, String stamp) =>
       (_db.select(_db.tasks)
             ..where((t) => t.listId.equals(listId) & t.deletedAt.equals(stamp)))
@@ -199,5 +212,10 @@ class ListsRepository {
   Future<List<Subtask>> _subtasksDeletedAt(String taskId, String stamp) =>
       (_db.select(_db.subtasks)
             ..where((t) => t.taskId.equals(taskId) & t.deletedAt.equals(stamp)))
+          .get();
+
+  Future<List<Note>> _notesDeletedAt(String listId, String stamp) =>
+      (_db.select(_db.notes)
+            ..where((t) => t.listId.equals(listId) & t.deletedAt.equals(stamp)))
           .get();
 }

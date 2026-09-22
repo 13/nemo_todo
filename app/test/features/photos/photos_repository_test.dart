@@ -43,15 +43,19 @@ void main() {
     final repo = newRepo(db, store);
     await addTask(db);
 
-    final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+    final photo = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 60, height: 40),
+    ))!;
 
-    expect(photo.taskId, 't1');
+    expect(photo.parentId, 't1');
     expect(photo.width, 60);
     expect(photo.height, 40);
     expect(await store.get(photo.sha256), isNotNull);
     expect((await db.pendingBlobs()).single.sha256, photo.sha256);
     expect(await repo.bytes(photo.sha256), isNotNull);
-    expect(await repo.watchByTask('t1').first, [photo]);
+    expect(await repo.watchByParent(PhotoParent.task, 't1').first, [photo]);
     expect(await repo.watchPendingHashes().first, {photo.sha256});
   });
 
@@ -61,8 +65,16 @@ void main() {
     final repo = newRepo(db, MemoryPhotoStore());
     await addTask(db);
 
-    final first = (await repo.add('t1', smallJpeg(width: 10, height: 10)))!;
-    final second = (await repo.add('t1', smallJpeg(height: 20)))!;
+    final first = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 10, height: 10),
+    ))!;
+    final second = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(height: 20),
+    ))!;
 
     expect(first.sortKey.compareTo(second.sortKey), lessThan(0));
     expect(await repo.watchCounts().first, {'t1': 2});
@@ -76,14 +88,18 @@ void main() {
       final store = MemoryPhotoStore();
       final repo = newRepo(db, store);
       await addTask(db);
-      final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+      final photo = (await repo.add(
+        PhotoParent.task,
+        't1',
+        smallJpeg(width: 60, height: 40),
+      ))!;
 
       await repo.delete(photo.id);
 
       final stored = await db.photoById(photo.id);
       expect(stored!.isDeleted, isTrue);
       expect(await store.get(photo.sha256), isNull);
-      expect(await repo.watchByTask('t1').first, isEmpty);
+      expect(await repo.watchByParent(PhotoParent.task, 't1').first, isEmpty);
     },
   );
 
@@ -94,15 +110,20 @@ void main() {
     final repo = newRepo(db, store);
     await addTask(db);
 
-    expect(await repo.add('t1', Uint8List.fromList([1, 2, 3])), isNull);
+    expect(
+      await repo.add(PhotoParent.task, 't1', Uint8List.fromList([1, 2, 3])),
+      isNull,
+    );
 
     // Nothing was written: no store entry, no blob row, no photo row, and
     // so nothing queued to push either.
     expect(await db.pendingBlobs(), isEmpty);
-    expect(await repo.watchByTask('t1').first, isEmpty);
+    expect(await repo.watchByParent(PhotoParent.task, 't1').first, isEmpty);
     expect(
-      (await db.outboxChanges(includePhotos: true))
-          .whereType<SyncChangePhoto>(),
+      (await db.outboxChanges(
+        includePhotos: true,
+        includeNotes: true,
+      )).whereType<SyncChangePhoto>(),
       isEmpty,
     );
   });
@@ -115,11 +136,17 @@ void main() {
       final repo = newRepo(db, MemoryPhotoStore());
       await addTask(db);
 
-      final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+      final photo = (await repo.add(
+        PhotoParent.task,
+        't1',
+        smallJpeg(width: 60, height: 40),
+      ))!;
 
       expect(
-        (await db.outboxChanges(includePhotos: true))
-            .whereType<SyncChangePhoto>(),
+        (await db.outboxChanges(
+          includePhotos: true,
+          includeNotes: true,
+        )).whereType<SyncChangePhoto>(),
         isEmpty,
         reason: 'the server would hold a row whose bytes it cannot serve',
       );
@@ -127,11 +154,10 @@ void main() {
       await db.markBlobSynced(photo.sha256);
 
       expect(
-        (await db.outboxChanges(includePhotos: true))
-            .whereType<SyncChangePhoto>()
-            .single
-            .row
-            .id,
+        (await db.outboxChanges(
+          includePhotos: true,
+          includeNotes: true,
+        )).whereType<SyncChangePhoto>().single.row.id,
         photo.id,
       );
     },
@@ -146,7 +172,11 @@ void main() {
     final repo = newRepo(db, store);
     await addTask(db);
 
-    final photo = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+    final photo = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 60, height: 40),
+    ))!;
     for (var i = 0; i < 5; i++) {
       await store.put('filler$i', Uint8List.fromList([i]));
     }
@@ -162,11 +192,19 @@ void main() {
     final store = MemoryPhotoStore(maxEntries: 1);
     final repo = newRepo(db, store);
     await addTask(db);
-    final first = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+    final first = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 60, height: 40),
+    ))!;
     await db.markBlobSynced(first.sha256);
     await store.unpin(first.sha256);
 
-    final second = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+    final second = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 60, height: 40),
+    ))!;
 
     expect(second.sha256, first.sha256);
     // "Synced" is only what the server said last time: it may have swept
@@ -183,11 +221,10 @@ void main() {
       isNotNull,
       reason: 'pinned again until that upload lands',
     );
-    Future<List<String>> pushable() async =>
-        (await db.outboxChanges(includePhotos: true))
-            .whereType<SyncChangePhoto>()
-            .map((c) => c.row.id)
-            .toList();
+    Future<List<String>> pushable() async => (await db.outboxChanges(
+      includePhotos: true,
+      includeNotes: true,
+    )).whereType<SyncChangePhoto>().map((c) => c.row.id).toList();
     expect(await pushable(), isEmpty, reason: 'both rows name those bytes');
 
     await db.markBlobSynced(first.sha256);
@@ -201,9 +238,17 @@ void main() {
     final store = MemoryPhotoStore();
     final repo = newRepo(db, store);
     await addTask(db);
-    final first = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+    final first = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 60, height: 40),
+    ))!;
     await db.markBlobSynced(first.sha256);
-    final second = (await repo.add('t1', smallJpeg(width: 60, height: 40)))!;
+    final second = (await repo.add(
+      PhotoParent.task,
+      't1',
+      smallJpeg(width: 60, height: 40),
+    ))!;
 
     await repo.delete(first.id);
 

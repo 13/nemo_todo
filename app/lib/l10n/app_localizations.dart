@@ -183,6 +183,12 @@ abstract class L {
   /// **'Search'**
   String get navSearch;
 
+  /// No description provided for @navNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get navNotes;
+
   /// No description provided for @navSettings.
   ///
   /// In en, this message translates to:
@@ -555,6 +561,18 @@ abstract class L {
   /// **'Search tasks, notes and tags'**
   String get searchHint;
 
+  /// No description provided for @searchTasksHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get searchTasksHeader;
+
+  /// No description provided for @searchNotesHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get searchNotesHeader;
+
   /// No description provided for @searchEmpty.
   ///
   /// In en, this message translates to:
@@ -564,7 +582,7 @@ abstract class L {
   /// No description provided for @searchNoResults.
   ///
   /// In en, this message translates to:
-  /// **'No tasks match \"{query}\".'**
+  /// **'Nothing matches \"{query}\".'**
   String searchNoResults(String query);
 
   /// No description provided for @settingsTitle.
@@ -1670,6 +1688,90 @@ abstract class L {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Tasks exported. 1 photo is not on this device and was left out.} other{Tasks exported. {count} photos are not on this device and were left out.}}'**
   String settingsExportedWithoutPhotos(int count);
+
+  /// No description provided for @notesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.'**
+  String get notesEmpty;
+
+  /// No description provided for @noteNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New note'**
+  String get noteNewTitle;
+
+  /// No description provided for @noteTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get noteTitleHint;
+
+  /// No description provided for @noteBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write something'**
+  String get noteBodyHint;
+
+  /// No description provided for @notePreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty note'**
+  String get notePreviewEmpty;
+
+  /// No description provided for @noteNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This note is no longer here.'**
+  String get noteNotFound;
+
+  /// No description provided for @noteEditToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get noteEditToggle;
+
+  /// No description provided for @noteReadToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get noteReadToggle;
+
+  /// No description provided for @notePinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get notePinned;
+
+  /// No description provided for @noteUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get noteUnpin;
+
+  /// No description provided for @noteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get noteDeleted;
+
+  /// No description provided for @noteMoveToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to list'**
+  String get noteMoveToList;
+
+  /// No description provided for @notesDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this note?'**
+  String get notesDeleteConfirm;
+
+  /// No description provided for @notesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted'**
+  String get notesDeleted;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -84,7 +84,29 @@ class MembersService {
             forUserId: target.id,
           );
         }
-        for (final photo in await _db.photosOfTask(task.id)) {
+        for (final photo in await _db.photosOfParent(
+          PhotoParent.task,
+          task.id,
+        )) {
+          await _db.logRevoke(
+            SyncEntity.photo,
+            photo.id,
+            listId: listId,
+            forUserId: target.id,
+          );
+        }
+      }
+      for (final note in await _db.notesOfList(listId)) {
+        await _db.logRevoke(
+          SyncEntity.note,
+          note.id,
+          listId: listId,
+          forUserId: target.id,
+        );
+        for (final photo in await _db.photosOfParent(
+          PhotoParent.note,
+          note.id,
+        )) {
           await _db.logRevoke(
             SyncEntity.photo,
             photo.id,
@@ -166,7 +188,16 @@ class MembersService {
       // Photos too: a member whose cursor is already past a photo's own
       // entry would otherwise never hear of a picture added before they
       // joined, and one who leaves would keep the rows.
-      for (final photo in await _db.photosOfTask(task.id)) {
+      for (final photo in await _db.photosOfParent(PhotoParent.task, task.id)) {
+        await _db.logUpsert(SyncEntity.photo, photo.id, listId);
+      }
+    }
+    // Notes and their pictures, same reasoning: a note keeps the seq it was
+    // last logged at, so a member whose cursor is already past that would
+    // never hear of it without this re-log.
+    for (final note in await _db.notesOfList(listId)) {
+      await _db.logUpsert(SyncEntity.note, note.id, listId);
+      for (final photo in await _db.photosOfParent(PhotoParent.note, note.id)) {
         await _db.logUpsert(SyncEntity.photo, photo.id, listId);
       }
     }

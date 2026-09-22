@@ -135,7 +135,7 @@ void main() {
   test('a photo change survives a round trip through JSON', () {
     const photo = Photo(
       id: 'p1',
-      taskId: 't1',
+      parentId: 't1',
       sha256:
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       byteSize: 4096,
@@ -155,10 +155,47 @@ void main() {
     expect(photo.copyWith(deletedAt: photo.updatedAt).isDeleted, isTrue);
   });
 
+  test('a note change survives a round trip through JSON', () {
+    const note = Note(
+      id: 'n1',
+      listId: 'l1',
+      title: 'Bread',
+      sortKey: 'V',
+      updatedAt: '2026-09-13T10:00:00.000Z-0000-node',
+    );
+    const change = SyncChange.note(note);
+    final json = change.toJson();
+    expect(json['type'], 'note');
+    final back = SyncChange.fromJson(json);
+    expect(back, change);
+    expect(back.entity, SyncEntity.note);
+    expect(back.rowId, 'n1');
+  });
+
+  test('a request says whether it can read notes, and defaults to not', () {
+    final old = SyncRequest.fromJson({'cursor': 3, 'changes': <Object>[]});
+    expect(old.notes, isFalse);
+
+    const req = SyncRequest(cursor: 3, notes: true);
+    final json = jsonDecode(jsonEncode(req.toJson())) as Map<String, dynamic>;
+    expect(json['notes'], isTrue);
+    expect(SyncRequest.fromJson(json), req);
+  });
+
+  test('a response says whether the server takes notes, default not', () {
+    final old = SyncResponse.fromJson({'cursor': 3, 'server_hlc': 'h'});
+    expect(old.notes, isFalse);
+
+    const res = SyncResponse(cursor: 3, serverHlc: 'h', notes: true);
+    final json = jsonDecode(jsonEncode(res.toJson())) as Map<String, dynamic>;
+    expect(json['notes'], isTrue);
+    expect(SyncResponse.fromJson(json), res);
+  });
+
   test('a photo merges by its stamp like any other row', () {
     const older = Photo(
       id: 'p1',
-      taskId: 't1',
+      parentId: 't1',
       sha256:
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       byteSize: 10,

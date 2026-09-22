@@ -33,9 +33,25 @@ Subtask subtask(String id, String taskId, HlcClock clock) => Subtask(
   updatedAt: clock.now().toString(),
 );
 
-Photo photo(String id, String taskId, HlcClock clock, {String? sha}) => Photo(
+Note note(String id, String listId, HlcClock clock, {String title = 'Note'}) =>
+    Note(
+      id: id,
+      listId: listId,
+      title: title,
+      sortKey: 'V',
+      updatedAt: clock.now().toString(),
+    );
+
+Photo photo(
+  String id,
+  String parentId,
+  HlcClock clock, {
+  String? sha,
+  PhotoParent kind = PhotoParent.task,
+}) => Photo(
   id: id,
-  taskId: taskId,
+  parentId: parentId,
+  parentKind: kind,
   sha256: sha ?? 'a' * 64,
   byteSize: 1024,
   width: 100,

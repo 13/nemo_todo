@@ -14,6 +14,7 @@
   "navUpcoming": "Upcoming",
   "navLists": "Lists",
   "navSearch": "Search",
+  "navNotes": "Notes",
   "navSettings": "Settings",
   "todayOverdue": "Overdue",
   "todayDoneToday": "Done today",
@@ -121,8 +122,10 @@
     }
   },
   "searchHint": "Search tasks, notes and tags",
+  "searchTasksHeader": "Tasks",
+  "searchNotesHeader": "Notes",
   "searchEmpty": "Type to search across all lists.",
-  "searchNoResults": "No tasks match \"{query}\".",
+  "searchNoResults": "Nothing matches \"{query}\".",
   "@searchNoResults": {
     "placeholders": {
       "query": {
@@ -536,5 +539,19 @@
   "settingsExportedWithoutPhotos": "{count, plural, =1{Tasks exported. 1 photo is not on this device and was left out.} other{Tasks exported. {count} photos are not on this device and were left out.}}",
   "@settingsExportedWithoutPhotos": {
     "placeholders": {"count": {"type": "int"}}
-  }
+  },
+  "notesEmpty": "No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.",
+  "noteNewTitle": "New note",
+  "noteTitleHint": "Title",
+  "noteBodyHint": "Write something",
+  "notePreviewEmpty": "Empty note",
+  "noteNotFound": "This note is no longer here.",
+  "noteEditToggle": "Edit",
+  "noteReadToggle": "Done",
+  "notePinned": "Pin",
+  "noteUnpin": "Unpin",
+  "noteDeleted": "Delete",
+  "noteMoveToList": "Move to list",
+  "notesDeleteConfirm": "Delete this note?",
+  "notesDeleted": "Note deleted"
 }

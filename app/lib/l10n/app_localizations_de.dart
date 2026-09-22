@@ -52,6 +52,9 @@ class LDe extends L {
   String get navSearch => 'Suche';
 
   @override
+  String get navNotes => 'Notizen';
+
+  @override
   String get navSettings => 'Einstellungen';
 
   @override
@@ -277,11 +280,17 @@ class LDe extends L {
   String get searchHint => 'Aufgaben, Notizen und Tags durchsuchen';
 
   @override
+  String get searchTasksHeader => 'Aufgaben';
+
+  @override
+  String get searchNotesHeader => 'Notizen';
+
+  @override
   String get searchEmpty => 'Tippe, um in allen Listen zu suchen.';
 
   @override
   String searchNoResults(String query) {
-    return 'Keine Aufgaben passen zu „$query“.';
+    return 'Nichts passt zu „$query“.';
   }
 
   @override
@@ -1026,4 +1035,47 @@ class LDe extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get notesEmpty =>
+      'Noch keine Notizen. Eine Notiz behält, was in keine Aufgabe passt: das Rezept, die Adresse, den Absatz.';
+
+  @override
+  String get noteNewTitle => 'Neue Notiz';
+
+  @override
+  String get noteTitleHint => 'Titel';
+
+  @override
+  String get noteBodyHint => 'Schreib etwas';
+
+  @override
+  String get notePreviewEmpty => 'Leere Notiz';
+
+  @override
+  String get noteNotFound => 'Diese Notiz gibt es nicht mehr.';
+
+  @override
+  String get noteEditToggle => 'Bearbeiten';
+
+  @override
+  String get noteReadToggle => 'Fertig';
+
+  @override
+  String get notePinned => 'Anheften';
+
+  @override
+  String get noteUnpin => 'Nicht mehr anheften';
+
+  @override
+  String get noteDeleted => 'Löschen';
+
+  @override
+  String get noteMoveToList => 'In andere Liste verschieben';
+
+  @override
+  String get notesDeleteConfirm => 'Diese Notiz löschen?';
+
+  @override
+  String get notesDeleted => 'Notiz gelöscht';
 }

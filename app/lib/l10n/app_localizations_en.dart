@@ -52,6 +52,9 @@ class LEn extends L {
   String get navSearch => 'Search';
 
   @override
+  String get navNotes => 'Notes';
+
+  @override
   String get navSettings => 'Settings';
 
   @override
@@ -277,11 +280,17 @@ class LEn extends L {
   String get searchHint => 'Search tasks, notes and tags';
 
   @override
+  String get searchTasksHeader => 'Tasks';
+
+  @override
+  String get searchNotesHeader => 'Notes';
+
+  @override
   String get searchEmpty => 'Type to search across all lists.';
 
   @override
   String searchNoResults(String query) {
-    return 'No tasks match \"$query\".';
+    return 'Nothing matches \"$query\".';
   }
 
   @override
@@ -1016,4 +1025,47 @@ class LEn extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get notesEmpty =>
+      'No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.';
+
+  @override
+  String get noteNewTitle => 'New note';
+
+  @override
+  String get noteTitleHint => 'Title';
+
+  @override
+  String get noteBodyHint => 'Write something';
+
+  @override
+  String get notePreviewEmpty => 'Empty note';
+
+  @override
+  String get noteNotFound => 'This note is no longer here.';
+
+  @override
+  String get noteEditToggle => 'Edit';
+
+  @override
+  String get noteReadToggle => 'Done';
+
+  @override
+  String get notePinned => 'Pin';
+
+  @override
+  String get noteUnpin => 'Unpin';
+
+  @override
+  String get noteDeleted => 'Delete';
+
+  @override
+  String get noteMoveToList => 'Move to list';
+
+  @override
+  String get notesDeleteConfirm => 'Delete this note?';
+
+  @override
+  String get notesDeleted => 'Note deleted';
 }

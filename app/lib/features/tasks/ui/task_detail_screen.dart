@@ -206,7 +206,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             ),
             const SizedBox(height: 20),
             DetailLabel(l.tasksPhotos),
-            PhotoStrip(taskId: task.id),
+            PhotoStrip(parentKind: PhotoParent.task, parentId: task.id),
             const SizedBox(height: 20),
             TaskDueSection(task: task, save: _save),
             const SizedBox(height: 8),

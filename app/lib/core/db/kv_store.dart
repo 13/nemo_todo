@@ -23,6 +23,11 @@ abstract final class KvKeys {
   /// Unset or anything else means it has not, and photo changes stay queued.
   static const serverPhotos = 'server_photos';
 
+  /// `"true"` once the server's last answer said it takes note changes.
+  /// Unset or anything else means it has not, and note changes -- and the
+  /// pictures hanging on a note -- stay queued.
+  static const serverNotes = 'server_notes';
+
   /// JSON list of achievement ids this device has already celebrated, or
   /// quietly recorded as reached. Unset until the first check.
   static const achievementsSeen = 'achievements_seen';

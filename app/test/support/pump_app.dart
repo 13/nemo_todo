@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:meta/meta.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
@@ -14,8 +15,10 @@ import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/celebrations/data/celebration_sound.dart';
 import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/photos/data/photo_pipeline.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
+import 'package:nemo/features/photos/data/photos_repository.dart';
 import 'package:nemo/features/settings/data/server_build.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -23,6 +26,7 @@ import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import 'fake_celebrations.dart';
+import 'photos.dart';
 import 'test_db.dart';
 
 /// Containers [pumpApp] built for the test running right now, so [appTest]
@@ -63,6 +67,56 @@ typedef TestApp = ({
   TaskList inbox,
   ProviderContainer container,
 });
+
+/// Seed helpers for a running [pumpApp], writing straight to its database
+/// the way a screen test wants rows to already exist rather than exercising
+/// a repository's own creation flow.
+extension SeedTestApp on TestApp {
+  Future<void> seedList(String id, String name) => db.upsertList(
+    TaskList(
+      id: id,
+      name: name,
+      sortKey: SortKey.first(),
+      updatedAt: testClock('a').now().toString(),
+    ),
+  );
+
+  Future<void> seedNote(
+    String id,
+    String listId, {
+    required String title,
+    String body = '',
+    bool pinned = false,
+  }) => db.upsertNote(
+    Note(
+      id: id,
+      listId: listId,
+      title: title,
+      body: body,
+      pinned: pinned,
+      sortKey: 'V',
+      updatedAt: testClock('a').now().toString(),
+    ),
+  );
+
+  /// Adds a picture straight through the repository, the way [seedList] and
+  /// [seedNote] write rows directly rather than driving the picker UI a
+  /// widget test would otherwise have to fake.
+  ///
+  /// Uses the same [photoStoreProvider] the running app was wired with --
+  /// not a store of its own -- so a widget that reads the picture back
+  /// through that provider (a thumbnail, the strip) finds its bytes.
+  Future<void> addPhotoTo(PhotoParent kind, String parentId) =>
+      PhotosRepository(
+        db,
+        testClock('a'),
+        sequentialIds('p'),
+        container.read(photoStoreProvider),
+        // Runs inside appTest's fake-async zone, where a real isolate's
+        // `compute` never reports back.
+        process: (raw) async => processPhoto(raw),
+      ).add(kind, parentId, smallJpeg());
+}
 
 /// The app over a fresh in-memory database, routed to [initialLocation].
 ///

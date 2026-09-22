@@ -19,6 +19,7 @@ class Device {
   final tasks = <String, Task>{};
   final subtasks = <String, Subtask>{};
   final photos = <String, Photo>{};
+  final notes = <String, Note>{};
   final outbox = <String, SyncChange>{};
   int cursor = 0;
   Map<String, List<ListMember>> members = const {};
@@ -93,7 +94,12 @@ class Device {
     while (hasMore) {
       final changes = pushed ? <SyncChange>[] : outbox.values.toList();
       final response = await _post(
-        SyncRequest(cursor: cursor, changes: changes, photos: true),
+        SyncRequest(
+          cursor: cursor,
+          changes: changes,
+          photos: true,
+          notes: true,
+        ),
       );
       pushed = true;
       for (final change in changes) {
@@ -118,19 +124,29 @@ class Device {
         if (incomingWins(subtasks[row.id], row)) subtasks[row.id] = row;
       case SyncChangePhoto(:final row):
         if (incomingWins(photos[row.id], row)) photos[row.id] = row;
+      case SyncChangeNote(:final row):
+        if (incomingWins(notes[row.id], row)) notes[row.id] = row;
       case SyncChangeRevoke(:final target, :final id):
         switch (target) {
           case SyncEntity.list:
             lists.remove(id);
             tasks.removeWhere((_, t) => t.listId == id);
+            notes.removeWhere((_, n) => n.listId == id);
           case SyncEntity.task:
             tasks.remove(id);
             subtasks.removeWhere((_, s) => s.taskId == id);
-            photos.removeWhere((_, p) => p.taskId == id);
+            photos.removeWhere(
+              (_, p) => p.parentKind == PhotoParent.task && p.parentId == id,
+            );
           case SyncEntity.subtask:
             subtasks.remove(id);
           case SyncEntity.photo:
             photos.remove(id);
+          case SyncEntity.note:
+            notes.remove(id);
+            photos.removeWhere(
+              (_, p) => p.parentKind == PhotoParent.note && p.parentId == id,
+            );
         }
     }
   }

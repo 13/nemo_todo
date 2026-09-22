@@ -53,6 +53,12 @@ class ShellScreen extends ConsumerWidget {
         path: Routes.lists,
       ),
       (
+        icon: Icons.sticky_note_2_outlined,
+        selectedIcon: Icons.sticky_note_2,
+        label: l.navNotes,
+        path: Routes.notes,
+      ),
+      (
         icon: Icons.search_outlined,
         selectedIcon: Icons.search,
         label: l.navSearch,
@@ -65,9 +71,10 @@ class ShellScreen extends ConsumerWidget {
     if (location.startsWith(Routes.today)) return 0;
     if (location.startsWith(Routes.upcoming)) return 1;
     if (location.startsWith(Routes.lists)) return 2;
-    if (location.startsWith(Routes.search)) return 3;
+    if (location.startsWith(Routes.notes)) return 3;
+    if (location.startsWith(Routes.search)) return 4;
     // Following a tag is a kind of search.
-    if (location.startsWith('/tags/')) return 3;
+    if (location.startsWith('/tags/')) return 4;
     return 0;
   }
 

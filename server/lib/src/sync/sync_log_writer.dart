@@ -97,20 +97,45 @@ extension SyncLogWriter on ServerDatabase {
   Future<Photo?> photoById(String id) =>
       (select(photos)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<Photo>> photosOfTask(String taskId) =>
-      (select(photos)..where((t) => t.taskId.equals(taskId))).get();
+  Future<Note?> noteById(String id) =>
+      (select(notes)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<List<Note>> notesOfList(String listId) =>
+      (select(notes)..where((t) => t.listId.equals(listId))).get();
+
+  Future<List<Photo>> photosOfParent(PhotoParent kind, String id) =>
+      (select(photos)..where(
+            (t) => t.parentKind.equalsValue(kind) & t.parentId.equals(id),
+          ))
+          .get();
 
   /// Whether [userId] is a member of any list holding a live photo that
-  /// names [sha256]. Losing a share loses the pictures with the tasks.
+  /// names [sha256]. Losing a share loses the pictures with the tasks or
+  /// notes.
+  ///
+  /// A task photo is reached by joining through `tasks`; a note photo has
+  /// no task to join through, so it is reached through `notes` instead --
+  /// each half of the union only matches the parent kind it names, via
+  /// `p.parent_kind`.
   Future<bool> canSeeBlob(String userId, String sha256) async {
     final row = await customSelect(
       'select 1 from photos p '
-      'join tasks t on t.id = p.task_id '
+      "join tasks t on t.id = p.parent_id and p.parent_kind = 'task' "
       'join list_members m on m.list_id = t.list_id '
       'where p.sha256 = ? and p.deleted_at is null and m.user_id = ? '
+      'union '
+      'select 1 from photos p '
+      "join notes n on n.id = p.parent_id and p.parent_kind = 'note' "
+      'join list_members m on m.list_id = n.list_id '
+      'where p.sha256 = ? and p.deleted_at is null and m.user_id = ? '
       'limit 1',
-      variables: [Variable<String>(sha256), Variable<String>(userId)],
-      readsFrom: {photos, tasks, listMembers},
+      variables: [
+        Variable<String>(sha256),
+        Variable<String>(userId),
+        Variable<String>(sha256),
+        Variable<String>(userId),
+      ],
+      readsFrom: {photos, tasks, notes, listMembers},
     ).getSingleOrNull();
     return row != null;
   }

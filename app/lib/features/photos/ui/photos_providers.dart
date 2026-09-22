@@ -22,8 +22,8 @@ final photosRepositoryProvider = Provider<PhotosRepository>(
 );
 
 @riverpod
-Stream<List<Photo>> photosByTask(Ref ref, String taskId) =>
-    ref.watch(photosRepositoryProvider).watchByTask(taskId);
+Stream<List<Photo>> photosByParent(Ref ref, PhotoParent kind, String id) =>
+    ref.watch(photosRepositoryProvider).watchByParent(kind, id);
 
 @riverpod
 Stream<Map<String, int>> photoCounts(Ref ref) =>

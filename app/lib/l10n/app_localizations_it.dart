@@ -52,6 +52,9 @@ class LIt extends L {
   String get navSearch => 'Cerca';
 
   @override
+  String get navNotes => 'Note';
+
+  @override
   String get navSettings => 'Impostazioni';
 
   @override
@@ -278,11 +281,17 @@ class LIt extends L {
   String get searchHint => 'Cerca attività, note e tag';
 
   @override
+  String get searchTasksHeader => 'Attività';
+
+  @override
+  String get searchNotesHeader => 'Note';
+
+  @override
   String get searchEmpty => 'Scrivi per cercare in tutte le liste.';
 
   @override
   String searchNoResults(String query) {
-    return 'Nessuna attività corrisponde a \"$query\".';
+    return 'Nessun risultato corrisponde a \"$query\".';
   }
 
   @override
@@ -1027,4 +1036,47 @@ class LIt extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get notesEmpty =>
+      'Ancora nessuna nota. Una nota conserva ciò che un\'attività non può: la ricetta, l\'indirizzo, il paragrafo.';
+
+  @override
+  String get noteNewTitle => 'Nuova nota';
+
+  @override
+  String get noteTitleHint => 'Titolo';
+
+  @override
+  String get noteBodyHint => 'Scrivi qualcosa';
+
+  @override
+  String get notePreviewEmpty => 'Nota vuota';
+
+  @override
+  String get noteNotFound => 'Questa nota non c\'è più.';
+
+  @override
+  String get noteEditToggle => 'Modifica';
+
+  @override
+  String get noteReadToggle => 'Fine';
+
+  @override
+  String get notePinned => 'Fissa';
+
+  @override
+  String get noteUnpin => 'Non fissare più';
+
+  @override
+  String get noteDeleted => 'Elimina';
+
+  @override
+  String get noteMoveToList => 'Sposta in un\'altra lista';
+
+  @override
+  String get notesDeleteConfirm => 'Eliminare questa nota?';
+
+  @override
+  String get notesDeleted => 'Nota eliminata';
 }

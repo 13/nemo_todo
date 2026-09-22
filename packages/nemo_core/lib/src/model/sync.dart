@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:nemo_core/src/model/note.dart';
 import 'package:nemo_core/src/model/photo.dart';
 import 'package:nemo_core/src/model/subtask.dart';
 import 'package:nemo_core/src/model/task.dart';
@@ -8,21 +9,23 @@ part 'sync.freezed.dart';
 part 'sync.g.dart';
 
 /// The kinds of rows that travel through the sync endpoint.
-enum SyncEntity { list, task, subtask, photo }
+enum SyncEntity { list, task, subtask, photo, note }
 
 /// What a user may do with a shared list.
 enum MemberRole { owner, editor }
 
 /// One change in a sync request or response.
 ///
-/// `list`, `task`, `subtask` and `photo` carry a full row; `revoke` tells the
-/// receiver to delete its local copy of a row it may no longer see.
+/// `list`, `task`, `subtask`, `photo` and `note` carry a full row; `revoke`
+/// tells the receiver to delete its local copy of a row it may no longer
+/// see.
 @Freezed(unionKey: 'type')
 sealed class SyncChange with _$SyncChange {
   const factory SyncChange.list(TaskList row) = SyncChangeList;
   const factory SyncChange.task(Task row) = SyncChangeTask;
   const factory SyncChange.subtask(Subtask row) = SyncChangeSubtask;
   const factory SyncChange.photo(Photo row) = SyncChangePhoto;
+  const factory SyncChange.note(Note row) = SyncChangeNote;
   const factory SyncChange.revoke({
     required SyncEntity target,
     required String id,
@@ -38,6 +41,7 @@ sealed class SyncChange with _$SyncChange {
     SyncChangeTask() => SyncEntity.task,
     SyncChangeSubtask() => SyncEntity.subtask,
     SyncChangePhoto() => SyncEntity.photo,
+    SyncChangeNote() => SyncEntity.note,
     SyncChangeRevoke(:final target) => target,
   };
 
@@ -46,6 +50,7 @@ sealed class SyncChange with _$SyncChange {
     SyncChangeTask(:final row) => row.id,
     SyncChangeSubtask(:final row) => row.id,
     SyncChangePhoto(:final row) => row.id,
+    SyncChangeNote(:final row) => row.id,
     SyncChangeRevoke(:final id) => id,
   };
 }
@@ -61,6 +66,12 @@ abstract class SyncRequest with _$SyncRequest {
     /// whole sync, so the server only sends photo changes to clients that
     /// say they can.
     @Default(false) bool photos,
+
+    /// Whether this client can read note changes. Apps released before
+    /// notes throw on a change they cannot decode, which stalls their
+    /// whole sync, so the server only sends note changes -- and the
+    /// pictures hanging on a note -- to clients that say they can.
+    @Default(false) bool notes,
   }) = _SyncRequest;
 
   factory SyncRequest.fromJson(Map<String, dynamic> json) =>
@@ -110,6 +121,12 @@ abstract class SyncResponse with _$SyncResponse {
     /// cannot decode with a 400 for the whole request, so the app holds its
     /// photo changes until a response says true.
     @Default(false) bool photos,
+
+    /// Whether this server takes note changes. A server from before notes
+    /// omits it and answers a push carrying one with a 400 for the whole
+    /// request, so the app holds its note changes until a response says
+    /// true.
+    @Default(false) bool notes,
   }) = _SyncResponse;
 
   factory SyncResponse.fromJson(Map<String, dynamic> json) =>

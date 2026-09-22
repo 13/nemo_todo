@@ -38,7 +38,10 @@ void main() {
     );
     expect((await db.listById('l1'))!.name, 'renamed');
     expect(await db.outboxCount(), 1);
-    final changes = await db.outboxChanges(includePhotos: true);
+    final changes = await db.outboxChanges(
+      includePhotos: true,
+      includeNotes: true,
+    );
     expect((changes.single as SyncChangeList).row.name, 'renamed');
     expect(
       await KvStore(db).get(KvKeys.hlcLast),
@@ -103,7 +106,10 @@ void main() {
   test('ackOutbox skips rows edited after the push', () async {
     final t = task('t1', 'l1');
     await db.upsertTask(t);
-    final pushed = await db.outboxChanges(includePhotos: true);
+    final pushed = await db.outboxChanges(
+      includePhotos: true,
+      includeNotes: true,
+    );
     await db.upsertTask(
       t.copyWith(title: 'edited', updatedAt: clock.now().toString()),
     );
@@ -113,7 +119,9 @@ void main() {
       1,
       reason: 'the later edit must still be pushed',
     );
-    await db.ackOutbox(await db.outboxChanges(includePhotos: true));
+    await db.ackOutbox(
+      await db.outboxChanges(includePhotos: true, includeNotes: true),
+    );
     expect(await db.outboxCount(), 0);
   });
 
@@ -158,9 +166,13 @@ void main() {
     await db.enqueueAll();
     expect(await db.outboxCount(), 2);
     await db.dropOutbox(SyncEntity.task, 't1');
-    expect((await db.outboxChanges(includePhotos: true)).map((c) => c.rowId), [
-      'l1',
-    ]);
+    expect(
+      (await db.outboxChanges(
+        includePhotos: true,
+        includeNotes: true,
+      )).map((c) => c.rowId),
+      ['l1'],
+    );
   });
 
   test(
@@ -211,7 +223,7 @@ void main() {
       await db.upsertPhoto(
         Photo(
           id: 'p1',
-          taskId: 't1',
+          parentId: 't1',
           sha256: hash,
           byteSize: 12,
           width: 4,
@@ -222,8 +234,10 @@ void main() {
       );
 
       expect(
-        (await db.outboxChanges(includePhotos: true))
-            .whereType<SyncChangePhoto>(),
+        (await db.outboxChanges(
+          includePhotos: true,
+          includeNotes: true,
+        )).whereType<SyncChangePhoto>(),
         isEmpty,
         reason: 'the server would hold a row whose bytes it cannot serve',
       );
@@ -231,11 +245,10 @@ void main() {
 
       await db.markBlobSynced(hash);
       expect(
-        (await db.outboxChanges(includePhotos: true))
-            .whereType<SyncChangePhoto>()
-            .single
-            .row
-            .id,
+        (await db.outboxChanges(
+          includePhotos: true,
+          includeNotes: true,
+        )).whereType<SyncChangePhoto>().single.row.id,
         'p1',
       );
     },
@@ -261,7 +274,7 @@ void main() {
         final at = clock.now().toString();
         return Photo(
           id: id,
-          taskId: 't1',
+          parentId: 't1',
           sha256: hash,
           byteSize: 12,
           width: 4,
@@ -280,11 +293,17 @@ void main() {
       await db.upsertPhoto(photo('p2'));
       await (db.delete(db.photos)..where((t) => t.id.equals('p2'))).go();
 
-      final without = await db.outboxChanges(includePhotos: false);
+      final without = await db.outboxChanges(
+        includePhotos: false,
+        includeNotes: true,
+      );
       expect(without.map((c) => c.rowId), ['t1']);
       expect(await db.outboxCount(), 3, reason: 'nothing was dropped');
 
-      final withPhotos = await db.outboxChanges(includePhotos: true);
+      final withPhotos = await db.outboxChanges(
+        includePhotos: true,
+        includeNotes: true,
+      );
       expect(withPhotos.map((c) => c.rowId), unorderedEquals(['t1', 'p1']));
       expect(await db.outboxCount(), 2, reason: 'the orphan goes as before');
     },
@@ -311,7 +330,7 @@ void main() {
         SyncChange.photo(
           Photo(
             id: 'p1',
-            taskId: 't1',
+            parentId: 't1',
             sha256: hash,
             byteSize: 9,
             width: 2,
@@ -350,7 +369,7 @@ void main() {
     );
     Photo photo(String id, String sha256, String stamp) => Photo(
       id: id,
-      taskId: 't1',
+      parentId: 't1',
       sha256: sha256,
       byteSize: 9,
       width: 2,
@@ -368,4 +387,152 @@ void main() {
 
     expect(await db.missingBlobHashes(), [newer, older]);
   });
+
+  test('a queued note is offered only to a server that takes notes', () async {
+    final clock = testClock('a');
+    await db.upsertNote(
+      Note(
+        id: 'n1',
+        listId: 'l1',
+        title: 'Bread',
+        sortKey: 'V',
+        updatedAt: clock.now().toString(),
+      ),
+    );
+    await db.rememberBlob('a' * 64, byteSize: 3, state: 'synced');
+    await db.upsertPhoto(
+      Photo(
+        id: 'p1',
+        parentKind: PhotoParent.note,
+        parentId: 'n1',
+        sha256: 'a' * 64,
+        byteSize: 3,
+        width: 1,
+        height: 1,
+        sortKey: 'V',
+        updatedAt: clock.now().toString(),
+      ),
+    );
+
+    final withNotes = await db.outboxChanges(
+      includePhotos: true,
+      includeNotes: true,
+    );
+    final without = await db.outboxChanges(
+      includePhotos: true,
+      includeNotes: false,
+    );
+
+    expect(withNotes.map((c) => c.rowId), containsAll(['n1', 'p1']));
+    expect(without.map((c) => c.rowId), isNot(contains('n1')));
+    expect(
+      without.map((c) => c.rowId),
+      isNot(contains('p1')),
+      reason: 'a picture on a note names a row that server cannot hold',
+    );
+    expect(await db.outboxCount(), 2, reason: 'held back, not dropped');
+  });
+
+  test('revoking a note takes its pictures and its queue entries', () async {
+    final clock = testClock('a');
+    await db.upsertNote(
+      Note(
+        id: 'n1',
+        listId: 'l1',
+        title: 'Bread',
+        sortKey: 'V',
+        updatedAt: clock.now().toString(),
+      ),
+    );
+    await db.upsertPhoto(
+      Photo(
+        id: 'p1',
+        parentKind: PhotoParent.note,
+        parentId: 'n1',
+        sha256: 'a' * 64,
+        byteSize: 3,
+        width: 1,
+        height: 1,
+        sortKey: 'V',
+        updatedAt: clock.now().toString(),
+      ),
+    );
+
+    await db.applyRemote(
+      const SyncChange.revoke(target: SyncEntity.note, id: 'n1'),
+    );
+
+    expect(await db.noteById('n1'), isNull);
+    expect(await db.photoById('p1'), isNull);
+    expect(await db.outboxCount(), 0);
+  });
+
+  test('a remote note wins or loses on its stamp', () async {
+    final note = Note(
+      id: 'n1',
+      listId: 'l1',
+      title: 'Bread',
+      sortKey: 'V',
+      updatedAt: testClock('a').now().toString(),
+    );
+    await db.upsertNote(note);
+
+    await db.applyRemote(
+      SyncChange.note(note.copyWith(title: 'Older', updatedAt: '0-0000-a')),
+    );
+    expect((await db.noteById('n1'))!.title, 'Bread');
+
+    await db.applyRemote(
+      SyncChange.note(
+        note.copyWith(title: 'Newer', updatedAt: '9999999999999-0000-z'),
+      ),
+    );
+    expect((await db.noteById('n1'))!.title, 'Newer');
+    expect(await db.outboxCount(), 0, reason: 'the queued edit was superseded');
+  });
+
+  test(
+    'revoking a list takes its notes, their pictures and queue entries',
+    () async {
+      final clock = testClock('a');
+      await db.upsertList(
+        TaskList(
+          id: 'l1',
+          name: 'L',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      await db.upsertNote(
+        Note(
+          id: 'n1',
+          listId: 'l1',
+          title: 'Bread',
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      await db.upsertPhoto(
+        Photo(
+          id: 'p1',
+          parentKind: PhotoParent.note,
+          parentId: 'n1',
+          sha256: 'a' * 64,
+          byteSize: 3,
+          width: 1,
+          height: 1,
+          sortKey: 'V',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+
+      await db.applyRemote(
+        const SyncChange.revoke(target: SyncEntity.list, id: 'l1'),
+      );
+
+      expect(await db.noteById('n1'), isNull);
+      expect(await db.photoById('p1'), isNull);
+      expect(await db.outboxCount(), 0);
+    },
+  );
 }

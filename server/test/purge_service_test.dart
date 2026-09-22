@@ -309,7 +309,7 @@ void main() {
           .insert(
             Photo(
               id: 'p1',
-              taskId: 't1',
+              parentId: 't1',
               sha256: 'a' * 64,
               byteSize: 3,
               width: 1,
@@ -495,7 +495,7 @@ void main() {
           .insert(
             Photo(
               id: 'p1',
-              taskId: 't1',
+              parentId: 't1',
               sha256: y,
               byteSize: 3,
               width: 1,
@@ -535,6 +535,97 @@ void main() {
       db.blobs,
     )..where((t) => t.sha256.equals(y))).getSingleOrNull();
     expect(yRow, isNotNull);
+  });
+
+  test('purging a tombstoned note takes its pictures, and orphaned bytes '
+      'are swept', () async {
+    final root = Directory.systemTemp.createTempSync('nemo-purge-note-blobs');
+    addTearDown(() => root.deleteSync(recursive: true));
+    final store = BlobStore(root.path);
+
+    String stamp(Duration ago) => Hlc(
+      millis: now.subtract(ago).millisecondsSinceEpoch,
+      counter: 0,
+      node: 'a',
+    ).toString();
+    final old = stamp(const Duration(days: 60));
+    final live = stamp(Duration.zero);
+
+    await db
+        .into(db.lists)
+        .insert(
+          TaskList(
+            id: 'l1',
+            name: 'L',
+            sortKey: 'V',
+            updatedAt: live,
+          ).toInsertable(),
+        );
+    await db
+        .into(db.notes)
+        .insert(
+          Note(
+            id: 'n1',
+            listId: 'l1',
+            title: 'N',
+            sortKey: 'V',
+            updatedAt: old,
+            deletedAt: old,
+          ).toInsertable(),
+        );
+    await db
+        .into(db.photos)
+        .insert(
+          Photo(
+            id: 'p1',
+            parentId: 'n1',
+            parentKind: PhotoParent.note,
+            sha256: 'a' * 64,
+            byteSize: 3,
+            width: 1,
+            height: 1,
+            sortKey: 'V',
+            updatedAt: old,
+          ).toInsertable(),
+        );
+
+    Future<void> blob(String hash, Duration ago) async {
+      await store.write(hash, [1, 2, 3]);
+      await db
+          .into(db.blobs)
+          .insert(
+            BlobsCompanion.insert(
+              sha256: hash,
+              byteSize: 3,
+              ownerUserId: 'u1',
+              createdAt: now.subtract(ago).millisecondsSinceEpoch,
+            ),
+          );
+    }
+
+    await blob('a' * 64, const Duration(days: 60));
+
+    final report = await purge(blobs: store).purge();
+
+    expect(report.notes, 1);
+    expect(report.photos, 1);
+    expect(await db.noteById('n1'), isNull);
+    expect(await db.photoById('p1'), isNull);
+    expect(report.blobs, 1);
+    expect(await store.exists('a' * 64), isFalse);
+  });
+
+  test('a note in a live list is left alone', () async {
+    final ben = await user('ben');
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.note(note('n1', 'l1', dev)),
+    ]);
+
+    final report = await purge().purge();
+
+    expect(report.notes, 0);
+    expect(await db.noteById('n1'), isNotNull);
   });
 
   test(
@@ -579,7 +670,7 @@ void main() {
           .insert(
             Photo(
               id: 'p1',
-              taskId: 't1',
+              parentId: 't1',
               sha256: 'a' * 64,
               byteSize: 3,
               width: 1,

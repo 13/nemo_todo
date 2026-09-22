@@ -285,7 +285,7 @@ void main() {
         clock,
         sequentialIds('p'),
         container.read(photoStoreProvider),
-      ).add('t1', smallJpeg()))!;
+      ).add(PhotoParent.task, 't1', smallJpeg()))!;
 
       await container.read(syncEngineProvider.notifier).syncNow();
 
@@ -331,7 +331,7 @@ void main() {
         clock,
         sequentialIds('p'),
         container.read(photoStoreProvider),
-      ).add('t1', smallJpeg()))!;
+      ).add(PhotoParent.task, 't1', smallJpeg()))!;
       await container.read(syncEngineProvider.notifier).syncNow();
 
       final anna = (await SyncClient.authenticate(
@@ -393,7 +393,7 @@ void main() {
         clock,
         sequentialIds('p'),
         container.read(photoStoreProvider),
-      ).add('t1', smallJpeg()))!;
+      ).add(PhotoParent.task, 't1', smallJpeg()))!;
       await container.read(syncEngineProvider.notifier).syncNow();
 
       final carol = (await SyncClient.authenticate(

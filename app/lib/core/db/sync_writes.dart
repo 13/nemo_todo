@@ -36,6 +36,12 @@ extension SyncWrites on AppDatabase {
     () => into(photos).insertOnConflictUpdate(row.toInsertable()),
   );
 
+  Future<void> upsertNote(Note row) => _writeLocal(
+    SyncEntity.note,
+    row,
+    () => into(notes).insertOnConflictUpdate(row.toInsertable()),
+  );
+
   Future<void> _writeLocal(
     SyncEntity entity,
     SyncRow row,
@@ -86,6 +92,13 @@ extension SyncWrites on AppDatabase {
           await dropOutbox(SyncEntity.photo, row.id);
         }
         return null;
+      case SyncChangeNote(:final row):
+        final local = await noteById(row.id);
+        if (incomingWins(local, row)) {
+          await into(notes).insertOnConflictUpdate(row.toInsertable());
+          await dropOutbox(SyncEntity.note, row.id);
+        }
+        return null;
       case SyncChangeRevoke(:final target, :final id):
         await _revoke(target, id);
         return null;
@@ -102,9 +115,14 @@ extension SyncWrites on AppDatabase {
           final subtaskIds = (await (select(
             subtasks,
           )..where((t) => t.taskId.isIn(taskIds))).get()).map((s) => s.id);
-          final photoIds = (await (select(
-            photos,
-          )..where((t) => t.taskId.isIn(taskIds))).get()).map((p) => p.id);
+          final photoIds =
+              (await (select(photos)..where(
+                        (t) =>
+                            t.parentKind.equalsValue(PhotoParent.task) &
+                            t.parentId.isIn(taskIds),
+                      ))
+                      .get())
+                  .map((p) => p.id);
           await (delete(outbox)..where(
                 (t) =>
                     (t.entity.equals(SyncEntity.task.name) &
@@ -116,18 +134,59 @@ extension SyncWrites on AppDatabase {
               ))
               .go();
           await (delete(subtasks)..where((t) => t.taskId.isIn(taskIds))).go();
-          await (delete(photos)..where((t) => t.taskId.isIn(taskIds))).go();
+          await (delete(photos)..where(
+                (t) =>
+                    t.parentKind.equalsValue(PhotoParent.task) &
+                    t.parentId.isIn(taskIds),
+              ))
+              .go();
+        }
+        // A note left behind here would orphan: nothing else ever notices
+        // that its list is gone, and the picture it carries would sit in
+        // this device's database for good.
+        final noteIds = (await (select(
+          notes,
+        )..where((t) => t.listId.equals(id))).get()).map((n) => n.id).toList();
+        if (noteIds.isNotEmpty) {
+          final notePhotoIds =
+              (await (select(photos)..where(
+                        (t) =>
+                            t.parentKind.equalsValue(PhotoParent.note) &
+                            t.parentId.isIn(noteIds),
+                      ))
+                      .get())
+                  .map((p) => p.id);
+          await (delete(outbox)..where(
+                (t) =>
+                    (t.entity.equals(SyncEntity.note.name) &
+                        t.rowId.isIn(noteIds)) |
+                    (t.entity.equals(SyncEntity.photo.name) &
+                        t.rowId.isIn(notePhotoIds)),
+              ))
+              .go();
+          await (delete(photos)..where(
+                (t) =>
+                    t.parentKind.equalsValue(PhotoParent.note) &
+                    t.parentId.isIn(noteIds),
+              ))
+              .go();
         }
         await (delete(tasks)..where((t) => t.listId.equals(id))).go();
+        await (delete(notes)..where((t) => t.listId.equals(id))).go();
         await (delete(lists)..where((t) => t.id.equals(id))).go();
         await (delete(listMeta)..where((t) => t.listId.equals(id))).go();
       case SyncEntity.task:
         final subtaskIds = (await (select(
           subtasks,
         )..where((t) => t.taskId.equals(id))).get()).map((s) => s.id);
-        final photoIds = (await (select(
-          photos,
-        )..where((t) => t.taskId.equals(id))).get()).map((p) => p.id);
+        final photoIds =
+            (await (select(photos)..where(
+                      (t) =>
+                          t.parentKind.equalsValue(PhotoParent.task) &
+                          t.parentId.equals(id),
+                    ))
+                    .get())
+                .map((p) => p.id);
         await (delete(outbox)..where(
               (t) =>
                   (t.entity.equals(SyncEntity.subtask.name) &
@@ -137,12 +196,39 @@ extension SyncWrites on AppDatabase {
             ))
             .go();
         await (delete(subtasks)..where((t) => t.taskId.equals(id))).go();
-        await (delete(photos)..where((t) => t.taskId.equals(id))).go();
+        await (delete(photos)..where(
+              (t) =>
+                  t.parentKind.equalsValue(PhotoParent.task) &
+                  t.parentId.equals(id),
+            ))
+            .go();
         await (delete(tasks)..where((t) => t.id.equals(id))).go();
       case SyncEntity.subtask:
         await (delete(subtasks)..where((t) => t.id.equals(id))).go();
       case SyncEntity.photo:
         await (delete(photos)..where((t) => t.id.equals(id))).go();
+      case SyncEntity.note:
+        final photoIds =
+            (await (select(photos)..where(
+                      (t) =>
+                          t.parentKind.equalsValue(PhotoParent.note) &
+                          t.parentId.equals(id),
+                    ))
+                    .get())
+                .map((p) => p.id);
+        await (delete(outbox)..where(
+              (t) =>
+                  t.entity.equals(SyncEntity.photo.name) &
+                  t.rowId.isIn(photoIds),
+            ))
+            .go();
+        await (delete(photos)..where(
+              (t) =>
+                  t.parentKind.equalsValue(PhotoParent.note) &
+                  t.parentId.equals(id),
+            ))
+            .go();
+        await (delete(notes)..where((t) => t.id.equals(id))).go();
     }
     await (delete(
       outbox,
@@ -167,6 +253,7 @@ extension SyncWrites on AppDatabase {
     await add(SyncEntity.task, await select(tasks).get());
     await add(SyncEntity.subtask, await select(subtasks).get());
     await add(SyncEntity.photo, await select(photos).get());
+    await add(SyncEntity.note, await select(notes).get());
   });
 
   /// The queued rows as they are right now.
@@ -175,19 +262,29 @@ extension SyncWrites on AppDatabase {
   /// -- are neither returned nor dropped. A server from before photos
   /// cannot decode one, and refuses the whole request over it, so a single
   /// deleted picture would stop every task from syncing too.
-  Future<List<SyncChange>> outboxChanges({required bool includePhotos}) async {
+  ///
+  /// Without [includeNotes], note entries are held back the same way, and
+  /// so is a photo entry whose row hangs on a note: a server that cannot
+  /// read notes has nowhere to resolve that picture's parent either, and
+  /// would refuse the whole push over it.
+  Future<List<SyncChange>> outboxChanges({
+    required bool includePhotos,
+    required bool includeNotes,
+  }) async {
     final entries = await select(outbox).get();
     final changes = <SyncChange>[];
     for (final entry in entries) {
       final entity = SyncEntity.values.byName(entry.entity);
       if (entity == SyncEntity.photo && !includePhotos) continue;
+      if (entity == SyncEntity.note && !includeNotes) continue;
       final change = switch (entity) {
         SyncEntity.list => (await listById(entry.rowId)).let(SyncChange.list),
         SyncEntity.task => (await taskById(entry.rowId)).let(SyncChange.task),
         SyncEntity.subtask => (await subtaskById(
           entry.rowId,
         )).let(SyncChange.subtask),
-        SyncEntity.photo => await _pushablePhoto(entry.rowId),
+        SyncEntity.photo => await _pushablePhoto(entry.rowId, includeNotes),
+        SyncEntity.note => (await noteById(entry.rowId)).let(SyncChange.note),
       };
       if (identical(change, _held)) continue;
       if (change == null) {
@@ -206,9 +303,15 @@ extension SyncWrites on AppDatabase {
   /// A photo row is only offered to the server once the server has its
   /// bytes. Pushing it first would leave every other device holding a row
   /// it cannot fetch a picture for.
-  Future<SyncChange?> _pushablePhoto(String rowId) async {
+  ///
+  /// A photo hanging on a note is held back the same way, not dropped, when
+  /// [includeNotes] is false: the row still exists locally and the server
+  /// may yet learn to read notes, at which point the still-queued entry is
+  /// exactly what should go out.
+  Future<SyncChange?> _pushablePhoto(String rowId, bool includeNotes) async {
     final row = await photoById(rowId);
     if (row == null) return null;
+    if (!includeNotes && row.parentKind == PhotoParent.note) return _held;
     final blob = await (select(
       blobs,
     )..where((t) => t.sha256.equals(row.sha256))).getSingleOrNull();
@@ -224,6 +327,7 @@ extension SyncWrites on AppDatabase {
         SyncChangeTask(:final row) => row.updatedAt,
         SyncChangeSubtask(:final row) => row.updatedAt,
         SyncChangePhoto(:final row) => row.updatedAt,
+        SyncChangeNote(:final row) => row.updatedAt,
         SyncChangeRevoke() => null,
       };
       if (updatedAt == null) continue;
@@ -297,6 +401,7 @@ extension SyncWrites on AppDatabase {
     await delete(blobs).go();
     await delete(subtasks).go();
     await delete(tasks).go();
+    await delete(notes).go();
     await delete(lists).go();
   });
 
@@ -316,8 +421,17 @@ extension SyncWrites on AppDatabase {
   Future<Photo?> photoById(String id) =>
       (select(photos)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<Photo>> photosOfTask(String taskId) =>
-      (select(photos)..where((t) => t.taskId.equals(taskId))).get();
+  Future<List<Photo>> photosOfParent(PhotoParent kind, String id) =>
+      (select(photos)..where(
+            (t) => t.parentKind.equalsValue(kind) & t.parentId.equals(id),
+          ))
+          .get();
+
+  Future<Note?> noteById(String id) =>
+      (select(notes)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<List<Note>> notesOfList(String listId) =>
+      (select(notes)..where((t) => t.listId.equals(listId))).get();
 
   /// Records that this device holds bytes for [sha256].
   Future<void> rememberBlob(

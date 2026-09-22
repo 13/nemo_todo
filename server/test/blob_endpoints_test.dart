@@ -33,6 +33,46 @@ void main() {
     expect(response.statusCode, 200);
   }
 
+  /// Pushes a list, a note and a photo naming [hash] on that note, as
+  /// [token]'s owner.
+  Future<void> attachToNote(String token, String hash) async {
+    final clock = deviceClock('ben');
+    final request = SyncRequest(
+      cursor: 0,
+      changes: [
+        SyncChange.list(list('l1', clock)),
+        SyncChange.note(note('n1', 'l1', clock)),
+        SyncChange.photo(
+          photo('p1', 'n1', clock, sha: hash, kind: PhotoParent.note),
+        ),
+      ],
+      notes: true,
+    );
+    final response = await server.post(
+      '/api/v1/sync',
+      request.toJson(),
+      token: token,
+    );
+    expect(response.statusCode, 200);
+  }
+
+  // Closes the gap `canSeeBlob` left when it only joined through `tasks`:
+  // a note photo's bytes must be servable to a member of the note's list
+  // too, not silently 404 for everybody.
+  test('a note picture is served back to a member of its list', () async {
+    server = await TestServer.start();
+    final token = await server.signup('ben');
+    final bytes = utf8.encode('a tiny note picture');
+    final hash = sha256.convert(bytes).toString();
+
+    await server.putBytes('/api/v1/blobs/$hash', bytes, token: token);
+    await attachToNote(token, hash);
+
+    final fetched = await server.get('/api/v1/blobs/$hash', token: token);
+    expect(fetched.statusCode, 200);
+    expect(fetched.bodyBytes, bytes);
+  });
+
   test(
     'uploads bytes, refuses a mismatched hash, and serves them back',
     () async {

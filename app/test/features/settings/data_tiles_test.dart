@@ -86,7 +86,7 @@ void main() {
         await db.upsertPhoto(
           Photo(
             id: 'p1',
-            taskId: task.id,
+            parentId: task.id,
             sha256: 'a' * 64,
             byteSize: 3,
             width: 1,

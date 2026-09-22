@@ -27,8 +27,14 @@ class NotesScreen extends ConsumerWidget {
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     final lists = ref.watch(allListsProvider).value ?? const <TaskList>[];
     final listNames = {for (final list in lists) list.id: list.name};
-    final pinned = [for (final note in notes) if (note.pinned) note];
-    final others = [for (final note in notes) if (!note.pinned) note];
+    final pinned = [
+      for (final note in notes)
+        if (note.pinned) note,
+    ];
+    final others = [
+      for (final note in notes)
+        if (!note.pinned) note,
+    ];
 
     return Scaffold(
       appBar: AppBar(title: Text(l.navNotes)),
@@ -98,10 +104,7 @@ class NotesScreen extends ConsumerWidget {
                         label(l.notesPinned, const Key('notes-pinned-label')),
                         grid(pinned),
                         if (others.isNotEmpty)
-                          label(
-                            l.notesOthers,
-                            const Key('notes-others-label'),
-                          ),
+                          label(l.notesOthers, const Key('notes-others-label')),
                       ] else
                         const SliverToBoxAdapter(child: SizedBox(height: 8)),
                       if (others.isNotEmpty) grid(others),

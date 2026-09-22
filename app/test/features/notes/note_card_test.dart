@@ -27,7 +27,10 @@ void main() {
   testWidgets('shows title, body preview and list name', (tester) async {
     await _pump(
       tester,
-      NoteCard(note: _note(body: '500 g flour'), listName: 'Kitchen'),
+      NoteCard(
+        note: _note(body: '500 g flour'),
+        listName: 'Kitchen',
+      ),
     );
 
     expect(find.byKey(const Key('note-tile-n1')), findsOneWidget);
@@ -44,7 +47,12 @@ void main() {
   });
 
   testWidgets('an empty title is left out', (tester) async {
-    await _pump(tester, NoteCard(note: _note(title: '', body: 'only body')));
+    await _pump(
+      tester,
+      NoteCard(
+        note: _note(title: '', body: 'only body'),
+      ),
+    );
 
     expect(find.text('only body'), findsOneWidget);
     // Only the body text: no empty title Text above it.

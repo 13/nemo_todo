@@ -173,5 +173,14 @@ class MembersService {
         await _db.logUpsert(SyncEntity.photo, photo.id, listId);
       }
     }
+    // Notes and their pictures, same reasoning: a note keeps the seq it was
+    // last logged at, so a member whose cursor is already past that would
+    // never hear of it without this re-log.
+    for (final note in await _db.notesOfList(listId)) {
+      await _db.logUpsert(SyncEntity.note, note.id, listId);
+      for (final photo in await _db.photosOfParent(PhotoParent.note, note.id)) {
+        await _db.logUpsert(SyncEntity.photo, photo.id, listId);
+      }
+    }
   }
 }

@@ -18,7 +18,7 @@ void main() {
     int cursor = 0,
   }) async => (await sync.sync(
     userId,
-    SyncRequest(cursor: cursor, changes: changes, photos: true),
+    SyncRequest(cursor: cursor, changes: changes, photos: true, notes: true),
   )).response;
 
   setUp(() async {
@@ -76,6 +76,24 @@ void main() {
       expect(after.changes.map((c) => c.rowId), ['l1', 't1', 's1', 'p1']);
     },
   );
+
+  test('notes already on a list, and their pictures, reach a new member whose '
+      'cursor is already advanced', () async {
+    await push(ben, [
+      SyncChange.note(note('n1', 'l1', dev)),
+      SyncChange.photo(photo('p1', 'n1', dev, kind: PhotoParent.note)),
+    ]);
+    // Anna has been using her own list since, so her cursor is already
+    // past the note's and the picture's entries in the log: only a
+    // re-log can reach her.
+    final before = await push(anna, [
+      SyncChange.list(list('annas', deviceClock('anna'))),
+    ]);
+
+    await members.share(ben, 'l1', 'anna', MemberRole.editor);
+    final shared = await push(anna, [], cursor: before.cursor);
+    expect(shared.changes.map((c) => c.rowId), ['l1', 't1', 's1', 'n1', 'p1']);
+  });
 
   test('unshare revokes for that member only', () async {
     await members.share(ben, 'l1', 'anna', MemberRole.editor);

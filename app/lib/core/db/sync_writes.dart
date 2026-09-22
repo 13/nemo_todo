@@ -283,7 +283,10 @@ extension SyncWrites on AppDatabase {
         SyncEntity.subtask => (await subtaskById(
           entry.rowId,
         )).let(SyncChange.subtask),
-        SyncEntity.photo => await _pushablePhoto(entry.rowId, includeNotes),
+        SyncEntity.photo => await _pushablePhoto(
+          entry.rowId,
+          includeNotes: includeNotes,
+        ),
         SyncEntity.note => (await noteById(entry.rowId)).let(SyncChange.note),
       };
       if (identical(change, _held)) continue;
@@ -308,7 +311,10 @@ extension SyncWrites on AppDatabase {
   /// [includeNotes] is false: the row still exists locally and the server
   /// may yet learn to read notes, at which point the still-queued entry is
   /// exactly what should go out.
-  Future<SyncChange?> _pushablePhoto(String rowId, bool includeNotes) async {
+  Future<SyncChange?> _pushablePhoto(
+    String rowId, {
+    required bool includeNotes,
+  }) async {
     final row = await photoById(rowId);
     if (row == null) return null;
     if (!includeNotes && row.parentKind == PhotoParent.note) return _held;

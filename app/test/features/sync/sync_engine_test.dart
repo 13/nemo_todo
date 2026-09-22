@@ -1200,4 +1200,50 @@ void main() {
       expect(await db.missingBlobHashes(), [hash]);
     },
   );
+
+  test('once the server says it takes notes, a queued note picture whose '
+      'bytes are still unsynced goes out in the same round', () async {
+    // Same shape as "a queued note picture with no queued note beside it
+    // goes out in the same round" above, but the bytes are never marked
+    // synced: `_pushablePhoto` holds the picture back from the outbox
+    // entirely while its blob is unsynced, so the outbox-based fallback
+    // in `noteRoundNeeded` can never trip on it. `hasHeldNoteBlobs` is
+    // the only thing that notices this round left the bytes behind.
+    await KvStore(db).set(KvKeys.serverPhotos, 'true');
+    await KvStore(db).set(KvKeys.serverNotes, 'false');
+    client.notes = false;
+    final c = await container();
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    final note = await notes().create(listId: 'l1', title: 'N');
+    await db.dropOutbox(SyncEntity.note, note.id);
+    final photo = (await photos().add(PhotoParent.note, note.id, smallJpeg()))!;
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(
+      (await db.select(db.outbox).get()).map((e) => e.rowId),
+      [photo.id],
+      reason:
+          'only the picture is queued -- the note itself already '
+          'synced',
+    );
+    expect(client.uploaded, isEmpty);
+    final blobRow = await (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(photo.sha256))).getSingle();
+    expect(blobRow.state, 'pendingUpload');
+
+    client.notes = true;
+    final before = client.calls;
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.uploaded, [photo.sha256]);
+    final pushed = client.pushes
+        .skip(before)
+        .expand((p) => p)
+        .whereType<SyncChangePhoto>();
+    expect(pushed.single.row.id, photo.id);
+    expect(client.calls - before, 2, reason: 'in the same sync, not the next');
+    expect(await db.outboxCount(), 0);
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+  });
 }

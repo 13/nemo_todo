@@ -276,5 +276,7 @@
   "notePinned": "Anheften",
   "noteUnpin": "Nicht mehr anheften",
   "noteDeleted": "Löschen",
-  "noteMoveToList": "In andere Liste verschieben"
+  "noteMoveToList": "In andere Liste verschieben",
+  "notesDeleteConfirm": "Diese Notiz löschen?",
+  "notesDeleted": "Notiz gelöscht"
 }

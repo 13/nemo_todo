@@ -68,6 +68,9 @@ class NotesRepository {
   Future<void> delete(String id) =>
       _edit(id, (note) => note.copyWith(deletedAt: _clock.now().toString()));
 
+  Future<void> restore(String id) =>
+      _edit(id, (note) => note.copyWith(deletedAt: null));
+
   Future<void> _edit(String id, Note Function(Note) change) async {
     final note = await _db.noteById(id);
     if (note == null) return;

@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/ui/note_body_view.dart';
 import 'package:nemo/features/notes/ui/note_editor_sections.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// Title and body of one note. A note always opens as a page -- unlike a
@@ -104,7 +106,15 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         await _save();
-        if (context.mounted) Navigator.of(context).pop();
+        if (!context.mounted) return;
+        // Reached directly -- a deep link, a shared URL, a PWA restore --
+        // this can be the only page on the stack, with nothing below it
+        // to pop back to.
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(Routes.notes);
+        }
       },
       child: Scaffold(
         appBar: AppBar(

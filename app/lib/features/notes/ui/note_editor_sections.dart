@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// Pins a note to the top of its list, or unpins it.
@@ -69,7 +71,9 @@ class NoteListPicker extends ConsumerWidget {
   }
 }
 
-/// Tombstones a note and leaves the page.
+/// Asks, deletes, and offers undo -- the same tier of confirmation a task
+/// or a list gets, since a note is a top-level entity like them, not a
+/// throwaway subitem.
 class NoteDeleteAction extends ConsumerWidget {
   const NoteDeleteAction({required this.note, super.key});
 
@@ -82,10 +86,50 @@ class NoteDeleteAction extends ConsumerWidget {
       key: const Key('note-delete'),
       leading: const Icon(Icons.delete_outline),
       title: Text(l.noteDeleted),
-      onTap: () async {
-        await ref.read(notesRepositoryProvider).delete(note.id);
-        if (context.mounted) Navigator.of(context).maybePop();
-      },
+      onTap: () => _delete(context, ref),
     );
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final l = L.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l.commonDelete),
+        content: Text(l.notesDeleteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            key: const Key('confirm-delete-note'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final repo = ref.read(notesRepositoryProvider);
+    await repo.delete(note.id);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l.notesDeleted),
+        action: SnackBarAction(
+          label: l.commonUndo,
+          onPressed: () => repo.restore(note.id),
+        ),
+      ),
+    );
+    // A note reached directly -- a deep link, a shared URL, a PWA restore
+    // -- can be the only page on the stack, with nothing below it to pop
+    // back to.
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(Routes.notes);
+    }
   }
 }

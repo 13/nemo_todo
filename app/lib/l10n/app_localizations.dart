@@ -1760,6 +1760,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Move to list'**
   String get noteMoveToList;
+
+  /// No description provided for @notesDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this note?'**
+  String get notesDeleteConfirm;
+
+  /// No description provided for @notesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted'**
+  String get notesDeleted;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

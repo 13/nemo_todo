@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
+import 'package:nemo/features/notes/ui/notes_screen.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -88,6 +89,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('note-delete')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-note')));
+    await tester.pumpAndSettle();
     expect((await harness.db.noteById('n1'))!.isDeleted, isTrue);
   });
 
@@ -104,4 +107,70 @@ void main() {
     expect(photos.single.parentId, 'n1');
     expect(find.byType(PhotoStrip), findsOneWidget);
   });
+
+  appTest('deleting a note asks first; cancelling leaves it alone', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bread'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-delete')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('confirm-delete-note')), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('note-title')), findsOneWidget);
+    expect((await harness.db.noteById('n1'))!.isDeleted, isFalse);
+  });
+
+  appTest('confirming deletes the note, and the snackbar undo restores it', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bread'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-note')));
+    await tester.pumpAndSettle();
+
+    expect((await harness.db.noteById('n1'))!.isDeleted, isTrue);
+    expect(find.text('Undo'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    expect((await harness.db.noteById('n1'))!.isDeleted, isFalse);
+  });
+
+  appTest(
+    'deleting a note opened directly, with nothing else on the stack, '
+    'lands on the notes list instead of crashing',
+    (tester) async {
+      final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+      await harness.seedList('l1', 'Kitchen');
+      await harness.seedNote('n1', 'l1', title: 'Bread');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('note-delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('confirm-delete-note')));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(NotesScreen), findsOneWidget);
+    },
+  );
 }

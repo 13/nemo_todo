@@ -1062,4 +1062,10 @@ class LEn extends L {
 
   @override
   String get noteMoveToList => 'Move to list';
+
+  @override
+  String get notesDeleteConfirm => 'Delete this note?';
+
+  @override
+  String get notesDeleted => 'Note deleted';
 }

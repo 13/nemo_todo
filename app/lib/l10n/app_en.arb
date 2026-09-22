@@ -551,5 +551,7 @@
   "notePinned": "Pin",
   "noteUnpin": "Unpin",
   "noteDeleted": "Delete",
-  "noteMoveToList": "Move to list"
+  "noteMoveToList": "Move to list",
+  "notesDeleteConfirm": "Delete this note?",
+  "notesDeleted": "Note deleted"
 }

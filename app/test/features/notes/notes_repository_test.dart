@@ -58,6 +58,18 @@ void main() {
     expect((await db.noteById(note.id))!.isDeleted, isTrue);
   });
 
+  test('a restored note is no longer tombstoned', () async {
+    final note = await repository.create(listId: 'l1', title: 'Bread');
+    await repository.delete(note.id);
+
+    await repository.restore(note.id);
+
+    expect((await db.noteById(note.id))!.isDeleted, isFalse);
+    expect([for (final n in await repository.watchByList('l1').first) n.title], [
+      'Bread',
+    ]);
+  });
+
   test('moving a note carries it to the other list', () async {
     final note = await repository.create(listId: 'l1', title: 'Bread');
 

@@ -276,5 +276,7 @@
   "notePinned": "Fissa",
   "noteUnpin": "Non fissare più",
   "noteDeleted": "Elimina",
-  "noteMoveToList": "Sposta in un'altra lista"
+  "noteMoveToList": "Sposta in un'altra lista",
+  "notesDeleteConfirm": "Eliminare questa nota?",
+  "notesDeleted": "Nota eliminata"
 }

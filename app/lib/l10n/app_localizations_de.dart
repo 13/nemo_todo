@@ -1072,4 +1072,10 @@ class LDe extends L {
 
   @override
   String get noteMoveToList => 'In andere Liste verschieben';
+
+  @override
+  String get notesDeleteConfirm => 'Diese Notiz löschen?';
+
+  @override
+  String get notesDeleted => 'Notiz gelöscht';
 }

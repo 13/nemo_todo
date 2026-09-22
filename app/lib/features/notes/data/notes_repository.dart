@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:nemo/core/db/app_database.dart';
+import 'package:nemo/core/db/like_pattern.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -32,10 +33,10 @@ class NotesRepository {
   Stream<List<Note>> search(String query) {
     final q = query.trim();
     if (q.isEmpty) return Stream.value(const []);
-    final pattern = _likePattern(q);
+    final pattern = likePattern(q);
     return _visible(
-      _db.notes.title.like(pattern, escapeChar: _likeEscapeChar) |
-          _db.notes.body.like(pattern, escapeChar: _likeEscapeChar),
+      _db.notes.title.like(pattern, escapeChar: likeEscapeChar) |
+          _db.notes.body.like(pattern, escapeChar: likeEscapeChar),
       _joinOrder,
     );
   }
@@ -125,21 +126,3 @@ class NotesRepository {
     OrderingTerm.asc(_db.notes.sortKey),
   ];
 }
-
-/// The escape character declared to drift's `like()` below -- SQLite's
-/// `LIKE` has no default one, so without this a backslash in the pattern
-/// is just a literal character and `%` or `_` typed by the user still act
-/// as wildcards. Kept in step with `TasksRepository`'s copy of the same
-/// helpers.
-const _likeEscapeChar = r'\';
-
-/// Wraps [q] as a substring match, escaping `%` and `_` -- SQLite's
-/// multi-character and single-character `LIKE` wildcards -- and the escape
-/// character itself, so a literal occurrence of any of the three in the
-/// query matches only itself.
-String _likePattern(String q) => '%${_escapeLike(q)}%';
-
-String _escapeLike(String q) => q
-    .replaceAll(_likeEscapeChar, _likeEscapeChar * 2)
-    .replaceAll('%', '$_likeEscapeChar%')
-    .replaceAll('_', '${_likeEscapeChar}_');

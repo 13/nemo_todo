@@ -273,9 +273,9 @@
   "noteNotFound": "Diese Notiz gibt es nicht mehr.",
   "noteEditToggle": "Bearbeiten",
   "noteReadToggle": "Fertig",
-  "notePinned": "Anheften",
+  "notePin": "Anheften",
   "noteUnpin": "Nicht mehr anheften",
-  "noteDeleted": "Löschen",
+  "noteDelete": "Löschen",
   "noteMoveToList": "In andere Liste verschieben",
   "notesDeleteConfirm": "Diese Notiz löschen?",
   "notesDeleted": "Notiz gelöscht"

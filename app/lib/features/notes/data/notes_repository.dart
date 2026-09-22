@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:nemo/core/db/app_database.dart';
+import 'package:nemo/core/db/like_pattern.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -32,9 +33,10 @@ class NotesRepository {
   Stream<List<Note>> search(String query) {
     final q = query.trim();
     if (q.isEmpty) return Stream.value(const []);
-    final pattern = '%${q.replaceAll('%', r'\%')}%';
+    final pattern = likePattern(q);
     return _visible(
-      _db.notes.title.like(pattern) | _db.notes.body.like(pattern),
+      _db.notes.title.like(pattern, escapeChar: likeEscapeChar) |
+          _db.notes.body.like(pattern, escapeChar: likeEscapeChar),
       _joinOrder,
     );
   }
@@ -76,8 +78,9 @@ class NotesRepository {
     await _write(change(note));
   }
 
-  Future<void> _write(Note note) =>
-      _db.upsertNote(note.copyWith(updatedAt: _clock.now().toString()));
+  Future<void> _write(Note note) => _db.upsertNote(
+    note.copyWith(updatedAt: note.deletedAt ?? _clock.now().toString()),
+  );
 
   Future<String> _nextSortKey(String listId) async {
     final last =

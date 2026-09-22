@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/features/notes/ui/note_tile.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
-import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// Full-text search over titles, notes and tags of every list, and over
@@ -108,34 +107,7 @@ List<Widget> _noteResultSlivers(List<Note> notes, L l) => [
   ),
   SliverList.builder(
     itemCount: notes.length,
-    itemBuilder: (context, i) => _NoteResultTile(note: notes[i]),
+    itemBuilder: (context, i) =>
+        NoteTile(note: notes[i], keyPrefix: 'search-note-tile'),
   ),
 ];
-
-/// Mirrors the tile `NotesScreen` uses, so a note reads the same way
-/// wherever it is listed.
-class _NoteResultTile extends StatelessWidget {
-  const _NoteResultTile({required this.note});
-
-  final Note note;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    final preview = note.body.trim();
-    return ListTile(
-      key: Key('search-note-tile-${note.id}'),
-      title: Text(note.title),
-      // The preview is the markdown source, not rendered: a heading or an
-      // image in a note would otherwise set the height of a row in a list
-      // of results.
-      subtitle: Text(
-        preview.isEmpty ? l.notePreviewEmpty : preview,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: note.pinned ? const Icon(Icons.push_pin, size: 18) : null,
-      onTap: () => context.push(Routes.note(note.id)),
-    );
-  }
-}

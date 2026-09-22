@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:nemo/core/db/app_database.dart';
+import 'package:nemo/core/db/like_pattern.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/utils/dates.dart';
@@ -59,11 +60,11 @@ class TasksRepository {
   Stream<List<Task>> search(String query) {
     final q = query.trim();
     if (q.isEmpty) return Stream.value(const []);
-    final pattern = '%${q.replaceAll('%', r'\%')}%';
+    final pattern = likePattern(q);
     return _visible(
-      _db.tasks.title.like(pattern) |
-          _db.tasks.notes.like(pattern) |
-          _db.tasks.tags.like(pattern),
+      _db.tasks.title.like(pattern, escapeChar: likeEscapeChar) |
+          _db.tasks.notes.like(pattern, escapeChar: likeEscapeChar) |
+          _db.tasks.tags.like(pattern, escapeChar: likeEscapeChar),
       [OrderingTerm.asc(_db.tasks.done), OrderingTerm.asc(_db.tasks.title)],
     );
   }

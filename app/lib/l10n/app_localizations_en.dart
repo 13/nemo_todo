@@ -1052,13 +1052,13 @@ class LEn extends L {
   String get noteReadToggle => 'Done';
 
   @override
-  String get notePinned => 'Pin';
+  String get notePin => 'Pin';
 
   @override
   String get noteUnpin => 'Unpin';
 
   @override
-  String get noteDeleted => 'Delete';
+  String get noteDelete => 'Delete';
 
   @override
   String get noteMoveToList => 'Move to list';

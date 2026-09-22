@@ -183,6 +183,16 @@ void main() {
     },
   );
 
+  test('search treats a literal % or _ as itself, not a wildcard', () async {
+    await tasks.create(listId: inbox, title: '50% off');
+    await tasks.create(listId: inbox, title: '50 something off');
+    await tasks.create(listId: inbox, title: 'a_b');
+    await tasks.create(listId: inbox, title: 'axb');
+
+    expect((await tasks.search('50%').first).map((t) => t.title), ['50% off']);
+    expect((await tasks.search('a_b').first).map((t) => t.title), ['a_b']);
+  });
+
   test('delete tombstones and reorders only the moved row', () async {
     final a = await tasks.create(listId: inbox, title: 'A');
     final b = await tasks.create(listId: inbox, title: 'B');

@@ -548,9 +548,9 @@
   "noteNotFound": "This note is no longer here.",
   "noteEditToggle": "Edit",
   "noteReadToggle": "Done",
-  "notePinned": "Pin",
+  "notePin": "Pin",
   "noteUnpin": "Unpin",
-  "noteDeleted": "Delete",
+  "noteDelete": "Delete",
   "noteMoveToList": "Move to list",
   "notesDeleteConfirm": "Delete this note?",
   "notesDeleted": "Note deleted"

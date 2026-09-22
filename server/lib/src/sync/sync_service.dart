@@ -289,21 +289,31 @@ class SyncService {
         final skew = _checkHlc(row.updatedAt);
         if (skew != null) return skew;
         final existing = await _db.photoById(row.id);
-        String? oldParentListId;
-        if (existing != null && existing.parentId != row.parentId) {
-          oldParentListId = switch (existing.parentKind) {
-            PhotoParent.task => (await _db.taskById(existing.parentId))?.listId,
-            PhotoParent.note => (await _db.noteById(existing.parentId))?.listId,
-          };
-        }
-        final oldListId = oldParentListId;
-        final moved = oldListId != null && oldListId != parent;
-        if (moved && !roles.containsKey(oldListId)) return 'forbidden';
+        // The pair -- kind and id -- decides whether the parent changed, not
+        // the id alone: a payload that flips parentKind while keeping the
+        // same id string still points somewhere new, and the old parent has
+        // to be resolved through the stored row's own kind, not the
+        // incoming one.
+        final oldParentListId =
+            existing != null &&
+                (existing.parentKind != row.parentKind ||
+                    existing.parentId != row.parentId)
+            ? switch (existing.parentKind) {
+                PhotoParent.task => (await _db.taskById(
+                  existing.parentId,
+                ))?.listId,
+                PhotoParent.note => (await _db.noteById(
+                  existing.parentId,
+                ))?.listId,
+              }
+            : null;
+        final moved = oldParentListId != null && oldParentListId != parent;
+        if (moved && !roles.containsKey(oldParentListId)) return 'forbidden';
         if (!incomingWins(existing, row)) {
           await _handBack(
             SyncEntity.photo,
             row.id,
-            oldListId ?? parent,
+            oldParentListId ?? parent,
             userId,
             incoming: row.updatedAt,
             held: existing!.updatedAt,
@@ -313,8 +323,12 @@ class SyncService {
         await _db.into(_db.photos).insertOnConflictUpdate(row.toInsertable());
         _accept(row.updatedAt);
         if (moved) {
-          await _db.logRevoke(SyncEntity.photo, row.id, listId: oldListId);
-          touched.add(oldListId);
+          await _db.logRevoke(
+            SyncEntity.photo,
+            row.id,
+            listId: oldParentListId,
+          );
+          touched.add(oldParentListId);
         }
         await _db.logUpsert(SyncEntity.photo, row.id, parent);
         touched.add(parent);

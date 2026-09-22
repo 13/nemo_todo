@@ -837,6 +837,108 @@ void main() {
     expect(await KvStore(db).get(KvKeys.serverNotes), 'true');
   });
 
+  test('once the server says it takes notes, a queued note picture with no '
+      'queued note beside it goes out in the same round', () async {
+    // The note already landed on an earlier, notes-capable sync; only its
+    // picture -- added after the server stopped taking notes -- is
+    // queued now.
+    await KvStore(db).set(KvKeys.serverPhotos, 'true');
+    await KvStore(db).set(KvKeys.serverNotes, 'false');
+    client.notes = false;
+    final c = await container();
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    final note = await notes().create(listId: 'l1', title: 'N');
+    await db.dropOutbox(SyncEntity.note, note.id);
+    final photo = (await photos().add(PhotoParent.note, note.id, smallJpeg()))!;
+    await db.markBlobSynced(photo.sha256);
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(
+      (await db.select(db.outbox).get()).map((e) => e.rowId),
+      [photo.id],
+      reason:
+          'only the picture is queued -- the note itself already '
+          'synced',
+    );
+
+    client.notes = true;
+    final before = client.calls;
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    final pushed = client.pushes
+        .skip(before)
+        .expand((p) => p)
+        .whereType<SyncChangePhoto>();
+    expect(pushed.single.row.id, photo.id);
+    expect(client.calls - before, 2, reason: 'in the same sync, not the next');
+    expect(await db.outboxCount(), 0);
+  });
+
+  // A picture hanging on a note has its row held back the same way a note
+  // itself is, but `uploadsHeld` only ever looked at KvKeys.serverPhotos:
+  // its bytes went up regardless. On a server rolled back below notes, the
+  // blob sweep could then delete those bytes before the row ever lands.
+  test(
+    "a note picture's bytes are held while the server does not take notes",
+    () async {
+      await KvStore(db).set(KvKeys.serverNotes, 'false');
+      client.notes = false;
+      final c = await container();
+      await db.upsertList(list('l1', testClock('a').now().toString()));
+      final note = await notes().create(listId: 'l1', title: 'N');
+      final photo = (await photos().add(
+        PhotoParent.note,
+        note.id,
+        smallJpeg(),
+      ))!;
+
+      await c.read(syncEngineProvider.notifier).syncNow();
+
+      expect(client.uploaded, isEmpty);
+      // Still waiting, byte-for-byte: `pendingBlobs` itself now holds a
+      // note-only blob back, but the raw row is a plainer witness that
+      // nothing pretended it landed.
+      final blobRow = await (db.select(
+        db.blobs,
+      )..where((t) => t.sha256.equals(photo.sha256))).getSingle();
+      expect(blobRow.state, 'pendingUpload');
+      // Round-neutral: a permanently notes-blind server must not send the
+      // engine round after round chasing bytes it will never be allowed
+      // to send.
+      expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+      expect(client.calls, 1);
+    },
+  );
+
+  // `onSignedIn` clears both capability flags to null before syncing, so
+  // the very first round after a sign-in has an *unset* serverNotes, not a
+  // 'false' one. A filter that only engages on the literal 'false' misses
+  // this round entirely, and a notes-blind server has no notes gate on the
+  // blob endpoints to catch the mistake the way a photos-blind one does:
+  // the upload would simply succeed, stranding bytes behind a row the
+  // server will never take.
+  test("signing in holds a note picture's bytes until the server is known to "
+      'take notes', () async {
+    client.notes = false;
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    final note = await notes().create(listId: 'l1', title: 'N');
+    final photo = (await photos().add(PhotoParent.note, note.id, smallJpeg()))!;
+    final c = await container();
+
+    await c.read(syncEngineProvider.notifier).onSignedIn();
+
+    expect(client.uploaded, isEmpty);
+    final blobRow = await (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(photo.sha256))).getSingle();
+    expect(blobRow.state, 'pendingUpload');
+    // Settles rather than spinning: a permanently notes-blind server
+    // must not send the engine round after round chasing bytes it will
+    // never be allowed to send.
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+    expect(client.calls, 1);
+  });
+
   test('signing in to a server without photos pushes no photo rows', () async {
     await syncedPicture('https://nemo.test|ben');
     await db.upsertList(list('l1', testClock('a').now().toString()));
@@ -1098,4 +1200,50 @@ void main() {
       expect(await db.missingBlobHashes(), [hash]);
     },
   );
+
+  test('once the server says it takes notes, a queued note picture whose '
+      'bytes are still unsynced goes out in the same round', () async {
+    // Same shape as "a queued note picture with no queued note beside it
+    // goes out in the same round" above, but the bytes are never marked
+    // synced: `_pushablePhoto` holds the picture back from the outbox
+    // entirely while its blob is unsynced, so the outbox-based fallback
+    // in `noteRoundNeeded` can never trip on it. `hasHeldNoteBlobs` is
+    // the only thing that notices this round left the bytes behind.
+    await KvStore(db).set(KvKeys.serverPhotos, 'true');
+    await KvStore(db).set(KvKeys.serverNotes, 'false');
+    client.notes = false;
+    final c = await container();
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    final note = await notes().create(listId: 'l1', title: 'N');
+    await db.dropOutbox(SyncEntity.note, note.id);
+    final photo = (await photos().add(PhotoParent.note, note.id, smallJpeg()))!;
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(
+      (await db.select(db.outbox).get()).map((e) => e.rowId),
+      [photo.id],
+      reason:
+          'only the picture is queued -- the note itself already '
+          'synced',
+    );
+    expect(client.uploaded, isEmpty);
+    final blobRow = await (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(photo.sha256))).getSingle();
+    expect(blobRow.state, 'pendingUpload');
+
+    client.notes = true;
+    final before = client.calls;
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.uploaded, [photo.sha256]);
+    final pushed = client.pushes
+        .skip(before)
+        .expand((p) => p)
+        .whereType<SyncChangePhoto>();
+    expect(pushed.single.row.id, photo.id);
+    expect(client.calls - before, 2, reason: 'in the same sync, not the next');
+    expect(await db.outboxCount(), 0);
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+  });
 }

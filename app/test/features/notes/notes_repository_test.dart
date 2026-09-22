@@ -60,6 +60,19 @@ void main() {
     expect((await db.noteById(note.id))!.isDeleted, isTrue);
   });
 
+  test('deleting a note stamps updatedAt with the tombstone itself', () async {
+    final note = await repository.create(listId: 'l1', title: 'Bread');
+
+    await repository.delete(note.id);
+
+    final row = await db.noteById(note.id);
+    expect(
+      row!.updatedAt,
+      row.deletedAt,
+      reason: 'matches TasksRepository, which reuses the one stamp',
+    );
+  });
+
   test('a restored note is no longer tombstoned', () async {
     final note = await repository.create(listId: 'l1', title: 'Bread');
     await repository.delete(note.id);
@@ -107,6 +120,22 @@ void main() {
     final notes = await repository.watchAll().first;
 
     expect([for (final n in notes) n.title], ['Bread']);
+  });
+
+  test('search treats a literal % or _ as itself, not a wildcard', () async {
+    await repository.create(listId: 'l1', title: '50% off');
+    await repository.create(listId: 'l1', title: '50 something off');
+    await repository.create(listId: 'l1', title: 'a_b');
+    await repository.create(listId: 'l1', title: 'axb');
+
+    expect(
+      [for (final n in await repository.search('50%').first) n.title],
+      ['50% off'],
+    );
+    expect(
+      [for (final n in await repository.search('a_b').first) n.title],
+      ['a_b'],
+    );
   });
 
   test('search does not surface a note whose list is deleted', () async {

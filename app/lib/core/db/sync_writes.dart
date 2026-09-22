@@ -283,7 +283,10 @@ extension SyncWrites on AppDatabase {
         SyncEntity.subtask => (await subtaskById(
           entry.rowId,
         )).let(SyncChange.subtask),
-        SyncEntity.photo => await _pushablePhoto(entry.rowId, includeNotes),
+        SyncEntity.photo => await _pushablePhoto(
+          entry.rowId,
+          includeNotes: includeNotes,
+        ),
         SyncEntity.note => (await noteById(entry.rowId)).let(SyncChange.note),
       };
       if (identical(change, _held)) continue;
@@ -308,7 +311,10 @@ extension SyncWrites on AppDatabase {
   /// [includeNotes] is false: the row still exists locally and the server
   /// may yet learn to read notes, at which point the still-queued entry is
   /// exactly what should go out.
-  Future<SyncChange?> _pushablePhoto(String rowId, bool includeNotes) async {
+  Future<SyncChange?> _pushablePhoto(
+    String rowId, {
+    required bool includeNotes,
+  }) async {
     final row = await photoById(rowId);
     if (row == null) return null;
     if (!includeNotes && row.parentKind == PhotoParent.note) return _held;
@@ -466,8 +472,74 @@ extension SyncWrites on AppDatabase {
     );
   }
 
-  Future<List<BlobRow>> pendingBlobs() =>
-      (select(blobs)..where((t) => t.state.equals('pendingUpload'))).get();
+  /// Blobs waiting to be uploaded.
+  ///
+  /// A blob whose only live pictures hang on a note is left out until the
+  /// server is *known* to take notes -- not only once it has explicitly
+  /// said it does not. Unset means exactly the same "not yet known" that a
+  /// literal `'false'` does: the notes gate on the row itself already
+  /// treats them alike, and the blob endpoints have no notes gate of their
+  /// own to 404 the mistake the way a photos-blind server does, so an
+  /// upload offered on the strength of an unset flag would simply succeed,
+  /// stranding bytes behind a row the server will never take. That picture's
+  /// row is held back the same way a note's own row is, so offering its
+  /// bytes anyway would let a rolled-back (or not-yet-caught-up) server's
+  /// blob sweep delete them before the row that names them ever lands. A
+  /// blob a task also names, or one the server is known to take notes for,
+  /// is never held here.
+  Future<List<BlobRow>> pendingBlobs() async {
+    final pending = await (select(
+      blobs,
+    )..where((t) => t.state.equals('pendingUpload'))).get();
+    if (pending.isEmpty) return pending;
+    final notesFlag = await (select(
+      kv,
+    )..where((t) => t.key.equals(KvKeys.serverNotes))).getSingleOrNull();
+    if (notesFlag?.value == 'true') return pending;
+    final noteOnly = await _noteOnlyBlobShas(pending);
+    if (noteOnly.isEmpty) return pending;
+    return [
+      for (final blob in pending)
+        if (!noteOnly.contains(blob.sha256)) blob,
+    ];
+  }
+
+  /// Whether some pending blob is held only because every live picture
+  /// naming it hangs on a note -- regardless of what is currently known
+  /// about the server's note support. Lets the engine notice, on the round
+  /// a notes-blind server turns out to take them after all, that bytes
+  /// [pendingBlobs] was withholding this round are worth another round --
+  /// without mistaking some unrelated stuck blob (a task picture that
+  /// failed to upload) for one of these, which would send the engine round
+  /// after round for a reason that has nothing to do with notes.
+  Future<bool> hasHeldNoteBlobs() async {
+    final pending = await (select(
+      blobs,
+    )..where((t) => t.state.equals('pendingUpload'))).get();
+    if (pending.isEmpty) return false;
+    return (await _noteOnlyBlobShas(pending)).isNotEmpty;
+  }
+
+  /// The hashes among [pending] whose every live photo row hangs on a
+  /// note. One query for every pending blob, not one per blob: fetch every
+  /// live photo naming one of them and group by hash locally.
+  Future<Set<String>> _noteOnlyBlobShas(List<BlobRow> pending) async {
+    final shas = [for (final blob in pending) blob.sha256];
+    final rows = await (select(
+      photos,
+    )..where((t) => t.sha256.isIn(shas) & t.deletedAt.isNull())).get();
+    final byHash = <String, List<Photo>>{};
+    for (final row in rows) {
+      (byHash[row.sha256] ??= []).add(row);
+    }
+    return {
+      for (final blob in pending)
+        if (byHash[blob.sha256] case final rows?
+            when rows.isNotEmpty &&
+                rows.every((p) => p.parentKind == PhotoParent.note))
+          blob.sha256,
+    };
+  }
 
   /// Hashes named by a live photo row that this device does not hold,
   /// those of the most recently changed photos first: the picture someone

@@ -54,7 +54,7 @@ class ServerDatabase extends _$ServerDatabase {
       customStatement('vacuum into ?', [path]);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -121,6 +121,16 @@ class ServerDatabase extends _$ServerDatabase {
         await customStatement('drop index if exists photos_task_id');
         await m.alterTable(TableMigration(photos));
         await m.createIndex(photosParent);
+      }
+      // Version 6 records what a task took. Every existing row is already
+      // valid without a backfill: solution defaults to empty, and a null
+      // time or cost is exactly what "nobody wrote one down" means. No
+      // cursor reset either -- these ride on the task row a client already
+      // receives, so there is nothing the server skipped for this device.
+      if (from < 6) {
+        await m.addColumn(tasks, tasks.solution);
+        await m.addColumn(tasks, tasks.timeSpentMinutes);
+        await m.addColumn(tasks, tasks.costMinor);
       }
     },
   );

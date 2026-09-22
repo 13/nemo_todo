@@ -453,6 +453,40 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _solutionMeta = const VerificationMeta(
+    'solution',
+  );
+  @override
+  late final GeneratedColumn<String> solution = GeneratedColumn<String>(
+    'solution',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _timeSpentMinutesMeta = const VerificationMeta(
+    'timeSpentMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> timeSpentMinutes = GeneratedColumn<int>(
+    'time_spent_minutes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _costMinorMeta = const VerificationMeta(
+    'costMinor',
+  );
+  @override
+  late final GeneratedColumn<int> costMinor = GeneratedColumn<int>(
+    'cost_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _doneMeta = const VerificationMeta('done');
   @override
   late final GeneratedColumn<bool> done = GeneratedColumn<bool>(
@@ -581,6 +615,9 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     listId,
     title,
     notes,
+    solution,
+    timeSpentMinutes,
+    costMinor,
     done,
     doneAt,
     dueAt,
@@ -630,6 +667,27 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
       context.handle(
         _notesMeta,
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('solution')) {
+      context.handle(
+        _solutionMeta,
+        solution.isAcceptableOrUnknown(data['solution']!, _solutionMeta),
+      );
+    }
+    if (data.containsKey('time_spent_minutes')) {
+      context.handle(
+        _timeSpentMinutesMeta,
+        timeSpentMinutes.isAcceptableOrUnknown(
+          data['time_spent_minutes']!,
+          _timeSpentMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cost_minor')) {
+      context.handle(
+        _costMinorMeta,
+        costMinor.isAcceptableOrUnknown(data['cost_minor']!, _costMinorMeta),
       );
     }
     if (data.containsKey('done')) {
@@ -762,6 +820,18 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
           data['${effectivePrefix}tags'],
         )!,
       ),
+      solution: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}solution'],
+      )!,
+      timeSpentMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}time_spent_minutes'],
+      ),
+      costMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cost_minor'],
+      ),
       repeat: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}repeat'],
@@ -787,6 +857,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<String> listId;
   final Value<String> title;
   final Value<String> notes;
+  final Value<String> solution;
+  final Value<int?> timeSpentMinutes;
+  final Value<int?> costMinor;
   final Value<bool> done;
   final Value<int?> doneAt;
   final Value<int?> dueAt;
@@ -804,6 +877,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.listId = const Value.absent(),
     this.title = const Value.absent(),
     this.notes = const Value.absent(),
+    this.solution = const Value.absent(),
+    this.timeSpentMinutes = const Value.absent(),
+    this.costMinor = const Value.absent(),
     this.done = const Value.absent(),
     this.doneAt = const Value.absent(),
     this.dueAt = const Value.absent(),
@@ -822,6 +898,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     required String listId,
     required String title,
     this.notes = const Value.absent(),
+    this.solution = const Value.absent(),
+    this.timeSpentMinutes = const Value.absent(),
+    this.costMinor = const Value.absent(),
     this.done = const Value.absent(),
     this.doneAt = const Value.absent(),
     this.dueAt = const Value.absent(),
@@ -845,6 +924,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Expression<String>? listId,
     Expression<String>? title,
     Expression<String>? notes,
+    Expression<String>? solution,
+    Expression<int>? timeSpentMinutes,
+    Expression<int>? costMinor,
     Expression<bool>? done,
     Expression<int>? doneAt,
     Expression<int>? dueAt,
@@ -863,6 +945,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
       if (listId != null) 'list_id': listId,
       if (title != null) 'title': title,
       if (notes != null) 'notes': notes,
+      if (solution != null) 'solution': solution,
+      if (timeSpentMinutes != null) 'time_spent_minutes': timeSpentMinutes,
+      if (costMinor != null) 'cost_minor': costMinor,
       if (done != null) 'done': done,
       if (doneAt != null) 'done_at': doneAt,
       if (dueAt != null) 'due_at': dueAt,
@@ -883,6 +968,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<String>? listId,
     Value<String>? title,
     Value<String>? notes,
+    Value<String>? solution,
+    Value<int?>? timeSpentMinutes,
+    Value<int?>? costMinor,
     Value<bool>? done,
     Value<int?>? doneAt,
     Value<int?>? dueAt,
@@ -901,6 +989,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
       listId: listId ?? this.listId,
       title: title ?? this.title,
       notes: notes ?? this.notes,
+      solution: solution ?? this.solution,
+      timeSpentMinutes: timeSpentMinutes ?? this.timeSpentMinutes,
+      costMinor: costMinor ?? this.costMinor,
       done: done ?? this.done,
       doneAt: doneAt ?? this.doneAt,
       dueAt: dueAt ?? this.dueAt,
@@ -930,6 +1021,15 @@ class TasksCompanion extends UpdateCompanion<Task> {
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
+    }
+    if (solution.present) {
+      map['solution'] = Variable<String>(solution.value);
+    }
+    if (timeSpentMinutes.present) {
+      map['time_spent_minutes'] = Variable<int>(timeSpentMinutes.value);
+    }
+    if (costMinor.present) {
+      map['cost_minor'] = Variable<int>(costMinor.value);
     }
     if (done.present) {
       map['done'] = Variable<bool>(done.value);
@@ -979,6 +1079,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
           ..write('listId: $listId, ')
           ..write('title: $title, ')
           ..write('notes: $notes, ')
+          ..write('solution: $solution, ')
+          ..write('timeSpentMinutes: $timeSpentMinutes, ')
+          ..write('costMinor: $costMinor, ')
           ..write('done: $done, ')
           ..write('doneAt: $doneAt, ')
           ..write('dueAt: $dueAt, ')
@@ -1006,6 +1109,9 @@ class _$TaskInsertable implements Insertable<Task> {
       listId: Value(_object.listId),
       title: Value(_object.title),
       notes: Value(_object.notes),
+      solution: Value(_object.solution),
+      timeSpentMinutes: Value(_object.timeSpentMinutes),
+      costMinor: Value(_object.costMinor),
       done: Value(_object.done),
       doneAt: Value(_object.doneAt),
       dueAt: Value(_object.dueAt),
@@ -4153,6 +4259,9 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   required String listId,
   required String title,
   Value<String> notes,
+  Value<String> solution,
+  Value<int?> timeSpentMinutes,
+  Value<int?> costMinor,
   Value<bool> done,
   Value<int?> doneAt,
   Value<int?> dueAt,
@@ -4171,6 +4280,9 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<String> listId,
   Value<String> title,
   Value<String> notes,
+  Value<String> solution,
+  Value<int?> timeSpentMinutes,
+  Value<int?> costMinor,
   Value<bool> done,
   Value<int?> doneAt,
   Value<int?> dueAt,
@@ -4211,6 +4323,21 @@ class $$TasksTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get solution => $composableBuilder(
+    column: $table.solution,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get timeSpentMinutes => $composableBuilder(
+    column: $table.timeSpentMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get costMinor => $composableBuilder(
+    column: $table.costMinor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4300,6 +4427,21 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get solution => $composableBuilder(
+    column: $table.solution,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get timeSpentMinutes => $composableBuilder(
+    column: $table.timeSpentMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get costMinor => $composableBuilder(
+    column: $table.costMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get done => $composableBuilder(
     column: $table.done,
     builder: (column) => ColumnOrderings(column),
@@ -4377,6 +4519,17 @@ class $$TasksTableAnnotationComposer
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
+  GeneratedColumn<String> get solution =>
+      $composableBuilder(column: $table.solution, builder: (column) => column);
+
+  GeneratedColumn<int> get timeSpentMinutes => $composableBuilder(
+    column: $table.timeSpentMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get costMinor =>
+      $composableBuilder(column: $table.costMinor, builder: (column) => column);
+
   GeneratedColumn<bool> get done =>
       $composableBuilder(column: $table.done, builder: (column) => column);
 
@@ -4445,6 +4598,9 @@ class $$TasksTableTableManager
                 Value<String> listId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String> notes = const Value.absent(),
+                Value<String> solution = const Value.absent(),
+                Value<int?> timeSpentMinutes = const Value.absent(),
+                Value<int?> costMinor = const Value.absent(),
                 Value<bool> done = const Value.absent(),
                 Value<int?> doneAt = const Value.absent(),
                 Value<int?> dueAt = const Value.absent(),
@@ -4462,6 +4618,9 @@ class $$TasksTableTableManager
                 listId: listId,
                 title: title,
                 notes: notes,
+                solution: solution,
+                timeSpentMinutes: timeSpentMinutes,
+                costMinor: costMinor,
                 done: done,
                 doneAt: doneAt,
                 dueAt: dueAt,
@@ -4481,6 +4640,9 @@ class $$TasksTableTableManager
                 required String listId,
                 required String title,
                 Value<String> notes = const Value.absent(),
+                Value<String> solution = const Value.absent(),
+                Value<int?> timeSpentMinutes = const Value.absent(),
+                Value<int?> costMinor = const Value.absent(),
                 Value<bool> done = const Value.absent(),
                 Value<int?> doneAt = const Value.absent(),
                 Value<int?> dueAt = const Value.absent(),
@@ -4498,6 +4660,9 @@ class $$TasksTableTableManager
                 listId: listId,
                 title: title,
                 notes: notes,
+                solution: solution,
+                timeSpentMinutes: timeSpentMinutes,
+                costMinor: costMinor,
                 done: done,
                 doneAt: doneAt,
                 dueAt: dueAt,

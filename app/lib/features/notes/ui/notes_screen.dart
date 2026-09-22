@@ -33,9 +33,14 @@ class NotesScreen extends ConsumerWidget {
           : FloatingActionButton(
               key: const Key('note-create'),
               onPressed: () async {
+                // Inbox by default, the way QuickAddBar picks a list for a
+                // new task when none is preselected.
+                final listId =
+                    lists.where((x) => x.isInbox).firstOrNull?.id ??
+                    lists.first.id;
                 final note = await ref
                     .read(notesRepositoryProvider)
-                    .create(listId: lists.first.id, title: l.noteNewTitle);
+                    .create(listId: listId, title: l.noteNewTitle);
                 if (context.mounted) {
                   unawaited(context.push(Routes.note(note.id)));
                 }

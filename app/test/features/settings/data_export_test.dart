@@ -772,4 +772,44 @@ void main() {
       reason: 'the whole transaction rolled back, note included',
     );
   });
+
+  test('a fresh device gets a note and its picture back too', () async {
+    await seed(db);
+    final list = (await db.select(db.lists).get()).first;
+    await db.upsertNote(
+      Note(
+        id: 'n1',
+        listId: list.id,
+        title: 'Bread',
+        body: '500 g flour',
+        sortKey: 'V',
+        updatedAt: testClock('a').now().toString(),
+      ),
+    );
+    final picture = await photoOn('n1', [1, 2, 3], kind: PhotoParent.note);
+    final result = await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow);
+
+    final fresh = testDatabase();
+    addTearDown(fresh.close);
+    final freshStore = MemoryPhotoStore();
+    await DataExport(fresh, testClock('b'), freshStore).import(result.bytes);
+
+    final note = await fresh.noteById('n1');
+    expect(note, isNotNull);
+    expect(note!.title, 'Bread');
+    expect(note.body, '500 g flour');
+    expect(note.deletedAt, isNull);
+
+    final photoRow = await (fresh.select(
+      fresh.photos,
+    )..where((p) => p.sha256.equals(picture.sha256))).getSingle();
+    expect(photoRow.parentKind, PhotoParent.note);
+    expect(photoRow.parentId, 'n1');
+
+    expect(await freshStore.get(picture.sha256), [1, 2, 3]);
+  });
 }

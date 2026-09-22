@@ -34,6 +34,11 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
   /// [_hasAny] instead of always starting closed.
   bool? _expanded;
 
+  /// Refreshed on every build. [dispose] needs it too, but by then the
+  /// element is unmounting and `Localizations.localeOf(context)` is no
+  /// longer safe to call, so it is read from here instead.
+  String _locale = 'en';
+
   bool get _hasAny =>
       widget.task.solution.isNotEmpty ||
       widget.task.timeSpentMinutes != null ||
@@ -49,6 +54,16 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
 
   @override
   void dispose() {
+    // Saving follows the task page's own rule: on unfocus and on pop.
+    // Disposing a focus node that still has primary focus can drop it from
+    // the manager's dirty set before the batched notify runs, so the
+    // `_saveIfUnfocused` listener is never guaranteed to fire here -- flush
+    // explicitly instead, the same way `_TaskDetailScreenState.dispose`
+    // flushes the title and notes fields. `_save` reads the controllers
+    // synchronously before its first `await`, so this runs before they are
+    // disposed below; `dispose` itself cannot await, so the write is fired
+    // and forgotten rather than awaited.
+    unawaited(_save());
     for (final c in [_solution, _time, _cost]) {
       c.dispose();
     }
@@ -86,12 +101,22 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
     if (_solutionFocus.hasFocus || _timeFocus.hasFocus || _costFocus.hasFocus) {
       return;
     }
-    unawaited(_save());
+    unawaited(_saveAndRefill());
+  }
+
+  /// Runs [_save], then asks for a redraw. A refusal that leaves the
+  /// stored value unchanged makes no database change, so nothing else
+  /// would otherwise trigger `_fill` to put the stored text back over
+  /// whatever unreadable text was typed -- it would stay on screen
+  /// looking like a pending edit forever. Not used from [dispose]: by
+  /// then the widget is unmounting and `setState` is unsafe to call.
+  Future<void> _saveAndRefill() async {
+    await _save();
+    if (mounted) setState(() {});
   }
 
   Future<void> _save() async {
     final task = widget.task;
-    final locale = Localizations.localeOf(context).toLanguageTag();
     // An unreadable time or amount leaves what is stored alone. Writing
     // null there would turn a slip into "took no time", which is a real
     // answer somebody may have meant to record.
@@ -100,7 +125,7 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
         : parseMinutes(_time.text) ?? task.timeSpentMinutes;
     final cost = _cost.text.trim().isEmpty
         ? null
-        : parseMinorUnits(_cost.text, locale: locale) ?? task.costMinor;
+        : parseMinorUnits(_cost.text, locale: _locale) ?? task.costMinor;
     final updated = task.copyWith(
       solution: _solution.text,
       timeSpentMinutes: minutes,
@@ -115,6 +140,7 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
     final l = L.of(context);
     final task = widget.task;
     final locale = Localizations.localeOf(context).toLanguageTag();
+    _locale = locale;
     _fill(task, locale);
     final expanded = _expanded ?? _hasAny;
     final currency = ref.watch(currencyCodeProvider);

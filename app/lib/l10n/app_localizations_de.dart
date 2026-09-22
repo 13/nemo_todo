@@ -202,7 +202,7 @@ class LDe extends L {
   String get tasksPhotos => 'Fotos';
 
   @override
-  String get tasksWork => 'Was es gekostet hat';
+  String get tasksWork => 'Was es gebraucht hat';
 
   @override
   String get tasksSolutionHint => 'Wie es gelöst wurde';

@@ -202,7 +202,7 @@ class LIt extends L {
   String get tasksPhotos => 'Foto';
 
   @override
-  String get tasksWork => 'Quanto è costata';
+  String get tasksWork => 'Cosa ci è voluto';
 
   @override
   String get tasksSolutionHint => 'Come è stata risolta';

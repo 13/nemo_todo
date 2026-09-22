@@ -178,7 +178,7 @@ class PurgeService {
     );
   }
 
-  // Three near-identical queries rather than one generic helper: drift's
+  // Five near-identical queries rather than one generic helper: drift's
   // column types are per table, and the version that took a table generic
   // had to reach for the column by its SQL name and cast it.
   Future<List<TaskList>> _oldLists(String cutoff) =>

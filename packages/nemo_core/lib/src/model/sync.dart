@@ -16,8 +16,9 @@ enum MemberRole { owner, editor }
 
 /// One change in a sync request or response.
 ///
-/// `list`, `task`, `subtask` and `photo` carry a full row; `revoke` tells the
-/// receiver to delete its local copy of a row it may no longer see.
+/// `list`, `task`, `subtask`, `photo` and `note` carry a full row; `revoke`
+/// tells the receiver to delete its local copy of a row it may no longer
+/// see.
 @Freezed(unionKey: 'type')
 sealed class SyncChange with _$SyncChange {
   const factory SyncChange.list(TaskList row) = SyncChangeList;

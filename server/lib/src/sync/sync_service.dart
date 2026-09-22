@@ -437,10 +437,13 @@ class SyncService {
       };
       if (change == null) continue;
       // A note's picture is part of the note as far as an older client is
-      // concerned: sent on its own it names a row that client will never
-      // hold. The entry still counted towards the cursor above, so nothing
-      // stalls -- the same way a photo entry itself is skipped for a
-      // client that cannot read photos at all.
+      // concerned: sent as an upsert on its own it would name a row that
+      // client can never hold. The entry still counted towards the cursor
+      // above, so nothing stalls -- the same way a photo entry itself is
+      // skipped for a client that cannot read photos at all. Only the
+      // upsert is held back here, though: a *revoke* for a note photo
+      // still reaches a notes-blind client, harmlessly -- it never held
+      // the row, so deleting an id it does not recognise is a no-op.
       if (change is SyncChangePhoto &&
           !includeNotes &&
           change.row.parentKind == PhotoParent.note) {

@@ -99,6 +99,17 @@ extension SeedTestApp on TestApp {
     ),
   );
 
+  Future<void> seedTask(String id, String listId, {required String title}) =>
+      db.upsertTask(
+        Task(
+          id: id,
+          listId: listId,
+          title: title,
+          sortKey: 'V',
+          updatedAt: testClock('a').now().toString(),
+        ),
+      );
+
   /// Adds a picture straight through the repository, the way [seedList] and
   /// [seedNote] write rows directly rather than driving the picker UI a
   /// widget test would otherwise have to fake.

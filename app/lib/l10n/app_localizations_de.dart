@@ -202,6 +202,24 @@ class LDe extends L {
   String get tasksPhotos => 'Fotos';
 
   @override
+  String get tasksWork => 'Was es gekostet hat';
+
+  @override
+  String get tasksSolutionHint => 'Wie es gelöst wurde';
+
+  @override
+  String get tasksTimeSpentHint => 'Aufgewendete Zeit';
+
+  @override
+  String get tasksCostHint => 'Kosten';
+
+  @override
+  String get tasksHours => 'Std.';
+
+  @override
+  String get tasksMinutes => 'Min.';
+
+  @override
   String get photosTakePhoto => 'Foto aufnehmen';
 
   @override

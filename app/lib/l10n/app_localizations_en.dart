@@ -202,6 +202,24 @@ class LEn extends L {
   String get tasksPhotos => 'Photos';
 
   @override
+  String get tasksWork => 'What it took';
+
+  @override
+  String get tasksSolutionHint => 'How it was solved';
+
+  @override
+  String get tasksTimeSpentHint => 'Time spent';
+
+  @override
+  String get tasksCostHint => 'Cost';
+
+  @override
+  String get tasksHours => 'h';
+
+  @override
+  String get tasksMinutes => 'min';
+
+  @override
   String get photosTakePhoto => 'Take photo';
 
   @override

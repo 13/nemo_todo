@@ -441,6 +441,42 @@ abstract class L {
   /// **'Photos'**
   String get tasksPhotos;
 
+  /// No description provided for @tasksWork.
+  ///
+  /// In en, this message translates to:
+  /// **'What it took'**
+  String get tasksWork;
+
+  /// No description provided for @tasksSolutionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How it was solved'**
+  String get tasksSolutionHint;
+
+  /// No description provided for @tasksTimeSpentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Time spent'**
+  String get tasksTimeSpentHint;
+
+  /// No description provided for @tasksCostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get tasksCostHint;
+
+  /// No description provided for @tasksHours.
+  ///
+  /// In en, this message translates to:
+  /// **'h'**
+  String get tasksHours;
+
+  /// No description provided for @tasksMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get tasksMinutes;
+
   /// No description provided for @photosTakePhoto.
   ///
   /// In en, this message translates to:

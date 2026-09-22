@@ -202,6 +202,24 @@ class LIt extends L {
   String get tasksPhotos => 'Foto';
 
   @override
+  String get tasksWork => 'Quanto è costata';
+
+  @override
+  String get tasksSolutionHint => 'Come è stata risolta';
+
+  @override
+  String get tasksTimeSpentHint => 'Tempo impiegato';
+
+  @override
+  String get tasksCostHint => 'Costo';
+
+  @override
+  String get tasksHours => 'h';
+
+  @override
+  String get tasksMinutes => 'min';
+
+  @override
   String get photosTakePhoto => 'Scatta foto';
 
   @override

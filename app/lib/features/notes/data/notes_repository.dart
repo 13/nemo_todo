@@ -23,10 +23,7 @@ class NotesRepository {
           .watch();
 
   Stream<List<Note>> watchAll() =>
-      (_db.select(_db.notes)
-            ..where((t) => t.deletedAt.isNull())
-            ..orderBy(_order))
-          .watch();
+      _visible(const Constant(true), _joinOrder);
 
   Stream<Note?> watch(String id) => (_db.select(
     _db.notes,
@@ -37,14 +34,10 @@ class NotesRepository {
     final q = query.trim();
     if (q.isEmpty) return Stream.value(const []);
     final pattern = '%${q.replaceAll('%', r'\%')}%';
-    return (_db.select(_db.notes)
-          ..where(
-            (t) =>
-                t.deletedAt.isNull() &
-                (t.title.like(pattern) | t.body.like(pattern)),
-          )
-          ..orderBy(_order))
-        .watch();
+    return _visible(
+      _db.notes.title.like(pattern) | _db.notes.body.like(pattern),
+      _joinOrder,
+    );
   }
 
   Future<Note> create({
@@ -93,4 +86,38 @@ class NotesRepository {
             .getSingleOrNull();
     return last == null ? SortKey.first() : SortKey.after(last.sortKey);
   }
+
+  /// Notes matching [filter] whose list and self are not deleted.
+  ///
+  /// A note outlives its list until told otherwise, so without this join a
+  /// deleted list's notes would go on surfacing here forever. The mirror of
+  /// `TasksRepository._visible`; `watchByList` needs no join because its
+  /// caller already knows the list it is asking about is live.
+  Stream<List<Note>> _visible(
+    Expression<bool> filter,
+    List<OrderingTerm> order,
+  ) {
+    final query =
+        _db.select(_db.notes).join([
+            innerJoin(
+              _db.lists,
+              _db.lists.id.equalsExp(_db.notes.listId),
+              useColumns: false,
+            ),
+          ])
+          ..where(
+            _db.notes.deletedAt.isNull() &
+                _db.lists.deletedAt.isNull() &
+                filter,
+          )
+          ..orderBy(order);
+    return query.watch().map(
+      (rows) => [for (final r in rows) r.readTable(_db.notes)],
+    );
+  }
+
+  List<OrderingTerm> get _joinOrder => [
+    OrderingTerm.desc(_db.notes.pinned),
+    OrderingTerm.asc(_db.notes.sortKey),
+  ];
 }

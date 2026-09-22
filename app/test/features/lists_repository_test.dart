@@ -184,6 +184,44 @@ void main() {
     },
   );
 
+  test('deleting a list takes its notes down too', () async {
+    final work = await repo.create(name: 'Work');
+    final note = Note(
+      id: 'n1',
+      listId: work.id,
+      title: 'Shopping list',
+      sortKey: 'V',
+      updatedAt: testClock('device').now().toString(),
+    );
+    await db.upsertNote(note);
+    // A note deleted before the list, which the restore must leave alone.
+    final earlier = note.copyWith(
+      id: 'n2',
+      title: 'Already gone',
+      updatedAt: testClock('device').now().toString(),
+      deletedAt: testClock('device').now().toString(),
+    );
+    await db.upsertNote(earlier);
+
+    await repo.delete(work.id);
+
+    expect((await db.noteById('n1'))!.isDeleted, isTrue);
+    expect(
+      (await db.noteById('n1'))!.deletedAt,
+      (await db.listById(work.id))!.deletedAt,
+      reason: "the note carries the list's own stamp",
+    );
+
+    await repo.restore(work.id);
+
+    expect((await db.noteById('n1'))!.isDeleted, isFalse);
+    expect(
+      (await db.noteById('n2'))!.isDeleted,
+      isTrue,
+      reason: 'restoring a list revives what it took, not what came before',
+    );
+  });
+
   test('save stamps a newer HLC', () async {
     final work = await repo.create(name: 'Work');
     await repo.save(work.copyWith(name: 'Job'));

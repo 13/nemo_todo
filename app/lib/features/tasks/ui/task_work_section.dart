@@ -210,6 +210,13 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
           Row(
             children: [
               Expanded(
+                // Shows the raw minute count, not `formatMinutes`' output,
+                // and deliberately so: `parseMinutes` cannot read what
+                // `formatMinutes` writes back (`'1 h 30 min'` parses to
+                // null, and German's `Std.`/`Min.` labels never parse
+                // either). Prefilling this field with the formatted
+                // summary would look nicer for a moment and then refuse
+                // every save silently -- do not "improve" it that way.
                 child: TextField(
                   key: const Key('task-time-spent'),
                   controller: _time,

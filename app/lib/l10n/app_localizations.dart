@@ -1737,11 +1737,11 @@ abstract class L {
   /// **'Done'**
   String get noteReadToggle;
 
-  /// No description provided for @notePinned.
+  /// No description provided for @notePin.
   ///
   /// In en, this message translates to:
   /// **'Pin'**
-  String get notePinned;
+  String get notePin;
 
   /// No description provided for @noteUnpin.
   ///
@@ -1749,11 +1749,11 @@ abstract class L {
   /// **'Unpin'**
   String get noteUnpin;
 
-  /// No description provided for @noteDeleted.
+  /// No description provided for @noteDelete.
   ///
   /// In en, this message translates to:
   /// **'Delete'**
-  String get noteDeleted;
+  String get noteDelete;
 
   /// No description provided for @noteMoveToList.
   ///

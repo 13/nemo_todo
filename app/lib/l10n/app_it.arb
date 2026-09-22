@@ -273,9 +273,9 @@
   "noteNotFound": "Questa nota non c'è più.",
   "noteEditToggle": "Modifica",
   "noteReadToggle": "Fine",
-  "notePinned": "Fissa",
+  "notePin": "Fissa",
   "noteUnpin": "Non fissare più",
-  "noteDeleted": "Elimina",
+  "noteDelete": "Elimina",
   "noteMoveToList": "Sposta in un'altra lista",
   "notesDeleteConfirm": "Eliminare questa nota?",
   "notesDeleted": "Nota eliminata"

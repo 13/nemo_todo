@@ -18,7 +18,7 @@ class NotePinAction extends ConsumerWidget {
     final l = L.of(context);
     return IconButton(
       key: const Key('note-pin'),
-      tooltip: note.pinned ? l.noteUnpin : l.notePinned,
+      tooltip: note.pinned ? l.noteUnpin : l.notePin,
       icon: Icon(note.pinned ? Icons.push_pin : Icons.push_pin_outlined),
       onPressed: () => ref
           .read(notesRepositoryProvider)
@@ -85,7 +85,7 @@ class NoteDeleteAction extends ConsumerWidget {
     return ListTile(
       key: const Key('note-delete'),
       leading: const Icon(Icons.delete_outline),
-      title: Text(l.noteDeleted),
+      title: Text(l.noteDelete),
       onTap: () => _delete(context, ref),
     );
   }

@@ -52,6 +52,9 @@ class LDe extends L {
   String get navSearch => 'Suche';
 
   @override
+  String get navNotes => 'Notizen';
+
+  @override
   String get navSettings => 'Einstellungen';
 
   @override
@@ -1026,4 +1029,20 @@ class LDe extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get notesEmpty =>
+      'Noch keine Notizen. Eine Notiz behält, was in keine Aufgabe passt: das Rezept, die Adresse, den Absatz.';
+
+  @override
+  String get noteNewTitle => 'Neue Notiz';
+
+  @override
+  String get noteTitleHint => 'Titel';
+
+  @override
+  String get noteBodyHint => 'Schreib etwas';
+
+  @override
+  String get notePreviewEmpty => 'Leere Notiz';
 }

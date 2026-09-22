@@ -183,6 +183,12 @@ abstract class L {
   /// **'Search'**
   String get navSearch;
 
+  /// No description provided for @navNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get navNotes;
+
   /// No description provided for @navSettings.
   ///
   /// In en, this message translates to:
@@ -1670,6 +1676,36 @@ abstract class L {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Tasks exported. 1 photo is not on this device and was left out.} other{Tasks exported. {count} photos are not on this device and were left out.}}'**
   String settingsExportedWithoutPhotos(int count);
+
+  /// No description provided for @notesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.'**
+  String get notesEmpty;
+
+  /// No description provided for @noteNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New note'**
+  String get noteNewTitle;
+
+  /// No description provided for @noteTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get noteTitleHint;
+
+  /// No description provided for @noteBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write something'**
+  String get noteBodyHint;
+
+  /// No description provided for @notePreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty note'**
+  String get notePreviewEmpty;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

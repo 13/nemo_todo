@@ -52,6 +52,9 @@ class LEn extends L {
   String get navSearch => 'Search';
 
   @override
+  String get navNotes => 'Notes';
+
+  @override
   String get navSettings => 'Settings';
 
   @override
@@ -1016,4 +1019,20 @@ class LEn extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get notesEmpty =>
+      'No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.';
+
+  @override
+  String get noteNewTitle => 'New note';
+
+  @override
+  String get noteTitleHint => 'Title';
+
+  @override
+  String get noteBodyHint => 'Write something';
+
+  @override
+  String get notePreviewEmpty => 'Empty note';
 }

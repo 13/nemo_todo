@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:meta/meta.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
@@ -63,6 +64,38 @@ typedef TestApp = ({
   TaskList inbox,
   ProviderContainer container,
 });
+
+/// Seed helpers for a running [pumpApp], writing straight to its database
+/// the way a screen test wants rows to already exist rather than exercising
+/// a repository's own creation flow.
+extension SeedTestApp on TestApp {
+  Future<void> seedList(String id, String name) => db.upsertList(
+    TaskList(
+      id: id,
+      name: name,
+      sortKey: SortKey.first(),
+      updatedAt: testClock('a').now().toString(),
+    ),
+  );
+
+  Future<void> seedNote(
+    String id,
+    String listId, {
+    required String title,
+    String body = '',
+    bool pinned = false,
+  }) => db.upsertNote(
+    Note(
+      id: id,
+      listId: listId,
+      title: title,
+      body: body,
+      pinned: pinned,
+      sortKey: 'V',
+      updatedAt: testClock('a').now().toString(),
+    ),
+  );
+}
 
 /// The app over a fresh in-memory database, routed to [initialLocation].
 ///

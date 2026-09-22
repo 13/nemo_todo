@@ -14,6 +14,7 @@
   "navUpcoming": "Demnächst",
   "navLists": "Listen",
   "navSearch": "Suche",
+  "navNotes": "Notizen",
   "navSettings": "Einstellungen",
   "todayOverdue": "Überfällig",
   "todayDoneToday": "Heute erledigt",
@@ -261,5 +262,10 @@
   "achievementsLoadError": "Erfolge konnten nicht geladen werden.",
   "achievementUnlockedBanner": "Erfolg freigeschaltet",
   "achievementsUnlockedMany": "{count, plural, other{{count} Erfolge freigeschaltet}}",
-  "settingsExportedWithoutPhotos": "{count, plural, =1{Aufgaben exportiert. 1 Foto ist nicht auf diesem Gerät und fehlt.} other{Aufgaben exportiert. {count} Fotos sind nicht auf diesem Gerät und fehlen.}}"
+  "settingsExportedWithoutPhotos": "{count, plural, =1{Aufgaben exportiert. 1 Foto ist nicht auf diesem Gerät und fehlt.} other{Aufgaben exportiert. {count} Fotos sind nicht auf diesem Gerät und fehlen.}}",
+  "notesEmpty": "Noch keine Notizen. Eine Notiz behält, was in keine Aufgabe passt: das Rezept, die Adresse, den Absatz.",
+  "noteNewTitle": "Neue Notiz",
+  "noteTitleHint": "Titel",
+  "noteBodyHint": "Schreib etwas",
+  "notePreviewEmpty": "Leere Notiz"
 }

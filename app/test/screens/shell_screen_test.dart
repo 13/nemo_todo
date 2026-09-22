@@ -101,7 +101,8 @@ void main() {
     expect(ShellScreen.indexFor('/today'), 0);
     expect(ShellScreen.indexFor('/upcoming'), 1);
     expect(ShellScreen.indexFor('/lists/abc'), 2);
-    expect(ShellScreen.indexFor('/search'), 3);
+    expect(ShellScreen.indexFor('/notes'), 3);
+    expect(ShellScreen.indexFor('/search'), 4);
     expect(ShellScreen.indexFor('/whatever'), 0);
   });
 }

@@ -14,6 +14,7 @@
   "navUpcoming": "Upcoming",
   "navLists": "Lists",
   "navSearch": "Search",
+  "navNotes": "Notes",
   "navSettings": "Settings",
   "todayOverdue": "Overdue",
   "todayDoneToday": "Done today",
@@ -536,5 +537,10 @@
   "settingsExportedWithoutPhotos": "{count, plural, =1{Tasks exported. 1 photo is not on this device and was left out.} other{Tasks exported. {count} photos are not on this device and were left out.}}",
   "@settingsExportedWithoutPhotos": {
     "placeholders": {"count": {"type": "int"}}
-  }
+  },
+  "notesEmpty": "No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.",
+  "noteNewTitle": "New note",
+  "noteTitleHint": "Title",
+  "noteBodyHint": "Write something",
+  "notePreviewEmpty": "Empty note"
 }

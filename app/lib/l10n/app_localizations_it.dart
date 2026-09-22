@@ -52,6 +52,9 @@ class LIt extends L {
   String get navSearch => 'Cerca';
 
   @override
+  String get navNotes => 'Note';
+
+  @override
   String get navSettings => 'Impostazioni';
 
   @override
@@ -1027,4 +1030,20 @@ class LIt extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get notesEmpty =>
+      'Ancora nessuna nota. Una nota conserva ciò che un\'attività non può: la ricetta, l\'indirizzo, il paragrafo.';
+
+  @override
+  String get noteNewTitle => 'Nuova nota';
+
+  @override
+  String get noteTitleHint => 'Titolo';
+
+  @override
+  String get noteBodyHint => 'Scrivi qualcosa';
+
+  @override
+  String get notePreviewEmpty => 'Nota vuota';
 }

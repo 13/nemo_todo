@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/notes/ui/note_tile.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -58,37 +59,12 @@ class NotesScreen extends ConsumerWidget {
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                       ),
-                      for (final note in held) _NoteTile(note: note),
+                      for (final note in held)
+                        NoteTile(note: note, keyPrefix: 'note-tile'),
                     ],
                 ],
               ),
             ),
-    );
-  }
-}
-
-class _NoteTile extends StatelessWidget {
-  const _NoteTile({required this.note});
-
-  final Note note;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    final preview = note.body.trim();
-    return ListTile(
-      key: Key('note-tile-${note.id}'),
-      title: Text(note.title),
-      // The preview is the markdown source, not rendered: a heading or an
-      // image in a long note would otherwise set the height of a row in a
-      // list of dozens.
-      subtitle: Text(
-        preview.isEmpty ? l.notePreviewEmpty : preview,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: note.pinned ? const Icon(Icons.push_pin, size: 18) : null,
-      onTap: () => context.push(Routes.note(note.id)),
     );
   }
 }

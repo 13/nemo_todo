@@ -13,6 +13,15 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.10.1 - 2026-09-22
+
+### Changed
+
+- Notes show as a grid of cards, the way Google Keep lays them out: pinned
+  notes first under their own heading, then the rest, newest first. Each
+  card shows more of the note and the name of the list it lives in, and a
+  wide screen spreads the grid over up to four columns.
+
 ## 0.10.0 - 2026-09-22
 
 ### Added

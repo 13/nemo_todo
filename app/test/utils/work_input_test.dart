@@ -36,12 +36,13 @@ void main() {
       expect(parseMinutes('9223372036854775808'), isNull);
     });
 
-    test('refuses an hours:minutes total that would overflow int64', () {
-      // hours * 60 lands just at int64.max; one more hour overflows it.
-      // (9223372036854775807 - 7, not the literal, so it stays exact when
-      // this file is analyzed for web compilation.)
-      expect(parseMinutes('153722867280912930:00'), 9223372036854775807 - 7);
-      expect(parseMinutes('153722867280912931:00'), isNull);
+    test('refuses an hours:minutes total that would exceed the exact-JS '
+        'ceiling', () {
+      // hours * 60 + minutes lands exactly at 2^53 - 1 (9007199254740991,
+      // the largest integer a JS number -- and so dart2js -- represents
+      // exactly); one more minute pushes it past that ceiling.
+      expect(parseMinutes('150119987579016:31'), 9007199254740991);
+      expect(parseMinutes('150119987579016:32'), isNull);
     });
   });
 
@@ -71,15 +72,16 @@ void main() {
 
     test('reads the largest exact amount and refuses past it', () {
       // The minor units are computed from the digit strings as exact
-      // integers, never through a double, so the only real limit is the
-      // int64 range they're stored in: int64.max (9223372036854775807)
-      // itself is the largest exact amount; one minor unit further can no
+      // integers, never through a double, so int64 itself isn't the real
+      // limit -- the guard's own ceiling is: 2^53 - 1 (9007199254740991,
+      // the largest integer a JS number -- and so dart2js -- represents
+      // exactly) is the largest exact amount; one minor unit further can no
       // longer fit.
       expect(
-        parseMinorUnits('92233720368547758.07', locale: 'en'),
-        9223372036854775807,
+        parseMinorUnits('90071992547409.91', locale: 'en'),
+        9007199254740991,
       );
-      expect(parseMinorUnits('92233720368547758.08', locale: 'en'), isNull);
+      expect(parseMinorUnits('90071992547409.92', locale: 'en'), isNull);
     });
 
     test('reads a large amount exactly, with no double in the path', () {

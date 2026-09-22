@@ -30,15 +30,23 @@ int? parseMinutes(String input) {
   return _hoursAndMinutes(hours, minutes);
 }
 
-/// Dart's `int` is a fixed-size 64-bit integer, so [int.tryParse] already
-/// refuses a digit run too long to hold -- but `hours * 60 + minutes` can
-/// still overflow (and silently wrap, not throw) even when both parsed
-/// cleanly on their own. This refuses that case too instead of returning a
-/// wrapped, wrong total.
-const int _maxInt = 9223372036854775807;
+/// The largest total these guards accept: not `int`'s own maximum, but the
+/// largest integer that is exact on every target this app builds for.
+///
+/// This app compiles to JavaScript as well as native (nemo ships a web
+/// build), and dart2js represents Dart's `int` as a JS `number` -- a
+/// double, exact only up to 2^53 - 1. `int`'s own maximum
+/// (9223372036854775807) compiles fine natively, but a ceiling the web
+/// compiler cannot represent exactly is not a ceiling at all: values past
+/// this point would compile to a *different*, rounded number on web than
+/// on native. So the ceiling is 2^53 - 1 (`9007199254740991`) everywhere,
+/// even though native `int` could hold far more -- amounts and durations
+/// beyond it are absurd inputs anyway, and refusing them is the documented
+/// contract above ("anything it cannot represent exactly returns null").
+const int _maxExactInt = 9007199254740991;
 
 int? _hoursAndMinutes(int hours, int minutes) {
-  if (hours > (_maxInt - minutes) ~/ 60) return null;
+  if (hours > (_maxExactInt - minutes) ~/ 60) return null;
   return hours * 60 + minutes;
 }
 
@@ -74,9 +82,10 @@ int? parseMinorUnits(String input, {required String locale}) {
 /// refuses a digit run too long to hold -- but `whole * 100 + fraction` can
 /// still overflow (and silently wrap, not throw) even when both parsed
 /// cleanly on their own. This refuses that case too instead of returning a
-/// wrapped, wrong total -- the same guard [_hoursAndMinutes] uses above.
+/// wrapped, wrong total -- the same guard [_hoursAndMinutes] uses above,
+/// against the same [_maxExactInt] ceiling.
 int? _wholeAndFraction(int whole, int fraction) {
-  if (whole > (_maxInt - fraction) ~/ 100) return null;
+  if (whole > (_maxExactInt - fraction) ~/ 100) return null;
   return whole * 100 + fraction;
 }
 

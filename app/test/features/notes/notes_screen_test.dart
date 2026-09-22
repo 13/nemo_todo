@@ -149,9 +149,7 @@ void main() {
     // Wide enough that, once the shell's rail and its divider are
     // subtracted, the notes grid still has >= 900 of its own width to work
     // with, but below the 1200 split breakpoint where a second, task-detail
-    // pane would also eat into that width. Passed straight to pumpApp: it
-    // sets its own physical size, so calling _tallSurface first would only
-    // have it overwritten.
+    // pane would also eat into that width.
     final harness = await pumpApp(
       tester,
       initialLocation: '/notes',

@@ -16,7 +16,7 @@ UI only -- the `Note` model, the database, sync and export do not change.
 | List grouping | Removed as headings; each card shows its list's name as a small label at the bottom |
 | Order within a section | `updatedAt` descending. `sortKey` is per list, so it orders nothing across lists |
 | Columns | 2 below 600 px of available width, 3 from 600 px, 4 from 900 px |
-| Width cap | Grid stays inside `MaxWidth`, as the rest of the app |
+| Width cap | Grid sits in `MaxWidth(maxWidth: 1200)`: the default 720 would never reach 4 columns |
 | Card | New `NoteCard`: outlined `Card`, rounded corners, no fill color; title (bold, max 2 lines, omitted when empty), body preview as markdown source (max 10 lines, ellipsis; `notePreviewEmpty` when blank), list-name label, pin icon top-right when pinned |
 | Keys | Card keeps `note-tile-<id>` so existing finders work |
 | Tap | Opens the note (`Routes.note(id)`), as now |

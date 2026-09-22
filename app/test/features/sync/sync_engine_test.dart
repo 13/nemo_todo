@@ -837,6 +837,43 @@ void main() {
     expect(await KvStore(db).get(KvKeys.serverNotes), 'true');
   });
 
+  test('once the server says it takes notes, a queued note picture with no '
+      'queued note beside it goes out in the same round', () async {
+    // The note already landed on an earlier, notes-capable sync; only its
+    // picture -- added after the server stopped taking notes -- is
+    // queued now.
+    await KvStore(db).set(KvKeys.serverPhotos, 'true');
+    await KvStore(db).set(KvKeys.serverNotes, 'false');
+    client.notes = false;
+    final c = await container();
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    final note = await notes().create(listId: 'l1', title: 'N');
+    await db.dropOutbox(SyncEntity.note, note.id);
+    final photo = (await photos().add(PhotoParent.note, note.id, smallJpeg()))!;
+    await db.markBlobSynced(photo.sha256);
+
+    await c.read(syncEngineProvider.notifier).syncNow();
+    expect(
+      (await db.select(db.outbox).get()).map((e) => e.rowId),
+      [photo.id],
+      reason:
+          'only the picture is queued -- the note itself already '
+          'synced',
+    );
+
+    client.notes = true;
+    final before = client.calls;
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    final pushed = client.pushes
+        .skip(before)
+        .expand((p) => p)
+        .whereType<SyncChangePhoto>();
+    expect(pushed.single.row.id, photo.id);
+    expect(client.calls - before, 2, reason: 'in the same sync, not the next');
+    expect(await db.outboxCount(), 0);
+  });
+
   // A picture hanging on a note has its row held back the same way a note
   // itself is, but `uploadsHeld` only ever looked at KvKeys.serverPhotos:
   // its bytes went up regardless. On a server rolled back below notes, the

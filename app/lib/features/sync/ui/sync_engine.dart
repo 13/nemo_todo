@@ -263,17 +263,21 @@ class SyncEngine extends _$SyncEngine {
                     )).any((c) => c.entity == SyncEntity.photo)));
         // Same idea for notes: the server has just said it takes them, and
         // this request's queue was built before that was known, so a note
-        // held back is worth sending now rather than waiting for the next
-        // edit. A queued picture on a note with nothing else queued does
-        // not trigger this -- it still goes out, just a round later, once
-        // something else asks for a round or the next edit does.
+        // -- or a picture hanging on one, with no note beside it in the
+        // queue -- held back is worth sending now rather than waiting for
+        // the next edit.
         final noteRoundNeeded =
             response.notes &&
             !serverNotes &&
             (await db.outboxChanges(
               includePhotos: true,
               includeNotes: true,
-            )).any((c) => c.entity == SyncEntity.note);
+            )).any(
+              (c) =>
+                  c.entity == SyncEntity.note ||
+                  (c is SyncChangePhoto &&
+                      c.row.parentKind == PhotoParent.note),
+            );
         if (photoRoundNeeded || noteRoundNeeded) _again = true;
       }
       pushed = true;

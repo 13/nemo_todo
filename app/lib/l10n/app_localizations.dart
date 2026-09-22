@@ -1724,6 +1724,30 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Done'**
   String get noteReadToggle;
+
+  /// No description provided for @notePinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get notePinned;
+
+  /// No description provided for @noteUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get noteUnpin;
+
+  /// No description provided for @noteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get noteDeleted;
+
+  /// No description provided for @noteMoveToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to list'**
+  String get noteMoveToList;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

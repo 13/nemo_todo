@@ -1044,4 +1044,16 @@ class LEn extends L {
 
   @override
   String get noteReadToggle => 'Done';
+
+  @override
+  String get notePinned => 'Pin';
+
+  @override
+  String get noteUnpin => 'Unpin';
+
+  @override
+  String get noteDeleted => 'Delete';
+
+  @override
+  String get noteMoveToList => 'Move to list';
 }

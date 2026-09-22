@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/ui/note_body_view.dart';
+import 'package:nemo/features/notes/ui/note_editor_sections.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
+import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -107,6 +109,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       child: Scaffold(
         appBar: AppBar(
           actions: [
+            NotePinAction(note: note),
             IconButton(
               key: const Key('note-edit-toggle'),
               tooltip: _editing ? l.noteReadToggle : l.noteEditToggle,
@@ -152,6 +155,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: NoteBodyView(body: note.body),
                 ),
+              const SizedBox(height: 16),
+              PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
+              NoteListPicker(note: note),
+              NoteDeleteAction(note: note),
             ],
           ),
         ),

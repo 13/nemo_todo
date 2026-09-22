@@ -1054,4 +1054,16 @@ class LDe extends L {
 
   @override
   String get noteReadToggle => 'Fertig';
+
+  @override
+  String get notePinned => 'Anheften';
+
+  @override
+  String get noteUnpin => 'Nicht mehr anheften';
+
+  @override
+  String get noteDeleted => 'Löschen';
+
+  @override
+  String get noteMoveToList => 'In andere Liste verschieben';
 }

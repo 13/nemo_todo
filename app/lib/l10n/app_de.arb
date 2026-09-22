@@ -270,5 +270,9 @@
   "notePreviewEmpty": "Leere Notiz",
   "noteNotFound": "Diese Notiz gibt es nicht mehr.",
   "noteEditToggle": "Bearbeiten",
-  "noteReadToggle": "Fertig"
+  "noteReadToggle": "Fertig",
+  "notePinned": "Anheften",
+  "noteUnpin": "Nicht mehr anheften",
+  "noteDeleted": "Löschen",
+  "noteMoveToList": "In andere Liste verschieben"
 }

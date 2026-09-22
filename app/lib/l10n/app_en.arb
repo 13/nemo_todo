@@ -545,5 +545,9 @@
   "notePreviewEmpty": "Empty note",
   "noteNotFound": "This note is no longer here.",
   "noteEditToggle": "Edit",
-  "noteReadToggle": "Done"
+  "noteReadToggle": "Done",
+  "notePinned": "Pin",
+  "noteUnpin": "Unpin",
+  "noteDeleted": "Delete",
+  "noteMoveToList": "Move to list"
 }

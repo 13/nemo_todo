@@ -1055,4 +1055,16 @@ class LIt extends L {
 
   @override
   String get noteReadToggle => 'Fine';
+
+  @override
+  String get notePinned => 'Fissa';
+
+  @override
+  String get noteUnpin => 'Non fissare più';
+
+  @override
+  String get noteDeleted => 'Elimina';
+
+  @override
+  String get noteMoveToList => 'Sposta in un\'altra lista';
 }

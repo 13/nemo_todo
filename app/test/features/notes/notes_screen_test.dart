@@ -4,13 +4,6 @@ import 'package:nemo/features/notes/ui/notes_screen.dart';
 
 import '../../support/pump_app.dart';
 
-/// A surface tall enough that the lazy grid builds every card.
-void _tallSurface(WidgetTester tester, {double width = 400}) {
-  tester.view.physicalSize = Size(width, 2000);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-}
-
 void main() {
   testWidgets('the notes destination shows notes as cards with their list', (
     tester,
@@ -47,8 +40,12 @@ void main() {
   });
 
   testWidgets('pinned notes sit under Pinned, above Others', (tester) async {
-    _tallSurface(tester);
-    final harness = await pumpApp(tester, initialLocation: '/notes');
+    // Tall enough that the lazy grid builds every card.
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes',
+      size: const Size(400, 2000),
+    );
     await harness.seedList('l1', 'Kitchen');
     await harness.seedNote('n1', 'l1', title: 'Loose');
     await harness.seedNote('n2', 'l1', title: 'Stuck', pinned: true);
@@ -92,8 +89,12 @@ void main() {
   });
 
   testWidgets('notes run newest first, across lists', (tester) async {
-    _tallSurface(tester);
-    final harness = await pumpApp(tester, initialLocation: '/notes');
+    // Tall enough that the lazy grid builds every card.
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes',
+      size: const Size(400, 2000),
+    );
     await harness.seedList('l1', 'Kitchen');
     await harness.seedList('l2', 'Work');
     await harness.seedNote(
@@ -127,8 +128,12 @@ void main() {
   });
 
   testWidgets('every note gets a card', (tester) async {
-    _tallSurface(tester);
-    final harness = await pumpApp(tester, initialLocation: '/notes');
+    // Tall enough that the lazy grid builds every card.
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes',
+      size: const Size(400, 2000),
+    );
     await harness.seedList('l1', 'Kitchen');
     for (var i = 0; i < 6; i++) {
       await harness.seedNote('n$i', 'l1', title: 'Note $i');

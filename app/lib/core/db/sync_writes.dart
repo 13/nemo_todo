@@ -496,12 +496,12 @@ extension SyncWrites on AppDatabase {
       kv,
     )..where((t) => t.key.equals(KvKeys.serverNotes))).getSingleOrNull();
     if (notesFlag?.value == 'true') return pending;
-    final eligible = <BlobRow>[];
-    for (final blob in pending) {
-      if (await _isNoteOnlyBlob(blob.sha256)) continue;
-      eligible.add(blob);
-    }
-    return eligible;
+    final noteOnly = await _noteOnlyBlobShas(pending);
+    if (noteOnly.isEmpty) return pending;
+    return [
+      for (final blob in pending)
+        if (!noteOnly.contains(blob.sha256)) blob,
+    ];
   }
 
   /// Whether some pending blob is held only because every live picture
@@ -516,19 +516,29 @@ extension SyncWrites on AppDatabase {
     final pending = await (select(
       blobs,
     )..where((t) => t.state.equals('pendingUpload'))).get();
-    for (final blob in pending) {
-      if (await _isNoteOnlyBlob(blob.sha256)) return true;
-    }
-    return false;
+    if (pending.isEmpty) return false;
+    return (await _noteOnlyBlobShas(pending)).isNotEmpty;
   }
 
-  /// Whether every live photo row naming [sha256] hangs on a note.
-  Future<bool> _isNoteOnlyBlob(String sha256) async {
+  /// The hashes among [pending] whose every live photo row hangs on a
+  /// note. One query for every pending blob, not one per blob: fetch every
+  /// live photo naming one of them and group by hash locally.
+  Future<Set<String>> _noteOnlyBlobShas(List<BlobRow> pending) async {
+    final shas = [for (final blob in pending) blob.sha256];
     final rows = await (select(
       photos,
-    )..where((t) => t.sha256.equals(sha256) & t.deletedAt.isNull())).get();
-    return rows.isNotEmpty &&
-        rows.every((p) => p.parentKind == PhotoParent.note);
+    )..where((t) => t.sha256.isIn(shas) & t.deletedAt.isNull())).get();
+    final byHash = <String, List<Photo>>{};
+    for (final row in rows) {
+      (byHash[row.sha256] ??= []).add(row);
+    }
+    return {
+      for (final blob in pending)
+        if (byHash[blob.sha256] case final rows?
+            when rows.isNotEmpty &&
+                rows.every((p) => p.parentKind == PhotoParent.note))
+          blob.sha256,
+    };
   }
 
   /// Hashes named by a live photo row that this device does not hold,

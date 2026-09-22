@@ -28,3 +28,7 @@ app/web/drift_worker.js
 # Anchored: an unanchored `data/` also swallowed every feature's data
 # directory, and those source files silently never reached the repository.
 /data/
+
+# Knowledge graph built from this repo by graphify. Regenerated on demand,
+# and large enough that a diff of it says nothing useful.
+/graphify-out/

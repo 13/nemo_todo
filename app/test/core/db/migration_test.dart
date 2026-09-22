@@ -108,6 +108,34 @@ void main() {
     await db.close();
   });
 
+  test('upgrading to task work fields starts the change log over', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(4);
+    schema.rawDatabase
+      ..execute('insert into kv (key, value) values (?, ?)', [
+        KvKeys.cursor,
+        '42',
+      ])
+      ..execute('insert into kv (key, value) values (?, ?)', [
+        KvKeys.username,
+        'ben',
+      ]);
+    final db = AppDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 5);
+
+    final kv = KvStore(db);
+    expect(
+      await kv.get(KvKeys.cursor),
+      isNull,
+      reason:
+          'a device running the build before this migration decoded task '
+          'rows through a Task.fromJson that dropped solution/time/cost '
+          'and advanced its cursor past them',
+    );
+    expect(await kv.get(KvKeys.username), 'ben', reason: 'only the cursor');
+    await db.close();
+  });
+
   test('a photo keeps its parent across the v4 migration', () async {
     final verifier = SchemaVerifier(GeneratedHelper());
     final schema = await verifier.schemaAt(3);

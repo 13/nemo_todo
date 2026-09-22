@@ -96,6 +96,25 @@ class MembersService {
           );
         }
       }
+      for (final note in await _db.notesOfList(listId)) {
+        await _db.logRevoke(
+          SyncEntity.note,
+          note.id,
+          listId: listId,
+          forUserId: target.id,
+        );
+        for (final photo in await _db.photosOfParent(
+          PhotoParent.note,
+          note.id,
+        )) {
+          await _db.logRevoke(
+            SyncEntity.photo,
+            photo.id,
+            listId: listId,
+            forUserId: target.id,
+          );
+        }
+      }
       return {...await _db.memberUserIds(listId), target.id};
     });
   }

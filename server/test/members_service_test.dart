@@ -95,6 +95,20 @@ void main() {
     expect(shared.changes.map((c) => c.rowId), ['l1', 't1', 's1', 'n1', 'p1']);
   });
 
+  test('unshare revokes notes and their pictures too', () async {
+    await push(ben, [
+      SyncChange.note(note('n1', 'l1', dev)),
+      SyncChange.photo(photo('p1', 'n1', dev, kind: PhotoParent.note)),
+    ]);
+    await members.share(ben, 'l1', 'anna', MemberRole.editor);
+    final annaSynced = await push(anna, []);
+
+    await members.unshare(ben, 'l1', 'anna');
+    final after = await push(anna, [], cursor: annaSynced.cursor);
+    expect(after.changes.every((c) => c is SyncChangeRevoke), isTrue);
+    expect(after.changes.map((c) => c.rowId), ['l1', 't1', 's1', 'n1', 'p1']);
+  });
+
   test('unshare revokes for that member only', () async {
     await members.share(ben, 'l1', 'anna', MemberRole.editor);
     final annaSynced = await push(anna, []);

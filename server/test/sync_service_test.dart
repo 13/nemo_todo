@@ -760,4 +760,69 @@ void main() {
       containsAll(['n1', 'p1']),
     );
   });
+
+  // A payload that flips parentKind while keeping the same id string must
+  // still be treated as a move: comparing parentId alone would miss it,
+  // leave no revoke logged for the old parent's list, and leave that list's
+  // members holding a photo row that now points at something they cannot
+  // see.
+  test('a photo whose parent kind flips is treated as moved even when the id '
+      'string stays the same', () async {
+    final ben = await user('ben');
+    final anna = await user('anna');
+    final clock = deviceClock('a');
+    await sync.sync(
+      ben,
+      SyncRequest(
+        cursor: 0,
+        changes: [
+          SyncChange.list(list('l1', clock)),
+          SyncChange.list(list('l2', clock)),
+          SyncChange.task(task('x', 'l1', clock)),
+          SyncChange.note(note('x', 'l2', clock)),
+          SyncChange.photo(photo('p1', 'x', clock)),
+        ],
+        notes: true,
+        photos: true,
+      ),
+    );
+    await MembersService(db).share(ben, 'l1', 'anna', MemberRole.editor);
+    final annaBefore = await sync.sync(
+      anna,
+      const SyncRequest(cursor: 0, photos: true, notes: true),
+    );
+    expect(
+      annaBefore.response.changes.whereType<SyncChangePhoto>().single.row.id,
+      'p1',
+    );
+
+    final later = laterClock('a');
+    await sync.sync(
+      ben,
+      SyncRequest(
+        cursor: 0,
+        changes: [
+          SyncChange.photo(photo('p1', 'x', later, kind: PhotoParent.note)),
+        ],
+        notes: true,
+        photos: true,
+      ),
+    );
+
+    final annaAfter = await sync.sync(
+      anna,
+      SyncRequest(
+        cursor: annaBefore.response.cursor,
+        photos: true,
+        notes: true,
+      ),
+    );
+    expect(
+      annaAfter.response.changes.whereType<SyncChangeRevoke>().map((c) => c.id),
+      contains('p1'),
+      reason:
+          'anna is not a member of l2, so the photo that now belongs '
+          'there must be revoked from l1',
+    );
+  });
 }

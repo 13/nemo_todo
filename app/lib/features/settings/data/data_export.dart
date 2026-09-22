@@ -36,8 +36,9 @@ class DataExport {
 
   static const format = 'nemo-export';
 
-  /// 1 was a bare JSON file without photos; it still imports.
-  static const version = 2;
+  /// 1 was a bare JSON file without photos; 2 had no notes. Both still
+  /// import.
+  static const version = 3;
   static const jsonEntry = 'nemo-export.json';
   static String photoEntry(String sha256) => 'photos/$sha256';
 
@@ -65,16 +66,24 @@ class DataExport {
       )..where((t) => t.deletedAt.isNull())).get())
         if (taskIds.contains(s.taskId)) s,
     ];
+    final notes = [
+      for (final n in await (_db.select(
+        _db.notes,
+      )..where((t) => t.deletedAt.isNull())).get())
+        if (listIds.contains(n.listId)) n,
+    ];
+    final noteIds = {for (final n in notes) n.id};
     final photos = <Photo>[];
     final pictures = <String, Uint8List>{};
     var leftOut = 0;
     for (final photo in await (_db.select(
       _db.photos,
     )..where((t) => t.deletedAt.isNull())).get()) {
-      if (photo.parentKind != PhotoParent.task ||
-          !taskIds.contains(photo.parentId)) {
-        continue;
-      }
+      final parentKept = switch (photo.parentKind) {
+        PhotoParent.task => taskIds.contains(photo.parentId),
+        PhotoParent.note => noteIds.contains(photo.parentId),
+      };
+      if (!parentKept) continue;
       final bytes = pictures[photo.sha256] ?? await _photos.get(photo.sha256);
       if (bytes == null) {
         leftOut++;
@@ -90,6 +99,7 @@ class DataExport {
       'lists': [for (final l in lists) l.toJson()],
       'tasks': [for (final t in tasks) t.toJson()],
       'subtasks': [for (final s in subtasks) s.toJson()],
+      'notes': [for (final n in notes) n.toJson()],
       'photos': [for (final p in photos) p.toJson()],
     });
     final archive = Archive()..addFile(ArchiveFile.string(jsonEntry, json));
@@ -132,6 +142,14 @@ class DataExport {
           );
           added++;
         }
+        for (final note in parsed.notes) {
+          if (!_live(await _db.listById(note.listId))) continue;
+          if (_live(await _db.noteById(note.id))) continue;
+          await _db.upsertNote(
+            note.copyWith(updatedAt: _stamp(), deletedAt: null),
+          );
+          added++;
+        }
         for (final task in parsed.tasks) {
           if (!_live(await _db.listById(task.listId))) continue;
           if (_live(await _db.taskById(task.id))) continue;
@@ -149,12 +167,13 @@ class DataExport {
           added++;
         }
         for (final photo in parsed.photos) {
-          // This export format only ever carries task photos; a note photo
-          // is not something version 2 can have written.
-          if (photo.parentKind != PhotoParent.task ||
-              !_live(await _db.taskById(photo.parentId))) {
-            continue;
-          }
+          // A picture's parent is a task or a note, whichever this file
+          // says -- either loop above may have just restored it.
+          final parentLive = switch (photo.parentKind) {
+            PhotoParent.task => _live(await _db.taskById(photo.parentId)),
+            PhotoParent.note => _live(await _db.noteById(photo.parentId)),
+          };
+          if (!parentLive) continue;
           if (_live(await _db.photoById(photo.id))) continue;
           final file = parsed.pictures[photo.sha256];
           if (file == null) continue;
@@ -265,6 +284,8 @@ class DataExport {
         lists: [for (final r in rows('lists')) TaskList.fromJson(r)],
         tasks: [for (final r in rows('tasks')) Task.fromJson(r)],
         subtasks: [for (final r in rows('subtasks')) Subtask.fromJson(r)],
+        // Absent from a version-2 file, which could not have carried notes.
+        notes: [for (final r in rows('notes')) Note.fromJson(r)],
         photos: [for (final r in rows('photos')) Photo.fromJson(r)],
         pictures: pictures,
       );
@@ -289,6 +310,7 @@ typedef _Parsed = ({
   List<TaskList> lists,
   List<Task> tasks,
   List<Subtask> subtasks,
+  List<Note> notes,
   List<Photo> photos,
   Map<String, ArchiveFile> pictures,
 });

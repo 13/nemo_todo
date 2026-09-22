@@ -91,15 +91,21 @@ void main() {
         db.tasks,
       )..where((t) => t.title.equals(title))).getSingle()).id;
 
-  /// A picture on [taskId] whose bytes this device holds.
-  Future<Photo> photoOn(String taskId, List<int> content) async {
+  /// A picture on [parentId] whose bytes this device holds. [kind] defaults
+  /// to a task parent, the only kind that existed before notes.
+  Future<Photo> photoOn(
+    String parentId,
+    List<int> content, {
+    PhotoParent kind = PhotoParent.task,
+  }) async {
     final bytes = Uint8List.fromList(content);
     final hash = sha256.convert(bytes).toString();
     await store.put(hash, bytes);
     await db.rememberBlob(hash, byteSize: bytes.length, state: 'synced');
     final photo = Photo(
       id: 'photo-${hash.substring(0, 8)}',
-      parentId: taskId,
+      parentId: parentId,
+      parentKind: kind,
       sha256: hash,
       byteSize: bytes.length,
       width: 1,
@@ -111,6 +117,43 @@ void main() {
     return photo;
   }
 
+  /// Rebuilds an export zip with [json] as its entry, keeping every picture
+  /// the original zip held -- the same rebuild several "refused" tests
+  /// below already did by hand, extracted so more of them can share it.
+  Uint8List rezip(Uint8List zip, Map<String, dynamic> json) {
+    final rebuilt = Archive()
+      ..addFile(ArchiveFile.string(DataExport.jsonEntry, jsonEncode(json)));
+    for (final file in ZipDecoder().decodeBytes(zip).files) {
+      if (file.name.startsWith('photos/')) {
+        rebuilt.addFile(ArchiveFile.bytes(file.name, file.readBytes()!));
+      }
+    }
+    return ZipEncoder().encodeBytes(rebuilt);
+  }
+
+  /// [zip] with its version field rewritten, as an older or newer release
+  /// would have written it.
+  Uint8List withVersion(Uint8List zip, int version) =>
+      rezip(zip, exportJson(zip)..['version'] = version);
+
+  /// A real export -- whose photo row and bytes are both genuinely present
+  /// -- with a task row missing a required field, so parsing refuses the
+  /// whole file before any row, note included, is ever written.
+  Future<Uint8List> brokenZipNamingAPicture() async {
+    await seed(db);
+    await photoOn(await taskId(db, 'Report'), [1, 2, 3]);
+    final result = await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow);
+    final badJson = exportJson(result.bytes);
+    ((badJson['tasks'] as List).firstWhere(
+      (t) => (t as Map)['title'] == 'Report',
+    ) as Map).remove('title');
+    return rezip(result.bytes, badJson);
+  }
+
   test('exports what is alive, and a fresh device takes all of it', () async {
     await seed(db);
     final bytes = (await DataExport(
@@ -120,7 +163,7 @@ void main() {
     ).export(now: testNow)).bytes;
     final json = exportJson(bytes);
     expect(json['format'], 'nemo-export');
-    expect(json['version'], 2);
+    expect(json['version'], 3);
     expect(json['photos'], isEmpty);
     expect(json['lists'], hasLength(2));
     expect(
@@ -228,7 +271,7 @@ void main() {
 
     expect(result.photosLeftOut, 0);
     final json = exportJson(result.bytes);
-    expect(json['version'], 2);
+    expect(json['version'], 3);
     expect(
       [for (final p in json['photos'] as List) (p as Map)['sha256']],
       [photo.sha256],
@@ -598,28 +641,135 @@ void main() {
     final photo = await photoOn(await taskId(db, 'Report'), [4, 5, 6]);
     final result = await exporter.export(now: testNow);
 
-    // Version 3, inside a real export whose photo row and bytes are both
+    // Version 4, inside a real export whose photo row and bytes are both
     // genuinely present -- refused before either is stored.
-    final v3Json = exportJson(result.bytes)..['version'] = 3;
-    final v3Archive = Archive()
-      ..addFile(ArchiveFile.string(DataExport.jsonEntry, jsonEncode(v3Json)));
+    final v4Json = exportJson(result.bytes)..['version'] = 4;
+    final v4Archive = Archive()
+      ..addFile(ArchiveFile.string(DataExport.jsonEntry, jsonEncode(v4Json)));
     for (final file in ZipDecoder().decodeBytes(result.bytes).files) {
       if (file.name.startsWith('photos/')) {
-        v3Archive.addFile(ArchiveFile.bytes(file.name, file.readBytes()!));
+        v4Archive.addFile(ArchiveFile.bytes(file.name, file.readBytes()!));
       }
     }
-    final freshForV3 = testDatabase();
-    addTearDown(freshForV3.close);
-    final storeForV3 = MemoryPhotoStore();
+    final freshForV4 = testDatabase();
+    addTearDown(freshForV4.close);
+    final storeForV4 = MemoryPhotoStore();
     await expectLater(
       DataExport(
-        freshForV3,
+        freshForV4,
         testClock('b'),
-        storeForV3,
-      ).import(ZipEncoder().encodeBytes(v3Archive)),
+        storeForV4,
+      ).import(ZipEncoder().encodeBytes(v4Archive)),
       throwsFormatException,
     );
-    expect(await freshForV3.select(freshForV3.tasks).get(), isEmpty);
-    expect(await storeForV3.get(photo.sha256), isNull);
+    expect(await freshForV4.select(freshForV4.tasks).get(), isEmpty);
+    expect(await storeForV4.get(photo.sha256), isNull);
+  });
+
+  test('the export carries notes and the pictures on them', () async {
+    await seed(db);
+    await db.upsertNote(
+      Note(
+        id: 'n1',
+        listId: 'l1',
+        title: 'Bread',
+        body: '500 g flour',
+        sortKey: 'V',
+        updatedAt: testClock('a').now().toString(),
+      ),
+    );
+    final picture = await photoOn('n1', [1, 2, 3], kind: PhotoParent.note);
+
+    final result = await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow);
+
+    final json = exportJson(result.bytes);
+    expect(json['version'], 3);
+    expect(
+      [for (final n in json['notes'] as List) (n as Map)['title']],
+      ['Bread'],
+    );
+    expect(
+      ZipDecoder()
+          .decodeBytes(result.bytes)
+          .findFile(DataExport.photoEntry(picture.sha256))!
+          .readBytes(),
+      [1, 2, 3],
+    );
+  });
+
+  test('a file from before notes still imports', () async {
+    // Seeded so the export actually carries rows to import -- an export of
+    // an empty database would trivially satisfy `added > 0` for the wrong
+    // reason (nothing to test) by simply having nothing to import at all.
+    await seed(db);
+    final v2 = await DataExport(db, testClock('a'), store).export(now: testNow);
+    // Rewrite the version in place, as a 0.9.x file would have it.
+    final downgraded = withVersion(v2.bytes, 2);
+
+    final fresh = testDatabase();
+    final added = await DataExport(
+      fresh,
+      testClock('b'),
+      MemoryPhotoStore(),
+    ).import(downgraded);
+
+    expect(added, greaterThan(0));
+    await fresh.close();
+  });
+
+  test('a refused import leaves no note behind', () async {
+    final broken = await brokenZipNamingAPicture();
+
+    await expectLater(
+      DataExport(db, testClock('a'), store).import(broken),
+      throwsA(isA<FormatException>()),
+    );
+
+    expect(await db.select(db.notes).get(), isEmpty);
+  });
+
+  test('a note already written this transaction rolls back with the rest '
+      'when a later step fails', () async {
+    // The note loop runs before the photo loop, so by the time the throw
+    // below fires, this note has already been upserted inside the still
+    // -open transaction -- the case the earlier, parse-time refusal
+    // above cannot exercise, since nothing has been written yet there.
+    await seed(db);
+    final list = (await db.select(db.lists).get()).first;
+    await db.upsertNote(
+      Note(
+        id: 'n1',
+        listId: list.id,
+        title: 'Bread',
+        body: '500 g flour',
+        sortKey: 'V',
+        updatedAt: testClock('a').now().toString(),
+      ),
+    );
+    await photoOn(await taskId(db, 'Report'), [1, 2, 3]);
+    final result = await DataExport(
+      db,
+      testClock('a'),
+      store,
+    ).export(now: testNow);
+
+    final fresh = testDatabase();
+    addTearDown(fresh.close);
+    final throwing = _ThrowingPinStore(MemoryPhotoStore(), throwOnCall: 1);
+
+    await expectLater(
+      DataExport(fresh, testClock('b'), throwing).import(result.bytes),
+      throwsA(isA<StateError>()),
+    );
+
+    expect(
+      await fresh.select(fresh.notes).get(),
+      isEmpty,
+      reason: 'the whole transaction rolled back, note included',
+    );
   });
 }

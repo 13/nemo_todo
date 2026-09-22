@@ -81,6 +81,33 @@ void main() {
     await db.close();
   });
 
+  test('upgrading to notes starts the change log over', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(3);
+    schema.rawDatabase
+      ..execute('insert into kv (key, value) values (?, ?)', [
+        KvKeys.cursor,
+        '42',
+      ])
+      ..execute('insert into kv (key, value) values (?, ?)', [
+        KvKeys.username,
+        'ben',
+      ]);
+    final db = AppDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 4);
+
+    final kv = KvStore(db);
+    expect(
+      await kv.get(KvKeys.cursor),
+      isNull,
+      reason:
+          'the server skipped note changes for this device while it ran a '
+          'build without notes',
+    );
+    expect(await kv.get(KvKeys.username), 'ben', reason: 'only the cursor');
+    await db.close();
+  });
+
   test('a photo keeps its parent across the v4 migration', () async {
     final verifier = SchemaVerifier(GeneratedHelper());
     final schema = await verifier.schemaAt(3);

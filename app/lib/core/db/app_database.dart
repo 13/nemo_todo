@@ -65,6 +65,12 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4) {
         await m.createTable(notes);
         await m.createIndex(notesListId);
+        // While this device ran a build without notes, the server skipped
+        // note changes for it and moved its cursor past them. Starting the
+        // change log over -- the path every first sync takes -- is what
+        // brings those notes, and the pictures hanging on them, back; rows
+        // it already holds merge as no-ops.
+        await (delete(kv)..where((t) => t.key.equals(KvKeys.cursor))).go();
       }
       // The photo parent columns, on the other hand, are only missing on a
       // device that already has a version-3 photos table -- built on the

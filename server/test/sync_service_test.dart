@@ -578,4 +578,186 @@ void main() {
       containsAll(['revoke:l1', 'upsert:l2']),
     );
   });
+
+  test('a note in a list I am in is accepted and comes back', () async {
+    final clock = deviceClock('a');
+    await sync.sync(
+      'u1',
+      SyncRequest(
+        cursor: 0,
+        changes: [
+          SyncChange.list(list('l1', clock)),
+          SyncChange.note(note('n1', 'l1', clock)),
+        ],
+        notes: true,
+      ),
+    );
+
+    final pulled = await sync.sync(
+      'u1',
+      const SyncRequest(cursor: 0, notes: true),
+    );
+
+    expect(
+      pulled.response.changes.whereType<SyncChangeNote>().single.row.id,
+      'n1',
+    );
+  });
+
+  test('a note in a list I am not in is refused', () async {
+    final clock = deviceClock('a');
+    await sync.sync(
+      'u1',
+      SyncRequest(
+        cursor: 0,
+        changes: [SyncChange.list(list('l1', clock))],
+        notes: true,
+      ),
+    );
+
+    final outcome = await sync.sync(
+      'u2',
+      SyncRequest(
+        cursor: 0,
+        changes: [SyncChange.note(note('n1', 'l1', clock))],
+        notes: true,
+      ),
+    );
+
+    expect(outcome.response.rejected.single.reason, 'forbidden');
+  });
+
+  test('a client that cannot read notes is sent neither notes nor their '
+      'pictures', () async {
+    final clock = deviceClock('a');
+    await sync.sync(
+      'u1',
+      SyncRequest(
+        cursor: 0,
+        changes: [
+          SyncChange.list(list('l1', clock)),
+          SyncChange.note(note('n1', 'l1', clock)),
+          SyncChange.photo(photo('p1', 'n1', clock, kind: PhotoParent.note)),
+        ],
+        notes: true,
+        photos: true,
+      ),
+    );
+
+    final old = await sync.sync(
+      'u1',
+      const SyncRequest(cursor: 0, photos: true),
+    );
+
+    expect(old.response.changes.whereType<SyncChangeNote>(), isEmpty);
+    expect(old.response.changes.whereType<SyncChangePhoto>(), isEmpty);
+    expect(old.response.notes, isTrue);
+  });
+
+  test('a photo naming a note that is not there is refused', () async {
+    final clock = deviceClock('a');
+    await sync.sync(
+      'u1',
+      SyncRequest(
+        cursor: 0,
+        changes: [SyncChange.list(list('l1', clock))],
+        notes: true,
+      ),
+    );
+
+    final outcome = await sync.sync(
+      'u1',
+      SyncRequest(
+        cursor: 0,
+        changes: [
+          SyncChange.photo(photo('p1', 'n9', clock, kind: PhotoParent.note)),
+        ],
+        notes: true,
+        photos: true,
+      ),
+    );
+
+    expect(outcome.response.rejected.single.reason, 'unknown_note');
+  });
+
+  // The reviewer of the photo-parent change (Task 2) deliberately left this
+  // gap for notes to close: a payload claiming a note parent must not be
+  // satisfied by a *task* row that happens to share the id, or a picture
+  // meant for a note would be stored, logged and forwarded to clients that
+  // cannot read notes at all.
+  test(
+    'a photo claiming a note parent whose id names a task is refused',
+    () async {
+      final clock = deviceClock('a');
+      await sync.sync(
+        'u1',
+        SyncRequest(
+          cursor: 0,
+          changes: [
+            SyncChange.list(list('l1', clock)),
+            SyncChange.task(task('t1', 'l1', clock)),
+          ],
+          notes: true,
+        ),
+      );
+
+      final outcome = await sync.sync(
+        'u1',
+        SyncRequest(
+          cursor: 0,
+          changes: [
+            SyncChange.photo(photo('p1', 't1', clock, kind: PhotoParent.note)),
+          ],
+          notes: true,
+          photos: true,
+        ),
+      );
+
+      expect(outcome.response.rejected.single.reason, 'unknown_note');
+      expect(await db.photoById('p1'), isNull);
+    },
+  );
+
+  test('a note moved to another list is revoked from the old one, pictures '
+      'and all', () async {
+    final clock = deviceClock('a');
+    await sync.sync(
+      'u1',
+      SyncRequest(
+        cursor: 0,
+        changes: [
+          SyncChange.list(list('l1', clock)),
+          SyncChange.list(list('l2', clock)),
+          SyncChange.note(note('n1', 'l1', clock)),
+          SyncChange.photo(photo('p1', 'n1', clock, kind: PhotoParent.note)),
+        ],
+        notes: true,
+        photos: true,
+      ),
+    );
+    final seen = await sync.sync(
+      'u1',
+      const SyncRequest(cursor: 0, notes: true, photos: true),
+    );
+
+    final later = laterClock('a');
+    await sync.sync(
+      'u1',
+      SyncRequest(
+        cursor: seen.response.cursor,
+        changes: [SyncChange.note(note('n1', 'l2', later))],
+        notes: true,
+        photos: true,
+      ),
+    );
+    final after = await sync.sync(
+      'u1',
+      SyncRequest(cursor: seen.response.cursor, notes: true, photos: true),
+    );
+
+    expect(
+      after.response.changes.whereType<SyncChangeRevoke>().map((c) => c.id),
+      containsAll(['n1', 'p1']),
+    );
+  });
 }

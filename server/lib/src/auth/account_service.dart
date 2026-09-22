@@ -78,6 +78,9 @@ class AccountService {
       ListsCompanion(ownerId: Value(successor.id)),
     );
     await _db.logUpsert(SyncEntity.list, listId, listId);
+    // Notes need no statement here: they are keyed by listId exactly as
+    // tasks are, so a list handed over already carries them, and nothing
+    // in the sync log names their old owner.
   }
 
   Future<void> _deleteList(String listId) async {
@@ -93,6 +96,20 @@ class AccountService {
           ))
           .go();
       await (_db.delete(_db.tasks)..where((t) => t.id.isIn(taskIds))).go();
+    }
+    // Notes are not gated behind `taskIds.isNotEmpty` above: a list can
+    // hold notes and no tasks at all, and a note left behind here would
+    // hold its blobs alive forever -- nothing else ever purges a photo
+    // whose list no longer exists to look it up through.
+    final noteIds = [for (final n in await _db.notesOfList(listId)) n.id];
+    if (noteIds.isNotEmpty) {
+      await (_db.delete(_db.photos)..where(
+            (t) =>
+                t.parentKind.equalsValue(PhotoParent.note) &
+                t.parentId.isIn(noteIds),
+          ))
+          .go();
+      await (_db.delete(_db.notes)..where((t) => t.id.isIn(noteIds))).go();
     }
     await (_db.delete(_db.lists)..where((t) => t.id.equals(listId))).go();
     await (_db.delete(

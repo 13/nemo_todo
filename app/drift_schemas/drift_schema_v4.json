@@ -518,6 +518,107 @@
       "references": [],
       "type": "table",
       "data": {
+        "name": "notes",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "list_id",
+            "getter_name": "listId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "title",
+            "getter_name": "title",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "body",
+            "getter_name": "body",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('\\'\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "pinned",
+            "getter_name": "pinned",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"pinned\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"pinned\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "sort_key",
+            "getter_name": "sortKey",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "deleted_at",
+            "getter_name": "deletedAt",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "references": [],
+      "type": "table",
+      "data": {
         "name": "outbox",
         "was_declared_in_moor": false,
         "columns": [
@@ -562,7 +663,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 6,
       "references": [],
       "type": "table",
       "data": {
@@ -609,7 +710,7 @@
       }
     },
     {
-      "id": 6,
+      "id": 7,
       "references": [],
       "type": "table",
       "data": {
@@ -646,7 +747,7 @@
       }
     },
     {
-      "id": 7,
+      "id": 8,
       "references": [],
       "type": "table",
       "data": {
@@ -693,7 +794,7 @@
       }
     },
     {
-      "id": 8,
+      "id": 9,
       "references": [
         1
       ],
@@ -712,7 +813,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 10,
       "references": [
         2
       ],
@@ -731,7 +832,7 @@
       }
     },
     {
-      "id": 10,
+      "id": 11,
       "references": [
         3
       ],
@@ -748,6 +849,25 @@
           },
           {
             "column": "parent_id",
+            "order_by": null
+          }
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "references": [
+        4
+      ],
+      "type": "index",
+      "data": {
+        "on": 4,
+        "name": "notes_list_id",
+        "sql": null,
+        "unique": false,
+        "columns": [
+          {
+            "column": "list_id",
             "order_by": null
           }
         ]
@@ -788,6 +908,15 @@
         {
           "dialect": "sqlite",
           "sql": "CREATE TABLE IF NOT EXISTS \"photos\" (\"id\" TEXT NOT NULL, \"parent_id\" TEXT NOT NULL, \"parent_kind\" TEXT NOT NULL DEFAULT 'task', \"sha256\" TEXT NOT NULL, \"byte_size\" INTEGER NOT NULL, \"width\" INTEGER NOT NULL, \"height\" INTEGER NOT NULL, \"sort_key\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"deleted_at\" TEXT NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "notes",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"notes\" (\"id\" TEXT NOT NULL, \"list_id\" TEXT NOT NULL, \"title\" TEXT NOT NULL, \"body\" TEXT NOT NULL DEFAULT '', \"pinned\" INTEGER NOT NULL DEFAULT 0 CHECK (\"pinned\" IN (0, 1)), \"sort_key\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"deleted_at\" TEXT NULL, PRIMARY KEY (\"id\"));"
         }
       ]
     },
@@ -851,6 +980,15 @@
         {
           "dialect": "sqlite",
           "sql": "CREATE INDEX photos_parent ON photos (parent_kind, parent_id)"
+        }
+      ]
+    },
+    {
+      "name": "notes_list_id",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX notes_list_id ON notes (list_id)"
         }
       ]
     }

@@ -66,6 +66,7 @@ class SyncService {
         roles.keys.toSet(),
         request.cursor,
         includePhotos: request.photos,
+        includeNotes: request.notes,
       );
       final members = await _db.membersOf(roles.keys);
       final notify = <String>{userId};
@@ -83,6 +84,7 @@ class SyncService {
           // Said on every response, so an app finds out its server was
           // upgraded, or rolled back, on the very next sync.
           photos: true,
+          notes: true,
         ),
         notifyUserIds: notify,
       );
@@ -222,28 +224,86 @@ class SyncService {
         touched.add(task.listId);
         return null;
 
+      case SyncChangeNote(:final row):
+        if (!roles.containsKey(row.listId)) return 'forbidden';
+        final skew = _checkHlc(row.updatedAt);
+        if (skew != null) return skew;
+        final existing = await _db.noteById(row.id);
+        final oldListId = existing?.listId;
+        final moved = oldListId != null && oldListId != row.listId;
+        if (moved && !roles.containsKey(oldListId)) return 'forbidden';
+        if (!incomingWins(existing, row)) {
+          await _handBack(
+            SyncEntity.note,
+            row.id,
+            existing!.listId,
+            userId,
+            incoming: row.updatedAt,
+            held: existing.updatedAt,
+          );
+          return null;
+        }
+        await _db.into(_db.notes).insertOnConflictUpdate(row.toInsertable());
+        _accept(row.updatedAt);
+        // A note carries its pictures between lists the way a task carries
+        // its subtasks: leaving them logged under the old list would show
+        // them to people who can no longer see the note.
+        final notePhotos = moved
+            ? await _db.photosOfParent(PhotoParent.note, row.id)
+            : <Photo>[];
+        if (moved) {
+          await _db.logRevoke(SyncEntity.note, row.id, listId: oldListId);
+          for (final p in notePhotos) {
+            await _db.logRevoke(SyncEntity.photo, p.id, listId: oldListId);
+          }
+          touched.add(oldListId);
+        }
+        await _db.logUpsert(SyncEntity.note, row.id, row.listId);
+        for (final p in notePhotos) {
+          await _db.logUpsert(SyncEntity.photo, p.id, row.listId);
+        }
+        touched.add(row.listId);
+        return null;
+
       case SyncChangePhoto(:final row):
-        // Checked before the task lookup: a hash this malformed is not a
-        // photo naming the wrong task, it is an attempt to make `fileFor`
-        // resolve outside the blob directory once the row is fetched back.
+        // Checked before any parent lookup: a hash this malformed is not a
+        // photo naming the wrong parent, it is an attempt to make
+        // `fileFor` resolve outside the blob directory once the row is
+        // fetched back.
         if (!BlobStore.isValidHash(row.sha256)) return 'invalid_row';
-        final task = await _db.taskById(row.parentId);
-        if (task == null) return 'unknown_task';
-        if (!roles.containsKey(task.listId)) return 'forbidden';
+        // Resolved through the parent the row actually claims: looking a
+        // note-parented photo up by `taskById` alone would let an id that
+        // happens to name a task satisfy a payload that claims to be a
+        // note's picture, storing and forwarding it to clients that can
+        // never read notes.
+        final parent = switch (row.parentKind) {
+          PhotoParent.task => (await _db.taskById(row.parentId))?.listId,
+          PhotoParent.note => (await _db.noteById(row.parentId))?.listId,
+        };
+        if (parent == null) {
+          return row.parentKind == PhotoParent.task
+              ? 'unknown_task'
+              : 'unknown_note';
+        }
+        if (!roles.containsKey(parent)) return 'forbidden';
         final skew = _checkHlc(row.updatedAt);
         if (skew != null) return skew;
         final existing = await _db.photoById(row.id);
-        final oldTask = existing == null || existing.parentId == row.parentId
-            ? null
-            : await _db.taskById(existing.parentId);
-        final oldListId = oldTask?.listId;
-        final moved = oldListId != null && oldListId != task.listId;
+        String? oldParentListId;
+        if (existing != null && existing.parentId != row.parentId) {
+          oldParentListId = switch (existing.parentKind) {
+            PhotoParent.task => (await _db.taskById(existing.parentId))?.listId,
+            PhotoParent.note => (await _db.noteById(existing.parentId))?.listId,
+          };
+        }
+        final oldListId = oldParentListId;
+        final moved = oldListId != null && oldListId != parent;
         if (moved && !roles.containsKey(oldListId)) return 'forbidden';
         if (!incomingWins(existing, row)) {
           await _handBack(
             SyncEntity.photo,
             row.id,
-            oldListId ?? task.listId,
+            oldListId ?? parent,
             userId,
             incoming: row.updatedAt,
             held: existing!.updatedAt,
@@ -256,8 +316,8 @@ class SyncService {
           await _db.logRevoke(SyncEntity.photo, row.id, listId: oldListId);
           touched.add(oldListId);
         }
-        await _db.logUpsert(SyncEntity.photo, row.id, task.listId);
-        touched.add(task.listId);
+        await _db.logUpsert(SyncEntity.photo, row.id, parent);
+        touched.add(parent);
         return null;
 
       case SyncChangeRevoke():
@@ -303,6 +363,7 @@ class SyncService {
     Set<String> listIds,
     int cursor, {
     required bool includePhotos,
+    required bool includeNotes,
   }) async {
     Expression<bool> visibleAfterCursor($SyncLogTable t) {
       final mine = t.forUserId.equals(userId);
@@ -313,13 +374,17 @@ class SyncService {
     }
 
     // Filtered in the query, not after it, so the page limit counts what a
-    // client that cannot read photos is actually sent.
+    // client that cannot read photos or notes is actually sent.
     final query = _db.select(_db.syncLog)
       ..where((t) {
-        final after = visibleAfterCursor(t);
-        return includePhotos
-            ? after
-            : after & t.entity.equals(SyncEntity.photo.name).not();
+        var after = visibleAfterCursor(t);
+        if (!includePhotos) {
+          after = after & t.entity.equals(SyncEntity.photo.name).not();
+        }
+        if (!includeNotes) {
+          after = after & t.entity.equals(SyncEntity.note.name).not();
+        }
+        return after;
       })
       ..orderBy([(t) => OrderingTerm.asc(t.seq)])
       ..limit(pageSize + 1);
@@ -327,9 +392,9 @@ class SyncService {
     final hasMore = entries.length > pageSize;
     final page = hasMore ? entries.sublist(0, pageSize) : entries;
     var nextCursor = page.isEmpty ? cursor : page.last.seq;
-    if (!includePhotos && !hasMore) {
-      // Photo entries after the last change sent were skipped, not missed:
-      // move past them, or the client asks about them on every sync.
+    if ((!includePhotos || !includeNotes) && !hasMore) {
+      // Entries after the last change sent were skipped, not missed: move
+      // past them, or the client asks about them on every sync.
       final last = _db.syncLog.seq.max();
       final row =
           await (_db.selectOnly(_db.syncLog)
@@ -351,6 +416,7 @@ class SyncService {
     final taskRows = await _tasksById(idsFor(SyncEntity.task));
     final subtaskRows = await _subtasksById(idsFor(SyncEntity.subtask));
     final photoRows = await _photosById(idsFor(SyncEntity.photo));
+    final noteRows = await _notesById(idsFor(SyncEntity.note));
 
     final changes = <SyncChange>[];
     for (final entry in page) {
@@ -367,8 +433,20 @@ class SyncService {
           SyncChange.subtask,
         ),
         SyncEntity.photo => _wrap(photoRows[entry.rowId], SyncChange.photo),
+        SyncEntity.note => _wrap(noteRows[entry.rowId], SyncChange.note),
       };
-      if (change != null) changes.add(change);
+      if (change == null) continue;
+      // A note's picture is part of the note as far as an older client is
+      // concerned: sent on its own it names a row that client will never
+      // hold. The entry still counted towards the cursor above, so nothing
+      // stalls -- the same way a photo entry itself is skipped for a
+      // client that cannot read photos at all.
+      if (change is SyncChangePhoto &&
+          !includeNotes &&
+          change.row.parentKind == PhotoParent.note) {
+        continue;
+      }
+      changes.add(change);
     }
     return (changes: changes, cursor: nextCursor, hasMore: hasMore);
   }
@@ -404,6 +482,14 @@ class SyncService {
     if (ids.isEmpty) return {};
     final rows = await (_db.select(
       _db.photos,
+    )..where((t) => t.id.isIn(ids))).get();
+    return {for (final r in rows) r.id: r};
+  }
+
+  Future<Map<String, Note>> _notesById(Set<String> ids) async {
+    if (ids.isEmpty) return {};
+    final rows = await (_db.select(
+      _db.notes,
     )..where((t) => t.id.isIn(ids))).get();
     return {for (final r in rows) r.id: r};
   }

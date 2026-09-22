@@ -33,6 +33,15 @@ Subtask subtask(String id, String taskId, HlcClock clock) => Subtask(
   updatedAt: clock.now().toString(),
 );
 
+Note note(String id, String listId, HlcClock clock, {String title = 'Note'}) =>
+    Note(
+      id: id,
+      listId: listId,
+      title: title,
+      sortKey: 'V',
+      updatedAt: clock.now().toString(),
+    );
+
 Photo photo(
   String id,
   String parentId,

@@ -130,7 +130,10 @@ void main() {
     final lists = await app.db.select(app.db.lists).get();
     expect(lists.map((l) => l.isInbox), [true]);
     expect(
-      (await app.db.outboxChanges(includePhotos: true)).map((c) => c.rowId),
+      (await app.db.outboxChanges(
+        includePhotos: true,
+        includeNotes: true,
+      )).map((c) => c.rowId),
       [lists.single.id],
     );
     expect(await KvStore(app.db).get(KvKeys.username), isNull);

@@ -161,6 +161,19 @@ void main() {
     expect(client.requests.map((r) => r.photos), everyElement(isTrue));
   });
 
+  test('tells the server it can read note changes', () async {
+    // A server only sends note changes to clients that say so, because
+    // apps from before notes cannot decode them.
+    client.responses.add(
+      SyncResponse(cursor: 1, serverHlc: serverHlc, hasMore: true),
+    );
+    final c = await container();
+    await c.read(syncEngineProvider.notifier).syncNow();
+
+    expect(client.requests, hasLength(2));
+    expect(client.requests.map((r) => r.notes), everyElement(isTrue));
+  });
+
   test('remembers which build the server said it was running', () async {
     client.responses.add(
       SyncResponse(cursor: 1, serverHlc: serverHlc, serverVersion: '9.9.9'),
@@ -283,12 +296,16 @@ void main() {
   test('an edit made during a push stays queued', () async {
     final clock = testClock('device');
     await db.upsertTask(task('t1', clock.now().toString(), title: 'first'));
-    final queued = await db.outboxChanges(includePhotos: true);
+    final queued = await db.outboxChanges(
+      includePhotos: true,
+      includeNotes: true,
+    );
     await db.upsertTask(task('t1', clock.now().toString(), title: 'second'));
     await db.ackOutbox(queued);
     expect(await db.outboxCount(), 1);
     expect(
-      ((await db.outboxChanges(includePhotos: true)).single as SyncChangeTask)
+      ((await db.outboxChanges(includePhotos: true, includeNotes: true)).single
+              as SyncChangeTask)
           .row
           .title,
       'second',

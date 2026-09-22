@@ -16,6 +16,7 @@ class PurgeReport {
     this.tasks = 0,
     this.subtasks = 0,
     this.photos = 0,
+    this.notes = 0,
     this.blobs = 0,
   });
 
@@ -23,17 +24,18 @@ class PurgeReport {
   final int tasks;
   final int subtasks;
   final int photos;
+  final int notes;
 
   /// Blob files swept. Not part of [total]: they are bytes, not rows, and
   /// no client is waiting to be told about them.
   final int blobs;
 
-  int get total => lists + tasks + subtasks + photos;
+  int get total => lists + tasks + subtasks + photos + notes;
 
   @override
   String toString() =>
       '$lists list(s), $tasks task(s), $subtasks subtask(s), '
-      '$photos photo(s), $blobs blob(s)';
+      '$photos photo(s), $notes note(s), $blobs blob(s)';
 }
 
 /// Deletes rows that have been tombstoned long enough that nobody is coming
@@ -92,10 +94,17 @@ class PurgeService {
         for (final s in subtasks) s.id,
         for (final row in await _childSubtasks(taskIds)) row.id,
       };
+      // A purged list takes its notes with it, exactly as it takes its
+      // tasks: a note surviving its list is a row nothing can ever reach.
+      final noteIds = {
+        for (final n in await _oldNotes(cutoff)) n.id,
+        for (final row in await _childNotes(lists.map((l) => l.id))) row.id,
+      };
       final photos = await _oldPhotos(cutoff);
       final photoIds = {
         for (final p in photos) p.id,
         for (final row in await _childPhotos(taskIds)) row.id,
+        for (final row in await _childNotePhotos(noteIds)) row.id,
       };
 
       if (dryRun) {
@@ -104,12 +113,14 @@ class PurgeService {
           tasks: taskIds.length,
           subtasks: subtaskIds.length,
           photoIds: photoIds,
+          noteIds: noteIds,
         );
       }
 
       // Children first, so a parent still exists to name the list a revoke
-      // is addressed to. Photos are retired and deleted before their tasks,
-      // for the same reason.
+      // is addressed to. Photos are retired and deleted before their tasks
+      // and notes, for the same reason; notes are retired and deleted
+      // after their photos and before the lists that hold them.
       for (final id in photoIds) {
         await _retire(SyncEntity.photo, id, await _listOfPhoto(id));
       }
@@ -118,6 +129,9 @@ class PurgeService {
       }
       for (final id in taskIds) {
         await _retire(SyncEntity.task, id, await _listOfTask(id));
+      }
+      for (final id in noteIds) {
+        await _retire(SyncEntity.note, id, await _listOfNote(id));
       }
       for (final list in lists) {
         await _retire(SyncEntity.list, list.id, list.id);
@@ -128,6 +142,7 @@ class PurgeService {
         _db.subtasks,
       )..where((t) => t.id.isIn(subtaskIds))).go();
       await (_db.delete(_db.tasks)..where((t) => t.id.isIn(taskIds))).go();
+      await (_db.delete(_db.notes)..where((t) => t.id.isIn(noteIds))).go();
       await (_db.delete(
         _db.lists,
       )..where((t) => t.id.isIn(lists.map((l) => l.id)))).go();
@@ -137,6 +152,7 @@ class PurgeService {
         tasks: taskIds.length,
         subtasks: subtaskIds.length,
         photoIds: photoIds,
+        noteIds: noteIds,
       );
     });
 
@@ -157,6 +173,7 @@ class PurgeService {
       tasks: result.tasks,
       subtasks: result.subtasks,
       photos: result.photoIds.length,
+      notes: result.noteIds.length,
       blobs: blobs,
     );
   }
@@ -204,6 +221,22 @@ class PurgeService {
     )..where((t) => t.taskId.isIn(ids))).get();
   }
 
+  Future<List<Note>> _oldNotes(String cutoff) =>
+      (_db.select(_db.notes)..where(
+            (t) =>
+                t.deletedAt.isNotNull() &
+                t.deletedAt.isSmallerThanValue(cutoff),
+          ))
+          .get();
+
+  Future<List<Note>> _childNotes(Iterable<String> listIds) async {
+    final ids = listIds.toList();
+    if (ids.isEmpty) return const [];
+    return await (_db.select(
+      _db.notes,
+    )..where((t) => t.listId.isIn(ids))).get();
+  }
+
   Future<List<Photo>> _oldPhotos(String cutoff) =>
       (_db.select(_db.photos)..where(
             (t) =>
@@ -218,6 +251,16 @@ class PurgeService {
     return await (_db.select(_db.photos)..where(
           (t) =>
               t.parentKind.equalsValue(PhotoParent.task) & t.parentId.isIn(ids),
+        ))
+        .get();
+  }
+
+  Future<List<Photo>> _childNotePhotos(Iterable<String> noteIds) async {
+    final ids = noteIds.toList();
+    if (ids.isEmpty) return const [];
+    return await (_db.select(_db.photos)..where(
+          (t) =>
+              t.parentKind.equalsValue(PhotoParent.note) & t.parentId.isIn(ids),
         ))
         .get();
   }
@@ -241,11 +284,19 @@ class PurgeService {
     return task?.listId ?? await _loggedListId(SyncEntity.task, id);
   }
 
+  Future<String> _listOfNote(String id) async {
+    final note = await _db.noteById(id);
+    return note?.listId ?? await _loggedListId(SyncEntity.note, id);
+  }
+
   Future<String> _listOfPhoto(String id) async {
     final row = await _db.photoById(id);
-    if (row != null && row.parentKind == PhotoParent.task) {
-      final task = await _db.taskById(row.parentId);
-      if (task != null) return task.listId;
+    if (row != null) {
+      final listId = switch (row.parentKind) {
+        PhotoParent.task => (await _db.taskById(row.parentId))?.listId,
+        PhotoParent.note => (await _db.noteById(row.parentId))?.listId,
+      };
+      if (listId != null) return listId;
     }
     return await _loggedListId(SyncEntity.photo, id);
   }

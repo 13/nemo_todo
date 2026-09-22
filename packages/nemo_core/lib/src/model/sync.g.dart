@@ -42,6 +42,15 @@ SyncChangePhoto _$SyncChangePhotoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$SyncChangePhotoToJson(SyncChangePhoto instance) =>
     <String, dynamic>{'row': instance.row.toJson(), 'type': instance.$type};
 
+SyncChangeNote _$SyncChangeNoteFromJson(Map<String, dynamic> json) =>
+    SyncChangeNote(
+      Note.fromJson(json['row'] as Map<String, dynamic>),
+      $type: json['type'] as String?,
+    );
+
+Map<String, dynamic> _$SyncChangeNoteToJson(SyncChangeNote instance) =>
+    <String, dynamic>{'row': instance.row.toJson(), 'type': instance.$type};
+
 SyncChangeRevoke _$SyncChangeRevokeFromJson(Map<String, dynamic> json) =>
     SyncChangeRevoke(
       target: $enumDecode(_$SyncEntityEnumMap, json['target']),
@@ -61,6 +70,7 @@ const _$SyncEntityEnumMap = {
   SyncEntity.task: 'task',
   SyncEntity.subtask: 'subtask',
   SyncEntity.photo: 'photo',
+  SyncEntity.note: 'note',
 };
 
 _SyncRequest _$SyncRequestFromJson(Map<String, dynamic> json) => _SyncRequest(
@@ -71,6 +81,7 @@ _SyncRequest _$SyncRequestFromJson(Map<String, dynamic> json) => _SyncRequest(
           .toList() ??
       const <SyncChange>[],
   photos: json['photos'] as bool? ?? false,
+  notes: json['notes'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$SyncRequestToJson(_SyncRequest instance) =>
@@ -78,6 +89,7 @@ Map<String, dynamic> _$SyncRequestToJson(_SyncRequest instance) =>
       'cursor': instance.cursor,
       'changes': instance.changes.map((e) => e.toJson()).toList(),
       'photos': instance.photos,
+      'notes': instance.notes,
     };
 
 _RejectedChange _$RejectedChangeFromJson(Map<String, dynamic> json) =>
@@ -137,6 +149,7 @@ _SyncResponse _$SyncResponseFromJson(Map<String, dynamic> json) =>
       hasMore: json['has_more'] as bool? ?? false,
       serverVersion: json['server_version'] as String? ?? '',
       photos: json['photos'] as bool? ?? false,
+      notes: json['notes'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$SyncResponseToJson(_SyncResponse instance) =>
@@ -151,4 +164,5 @@ Map<String, dynamic> _$SyncResponseToJson(_SyncResponse instance) =>
       'has_more': instance.hasMore,
       'server_version': instance.serverVersion,
       'photos': instance.photos,
+      'notes': instance.notes,
     };

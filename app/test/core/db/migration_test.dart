@@ -50,7 +50,7 @@ void main() {
                 .get())
             .map((r) => r.read<String>('name'))
             .toList();
-    expect(indexes, contains('photos_parent'));
+    expect(indexes, containsAll(['photos_parent', 'notes_list_id']));
     await db.close();
   });
 

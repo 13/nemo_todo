@@ -28,9 +28,17 @@ class FakeSyncClient implements SyncClient {
   /// included. False plays a server from before photos.
   bool photos = true;
 
+  /// What every answer says about taking note changes, scripted ones
+  /// included. False plays a server from before notes.
+  bool notes = true;
+
   /// When set, `/sync` refuses a push carrying a photo change the way a
   /// server from before photos does: a 400 for the whole request.
   bool rejectPhotoChanges = false;
+
+  /// When set, `/sync` refuses a push carrying a note change the way a
+  /// server from before notes does: a 400 for the whole request.
+  bool rejectNoteChanges = false;
 
   /// Runs while a push is in flight, so a test can make the device edit a
   /// row after its changes were collected but before the answer arrives.
@@ -115,6 +123,10 @@ class FakeSyncClient implements SyncClient {
         request.changes.any((c) => c.entity == SyncEntity.photo)) {
       throw const ApiError(400, 'bad_request');
     }
+    if (rejectNoteChanges &&
+        request.changes.any((c) => c.entity == SyncEntity.note)) {
+      throw const ApiError(400, 'bad_request');
+    }
     final response = responses.isEmpty
         ? SyncResponse(
             cursor: request.cursor,
@@ -126,7 +138,7 @@ class FakeSyncClient implements SyncClient {
             ).toString(),
           )
         : responses.removeAt(0);
-    return response.copyWith(photos: photos);
+    return response.copyWith(photos: photos, notes: notes);
   }
 
   @override

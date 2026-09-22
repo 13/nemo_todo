@@ -48,7 +48,12 @@ void main() {
             .toList();
     expect(
       indexes,
-      containsAll(['list_members_user_id', 'sync_log_row', 'photos_parent']),
+      containsAll([
+        'list_members_user_id',
+        'sync_log_row',
+        'photos_parent',
+        'notes_list_id',
+      ]),
     );
     await db.close();
   });

@@ -16,6 +16,7 @@ part 'server_database.g.dart';
     Tasks,
     Subtasks,
     Photos,
+    Notes,
     Users,
     Sessions,
     ListMembers,
@@ -83,10 +84,21 @@ class ServerDatabase extends _$ServerDatabase {
         await m.create(photosParent);
         await m.createTable(blobs);
       }
-      // Version 5 lets a picture hang on a note as well as a task. Only a
+      // Version 5 also adds the notes table. Notes are brand new at this
+      // version -- there is no earlier shape of them to have -- so unlike
+      // the photo parent columns below, creating this table does not
+      // depend on which version the device is coming from: every device
+      // below 5 needs it exactly once, whether it jumped here from before
+      // photos existed or is stepping up from a version-4 install.
+      if (from < 5) {
+        await m.createTable(notes);
+        await m.createIndex(notesListId);
+      }
+      // The photo parent columns, on the other hand, are only missing on a
       // device that already has a version-4 photos table -- built on the
-      // old schema, with task_id -- needs this: the block above already
-      // gave a fresher device the final shape.
+      // old schema, with task_id -- so this block is guarded to a device
+      // coming from exactly that version: the block above already gave a
+      // fresher device (jumping in below version 4) the final shape.
       if (from < 5 && from >= 4) {
         // The backfill runs while task_id is still there: dropping it first
         // would leave every picture without a parent, and there is no

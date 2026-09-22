@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' hide isNull;
 import 'package:http/http.dart' as http;
 import 'package:nemo_core/nemo_core.dart';
+import 'package:nemo_server/nemo_server.dart';
 import 'package:test/test.dart';
 
 import 'support/rows.dart';
@@ -75,10 +76,17 @@ void main() {
           body: '{"password":"$password"}',
         );
 
-    Future<void> push(String token, List<SyncChange> changes) async {
+    Future<void> push(
+      String token,
+      List<SyncChange> changes, {
+      bool photos = false,
+      bool notes = false,
+    }) async {
       final r = await server.post('/api/v1/sync', {
         'cursor': 0,
         'changes': [for (final c in changes) c.toJson()],
+        'photos': photos,
+        'notes': notes,
       }, token: token);
       expect(r.statusCode, 200, reason: r.body);
     }
@@ -125,6 +133,28 @@ void main() {
         await server.signup('ben');
       },
     );
+
+    test('deleting a list takes its notes and their pictures', () async {
+      server = await TestServer.start();
+      final token = await server.signup('ben');
+      await push(
+        token,
+        [
+          SyncChange.list(list('l1', clock)),
+          SyncChange.note(note('n1', 'l1', clock)),
+          SyncChange.photo(photo('p1', 'n1', clock, kind: PhotoParent.note)),
+        ],
+        photos: true,
+        notes: true,
+      );
+
+      final r = await deleteAccount(token, 'password123');
+      expect(json(r), {'ok': true});
+
+      final db = server.db;
+      expect(await db.noteById('n1'), isNull);
+      expect(await db.photoById('p1'), isNull);
+    });
 
     test(
       'hands a shared list to the next member and leaves theirs alone',

@@ -60,6 +60,22 @@ class Subtasks extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@TableIndex(name: 'notes_list_id', columns: {#listId})
+@UseRowClass(Note, generateInsertable: true)
+class Notes extends Table {
+  TextColumn get id => text()();
+  TextColumn get listId => text()();
+  TextColumn get title => text()();
+  TextColumn get body => text().withDefault(const Constant(''))();
+  BoolColumn get pinned => boolean().withDefault(const Constant(false))();
+  TextColumn get sortKey => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get deletedAt => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @TableIndex(name: 'photos_parent', columns: {#parentKind, #parentId})
 @UseRowClass(Photo, generateInsertable: true)
 class Photos extends Table {

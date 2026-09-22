@@ -507,6 +507,111 @@ class Photos extends Table with TableInfo {
   bool get dontWriteConstraints => true;
 }
 
+class Notes extends Table with TableInfo {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Notes(this.attachedDatabase, [this._alias]);
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  late final GeneratedColumn<String> listId = GeneratedColumn<String>(
+    'list_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'\'',
+    defaultValue: const CustomExpression('\'\''),
+  );
+  late final GeneratedColumn<int> pinned = GeneratedColumn<int>(
+    'pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<String> sortKey = GeneratedColumn<String>(
+    'sort_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    listId,
+    title,
+    body,
+    pinned,
+    sortKey,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'notes';
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Never map(Map<String, dynamic> data, {String? tablePrefix}) {
+    throw UnsupportedError('TableInfo.map in schema verification code');
+  }
+
+  @override
+  Notes createAlias(String alias) {
+    return Notes(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const ['PRIMARY KEY(id)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
 class Outbox extends Table with TableInfo {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -723,6 +828,7 @@ class DatabaseAtV4 extends GeneratedDatabase {
   late final Tasks tasks = Tasks(this);
   late final Subtasks subtasks = Subtasks(this);
   late final Photos photos = Photos(this);
+  late final Notes notes = Notes(this);
   late final Outbox outbox = Outbox(this);
   late final ListMeta listMeta = ListMeta(this);
   late final Kv kv = Kv(this);
@@ -739,6 +845,10 @@ class DatabaseAtV4 extends GeneratedDatabase {
     'photos_parent',
     'CREATE INDEX photos_parent ON photos (parent_kind, parent_id)',
   );
+  late final Index notesListId = Index(
+    'notes_list_id',
+    'CREATE INDEX notes_list_id ON notes (list_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -748,6 +858,7 @@ class DatabaseAtV4 extends GeneratedDatabase {
     tasks,
     subtasks,
     photos,
+    notes,
     outbox,
     listMeta,
     kv,
@@ -755,6 +866,7 @@ class DatabaseAtV4 extends GeneratedDatabase {
     tasksListId,
     subtasksTaskId,
     photosParent,
+    notesListId,
   ];
   @override
   int get schemaVersion => 4;

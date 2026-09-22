@@ -6,16 +6,15 @@ import 'package:nemo/features/notes/ui/note_body_view.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
 
 void main() {
-  Future<void> pump(
-    WidgetTester tester,
-    String body,
-    List<Object> overrides,
-  ) => tester.pumpWidget(
-    ProviderScope(
-      overrides: overrides.cast(),
-      child: MaterialApp(home: Scaffold(body: NoteBodyView(body: body))),
-    ),
-  );
+  Future<void> pump(WidgetTester tester, String body, List<Object> overrides) =>
+      tester.pumpWidget(
+        ProviderScope(
+          overrides: overrides.cast(),
+          child: MaterialApp(
+            home: Scaffold(body: NoteBodyView(body: body)),
+          ),
+        ),
+      );
 
   /// Fires the tap gesture recognizer flutter_markdown_plus attaches to a
   /// link's `TextSpan`, the way the package's own link tests do.

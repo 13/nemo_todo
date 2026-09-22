@@ -22,8 +22,7 @@ class NotesRepository {
             ..orderBy(_order))
           .watch();
 
-  Stream<List<Note>> watchAll() =>
-      _visible(const Constant(true), _joinOrder);
+  Stream<List<Note>> watchAll() => _visible(const Constant(true), _joinOrder);
 
   Stream<Note?> watch(String id) => (_db.select(
     _db.notes,

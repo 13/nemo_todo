@@ -40,12 +40,14 @@ void main() {
     await repository.create(listId: 'l1', title: 'Bread', body: '500 g flour');
     await repository.create(listId: 'l1', title: 'Milk');
 
-    expect([for (final n in await repository.search('flour').first) n.title], [
-      'Bread',
-    ]);
-    expect([for (final n in await repository.search('brea').first) n.title], [
-      'Bread',
-    ]);
+    expect(
+      [for (final n in await repository.search('flour').first) n.title],
+      ['Bread'],
+    );
+    expect(
+      [for (final n in await repository.search('brea').first) n.title],
+      ['Bread'],
+    );
     expect(await repository.search('  ').first, isEmpty);
   });
 
@@ -65,9 +67,10 @@ void main() {
     await repository.restore(note.id);
 
     expect((await db.noteById(note.id))!.isDeleted, isFalse);
-    expect([for (final n in await repository.watchByList('l1').first) n.title], [
-      'Bread',
-    ]);
+    expect(
+      [for (final n in await repository.watchByList('l1').first) n.title],
+      ['Bread'],
+    );
   });
 
   test('moving a note carries it to the other list', () async {
@@ -76,9 +79,10 @@ void main() {
     await repository.moveToList(note.id, 'l2');
 
     expect(await repository.watchByList('l1').first, isEmpty);
-    expect([for (final n in await repository.watchByList('l2').first) n.title], [
-      'Bread',
-    ]);
+    expect(
+      [for (final n in await repository.watchByList('l2').first) n.title],
+      ['Bread'],
+    );
   });
 
   test('watchAll does not surface a note whose list is deleted', () async {

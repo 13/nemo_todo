@@ -155,22 +155,19 @@ void main() {
     expect((await harness.db.noteById('n1'))!.isDeleted, isFalse);
   });
 
-  appTest(
-    'deleting a note opened directly, with nothing else on the stack, '
-    'lands on the notes list instead of crashing',
-    (tester) async {
-      final harness = await pumpApp(tester, initialLocation: '/notes/n1');
-      await harness.seedList('l1', 'Kitchen');
-      await harness.seedNote('n1', 'l1', title: 'Bread');
-      await tester.pumpAndSettle();
+  appTest('deleting a note opened directly, with nothing else on the stack, '
+      'lands on the notes list instead of crashing', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('note-delete')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('confirm-delete-note')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('note-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-note')));
+    await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.byType(NotesScreen), findsOneWidget);
-    },
-  );
+    expect(tester.takeException(), isNull);
+    expect(find.byType(NotesScreen), findsOneWidget);
+  });
 }

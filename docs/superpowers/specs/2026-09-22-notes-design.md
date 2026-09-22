@@ -97,9 +97,12 @@ enum PhotoParent { task, note }
 
 The *wire* keeps the name it already has: `parentId` is annotated
 `@JsonKey(name: 'task_id')`, and `parentKind` serialises as `parent_kind`
-with a default of `task` when the key is absent. So a task photo travels
-as exactly the JSON it travels as today, a payload from before this
-change reads as a task parent without any special case, and only the
+with a default of `task` when the key is absent. `toJson` always emits
+`parent_kind` now, so a task photo's JSON is not byte-identical to what
+it was before this change -- it carries the new key too. What is
+preserved is compatibility, not the bytes: a payload from before this
+change, with no `parent_kind` at all, still reads as a task parent, and
+an old reader that does not know the key simply ignores it. Only the
 Dart-side name and the new discriminator are new. A note photo does put a
 note id in a field spelled `task_id`, which is the price of not renaming
 a live wire field; the field carries a comment saying so, and no client

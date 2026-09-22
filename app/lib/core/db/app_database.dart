@@ -28,7 +28,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -99,6 +99,29 @@ class AppDatabase extends _$AppDatabase {
         await customStatement('drop index if exists photos_task_id');
         await m.alterTable(TableMigration(photos));
         await m.createIndex(photosParent);
+      }
+      // Version 5 records what a task took. Every existing row is already
+      // valid without a backfill: solution defaults to empty, and a null
+      // time or cost is exactly what "nobody wrote one down" means. The
+      // server itself skipped nothing -- task rows are never filtered by
+      // capability -- but that is the wrong question. A device running the
+      // build *before* this migration already decoded every task row it
+      // received through a `Task.fromJson` that silently dropped these
+      // three fields, and advanced its cursor past them anyway. So this
+      // device now holds an empty-but-valid copy of tasks whose solution,
+      // time or cost were in fact recorded elsewhere. Nothing about that
+      // copy looks wrong to it: the next time it writes that task for any
+      // reason, `TasksRepository._write` stamps a fresh, newer HLC, and
+      // last-write-wins erases the real values for every device, not just
+      // this one. Resetting the cursor here -- the same repair the photo
+      // and note migrations above make -- re-fetches every task from
+      // scratch instead, so this device relearns what it silently dropped
+      // before it can overwrite it.
+      if (from < 5) {
+        await m.addColumn(tasks, tasks.solution);
+        await m.addColumn(tasks, tasks.timeSpentMinutes);
+        await m.addColumn(tasks, tasks.costMinor);
+        await (delete(kv)..where((t) => t.key.equals(KvKeys.cursor))).go();
       }
     },
     beforeOpen: (details) async {

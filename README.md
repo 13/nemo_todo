@@ -105,6 +105,21 @@ same blob channel. Both notes and note photos travel behind a `notes`
 capability flag the app and server exchange during sync, so a server or
 app from before notes simply never sends or expects them.
 
+A task can also record what it took: how it was solved, in free text, how
+long it took, and what it cost. All three stay out of the way -- the task
+page collapses them to a single row until one of them is filled in.
+Currency is a setting in its own section for tasks, between the data tiles
+and the update check, rather than a synced one, since this app has no
+synced settings channel and a display symbol does not justify inventing
+one; it defaults from the device's own locale. Unlike notes, there is no
+capability flag here: an app from before this reads a task with them back
+just fine, but if it edits that task afterwards its push carries none of
+the three, and last-write-wins overwrites them with nothing. An old
+*server* does the same to a new app: nothing filters task rows by
+capability, so a server that has not been upgraded yet accepts a push
+carrying a solution, a time or a cost, and simply has nowhere to put them
+-- discarding exactly what the app just recorded.
+
 `docs/superpowers/specs/2026-09-07-nemo-design.md` has the details.
 
 ## Development

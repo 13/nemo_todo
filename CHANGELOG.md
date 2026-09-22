@@ -20,6 +20,8 @@ would ship without them, and nothing would say so.
 - Notes: a list can hold notes as well as tasks. A note is a title and a
   markdown body, it is shared with the list it lives in, it can carry
   pictures, and it is found by search and carried through export.
+- A task can record how it was solved, how long it took and what it cost.
+  The three stay out of the way until one is filled in.
 
 ## 0.9.1 - 2026-09-15
 

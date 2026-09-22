@@ -353,4 +353,48 @@ void main() {
       isFalse,
     );
   });
+
+  test('the next occurrence of a repeating task starts unrecorded', () async {
+    final task = await tasks.create(
+      listId: inbox,
+      title: 'Change the filter',
+      dueAt: testNow.millisecondsSinceEpoch,
+      repeat: const EveryRepeat(1, RepeatUnit.month),
+    );
+    await tasks.save(
+      task.copyWith(
+        solution: 'Second filter from the box',
+        timeSpentMinutes: 20,
+        costMinor: 1499,
+      ),
+    );
+
+    await tasks.setDone(task.id, done: true);
+
+    final spawned = (await tasks.watchByList(inbox).first).firstWhere(
+      (t) => t.id != task.id,
+    );
+    expect(spawned.solution, '');
+    expect(spawned.timeSpentMinutes, isNull);
+    expect(
+      spawned.costMinor,
+      isNull,
+      reason: 'they describe the occurrence that was done, not the rule',
+    );
+    expect(
+      (await db.taskById(task.id))!.solution,
+      'Second filter from the box',
+      reason: 'the completed one keeps its own history',
+    );
+  });
+
+  test('search finds a task by a word only its solution has', () async {
+    final task = await tasks.create(listId: inbox, title: 'Fix the tap');
+    await tasks.save(task.copyWith(solution: 'New washer, 12 mm'));
+
+    expect(
+      [for (final t in await tasks.search('washer').first) t.title],
+      ['Fix the tap'],
+    );
+  });
 }

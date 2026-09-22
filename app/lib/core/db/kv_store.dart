@@ -42,6 +42,10 @@ abstract final class KvKeys {
   static const celebrations = 'celebrations';
   static const celebrationSound = 'celebration_sound';
   static const achievements = 'achievements';
+
+  /// ISO 4217 code the amounts on a task are written in. Device-local,
+  /// like every other setting here.
+  static const currency = 'currency';
 }
 
 /// Typed access to the `kv` table.

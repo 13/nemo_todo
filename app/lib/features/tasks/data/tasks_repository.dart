@@ -64,6 +64,7 @@ class TasksRepository {
     return _visible(
       _db.tasks.title.like(pattern, escapeChar: likeEscapeChar) |
           _db.tasks.notes.like(pattern, escapeChar: likeEscapeChar) |
+          _db.tasks.solution.like(pattern, escapeChar: likeEscapeChar) |
           _db.tasks.tags.like(pattern, escapeChar: likeEscapeChar),
       [OrderingTerm.asc(_db.tasks.done), OrderingTerm.asc(_db.tasks.title)],
     );
@@ -168,6 +169,11 @@ class TasksRepository {
       id: _newId(),
       done: false,
       doneAt: null,
+      // What it took describes the occurrence that was completed, not the
+      // rule -- a fresh one has taken no time and cost nothing yet.
+      solution: '',
+      timeSpentMinutes: null,
+      costMinor: null,
       dueAt: rule.nextDueAt(dueAt: dueAt, after: _now()),
       sortKey: await nextSortKey(task.listId),
       updatedAt: _clock.now().toString(),

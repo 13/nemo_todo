@@ -5,6 +5,7 @@ import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/celebrations/ui/celebration_settings_section.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart';
+import 'package:nemo/features/settings/ui/currency_tile.dart';
 import 'package:nemo/features/settings/ui/data_tiles.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_settings_section.dart';
@@ -62,6 +63,8 @@ class SettingsScreen extends ConsumerWidget {
             const CelebrationSettingsSection(),
             const SyncSettingsSection(),
             const DataTiles(),
+            SectionHeader(title: l.settingsTasks),
+            const CurrencyTile(),
             const UpdateTile(),
             SectionHeader(title: l.settingsAbout),
             const AboutTile(),

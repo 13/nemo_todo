@@ -243,3 +243,61 @@ abstract class _$AchievementsEnabled extends $Notifier<bool> {
     return element.handleCreate(ref, build);
   }
 }
+
+/// Which currency the amounts on a task are written in.
+
+@ProviderFor(CurrencyCode)
+final currencyCodeProvider = CurrencyCodeProvider._();
+
+/// Which currency the amounts on a task are written in.
+final class CurrencyCodeProvider
+    extends $NotifierProvider<CurrencyCode, String> {
+  /// Which currency the amounts on a task are written in.
+  CurrencyCodeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currencyCodeProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currencyCodeHash();
+
+  @$internal
+  @override
+  CurrencyCode create() => CurrencyCode();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$currencyCodeHash() => r'91fef8e4c0f3acc84071bc1e73457015b9081502';
+
+/// Which currency the amounts on a task are written in.
+
+abstract class _$CurrencyCode extends $Notifier<String> {
+  String build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<String, String>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String, String>,
+              String,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

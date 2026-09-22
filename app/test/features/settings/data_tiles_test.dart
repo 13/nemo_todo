@@ -50,7 +50,7 @@ void main() {
   );
 
   Future<void> tap(WidgetTester tester, String key) async {
-    await tester.ensureVisible(find.byKey(Key(key)));
+    await scrollIntoView(tester, find.byKey(Key(key)));
     await tester.tap(find.byKey(Key(key)));
     await tester.pumpAndSettle();
   }

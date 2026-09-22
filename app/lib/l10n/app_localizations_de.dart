@@ -202,6 +202,24 @@ class LDe extends L {
   String get tasksPhotos => 'Fotos';
 
   @override
+  String get tasksWork => 'Was es gebraucht hat';
+
+  @override
+  String get tasksSolutionHint => 'Wie es gelöst wurde';
+
+  @override
+  String get tasksTimeSpentHint => 'Aufgewendete Zeit';
+
+  @override
+  String get tasksCostHint => 'Kosten';
+
+  @override
+  String get tasksHours => 'Std.';
+
+  @override
+  String get tasksMinutes => 'Min.';
+
+  @override
   String get photosTakePhoto => 'Foto aufnehmen';
 
   @override
@@ -448,6 +466,12 @@ class LDe extends L {
   String settingsVersion(String version) {
     return 'Version $version';
   }
+
+  @override
+  String get settingsTasks => 'Aufgaben';
+
+  @override
+  String get settingsCurrency => 'Währung';
 
   @override
   String get settingsCelebrations => 'Feiern & Erfolge';

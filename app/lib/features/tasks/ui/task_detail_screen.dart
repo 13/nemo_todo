@@ -11,6 +11,7 @@ import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_detail_sections.dart';
+import 'package:nemo/features/tasks/ui/task_work_section.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -213,6 +214,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             TaskRepeatSection(task: task, save: _save),
             const SizedBox(height: 20),
             TaskPrioritySection(task: task, save: _save),
+            const SizedBox(height: 20),
+            TaskWorkSection(task: task, save: _save),
             const SizedBox(height: 20),
             TaskListSection(task: task, save: _save),
             const SizedBox(height: 20),

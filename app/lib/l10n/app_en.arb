@@ -78,6 +78,12 @@
   "tasksSubtasks": "Subtasks",
   "tasksSubtaskHint": "Add subtask",
   "tasksPhotos": "Photos",
+  "tasksWork": "What it took",
+  "tasksSolutionHint": "How it was solved",
+  "tasksTimeSpentHint": "Time spent",
+  "tasksCostHint": "Cost",
+  "tasksHours": "h",
+  "tasksMinutes": "min",
   "photosTakePhoto": "Take photo",
   "photosChoose": "Choose from gallery",
   "photosAdd": "Add photo",
@@ -234,6 +240,8 @@
       }
     }
   },
+  "settingsTasks": "Tasks",
+  "settingsCurrency": "Currency",
   "settingsCelebrations": "Celebrations & achievements",
   "settingsCelebrationsEnabled": "Celebrations",
   "settingsCelebrationsEnabledHint": "Confetti, animations and haptics when you complete tasks",

@@ -29,6 +29,9 @@ class Tasks extends Table {
   TextColumn get listId => text()();
   TextColumn get title => text()();
   TextColumn get notes => text().withDefault(const Constant(''))();
+  TextColumn get solution => text().withDefault(const Constant(''))();
+  IntColumn get timeSpentMinutes => integer().nullable()();
+  IntColumn get costMinor => integer().nullable()();
   BoolColumn get done => boolean().withDefault(const Constant(false))();
   IntColumn get doneAt => integer().nullable()();
   IntColumn get dueAt => integer().nullable()();

@@ -202,6 +202,24 @@ class LIt extends L {
   String get tasksPhotos => 'Foto';
 
   @override
+  String get tasksWork => 'Cosa ci è voluto';
+
+  @override
+  String get tasksSolutionHint => 'Come è stata risolta';
+
+  @override
+  String get tasksTimeSpentHint => 'Tempo impiegato';
+
+  @override
+  String get tasksCostHint => 'Costo';
+
+  @override
+  String get tasksHours => 'h';
+
+  @override
+  String get tasksMinutes => 'min';
+
+  @override
   String get photosTakePhoto => 'Scatta foto';
 
   @override
@@ -449,6 +467,12 @@ class LIt extends L {
   String settingsVersion(String version) {
     return 'Versione $version';
   }
+
+  @override
+  String get settingsTasks => 'Attività';
+
+  @override
+  String get settingsCurrency => 'Valuta';
 
   @override
   String get settingsCelebrations => 'Festeggiamenti e traguardi';

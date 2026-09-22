@@ -95,6 +95,16 @@ pull; on the web they are fetched only when a photo is actually shown.
 Either way, a photo is re-encoded on the device before any of this, which
 also strips its EXIF data.
 
+A note is a title and a body of markdown living in a list, so it is
+shared with that list and revoked with it exactly like a task. The body
+is stored as the text someone typed and rendered read-only in the app;
+editing shows the raw markdown, not a rich-text view of it, so two
+devices editing the same note conflict the same way two devices editing
+a task do. A note can carry pictures the same way a task does, over the
+same blob channel. Both notes and note photos travel behind a `notes`
+capability flag the app and server exchange during sync, so a server or
+app from before notes simply never sends or expects them.
+
 `docs/superpowers/specs/2026-09-07-nemo-design.md` has the details.
 
 ## Development

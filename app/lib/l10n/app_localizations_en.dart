@@ -290,7 +290,7 @@ class LEn extends L {
 
   @override
   String searchNoResults(String query) {
-    return 'No tasks match \"$query\".';
+    return 'Nothing matches \"$query\".';
   }
 
   @override

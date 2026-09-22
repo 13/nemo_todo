@@ -290,7 +290,7 @@ class LDe extends L {
 
   @override
   String searchNoResults(String query) {
-    return 'Keine Aufgaben passen zu „$query“.';
+    return 'Nichts passt zu „$query“.';
   }
 
   @override

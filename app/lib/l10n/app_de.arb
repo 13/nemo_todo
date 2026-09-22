@@ -80,7 +80,7 @@
   "searchTasksHeader": "Aufgaben",
   "searchNotesHeader": "Notizen",
   "searchEmpty": "Tippe, um in allen Listen zu suchen.",
-  "searchNoResults": "Keine Aufgaben passen zu „{query}“.",
+  "searchNoResults": "Nichts passt zu „{query}“.",
   "settingsTitle": "Einstellungen",
   "settingsAppearance": "Darstellung",
   "settingsTheme": "Design",

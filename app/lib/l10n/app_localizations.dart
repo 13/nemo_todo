@@ -582,7 +582,7 @@ abstract class L {
   /// No description provided for @searchNoResults.
   ///
   /// In en, this message translates to:
-  /// **'No tasks match \"{query}\".'**
+  /// **'Nothing matches \"{query}\".'**
   String searchNoResults(String query);
 
   /// No description provided for @settingsTitle.

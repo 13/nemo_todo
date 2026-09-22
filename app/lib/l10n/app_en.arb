@@ -125,7 +125,7 @@
   "searchTasksHeader": "Tasks",
   "searchNotesHeader": "Notes",
   "searchEmpty": "Type to search across all lists.",
-  "searchNoResults": "No tasks match \"{query}\".",
+  "searchNoResults": "Nothing matches \"{query}\".",
   "@searchNoResults": {
     "placeholders": {
       "query": {

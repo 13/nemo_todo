@@ -33,7 +33,7 @@ void main() {
     expect(find.text('Call mum'), findsNothing);
     await tester.enterText(find.byKey(const Key('search-field')), 'zzz');
     await tester.pumpAndSettle();
-    expect(find.text('No tasks match "zzz".'), findsOneWidget);
+    expect(find.text('Nothing matches "zzz".'), findsOneWidget);
   });
 
   appTest('search finds a note by its body', (tester) async {

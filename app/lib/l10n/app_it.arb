@@ -80,7 +80,7 @@
   "searchTasksHeader": "Attività",
   "searchNotesHeader": "Note",
   "searchEmpty": "Scrivi per cercare in tutte le liste.",
-  "searchNoResults": "Nessuna attività corrisponde a \"{query}\".",
+  "searchNoResults": "Nessun risultato corrisponde a \"{query}\".",
   "settingsTitle": "Impostazioni",
   "settingsAppearance": "Aspetto",
   "settingsTheme": "Tema",

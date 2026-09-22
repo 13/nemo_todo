@@ -291,7 +291,7 @@ class LIt extends L {
 
   @override
   String searchNoResults(String query) {
-    return 'Nessuna attività corrisponde a \"$query\".';
+    return 'Nessun risultato corrisponde a \"$query\".';
   }
 
   @override

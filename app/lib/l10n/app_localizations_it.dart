@@ -1066,6 +1066,12 @@ class LIt extends L {
       'Ancora nessuna nota. Una nota conserva ciò che un\'attività non può: la ricetta, l\'indirizzo, il paragrafo.';
 
   @override
+  String get notesPinned => 'Fissate';
+
+  @override
+  String get notesOthers => 'Altre';
+
+  @override
   String get noteNewTitle => 'Nuova nota';
 
   @override

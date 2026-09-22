@@ -274,6 +274,8 @@
   "achievementsUnlockedMany": "{count, plural, other{{count} Erfolge freigeschaltet}}",
   "settingsExportedWithoutPhotos": "{count, plural, =1{Aufgaben exportiert. 1 Foto ist nicht auf diesem Gerät und fehlt.} other{Aufgaben exportiert. {count} Fotos sind nicht auf diesem Gerät und fehlen.}}",
   "notesEmpty": "Noch keine Notizen. Eine Notiz behält, was in keine Aufgabe passt: das Rezept, die Adresse, den Absatz.",
+  "notesPinned": "Angeheftet",
+  "notesOthers": "Andere",
   "noteNewTitle": "Neue Notiz",
   "noteTitleHint": "Titel",
   "noteBodyHint": "Schreib etwas",

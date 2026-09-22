@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/features/notes/ui/notes_screen.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
+import 'package:nemo/features/tasks/ui/today_screen.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo/screens/shell_screen.dart';
 import 'package:nemo/utils/dates.dart';
 
@@ -95,6 +98,22 @@ void main() {
       reason: 'a page of its own',
     );
     expect(find.byType(BackButton), findsOneWidget);
+  });
+
+  appTest('the notes route is exempt from the shell width cap', (tester) async {
+    await pumpApp(
+      tester,
+      initialLocation: Routes.notes,
+      size: const Size(1000, 900),
+    );
+
+    // The notes grid needs the width the shell would otherwise cap at 720.
+    expect(tester.getSize(find.byType(NotesScreen)).width, greaterThan(720));
+
+    // Another shell route still gets the usual cap.
+    await tester.tap(find.text('Today'));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(find.byType(TodayScreen)).width, 720);
   });
 
   test('indexFor maps locations', () {

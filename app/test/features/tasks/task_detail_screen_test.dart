@@ -41,8 +41,10 @@ void main() {
 
     // The photo strip made the screen taller than the viewport, so the
     // priority row -- already built, this `ListView` is not lazy -- sits
-    // out of the fold until scrolled to.
-    await tester.ensureVisible(find.text('High'));
+    // out of the fold until scrolled to. `ensureVisible` does nothing for
+    // a widget that is built but below the fold, so this uses the same
+    // hit-testable scroll the tap-heavy tests elsewhere on this branch do.
+    await scrollIntoView(tester, find.text('High'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('High'));
     await tester.pumpAndSettle();

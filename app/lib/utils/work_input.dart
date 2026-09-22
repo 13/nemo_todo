@@ -9,22 +9,37 @@ int? parseMinutes(String input) {
   if (text.isEmpty) return null;
 
   final bare = RegExp(r'^\d+$').firstMatch(text);
-  if (bare != null) return int.parse(text);
+  if (bare != null) return int.tryParse(text);
 
   final colon = RegExp(r'^(\d+):([0-5]?\d)$').firstMatch(text);
   if (colon != null) {
-    return int.parse(colon.group(1)!) * 60 + int.parse(colon.group(2)!);
+    final hours = int.tryParse(colon.group(1)!);
+    final minutes = int.tryParse(colon.group(2)!);
+    if (hours == null || minutes == null) return null;
+    return _hoursAndMinutes(hours, minutes);
   }
 
   final parts = RegExp(r'^(?:(\d+)\s*h)?\s*(?:(\d+)\s*m?)?$').firstMatch(text);
   if (parts == null) return null;
-  final hours = parts.group(1);
-  final minutes = parts.group(2);
-  if (hours == null && minutes == null) return null;
-  final total =
-      (hours == null ? 0 : int.parse(hours) * 60) +
-      (minutes == null ? 0 : int.parse(minutes));
-  return total;
+  final hoursText = parts.group(1);
+  final minutesText = parts.group(2);
+  if (hoursText == null && minutesText == null) return null;
+  final hours = hoursText == null ? 0 : int.tryParse(hoursText);
+  final minutes = minutesText == null ? 0 : int.tryParse(minutesText);
+  if (hours == null || minutes == null) return null;
+  return _hoursAndMinutes(hours, minutes);
+}
+
+/// Dart's `int` is a fixed-size 64-bit integer, so [int.tryParse] already
+/// refuses a digit run too long to hold -- but `hours * 60 + minutes` can
+/// still overflow (and silently wrap, not throw) even when both parsed
+/// cleanly on their own. This refuses that case too instead of returning a
+/// wrapped, wrong total.
+const int _maxInt = 9223372036854775807;
+
+int? _hoursAndMinutes(int hours, int minutes) {
+  if (hours > (_maxInt - minutes) ~/ 60) return null;
+  return hours * 60 + minutes;
 }
 
 /// Reads an amount written the way [locale] writes one -- `12.50` or
@@ -39,8 +54,17 @@ int? parseMinorUnits(String input, {required String locale}) {
   final normalised = text.replaceAll(separator, '.');
   if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(normalised)) return null;
   final value = double.parse(normalised);
-  return (value * 100).round();
+  final minor = value * 100;
+  // A double represents every integer up to 2^53 - 1 exactly (the
+  // well-known "max safe integer"); past that, `.round()` can return a
+  // number nobody typed -- for a large enough amount it silently
+  // saturates to int64.max instead of the intended value. Refuse rather
+  // than hand back a wrong amount.
+  if (minor.isNaN || minor.abs() > _maxSafeMinorUnits) return null;
+  return minor.round();
 }
+
+const double _maxSafeMinorUnits = 9007199254740991; // 2^53 - 1
 
 /// `1 h 30 min`, `45 min`, `2 h`. Labels come from the l10n catalogue so
 /// each language writes its own.

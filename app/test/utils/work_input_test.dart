@@ -25,6 +25,24 @@ void main() {
       expect(parseMinutes('-5'), isNull);
       expect(parseMinutes('1:90'), isNull, reason: '90 is not a minute count');
     });
+
+    test('refuses digit runs too long to be an int rather than crashing', () {
+      expect(parseMinutes('9' * 42), isNull);
+      expect(parseMinutes('${'9' * 42}:30'), isNull);
+    });
+
+    test('reads exactly at the int64 boundary and refuses past it', () {
+      expect(parseMinutes('9223372036854775807'), 9223372036854775807);
+      expect(parseMinutes('9223372036854775808'), isNull);
+    });
+
+    test('refuses an hours:minutes total that would overflow int64', () {
+      // hours * 60 lands just at int64.max; one more hour overflows it.
+      // (9223372036854775807 - 7, not the literal, so it stays exact when
+      // this file is analyzed for web compilation.)
+      expect(parseMinutes('153722867280912930:00'), 9223372036854775807 - 7);
+      expect(parseMinutes('153722867280912931:00'), isNull);
+    });
   });
 
   group('parseMinorUnits', () {
@@ -46,6 +64,24 @@ void main() {
         reason: 'more precision than the currency has',
       );
     });
+
+    test('refuses a huge amount rather than returning a saturated value', () {
+      expect(parseMinorUnits('${'9' * 42}.50', locale: 'en'), isNull);
+    });
+
+    test(
+      'reads exactly at the max-safe-integer boundary and refuses past it',
+      () {
+        // 9007199254740991 minor units == 2^53 - 1, the largest int a double
+        // represents exactly; one minor unit further can no longer be
+        // trusted to round-trip precisely.
+        expect(
+          parseMinorUnits('90071992547409.91', locale: 'en'),
+          9007199254740991,
+        );
+        expect(parseMinorUnits('90071992547409.99', locale: 'en'), isNull);
+      },
+    );
   });
 
   group('formatting', () {

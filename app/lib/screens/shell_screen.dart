@@ -81,7 +81,8 @@ class ShellScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = destinations(context);
-    final index = indexFor(GoRouterState.of(context).matchedLocation);
+    final location = GoRouterState.of(context).matchedLocation;
+    final index = indexFor(location);
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= railBreakpoint;
     final split = width >= splitBreakpoint;
@@ -134,7 +135,11 @@ class ShellScreen extends ConsumerWidget {
               ],
             ),
             const VerticalDivider(width: 1),
-            Expanded(child: MaxWidth(child: child)),
+            Expanded(
+              // The notes grid wants the width the shell would otherwise
+              // cap at 720 to lay out its columns, and caps itself at 1200.
+              child: location == Routes.notes ? child : MaxWidth(child: child),
+            ),
             if (split) ...[
               const VerticalDivider(width: 1),
               SizedBox(

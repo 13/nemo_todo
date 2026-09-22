@@ -141,8 +141,17 @@ void main() {
   });
 
   testWidgets('a wide screen shows four columns', (tester) async {
-    _tallSurface(tester, width: 1200);
-    final harness = await pumpApp(tester, initialLocation: '/notes');
+    // Wide enough that, once the shell's rail and its divider are
+    // subtracted, the notes grid still has >= 900 of its own width to work
+    // with, but below the 1200 split breakpoint where a second, task-detail
+    // pane would also eat into that width. Passed straight to pumpApp: it
+    // sets its own physical size, so calling _tallSurface first would only
+    // have it overwritten.
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes',
+      size: const Size(1100, 2000),
+    );
     await harness.seedList('l1', 'Kitchen');
     for (var i = 0; i < 4; i++) {
       await harness.seedNote('n$i', 'l1', title: 'Note $i');

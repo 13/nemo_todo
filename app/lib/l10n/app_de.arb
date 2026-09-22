@@ -267,5 +267,6 @@
   "noteNewTitle": "Neue Notiz",
   "noteTitleHint": "Titel",
   "noteBodyHint": "Schreib etwas",
-  "notePreviewEmpty": "Leere Notiz"
+  "notePreviewEmpty": "Leere Notiz",
+  "noteNotFound": "Diese Notiz gibt es nicht mehr."
 }

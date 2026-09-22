@@ -76,10 +76,11 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     final l = L.of(context);
     final note = ref.watch(noteByIdProvider(widget.noteId)).value;
     if (note == null) {
-      // Either the stream has not delivered its first value yet, or the
-      // note was deleted out from under this page; either way there is
-      // nothing to edit, and no dedicated copy was asked for either state.
-      return const Scaffold(body: SizedBox.shrink());
+      // A note can be deleted on another device while this page is open.
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text(l.noteNotFound)),
+      );
     }
     _fill(note);
 

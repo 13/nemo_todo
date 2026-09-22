@@ -1045,4 +1045,7 @@ class LDe extends L {
 
   @override
   String get notePreviewEmpty => 'Leere Notiz';
+
+  @override
+  String get noteNotFound => 'Diese Notiz gibt es nicht mehr.';
 }

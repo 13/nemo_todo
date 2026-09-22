@@ -1046,4 +1046,7 @@ class LIt extends L {
 
   @override
   String get notePreviewEmpty => 'Nota vuota';
+
+  @override
+  String get noteNotFound => 'Questa nota non c\'è più.';
 }

@@ -1035,4 +1035,7 @@ class LEn extends L {
 
   @override
   String get notePreviewEmpty => 'Empty note';
+
+  @override
+  String get noteNotFound => 'This note is no longer here.';
 }

@@ -1706,6 +1706,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Empty note'**
   String get notePreviewEmpty;
+
+  /// No description provided for @noteNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This note is no longer here.'**
+  String get noteNotFound;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

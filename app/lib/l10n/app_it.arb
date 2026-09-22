@@ -267,5 +267,6 @@
   "noteNewTitle": "Nuova nota",
   "noteTitleHint": "Titolo",
   "noteBodyHint": "Scrivi qualcosa",
-  "notePreviewEmpty": "Nota vuota"
+  "notePreviewEmpty": "Nota vuota",
+  "noteNotFound": "Questa nota non c'è più."
 }

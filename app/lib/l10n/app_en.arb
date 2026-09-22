@@ -542,5 +542,6 @@
   "noteNewTitle": "New note",
   "noteTitleHint": "Title",
   "noteBodyHint": "Write something",
-  "notePreviewEmpty": "Empty note"
+  "notePreviewEmpty": "Empty note",
+  "noteNotFound": "This note is no longer here."
 }

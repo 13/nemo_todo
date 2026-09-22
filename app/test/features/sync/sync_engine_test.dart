@@ -837,6 +837,42 @@ void main() {
     expect(await KvStore(db).get(KvKeys.serverNotes), 'true');
   });
 
+  // A picture hanging on a note has its row held back the same way a note
+  // itself is, but `uploadsHeld` only ever looked at KvKeys.serverPhotos:
+  // its bytes went up regardless. On a server rolled back below notes, the
+  // blob sweep could then delete those bytes before the row ever lands.
+  test(
+    "a note picture's bytes are held while the server does not take notes",
+    () async {
+      await KvStore(db).set(KvKeys.serverNotes, 'false');
+      client.notes = false;
+      final c = await container();
+      await db.upsertList(list('l1', testClock('a').now().toString()));
+      final note = await notes().create(listId: 'l1', title: 'N');
+      final photo = (await photos().add(
+        PhotoParent.note,
+        note.id,
+        smallJpeg(),
+      ))!;
+
+      await c.read(syncEngineProvider.notifier).syncNow();
+
+      expect(client.uploaded, isEmpty);
+      // Still waiting, byte-for-byte: `pendingBlobs` itself now holds a
+      // note-only blob back, but the raw row is a plainer witness that
+      // nothing pretended it landed.
+      final blobRow = await (db.select(
+        db.blobs,
+      )..where((t) => t.sha256.equals(photo.sha256))).getSingle();
+      expect(blobRow.state, 'pendingUpload');
+      // Round-neutral: a permanently notes-blind server must not send the
+      // engine round after round chasing bytes it will never be allowed
+      // to send.
+      expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+      expect(client.calls, 1);
+    },
+  );
+
   test('signing in to a server without photos pushes no photo rows', () async {
     await syncedPicture('https://nemo.test|ben');
     await db.upsertList(list('l1', testClock('a').now().toString()));

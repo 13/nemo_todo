@@ -472,8 +472,39 @@ extension SyncWrites on AppDatabase {
     );
   }
 
-  Future<List<BlobRow>> pendingBlobs() =>
-      (select(blobs)..where((t) => t.state.equals('pendingUpload'))).get();
+  /// Blobs waiting to be uploaded.
+  ///
+  /// A blob whose only live pictures hang on a note is left out once the
+  /// server has said, explicitly, that it does not take notes: that
+  /// picture's row is held back the same way a note's own row is, so
+  /// offering its bytes anyway would let a rolled-back server's blob sweep
+  /// delete them before the row that names them ever lands. A blob a task
+  /// also names, or one the server has not ruled notes out for, is never
+  /// held here.
+  Future<List<BlobRow>> pendingBlobs() async {
+    final pending = await (select(
+      blobs,
+    )..where((t) => t.state.equals('pendingUpload'))).get();
+    if (pending.isEmpty) return pending;
+    final notesFlag = await (select(
+      kv,
+    )..where((t) => t.key.equals(KvKeys.serverNotes))).getSingleOrNull();
+    if (notesFlag?.value != 'false') return pending;
+    final eligible = <BlobRow>[];
+    for (final blob in pending) {
+      final rows =
+          await (select(photos)..where(
+                (t) => t.sha256.equals(blob.sha256) & t.deletedAt.isNull(),
+              ))
+              .get();
+      if (rows.isNotEmpty &&
+          rows.every((p) => p.parentKind == PhotoParent.note)) {
+        continue;
+      }
+      eligible.add(blob);
+    }
+    return eligible;
+  }
 
   /// Hashes named by a live photo row that this device does not hold,
   /// those of the most recently changed photos first: the picture someone

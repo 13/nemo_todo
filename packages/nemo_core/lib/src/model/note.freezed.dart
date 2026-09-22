@@ -1,0 +1,306 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'note.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+
+/// @nodoc
+mixin _$Note {
+
+ String get id; String get listId; String get title; String get body; bool get pinned; String get sortKey; String get updatedAt; String? get deletedAt;
+/// Create a copy of Note
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$NoteCopyWith<Note> get copyWith => _$NoteCopyWithImpl<Note>(this as Note, _$identity);
+
+  /// Serializes this Note to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Note;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Note&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.listId, _this.listId) || other.listId == _this.listId)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.body, _this.body) || other.body == _this.body)&&(identical(other.pinned, _this.pinned) || other.pinned == _this.pinned)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Note;
+  return Object.hash(runtimeType,_this.id,_this.listId,_this.title,_this.body,_this.pinned,_this.sortKey,_this.updatedAt,_this.deletedAt);
+}
+
+@override
+String toString() {
+  final _this = this as Note;
+  return 'Note(id: ${_this.id}, listId: ${_this.listId}, title: ${_this.title}, body: ${_this.body}, pinned: ${_this.pinned}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, deletedAt: ${_this.deletedAt})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $NoteCopyWith<$Res>  {
+  factory $NoteCopyWith(Note value, $Res Function(Note) _then) = _$NoteCopyWithImpl;
+@useResult
+$Res call({
+ String id, String listId, String title, String body, bool pinned, String sortKey, String updatedAt, String? deletedAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$NoteCopyWithImpl<$Res>
+    implements $NoteCopyWith<$Res> {
+  _$NoteCopyWithImpl(this._self, this._then);
+
+  final Note _self;
+  final $Res Function(Note) _then;
+
+/// Create a copy of Note
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? body = null,Object? pinned = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
+  return _then(Note(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,listId: null == listId ? _self.listId : listId // ignore: cast_nullable_to_non_nullable
+as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
+as String,pinned: null == pinned ? _self.pinned : pinned // ignore: cast_nullable_to_non_nullable
+as bool,sortKey: null == sortKey ? _self.sortKey : sortKey // ignore: cast_nullable_to_non_nullable
+as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as String,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Note].
+extension NotePatterns on Note {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Note value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Note() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Note value)  $default,){
+final _that = this;
+switch (_that) {
+case _Note():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Note value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Note() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String body,  bool pinned,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Note() when $default != null:
+return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String body,  bool pinned,  String sortKey,  String updatedAt,  String? deletedAt)  $default,) {final _that = this;
+switch (_that) {
+case _Note():
+return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String listId,  String title,  String body,  bool pinned,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,) {final _that = this;
+switch (_that) {
+case _Note() when $default != null:
+return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Note extends Note {
+  const _Note({required this.id, required this.listId, required this.title, this.body = '', this.pinned = false, required this.sortKey, required this.updatedAt, this.deletedAt}): super._();
+  factory _Note.fromJson(Map<String, dynamic> json) => _$NoteFromJson(json);
+
+@override final  String id;
+@override final  String listId;
+@override final  String title;
+@override@JsonKey() final  String body;
+@override@JsonKey() final  bool pinned;
+@override final  String sortKey;
+@override final  String updatedAt;
+@override final  String? deletedAt;
+
+/// Create a copy of Note
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$NoteCopyWith<_Note> get copyWith => __$NoteCopyWithImpl<_Note>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$NoteToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Note&&(identical(other.id, id) || other.id == id)&&(identical(other.listId, listId) || other.listId == listId)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&(identical(other.pinned, pinned) || other.pinned == pinned)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,listId,title,body,pinned,sortKey,updatedAt,deletedAt);
+}
+
+@override
+String toString() {
+    return 'Note(id: $id, listId: $listId, title: $title, body: $body, pinned: $pinned, sortKey: $sortKey, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$NoteCopyWith<$Res> implements $NoteCopyWith<$Res> {
+  factory _$NoteCopyWith(_Note value, $Res Function(_Note) _then) = __$NoteCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String listId, String title, String body, bool pinned, String sortKey, String updatedAt, String? deletedAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$NoteCopyWithImpl<$Res>
+    implements _$NoteCopyWith<$Res> {
+  __$NoteCopyWithImpl(this._self, this._then);
+
+  final _Note _self;
+  final $Res Function(_Note) _then;
+
+/// Create a copy of Note
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? body = null,Object? pinned = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
+  return _then(_Note(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,listId: null == listId ? _self.listId : listId // ignore: cast_nullable_to_non_nullable
+as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
+as String,pinned: null == pinned ? _self.pinned : pinned // ignore: cast_nullable_to_non_nullable
+as bool,sortKey: null == sortKey ? _self.sortKey : sortKey // ignore: cast_nullable_to_non_nullable
+as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as String,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+// dart format on

@@ -163,4 +163,43 @@ void main() {
       expect(find.text('45'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'a refused edit shows the stored cost again, not the rejected text',
+    (tester) async {
+      final harness = await pumpApp(tester, initialLocation: '/tasks/t1');
+      await harness.seedList('l1', 'Home');
+      await harness.seedTask('t1', 'l1', title: 'Fix the tap');
+      await harness.db.upsertTask(
+        (await harness.db.taskById('t1'))!.copyWith(costMinor: 1250),
+      );
+      await tester.pumpAndSettle();
+
+      await scrollIntoView(tester, find.byKey(const Key('task-cost')));
+      expect(find.text('12.50'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('task-cost')), 'lots');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      expect((await harness.db.taskById('t1'))!.costMinor, 1250);
+      expect(find.text('lots'), findsNothing);
+      expect(find.text('12.50'), findsOneWidget);
+    },
+  );
+
+  testWidgets('a stored cost renders as the locale would write it', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/tasks/t1');
+    await harness.seedList('l1', 'Home');
+    await harness.seedTask('t1', 'l1', title: 'Fix the tap');
+    await harness.db.upsertTask(
+      (await harness.db.taskById('t1'))!.copyWith(costMinor: 1250),
+    );
+    await tester.pumpAndSettle();
+
+    await scrollIntoView(tester, find.byKey(const Key('task-cost')));
+
+    expect(find.text('12.50'), findsOneWidget);
+  });
 }

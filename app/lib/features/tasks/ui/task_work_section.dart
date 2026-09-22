@@ -89,10 +89,15 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
       // Written back with the separator [locale] itself writes numbers
       // with, so an amount nobody touched still reads as that locale
       // would type it, not always with a literal dot.
+      //
+      // Built from integer arithmetic, never `cost / 100` as a double: a
+      // double round-trips imprecisely for large minor-unit values (see
+      // the `parseMinorUnits` regression this mirrors), silently changing
+      // the stored amount on a redisplay nobody asked for.
       final separator = NumberFormat.decimalPattern(locale).symbols.DECIMAL_SEP;
       final shown = cost == null
           ? ''
-          : (cost / 100).toStringAsFixed(2).replaceAll('.', separator);
+          : '${cost ~/ 100}$separator${(cost % 100).toString().padLeft(2, '0')}';
       if (_cost.text != shown) _cost.text = shown;
     }
   }

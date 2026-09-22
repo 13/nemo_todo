@@ -60,6 +60,19 @@ void main() {
     expect((await db.noteById(note.id))!.isDeleted, isTrue);
   });
 
+  test('deleting a note stamps updatedAt with the tombstone itself', () async {
+    final note = await repository.create(listId: 'l1', title: 'Bread');
+
+    await repository.delete(note.id);
+
+    final row = await db.noteById(note.id);
+    expect(
+      row!.updatedAt,
+      row.deletedAt,
+      reason: 'matches TasksRepository, which reuses the one stamp',
+    );
+  });
+
   test('a restored note is no longer tombstoned', () async {
     final note = await repository.create(listId: 'l1', title: 'Bread');
     await repository.delete(note.id);

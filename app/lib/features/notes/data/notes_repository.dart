@@ -77,8 +77,9 @@ class NotesRepository {
     await _write(change(note));
   }
 
-  Future<void> _write(Note note) =>
-      _db.upsertNote(note.copyWith(updatedAt: _clock.now().toString()));
+  Future<void> _write(Note note) => _db.upsertNote(
+    note.copyWith(updatedAt: note.deletedAt ?? _clock.now().toString()),
+  );
 
   Future<String> _nextSortKey(String listId) async {
     final last =

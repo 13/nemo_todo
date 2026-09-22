@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/widgets/max_width.dart';
+import 'package:nemo/features/notes/ui/note_body_view.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -24,6 +25,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   final _body = TextEditingController();
   final _titleFocus = FocusNode();
   final _bodyFocus = FocusNode();
+
+  // The body opens rendered -- most visits to a note are to read it, not
+  // change it -- and only shows its markdown source once asked to.
+  bool _editing = false;
 
   @override
   void initState() {
@@ -56,6 +61,14 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   void _saveIfUnfocused() {
     if (_titleFocus.hasFocus || _bodyFocus.hasFocus) return;
     unawaited(_save());
+  }
+
+  /// Flips read/edit. Leaving edit mode saves first, the same as
+  /// unfocusing the field does, since the field is about to disappear
+  /// rather than merely lose focus.
+  Future<void> _toggleEditing() async {
+    if (_editing) await _save();
+    setState(() => _editing = !_editing);
   }
 
   Future<void> _save() async {
@@ -92,7 +105,16 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         if (context.mounted) Navigator.of(context).pop();
       },
       child: Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              key: const Key('note-edit-toggle'),
+              tooltip: _editing ? l.noteReadToggle : l.noteEditToggle,
+              icon: Icon(_editing ? Icons.check_rounded : Icons.edit_outlined),
+              onPressed: () => unawaited(_toggleEditing()),
+            ),
+          ],
+        ),
         body: MaxWidth(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
@@ -111,22 +133,25 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                   border: InputBorder.none,
                 ),
               ),
-              // Task 6 replaces this with NoteBodyView's rendered markdown
-              // once the note is not the one being edited; for now the body
-              // is always the plain source.
-              TextField(
-                key: const Key('note-body'),
-                controller: _body,
-                focusNode: _bodyFocus,
-                maxLines: null,
-                minLines: 6,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: l.noteBodyHint,
-                  filled: false,
-                  border: InputBorder.none,
+              if (_editing)
+                TextField(
+                  key: const Key('note-body'),
+                  controller: _body,
+                  focusNode: _bodyFocus,
+                  maxLines: null,
+                  minLines: 6,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    hintText: l.noteBodyHint,
+                    filled: false,
+                    border: InputBorder.none,
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: NoteBodyView(body: note.body),
                 ),
-              ),
             ],
           ),
         ),

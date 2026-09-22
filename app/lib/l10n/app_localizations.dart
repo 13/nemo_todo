@@ -1712,6 +1712,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'This note is no longer here.'**
   String get noteNotFound;
+
+  /// No description provided for @noteEditToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get noteEditToggle;
+
+  /// No description provided for @noteReadToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get noteReadToggle;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

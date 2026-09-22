@@ -543,5 +543,7 @@
   "noteTitleHint": "Title",
   "noteBodyHint": "Write something",
   "notePreviewEmpty": "Empty note",
-  "noteNotFound": "This note is no longer here."
+  "noteNotFound": "This note is no longer here.",
+  "noteEditToggle": "Edit",
+  "noteReadToggle": "Done"
 }

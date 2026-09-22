@@ -1038,4 +1038,10 @@ class LEn extends L {
 
   @override
   String get noteNotFound => 'This note is no longer here.';
+
+  @override
+  String get noteEditToggle => 'Edit';
+
+  @override
+  String get noteReadToggle => 'Done';
 }

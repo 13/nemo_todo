@@ -474,13 +474,19 @@ extension SyncWrites on AppDatabase {
 
   /// Blobs waiting to be uploaded.
   ///
-  /// A blob whose only live pictures hang on a note is left out once the
-  /// server has said, explicitly, that it does not take notes: that
-  /// picture's row is held back the same way a note's own row is, so
-  /// offering its bytes anyway would let a rolled-back server's blob sweep
-  /// delete them before the row that names them ever lands. A blob a task
-  /// also names, or one the server has not ruled notes out for, is never
-  /// held here.
+  /// A blob whose only live pictures hang on a note is left out until the
+  /// server is *known* to take notes -- not only once it has explicitly
+  /// said it does not. Unset means exactly the same "not yet known" that a
+  /// literal `'false'` does: the notes gate on the row itself already
+  /// treats them alike, and the blob endpoints have no notes gate of their
+  /// own to 404 the mistake the way a photos-blind server does, so an
+  /// upload offered on the strength of an unset flag would simply succeed,
+  /// stranding bytes behind a row the server will never take. That picture's
+  /// row is held back the same way a note's own row is, so offering its
+  /// bytes anyway would let a rolled-back (or not-yet-caught-up) server's
+  /// blob sweep delete them before the row that names them ever lands. A
+  /// blob a task also names, or one the server is known to take notes for,
+  /// is never held here.
   Future<List<BlobRow>> pendingBlobs() async {
     final pending = await (select(
       blobs,
@@ -489,21 +495,40 @@ extension SyncWrites on AppDatabase {
     final notesFlag = await (select(
       kv,
     )..where((t) => t.key.equals(KvKeys.serverNotes))).getSingleOrNull();
-    if (notesFlag?.value != 'false') return pending;
+    if (notesFlag?.value == 'true') return pending;
     final eligible = <BlobRow>[];
     for (final blob in pending) {
-      final rows =
-          await (select(photos)..where(
-                (t) => t.sha256.equals(blob.sha256) & t.deletedAt.isNull(),
-              ))
-              .get();
-      if (rows.isNotEmpty &&
-          rows.every((p) => p.parentKind == PhotoParent.note)) {
-        continue;
-      }
+      if (await _isNoteOnlyBlob(blob.sha256)) continue;
       eligible.add(blob);
     }
     return eligible;
+  }
+
+  /// Whether some pending blob is held only because every live picture
+  /// naming it hangs on a note -- regardless of what is currently known
+  /// about the server's note support. Lets the engine notice, on the round
+  /// a notes-blind server turns out to take them after all, that bytes
+  /// [pendingBlobs] was withholding this round are worth another round --
+  /// without mistaking some unrelated stuck blob (a task picture that
+  /// failed to upload) for one of these, which would send the engine round
+  /// after round for a reason that has nothing to do with notes.
+  Future<bool> hasHeldNoteBlobs() async {
+    final pending = await (select(
+      blobs,
+    )..where((t) => t.state.equals('pendingUpload'))).get();
+    for (final blob in pending) {
+      if (await _isNoteOnlyBlob(blob.sha256)) return true;
+    }
+    return false;
+  }
+
+  /// Whether every live photo row naming [sha256] hangs on a note.
+  Future<bool> _isNoteOnlyBlob(String sha256) async {
+    final rows = await (select(
+      photos,
+    )..where((t) => t.sha256.equals(sha256) & t.deletedAt.isNull())).get();
+    return rows.isNotEmpty &&
+        rows.every((p) => p.parentKind == PhotoParent.note);
   }
 
   /// Hashes named by a live photo row that this device does not hold,

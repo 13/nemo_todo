@@ -265,19 +265,30 @@ class SyncEngine extends _$SyncEngine {
         // this request's queue was built before that was known, so a note
         // -- or a picture hanging on one, with no note beside it in the
         // queue -- held back is worth sending now rather than waiting for
-        // the next edit.
+        // the next edit. `hasHeldNoteBlobs` is checked too, not just the
+        // outbox: a note picture whose bytes are still unsynced is held
+        // back from the outbox entirely (`_pushablePhoto` returns `_held`),
+        // so it could never trip the check below on its own -- its bytes,
+        // held by `pendingBlobs` on the strength of the same now-stale
+        // `serverNotes`, are the only sign this round left anything
+        // behind. Narrower than asking whether any blob at all is still
+        // pending: an unrelated stuck upload (a task picture the server
+        // keeps refusing) would otherwise trip this every round the flag
+        // happened to flip, for a reason that has nothing to do with
+        // notes.
         final noteRoundNeeded =
             response.notes &&
             !serverNotes &&
-            (await db.outboxChanges(
-              includePhotos: true,
-              includeNotes: true,
-            )).any(
-              (c) =>
-                  c.entity == SyncEntity.note ||
-                  (c is SyncChangePhoto &&
-                      c.row.parentKind == PhotoParent.note),
-            );
+            (await db.hasHeldNoteBlobs() ||
+                (await db.outboxChanges(
+                  includePhotos: true,
+                  includeNotes: true,
+                )).any(
+                  (c) =>
+                      c.entity == SyncEntity.note ||
+                      (c is SyncChangePhoto &&
+                          c.row.parentKind == PhotoParent.note),
+                ));
         if (photoRoundNeeded || noteRoundNeeded) _again = true;
       }
       pushed = true;

@@ -910,6 +910,35 @@ void main() {
     },
   );
 
+  // `onSignedIn` clears both capability flags to null before syncing, so
+  // the very first round after a sign-in has an *unset* serverNotes, not a
+  // 'false' one. A filter that only engages on the literal 'false' misses
+  // this round entirely, and a notes-blind server has no notes gate on the
+  // blob endpoints to catch the mistake the way a photos-blind one does:
+  // the upload would simply succeed, stranding bytes behind a row the
+  // server will never take.
+  test("signing in holds a note picture's bytes until the server is known to "
+      'take notes', () async {
+    client.notes = false;
+    await db.upsertList(list('l1', testClock('a').now().toString()));
+    final note = await notes().create(listId: 'l1', title: 'N');
+    final photo = (await photos().add(PhotoParent.note, note.id, smallJpeg()))!;
+    final c = await container();
+
+    await c.read(syncEngineProvider.notifier).onSignedIn();
+
+    expect(client.uploaded, isEmpty);
+    final blobRow = await (db.select(
+      db.blobs,
+    )..where((t) => t.sha256.equals(photo.sha256))).getSingle();
+    expect(blobRow.state, 'pendingUpload');
+    // Settles rather than spinning: a permanently notes-blind server
+    // must not send the engine round after round chasing bytes it will
+    // never be allowed to send.
+    expect(c.read(syncEngineProvider).status, SyncStatus.idle);
+    expect(client.calls, 1);
+  });
+
   test('signing in to a server without photos pushes no photo rows', () async {
     await syncedPicture('https://nemo.test|ben');
     await db.upsertList(list('l1', testClock('a').now().toString()));

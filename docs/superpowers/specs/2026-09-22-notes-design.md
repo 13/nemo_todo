@@ -44,13 +44,14 @@ collection counts references by selecting `sha256` from that one table,
 and a second attachment table would mean a second place to consult and a
 new way to leak or prematurely delete bytes.
 
-The cost is a renamed field on a synced entity and a migration of every
-existing photo row on both sides. Two things contain it. First, the JSON
-stays backward compatible in both directions: a task photo still emits
-`task_id` alongside the new fields, and a payload carrying only `task_id`
-still reads. Second, note rows and note photos are withheld from any
-client that did not ask for notes, so a client old enough to be confused
-by them never receives one.
+The cost is a migration of every existing photo row on both sides, and a
+column rename in both databases. Two things contain it. First, nothing
+about the JSON changes for a task photo: the field stays spelled
+`task_id`, the rename is Dart-side and SQL-side only, and the one new key
+is a discriminator that defaults to `task` when it is absent. Second,
+note rows and note photos are withheld from any client that did not ask
+for notes, so a client old enough to be confused by them never receives
+one.
 
 ## Model
 

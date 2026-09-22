@@ -47,24 +47,38 @@ int? _hoursAndMinutes(int hours, int minutes) {
 ///
 /// Returns null for anything it cannot read, and for more decimal places
 /// than the minor unit has: 12.505 is a typo, not an amount.
+///
+/// The digits are parsed and combined as integers, never as a `double` --
+/// a double loses precision past 2^53 - 1, and rounding an already-lossy
+/// intermediate can silently hand back an amount nobody typed. Computing
+/// the minor units from the digit strings themselves is exact by
+/// construction for every input the regex above admits, so there is no
+/// imprecise intermediate left to bound.
 int? parseMinorUnits(String input, {required String locale}) {
   final text = input.trim();
   if (text.isEmpty) return null;
   final separator = NumberFormat.decimalPattern(locale).symbols.DECIMAL_SEP;
   final normalised = text.replaceAll(separator, '.');
   if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(normalised)) return null;
-  final value = double.parse(normalised);
-  final minor = value * 100;
-  // A double represents every integer up to 2^53 - 1 exactly (the
-  // well-known "max safe integer"); past that, `.round()` can return a
-  // number nobody typed -- for a large enough amount it silently
-  // saturates to int64.max instead of the intended value. Refuse rather
-  // than hand back a wrong amount.
-  if (minor.isNaN || minor.abs() > _maxSafeMinorUnits) return null;
-  return minor.round();
+  final segments = normalised.split('.');
+  final whole = int.tryParse(segments[0]);
+  if (whole == null) return null;
+  var fractionText = segments.length > 1 ? segments[1] : '0';
+  if (fractionText.length == 1) fractionText = '${fractionText}0';
+  final fraction = int.tryParse(fractionText);
+  if (fraction == null) return null;
+  return _wholeAndFraction(whole, fraction);
 }
 
-const double _maxSafeMinorUnits = 9007199254740991; // 2^53 - 1
+/// Dart's `int` is a fixed-size 64-bit integer, so [int.tryParse] already
+/// refuses a digit run too long to hold -- but `whole * 100 + fraction` can
+/// still overflow (and silently wrap, not throw) even when both parsed
+/// cleanly on their own. This refuses that case too instead of returning a
+/// wrapped, wrong total -- the same guard [_hoursAndMinutes] uses above.
+int? _wholeAndFraction(int whole, int fraction) {
+  if (whole > (_maxInt - fraction) ~/ 100) return null;
+  return whole * 100 + fraction;
+}
 
 /// `1 h 30 min`, `45 min`, `2 h`. Labels come from the l10n catalogue so
 /// each language writes its own.

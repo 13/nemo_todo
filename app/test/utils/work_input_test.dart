@@ -69,19 +69,52 @@ void main() {
       expect(parseMinorUnits('${'9' * 42}.50', locale: 'en'), isNull);
     });
 
-    test(
-      'reads exactly at the max-safe-integer boundary and refuses past it',
-      () {
-        // 9007199254740991 minor units == 2^53 - 1, the largest int a double
-        // represents exactly; one minor unit further can no longer be
-        // trusted to round-trip precisely.
+    test('reads the largest exact amount and refuses past it', () {
+      // The minor units are computed from the digit strings as exact
+      // integers, never through a double, so the only real limit is the
+      // int64 range they're stored in: int64.max (9223372036854775807)
+      // itself is the largest exact amount; one minor unit further can no
+      // longer fit.
+      expect(
+        parseMinorUnits('92233720368547758.07', locale: 'en'),
+        9223372036854775807,
+      );
+      expect(parseMinorUnits('92233720368547758.08', locale: 'en'), isNull);
+    });
+
+    test('reads a large amount exactly, with no double in the path', () {
+      // Regression for the reviewer's case: double.parse + *100 + .round()
+      // lost precision here and returned ...002 instead of ...001.
+      expect(
+        parseMinorUnits('89999999999980.01', locale: 'en'),
+        8999999999998001,
+      );
+    });
+
+    test('reads every amount in a band around 2^53 exactly', () {
+      // Built from exact cent values via integer/BigInt arithmetic (never a
+      // formatted double) and asserted to round-trip to precisely that cent
+      // value, across a band that straddles 8e15 and 9e15 -- proving
+      // exactness across a range, not just at one pinned point.
+      final centValues = <BigInt>[
+        for (final base in [
+          BigInt.from(8000000000000000),
+          BigInt.from(9000000000000000),
+        ])
+          for (final delta in [-3, -2, -1, 0, 1, 2, 3])
+            base + BigInt.from(delta),
+      ];
+      for (final cents in centValues) {
+        final whole = cents ~/ BigInt.from(100);
+        final fraction = (cents % BigInt.from(100)).abs();
+        final amount = '$whole.${fraction.toString().padLeft(2, '0')}';
         expect(
-          parseMinorUnits('90071992547409.91', locale: 'en'),
-          9007199254740991,
+          parseMinorUnits(amount, locale: 'en'),
+          cents.toInt(),
+          reason: '$amount should read back as exactly $cents minor units',
         );
-        expect(parseMinorUnits('90071992547409.99', locale: 'en'), isNull);
-      },
-    );
+      }
+    });
   });
 
   group('formatting', () {

@@ -15,10 +15,10 @@ abstract class Note with _$Note implements SyncRow {
     required String id,
     required String listId,
     required String title,
-    @Default('') String body,
-    @Default(false) bool pinned,
     required String sortKey,
     required String updatedAt,
+    @Default('') String body,
+    @Default(false) bool pinned,
     String? deletedAt,
   }) = _Note;
 

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Note {
 
- String get id; String get listId; String get title; String get body; bool get pinned; String get sortKey; String get updatedAt; String? get deletedAt;
+ String get id; String get listId; String get title; String get sortKey; String get updatedAt; String get body; bool get pinned; String? get deletedAt;
 /// Create a copy of Note
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $NoteCopyWith<Note> get copyWith => _$NoteCopyWithImpl<Note>(this as Note, _$ide
 @override
 bool operator ==(Object other) {
   final _this = this as Note;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Note&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.listId, _this.listId) || other.listId == _this.listId)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.body, _this.body) || other.body == _this.body)&&(identical(other.pinned, _this.pinned) || other.pinned == _this.pinned)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Note&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.listId, _this.listId) || other.listId == _this.listId)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.body, _this.body) || other.body == _this.body)&&(identical(other.pinned, _this.pinned) || other.pinned == _this.pinned)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Note;
-  return Object.hash(runtimeType,_this.id,_this.listId,_this.title,_this.body,_this.pinned,_this.sortKey,_this.updatedAt,_this.deletedAt);
+  return Object.hash(runtimeType,_this.id,_this.listId,_this.title,_this.sortKey,_this.updatedAt,_this.body,_this.pinned,_this.deletedAt);
 }
 
 @override
 String toString() {
   final _this = this as Note;
-  return 'Note(id: ${_this.id}, listId: ${_this.listId}, title: ${_this.title}, body: ${_this.body}, pinned: ${_this.pinned}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, deletedAt: ${_this.deletedAt})';
+  return 'Note(id: ${_this.id}, listId: ${_this.listId}, title: ${_this.title}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, body: ${_this.body}, pinned: ${_this.pinned}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $NoteCopyWith<$Res>  {
   factory $NoteCopyWith(Note value, $Res Function(Note) _then) = _$NoteCopyWithImpl;
 @useResult
 $Res call({
- String id, String listId, String title, String body, bool pinned, String sortKey, String updatedAt, String? deletedAt
+ String id, String listId, String title, String sortKey, String updatedAt, String body, bool pinned, String? deletedAt
 });
 
 
@@ -71,16 +71,16 @@ class _$NoteCopyWithImpl<$Res>
 
 /// Create a copy of Note
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? body = null,Object? pinned = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? sortKey = null,Object? updatedAt = null,Object? body = null,Object? pinned = null,Object? deletedAt = freezed,}) {
   return _then(Note(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,listId: null == listId ? _self.listId : listId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String,sortKey: null == sortKey ? _self.sortKey : sortKey // ignore: cast_nullable_to_non_nullable
+as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as String,pinned: null == pinned ? _self.pinned : pinned // ignore: cast_nullable_to_non_nullable
-as bool,sortKey: null == sortKey ? _self.sortKey : sortKey // ignore: cast_nullable_to_non_nullable
-as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as String,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -166,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String body,  bool pinned,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String body,  bool pinned,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Note() when $default != null:
-return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.body,_that.pinned,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -187,10 +187,10 @@ return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String body,  bool pinned,  String sortKey,  String updatedAt,  String? deletedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String body,  bool pinned,  String? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Note():
-return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.body,_that.pinned,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +207,10 @@ return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String listId,  String title,  String body,  bool pinned,  String sortKey,  String updatedAt,  String? deletedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String listId,  String title,  String sortKey,  String updatedAt,  String body,  bool pinned,  String? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Note() when $default != null:
-return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.sortKey,_that.updatedAt,_that.deletedAt);case _:
+return $default(_that.id,_that.listId,_that.title,_that.sortKey,_that.updatedAt,_that.body,_that.pinned,_that.deletedAt);case _:
   return null;
 
 }
@@ -222,16 +222,16 @@ return $default(_that.id,_that.listId,_that.title,_that.body,_that.pinned,_that.
 @JsonSerializable()
 
 class _Note extends Note {
-  const _Note({required this.id, required this.listId, required this.title, this.body = '', this.pinned = false, required this.sortKey, required this.updatedAt, this.deletedAt}): super._();
+  const _Note({required this.id, required this.listId, required this.title, required this.sortKey, required this.updatedAt, this.body = '', this.pinned = false, this.deletedAt}): super._();
   factory _Note.fromJson(Map<String, dynamic> json) => _$NoteFromJson(json);
 
 @override final  String id;
 @override final  String listId;
 @override final  String title;
-@override@JsonKey() final  String body;
-@override@JsonKey() final  bool pinned;
 @override final  String sortKey;
 @override final  String updatedAt;
+@override@JsonKey() final  String body;
+@override@JsonKey() final  bool pinned;
 @override final  String? deletedAt;
 
 /// Create a copy of Note
@@ -247,18 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Note&&(identical(other.id, id) || other.id == id)&&(identical(other.listId, listId) || other.listId == listId)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&(identical(other.pinned, pinned) || other.pinned == pinned)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Note&&(identical(other.id, id) || other.id == id)&&(identical(other.listId, listId) || other.listId == listId)&&(identical(other.title, title) || other.title == title)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.body, body) || other.body == body)&&(identical(other.pinned, pinned) || other.pinned == pinned)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,listId,title,body,pinned,sortKey,updatedAt,deletedAt);
+    return Object.hash(runtimeType,id,listId,title,sortKey,updatedAt,body,pinned,deletedAt);
 }
 
 @override
 String toString() {
-    return 'Note(id: $id, listId: $listId, title: $title, body: $body, pinned: $pinned, sortKey: $sortKey, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+    return 'Note(id: $id, listId: $listId, title: $title, sortKey: $sortKey, updatedAt: $updatedAt, body: $body, pinned: $pinned, deletedAt: $deletedAt)';
 }
 
 
@@ -269,7 +269,7 @@ abstract mixin class _$NoteCopyWith<$Res> implements $NoteCopyWith<$Res> {
   factory _$NoteCopyWith(_Note value, $Res Function(_Note) _then) = __$NoteCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String listId, String title, String body, bool pinned, String sortKey, String updatedAt, String? deletedAt
+ String id, String listId, String title, String sortKey, String updatedAt, String body, bool pinned, String? deletedAt
 });
 
 
@@ -286,16 +286,16 @@ class __$NoteCopyWithImpl<$Res>
 
 /// Create a copy of Note
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? body = null,Object? pinned = null,Object? sortKey = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? listId = null,Object? title = null,Object? sortKey = null,Object? updatedAt = null,Object? body = null,Object? pinned = null,Object? deletedAt = freezed,}) {
   return _then(_Note(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,listId: null == listId ? _self.listId : listId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String,sortKey: null == sortKey ? _self.sortKey : sortKey // ignore: cast_nullable_to_non_nullable
+as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as String,pinned: null == pinned ? _self.pinned : pinned // ignore: cast_nullable_to_non_nullable
-as bool,sortKey: null == sortKey ? _self.sortKey : sortKey // ignore: cast_nullable_to_non_nullable
-as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as String,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

@@ -24,10 +24,6 @@ abstract class Photo with _$Photo implements SyncRow {
     /// notes is never sent a photo whose parent is one.
     @JsonKey(name: 'task_id') required String parentId,
 
-    /// Absent on the wire from a client or server released before notes,
-    /// where it could only ever have meant a task.
-    @Default(PhotoParent.task) PhotoParent parentKind,
-
     /// Lowercase hex SHA-256 of the processed bytes.
     required String sha256,
     required int byteSize,
@@ -35,6 +31,11 @@ abstract class Photo with _$Photo implements SyncRow {
     required int height,
     required String sortKey,
     required String updatedAt,
+
+    /// Absent on the wire from a client or server released before notes,
+    /// where it could only ever have meant a task.
+    @Default(PhotoParent.task) PhotoParent parentKind,
+
     String? deletedAt,
   }) = _Photo;
 

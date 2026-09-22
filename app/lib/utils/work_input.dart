@@ -8,9 +8,6 @@ int? parseMinutes(String input) {
   final text = input.trim().toLowerCase();
   if (text.isEmpty) return null;
 
-  final bare = RegExp(r'^\d+$').firstMatch(text);
-  if (bare != null) return int.tryParse(text);
-
   final colon = RegExp(r'^(\d+):([0-5]?\d)$').firstMatch(text);
   if (colon != null) {
     final hours = int.tryParse(colon.group(1)!);
@@ -104,6 +101,14 @@ String formatMinutes(
 }
 
 /// The amount as [locale] would write it, with [currency]'s symbol.
+///
+/// Assumes every stored amount is in hundredths (minor units with an
+/// exponent of 2), the same assumption [parseMinorUnits] makes. `minor /
+/// 100` matches that; `simpleCurrency`'s own formatting instead applies
+/// each currency's *real* exponent, which is not always 2 -- JPY has none,
+/// so a 1250-minor-unit amount would render as `¥13`, not `¥12.50`.
+/// Unreachable today because the currency picker only offers two-decimal
+/// codes, but silently wrong the moment that list grows.
 String formatMoney(
   int minor, {
   required String currency,

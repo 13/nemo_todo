@@ -31,8 +31,15 @@ void main() {
       expect(parseMinutes('${'9' * 42}:30'), isNull);
     });
 
-    test('reads exactly at the int64 boundary and refuses past it', () {
-      expect(parseMinutes('9223372036854775807'), 9223372036854775807);
+    test('refuses the int64 boundary too -- it is past the exact-JS ceiling '
+        'like everything else the bare path now shares with hours:minutes', () {
+      // The bare-number path used to skip `_hoursAndMinutes`' guard and
+      // return `int.tryParse` directly, so this pinned the raw int64 value
+      // on the VM -- but `int.tryParse` is not consistent across dart2js
+      // and the VM past 2^53 - 1 (see the module doc on `_maxExactInt`), so
+      // a bare number now goes through the same guard as every other shape
+      // and is refused here too, on every target alike.
+      expect(parseMinutes('9223372036854775807'), isNull);
       expect(parseMinutes('9223372036854775808'), isNull);
     });
 

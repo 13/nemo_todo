@@ -1916,6 +1916,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Redo'**
   String get mdRedo;
+
+  /// Label of a task link chip in a note when the linked task no longer exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Task deleted'**
+  String get noteTaskDeleted;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

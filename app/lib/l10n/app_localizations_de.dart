@@ -1150,4 +1150,7 @@ class LDe extends L {
 
   @override
   String get mdRedo => 'Wiederholen';
+
+  @override
+  String get noteTaskDeleted => 'Aufgabe gelöscht';
 }

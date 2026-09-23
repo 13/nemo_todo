@@ -128,6 +128,18 @@ extension SeedTestApp on TestApp {
         // `compute` never reports back.
         process: (raw) async => processPhoto(raw),
       ).add(kind, parentId, smallJpeg());
+
+  /// [child] inside this harness's providers, theme and localisations, for
+  /// a widget test that needs the database but not the whole router.
+  Widget wrap(Widget child) => UncontrolledProviderScope(
+    container: container,
+    child: MaterialApp(
+      theme: AppTheme.light(),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
+      home: child,
+    ),
+  );
 }
 
 /// The app over a fresh in-memory database, routed to [initialLocation].

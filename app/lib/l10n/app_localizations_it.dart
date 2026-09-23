@@ -1151,4 +1151,7 @@ class LIt extends L {
 
   @override
   String get mdRedo => 'Ripeti';
+
+  @override
+  String get noteTaskDeleted => 'Attività eliminata';
 }

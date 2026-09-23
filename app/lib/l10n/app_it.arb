@@ -302,5 +302,6 @@
   "mdLinkUrlHint": "URL",
   "mdOpenLink": "Apri link",
   "mdUndo": "Annulla",
-  "mdRedo": "Ripeti"
+  "mdRedo": "Ripeti",
+  "noteTaskDeleted": "Attività eliminata"
 }

@@ -580,5 +580,9 @@
   "mdLinkUrlHint": "URL",
   "mdOpenLink": "Open link",
   "mdUndo": "Undo",
-  "mdRedo": "Redo"
+  "mdRedo": "Redo",
+  "noteTaskDeleted": "Task deleted",
+  "@noteTaskDeleted": {
+    "description": "Label of a task link chip in a note when the linked task no longer exists."
+  }
 }

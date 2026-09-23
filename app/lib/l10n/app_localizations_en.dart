@@ -1140,4 +1140,7 @@ class LEn extends L {
 
   @override
   String get mdRedo => 'Redo';
+
+  @override
+  String get noteTaskDeleted => 'Task deleted';
 }

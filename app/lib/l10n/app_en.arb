@@ -560,6 +560,10 @@
   "noteUnpin": "Unpin",
   "noteDelete": "Delete",
   "noteMoveToList": "Move to list",
+  "noteSaveFailed": "Couldn't save the note",
+  "@noteSaveFailed": {
+    "description": "Snackbar when writing a note's title or body to the local store fails; the typed text stays in the field."
+  },
   "notesDeleteConfirm": "Delete this note?",
   "notesDeleted": "Note deleted",
   "mdBold": "Bold",

@@ -285,6 +285,7 @@
   "noteUnpin": "Non fissare più",
   "noteDelete": "Elimina",
   "noteMoveToList": "Sposta in un'altra lista",
+  "noteSaveFailed": "Impossibile salvare la nota",
   "notesDeleteConfirm": "Eliminare questa nota?",
   "notesDeleted": "Nota eliminata",
   "mdBold": "Grassetto",

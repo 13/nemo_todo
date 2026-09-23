@@ -1809,6 +1809,12 @@ abstract class L {
   /// **'Move to list'**
   String get noteMoveToList;
 
+  /// Snackbar when writing a note's title or body to the local store fails; the typed text stays in the field.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the note'**
+  String get noteSaveFailed;
+
   /// No description provided for @notesDeleteConfirm.
   ///
   /// In en, this message translates to:

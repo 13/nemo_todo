@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
+import 'package:nemo/features/notes/data/notes_repository.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
 import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
@@ -58,9 +59,17 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   // it differs from this one.
   Note? _superseded;
 
+  // Kept for `dispose`, where Riverpod no longer allows `ref`: a page can
+  // go without a pop -- on web, browser back and a deep link's `go` are
+  // URL changes `PopScope` never hears of -- and whatever is still dirty
+  // is written from here then. Refreshed on every save, so it follows the
+  // provider if that is ever rebuilt.
+  late NotesRepository _repo;
+
   @override
   void initState() {
     super.initState();
+    _repo = ref.read(notesRepositoryProvider);
     _titleFocus.addListener(_onFocusChange);
     _bodyFocus.addListener(_onFocusChange);
     // A listener, not `onChanged`: toolbar buttons and shortcuts write
@@ -84,6 +93,17 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    if (_titleDirty || _bodyDirty) {
+      final title = _title.text.trim();
+      unawaited(
+        _flush(
+          _repo,
+          widget.noteId,
+          title: _titleDirty && title.isNotEmpty ? title : null,
+          body: _bodyDirty ? _body.text : null,
+        ),
+      );
+    }
     _title.dispose();
     _body.dispose();
     _undo.dispose();
@@ -110,6 +130,22 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
   }
 
+  /// The last-chance write from [dispose]. A failure here has no page left
+  /// to show it on, so it is only logged; there is nothing else to do with
+  /// the text once its field is gone.
+  static Future<void> _flush(
+    NotesRepository repo,
+    String id, {
+    String? title,
+    String? body,
+  }) async {
+    try {
+      await repo.updateText(id, title: title, body: body);
+    } on Object catch (error, stack) {
+      debugPrint('note $id not saved on leaving: $error\n$stack');
+    }
+  }
+
   void _scheduleSave() {
     _debounce?.cancel();
     _debounce = Timer(_debounceDelay, () => unawaited(_save()));
@@ -125,12 +161,23 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _save() async {
+  /// Writes the dirty fields, and only those, through
+  /// [NotesRepository.updateText] -- never the whole row from
+  /// `noteByIdProvider`'s copy, which can predate a pin, move or delete
+  /// that has already landed and would be written back over it.
+  ///
+  /// Returns false when the write failed. The flags then stay set, so the
+  /// text is neither lost nor overwritten by `_fill`, and the next save --
+  /// or [dispose] -- tries again; a snackbar says so meanwhile.
+  Future<bool> _save() async {
     _debounce?.cancel();
+    if (!mounted) return true;
     final note = ref.read(noteByIdProvider(widget.noteId)).value;
-    if (note == null) return;
+    if (note == null) return true;
     final rawTitle = _title.text.trim();
-    final title = _titleDirty && rawTitle.isNotEmpty ? rawTitle : note.title;
+    // A title cleared to nothing keeps the stored one: it is not written.
+    final writeTitle = _titleDirty && rawTitle.isNotEmpty;
+    final title = writeTitle ? rawTitle : note.title;
     final body = _bodyDirty ? _body.text : note.body;
     if (title == note.title && body == note.body) {
       // Nothing to write, but a dirty field that trimmed/normalized back
@@ -139,7 +186,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       // flight to wait for.
       _titleDirty = false;
       _bodyDirty = false;
-      return;
+      return true;
     }
     // The flags stay set for the whole write, not cleared up front: `_fill`
     // must keep skipping this field until the note it reads back actually
@@ -162,10 +209,25 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     // field's own stale text on the next save (a pop, say).
     final sentTitle = _title.text;
     final sentBody = _body.text;
-    await ref
-        .read(notesRepositoryProvider)
-        .save(note.copyWith(title: title, body: body));
-    if (!mounted) return;
+    final repo = _repo = ref.read(notesRepositoryProvider);
+    try {
+      await repo.updateText(
+        widget.noteId,
+        title: writeTitle ? title : null,
+        body: _bodyDirty ? body : null,
+      );
+    } on Object catch (error, stack) {
+      // Any failure, not just an Exception: whatever went wrong, the text
+      // must stay put and the person must hear that it isn't saved.
+      debugPrint('note ${widget.noteId} not saved: $error\n$stack');
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(L.of(context).noteSaveFailed)));
+      }
+      return false;
+    }
+    if (!mounted) return true;
     _superseded = note;
     // A field whose flag clears here is settled straight to the value just
     // written -- the trimmed title, or the stored one when it was left
@@ -187,6 +249,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       _bodyDirty = false;
       if (!_bodyFocus.hasFocus && _body.text != body) _body.text = body;
     }
+    return true;
   }
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {
@@ -222,7 +285,9 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        await _save();
+        // A failed write keeps the page open, its snackbar showing: leaving
+        // would leave the text to `dispose`'s one unannounced retry.
+        if (!await _save()) return;
         if (!context.mounted) return;
         // Reached directly -- a deep link, a shared URL, a PWA restore --
         // this can be the only page on the stack, with nothing below it

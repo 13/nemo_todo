@@ -60,6 +60,20 @@ class NotesRepository {
 
   Future<void> save(Note note) => _write(note);
 
+  /// Writes only the given text fields onto the stored note, read fresh.
+  ///
+  /// The editor's save path: unlike [save], it never writes back a pin,
+  /// move or delete the caller's copy of the note hasn't seen yet. A note
+  /// that is gone or tombstoned stays that way.
+  Future<void> updateText(String id, {String? title, String? body}) async {
+    if (title == null && body == null) return;
+    final note = await _db.noteById(id);
+    if (note == null || note.isDeleted) return;
+    await _write(
+      note.copyWith(title: title ?? note.title, body: body ?? note.body),
+    );
+  }
+
   Future<void> setPinned(String id, {required bool pinned}) =>
       _edit(id, (note) => note.copyWith(pinned: pinned));
 

@@ -285,6 +285,7 @@
   "noteUnpin": "Nicht mehr anheften",
   "noteDelete": "Löschen",
   "noteMoveToList": "In andere Liste verschieben",
+  "noteSaveFailed": "Notiz konnte nicht gespeichert werden",
   "notesDeleteConfirm": "Diese Notiz löschen?",
   "notesDeleted": "Notiz gelöscht",
   "mdBold": "Fett",

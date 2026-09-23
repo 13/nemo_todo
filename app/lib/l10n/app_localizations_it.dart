@@ -1099,6 +1099,9 @@ class LIt extends L {
   String get noteMoveToList => 'Sposta in un\'altra lista';
 
   @override
+  String get noteSaveFailed => 'Impossibile salvare la nota';
+
+  @override
   String get notesDeleteConfirm => 'Eliminare questa nota?';
 
   @override

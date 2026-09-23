@@ -17,7 +17,8 @@ import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
 
-/// A [NotesRepository] whose `save` waits on [_gate] before writing anything.
+/// A [NotesRepository] whose `updateText` -- the screen's save path --
+/// waits on [_gate] before writing anything.
 ///
 /// Used to make the gap between `_save` kicking a write off and the write
 /// actually landing observable from a test -- the in-memory test database
@@ -30,9 +31,9 @@ class _GatedNotesRepository extends NotesRepository {
   final Completer<void> _gate;
 
   @override
-  Future<void> save(Note note) async {
+  Future<void> updateText(String id, {String? title, String? body}) async {
     await _gate.future;
-    await super.save(note);
+    await super.updateText(id, title: title, body: body);
   }
 }
 
@@ -52,6 +53,44 @@ class _LaggingNotesRepository extends NotesRepository {
     await Future<void>.delayed(_lag);
     return note;
   });
+}
+
+/// A [NotesRepository] whose text writes always fail, as a full disk or a
+/// closed database would.
+class _FailingNotesRepository extends NotesRepository {
+  _FailingNotesRepository(super._db, super._clock, super._newId);
+
+  @override
+  Future<void> save(Note note) async => throw StateError('disk full');
+
+  @override
+  Future<void> updateText(String id, {String? title, String? body}) async =>
+      throw StateError('disk full');
+}
+
+/// A [NotesRepository] whose first text write fails and later ones land.
+class _FailingOnceNotesRepository extends NotesRepository {
+  _FailingOnceNotesRepository(super._db, super._clock, super._newId);
+
+  var _failed = false;
+
+  @override
+  Future<void> save(Note note) async {
+    if (!_failed) {
+      _failed = true;
+      throw StateError('disk full');
+    }
+    await super.save(note);
+  }
+
+  @override
+  Future<void> updateText(String id, {String? title, String? body}) async {
+    if (!_failed) {
+      _failed = true;
+      throw StateError('disk full');
+    }
+    await super.updateText(id, title: title, body: body);
+  }
 }
 
 void main() {
@@ -471,6 +510,169 @@ void main() {
     // The field itself must catch up to that fallback, not keep showing
     // the blank text that was typed into it.
     expect(titleField(tester).controller!.text, 'Bread');
+  });
+
+  appTest('an unsaved edit is saved when the page is left without a pop, '
+      'as a browser back or a deep link does', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    // Well inside the debounce: nothing has been written yet.
+    await tester.pump(const Duration(milliseconds: 100));
+    expect((await harness.db.noteById('n1'))!.body, 'dough');
+
+    // A URL change, not a pop: `PopScope` never hears of it.
+    harness.router.go('/notes');
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('note-body')), findsNothing);
+    expect((await harness.db.noteById('n1'))!.body, 'flour');
+  });
+
+  appTest('an unsaved edit is saved when the page is torn down while the '
+      'body still has focus', (tester) async {
+    // No route change and no unfocus -- the page just goes, as it does when
+    // the whole tree above it is replaced. Only `dispose` is left to save.
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    expect((await harness.db.noteById('n1'))!.body, 'flour');
+  });
+
+  appTest('an edit whose save failed is retried when the page is left', (
+    tester,
+  ) async {
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        notesRepositoryProvider.overrideWith(
+          (ref) => _FailingOnceNotesRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+          ),
+        ),
+      ],
+    );
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    expect((await harness.db.noteById('n1'))!.body, 'dough');
+
+    harness.router.go('/notes');
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('note-body')), findsNothing);
+    expect((await harness.db.noteById('n1'))!.body, 'flour');
+  });
+
+  appTest('a pin that lands while the body is dirty survives the save', (
+    tester,
+  ) async {
+    // The note stream lags past the debounce, so when the save fires the
+    // provider still holds the unpinned note -- the window in which a
+    // whole-row write would put the pin back.
+    const lag = Duration(seconds: 2);
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        notesRepositoryProvider.overrideWith(
+          (ref) => _LaggingNotesRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+            lag,
+          ),
+        ),
+      ],
+    );
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pump(lag * 2);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    await harness.container
+        .read(notesRepositoryProvider)
+        .setPinned('n1', pinned: true);
+    await tester.pump(const Duration(milliseconds: 1100));
+    await tester.pump(lag * 2);
+    await tester.pumpAndSettle();
+
+    final stored = (await harness.db.noteById('n1'))!;
+    expect(stored.body, 'flour');
+    expect(stored.pinned, isTrue);
+  });
+
+  appTest('a save that fails says so and keeps the text', (tester) async {
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        notesRepositoryProvider.overrideWith(
+          (ref) => _FailingNotesRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+          ),
+        ),
+      ],
+    );
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    expect(find.text("Couldn't save the note"), findsOneWidget);
+    expect(bodyField(tester).controller!.text, 'flour');
+    expect((await harness.db.noteById('n1'))!.body, 'dough');
+  });
+
+  appTest('a save that fails on back keeps the page open', (tester) async {
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes',
+      overrides: [
+        notesRepositoryProvider.overrideWith(
+          (ref) => _FailingNotesRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+          ),
+        ),
+      ],
+    );
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bread'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('note-body')), findsOneWidget);
+    expect(bodyField(tester).controller!.text, 'flour');
+    expect(find.text("Couldn't save the note"), findsOneWidget);
   });
 
   appTest('open link opens a web link at the cursor', (tester) async {

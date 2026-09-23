@@ -1098,6 +1098,9 @@ class LDe extends L {
   String get noteMoveToList => 'In andere Liste verschieben';
 
   @override
+  String get noteSaveFailed => 'Notiz konnte nicht gespeichert werden';
+
+  @override
   String get notesDeleteConfirm => 'Diese Notiz löschen?';
 
   @override

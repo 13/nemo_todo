@@ -49,6 +49,15 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   bool _titleDirty = false;
   bool _bodyDirty = false;
 
+  // The note a save of ours just replaced, while `noteByIdProvider` may
+  // still be holding it: the store's stream lags the write in production
+  // (drift's background isolate), so a rebuild in that window -- the one
+  // `_onFocusChange` forces, say -- would otherwise have `_fill` copy the
+  // pre-write text back into the fields `_save` has just settled. Every
+  // write stamps a fresh `updatedAt`, so any note the stream emits after
+  // it differs from this one.
+  Note? _superseded;
+
   @override
   void initState() {
     super.initState();
@@ -89,7 +98,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   /// field is skipped too -- `_save` keeps the flag set for the whole
   /// write, so this stays skipped until the field's text has actually
   /// landed in the store, not just until the write was kicked off.
+  /// Skips [_superseded] outright: it is older than what the fields show.
   void _fill(Note note) {
+    if (note == _superseded) return;
+    _superseded = null;
     if (!_titleFocus.hasFocus && !_titleDirty && _title.text != note.title) {
       _title.text = note.title;
     }
@@ -154,23 +166,27 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         .read(notesRepositoryProvider)
         .save(note.copyWith(title: title, body: body));
     if (!mounted) return;
-    // Clearing a flag can leave the field showing un-normalized text (the
-    // trailing space just trimmed off, or blank where the stored title
-    // should show through) with nothing left to force a rebuild -- so
-    // `setState` is called explicitly here, rather than relying on the
-    // note stream's own next emission, to run `_fill` and pick that up
-    // right away.
-    final current = ref.read(noteByIdProvider(widget.noteId)).value;
-    var needsFill = false;
+    _superseded = note;
+    // A field whose flag clears here is settled straight to the value just
+    // written -- the trimmed title, or the stored one when it was left
+    // blank; the body as typed -- rather than waiting on `_fill`, which
+    // would otherwise leave un-normalized text ("Bread ", or a blank
+    // title) showing with nothing left to rebuild it. Taken from what was
+    // written, never re-read from `noteByIdProvider`: the store's stream
+    // lags the write in production (drift's background isolate), so that
+    // read would still hold the pre-write note, and filling from it would
+    // flash the old text back until the stream caught up -- or, if the
+    // field were refocused in between, leave the old text there to be
+    // edited and saved over this write. Only while unfocused, like
+    // `_fill`; `_onBodyChanged` ignores the change for the same reason.
     if (_title.text == sentTitle) {
       _titleDirty = false;
-      if (current != null && _title.text != current.title) needsFill = true;
+      if (!_titleFocus.hasFocus && _title.text != title) _title.text = title;
     }
     if (_body.text == sentBody) {
       _bodyDirty = false;
-      if (current != null && _body.text != current.body) needsFill = true;
+      if (!_bodyFocus.hasFocus && _body.text != body) _body.text = body;
     }
-    if (needsFill) setState(() {});
   }
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {

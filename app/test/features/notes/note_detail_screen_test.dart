@@ -36,6 +36,24 @@ class _GatedNotesRepository extends NotesRepository {
   }
 }
 
+/// A [NotesRepository] whose [watch] delivers every emission [_lag] late.
+///
+/// Stands in for production, where drift runs on a background isolate: the
+/// row a `save` just wrote reaches the note stream some time after `save`
+/// itself has returned, so for that window the provider still holds the
+/// pre-write note.
+class _LaggingNotesRepository extends NotesRepository {
+  _LaggingNotesRepository(super._db, super._clock, super._newId, this._lag);
+
+  final Duration _lag;
+
+  @override
+  Stream<Note?> watch(String id) => super.watch(id).asyncMap((note) async {
+    await Future<void>.delayed(_lag);
+    return note;
+  });
+}
+
 void main() {
   TextField bodyField(WidgetTester tester) =>
       tester.widget<TextField>(find.byKey(const Key('note-body')));
@@ -265,6 +283,68 @@ void main() {
       expect(bodyField(tester).controller!.text, 'flour');
     },
   );
+
+  appTest('a saved edit does not flicker back to the old text while the note '
+      'stream still lags behind the write', (tester) async {
+    const lag = Duration(milliseconds: 500);
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        notesRepositoryProvider.overrideWith(
+          (ref) => _LaggingNotesRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+            lag,
+          ),
+        ),
+      ],
+    );
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'flour');
+    await tester.pump(lag * 2);
+    await tester.pumpAndSettle();
+    expect(titleField(tester).controller!.text, 'Bread');
+    expect(bodyField(tester).controller!.text, 'flour');
+
+    // Every distinct text each field shows, in order.
+    final title = titleField(tester).controller!;
+    final body = bodyField(tester).controller!;
+    final titles = [title.text];
+    final bodies = [body.text];
+    void recordTitle() {
+      if (titles.last != title.text) titles.add(title.text);
+    }
+
+    void recordBody() {
+      if (bodies.last != body.text) bodies.add(body.text);
+    }
+
+    title.addListener(recordTitle);
+    body.addListener(recordBody);
+    addTearDown(() {
+      title.removeListener(recordTitle);
+      body.removeListener(recordBody);
+    });
+
+    await tester.enterText(find.byKey(const Key('note-title')), 'Milk');
+    await tester.enterText(find.byKey(const Key('note-body')), 'dough');
+    FocusManager.instance.primaryFocus?.unfocus();
+    // Step through the lag frame by frame, so a revert that the stream
+    // later papers over is still caught by the listeners above.
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await tester.pumpAndSettle();
+
+    expect((await harness.db.noteById('n1'))!.title, 'Milk');
+    expect((await harness.db.noteById('n1'))!.body, 'dough');
+    expect(titles, ['Bread', 'Milk']);
+    expect(bodies, ['flour', 'dough']);
+    expect(title.text, 'Milk');
+    expect(body.text, 'dough');
+  });
 
   appTest('focusing the body without typing does not revert a sync that lands '
       'while it is focused, once it loses focus', (tester) async {

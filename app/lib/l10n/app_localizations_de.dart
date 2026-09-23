@@ -1086,12 +1086,6 @@ class LDe extends L {
   String get noteNotFound => 'Diese Notiz gibt es nicht mehr.';
 
   @override
-  String get noteEditToggle => 'Bearbeiten';
-
-  @override
-  String get noteReadToggle => 'Fertig';
-
-  @override
   String get notePin => 'Anheften';
 
   @override
@@ -1104,8 +1098,56 @@ class LDe extends L {
   String get noteMoveToList => 'In andere Liste verschieben';
 
   @override
+  String get noteSaveFailed => 'Notiz konnte nicht gespeichert werden';
+
+  @override
   String get notesDeleteConfirm => 'Diese Notiz löschen?';
 
   @override
   String get notesDeleted => 'Notiz gelöscht';
+
+  @override
+  String get mdBold => 'Fett';
+
+  @override
+  String get mdItalic => 'Kursiv';
+
+  @override
+  String get mdStrike => 'Durchgestrichen';
+
+  @override
+  String get mdHeading => 'Überschrift';
+
+  @override
+  String get mdBulletList => 'Aufzählung';
+
+  @override
+  String get mdNumberedList => 'Nummerierte Liste';
+
+  @override
+  String get mdChecklist => 'Kontrollkästchen';
+
+  @override
+  String get mdQuote => 'Zitat';
+
+  @override
+  String get mdCode => 'Code';
+
+  @override
+  String get mdCodeBlock => 'Codeblock';
+
+  @override
+  String get mdLink => 'Link';
+
+  @override
+  String get mdLinkUrlHint => 'URL';
+
+  @override
+  String get mdOpenLink => 'Link öffnen';
+
+  @override
+  String get mdUndo => 'Rückgängig';
+
+  @override
+  String get mdRedo => 'Wiederholen';
 }

@@ -556,12 +556,29 @@
   "noteBodyHint": "Write something",
   "notePreviewEmpty": "Empty note",
   "noteNotFound": "This note is no longer here.",
-  "noteEditToggle": "Edit",
-  "noteReadToggle": "Done",
   "notePin": "Pin",
   "noteUnpin": "Unpin",
   "noteDelete": "Delete",
   "noteMoveToList": "Move to list",
+  "noteSaveFailed": "Couldn't save the note",
+  "@noteSaveFailed": {
+    "description": "Snackbar when writing a note's title or body to the local store fails; the typed text stays in the field."
+  },
   "notesDeleteConfirm": "Delete this note?",
-  "notesDeleted": "Note deleted"
+  "notesDeleted": "Note deleted",
+  "mdBold": "Bold",
+  "mdItalic": "Italic",
+  "mdStrike": "Strikethrough",
+  "mdHeading": "Heading",
+  "mdBulletList": "Bulleted list",
+  "mdNumberedList": "Numbered list",
+  "mdChecklist": "Checkbox",
+  "mdQuote": "Quote",
+  "mdCode": "Code",
+  "mdCodeBlock": "Code block",
+  "mdLink": "Link",
+  "mdLinkUrlHint": "URL",
+  "mdOpenLink": "Open link",
+  "mdUndo": "Undo",
+  "mdRedo": "Redo"
 }

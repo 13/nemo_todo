@@ -1,10 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
-import 'package:nemo/features/notes/ui/note_body_view.dart';
+import 'package:nemo/features/notes/data/notes_repository.dart';
+import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
+import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
+import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/note_editor_sections.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
@@ -26,25 +31,82 @@ class NoteDetailScreen extends ConsumerStatefulWidget {
 
 class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   final _title = TextEditingController();
-  final _body = TextEditingController();
+  final _body = MarkdownEditingController();
+  final _undo = UndoHistoryController();
   final _titleFocus = FocusNode();
   final _bodyFocus = FocusNode();
 
-  // The body opens rendered -- most visits to a note are to read it, not
-  // change it -- and only shows its markdown source once asked to.
-  bool _editing = false;
+  // There is no "Done" to mark the end of an edit any more, so a pause in
+  // typing saves as well as leaving the field does.
+  Timer? _debounce;
+  static const _debounceDelay = Duration(seconds: 1);
+
+  // Whether a field holds an edit the store hasn't seen yet. `_save` only
+  // writes a dirty field; a clean one takes the stored note's value
+  // instead. Without this, focusing a field (with no typing) while a sync
+  // changes it, then unfocusing, would save the field's stale text over
+  // the sync -- `_fill` correctly skips a focused field, but the old text
+  // it left behind is otherwise indistinguishable from a real edit.
+  bool _titleDirty = false;
+  bool _bodyDirty = false;
+
+  // The note a save of ours just replaced, while `noteByIdProvider` may
+  // still be holding it: the store's stream lags the write in production
+  // (drift's background isolate), so a rebuild in that window -- the one
+  // `_onFocusChange` forces, say -- would otherwise have `_fill` copy the
+  // pre-write text back into the fields `_save` has just settled. Every
+  // write stamps a fresh `updatedAt`, so any note the stream emits after
+  // it differs from this one.
+  Note? _superseded;
+
+  // Kept for `dispose`, where Riverpod no longer allows `ref`: a page can
+  // go without a pop -- on web, browser back and a deep link's `go` are
+  // URL changes `PopScope` never hears of -- and whatever is still dirty
+  // is written from here then. Refreshed on every save, so it follows the
+  // provider if that is ever rebuilt.
+  late NotesRepository _repo;
 
   @override
   void initState() {
     super.initState();
-    _titleFocus.addListener(_saveIfUnfocused);
-    _bodyFocus.addListener(_saveIfUnfocused);
+    _repo = ref.read(notesRepositoryProvider);
+    _titleFocus.addListener(_onFocusChange);
+    _bodyFocus.addListener(_onFocusChange);
+    // A listener, not `onChanged`: toolbar buttons and shortcuts write
+    // `_body.value` directly, which `onChanged` never hears about.
+    _body.addListener(_onBodyChanged);
+  }
+
+  String _lastBody = '';
+
+  void _onBodyChanged() {
+    if (_body.text == _lastBody) return; // selection-only change
+    _lastBody = _body.text;
+    // `_fill` writes only while unfocused, so a sync landing is not
+    // mistaken for typing.
+    if (_bodyFocus.hasFocus) {
+      _bodyDirty = true;
+      _scheduleSave();
+    }
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    if (_titleDirty || _bodyDirty) {
+      final title = _title.text.trim();
+      unawaited(
+        _flush(
+          _repo,
+          widget.noteId,
+          title: _titleDirty && title.isNotEmpty ? title : null,
+          body: _bodyDirty ? _body.text : null,
+        ),
+      );
+    }
     _title.dispose();
     _body.dispose();
+    _undo.dispose();
     _titleFocus.dispose();
     _bodyFocus.dispose();
     super.dispose();
@@ -52,41 +114,153 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
 
   /// Keeps the controllers in step with the stored note unless being
   /// edited. Never while a field has focus: an arriving sync would
-  /// otherwise move the cursor out from under whoever is typing.
+  /// otherwise move the cursor out from under whoever is typing. A dirty
+  /// field is skipped too -- `_save` keeps the flag set for the whole
+  /// write, so this stays skipped until the field's text has actually
+  /// landed in the store, not just until the write was kicked off.
+  /// Skips [_superseded] outright: it is older than what the fields show.
   void _fill(Note note) {
-    if (!_titleFocus.hasFocus && _title.text != note.title) {
+    if (note == _superseded) return;
+    _superseded = null;
+    if (!_titleFocus.hasFocus && !_titleDirty && _title.text != note.title) {
       _title.text = note.title;
     }
-    if (!_bodyFocus.hasFocus && _body.text != note.body) {
+    if (!_bodyFocus.hasFocus && !_bodyDirty && _body.text != note.body) {
       _body.text = note.body;
     }
   }
 
-  void _saveIfUnfocused() {
+  /// The last-chance write from [dispose]. A failure here has no page left
+  /// to show it on, so it is only logged; there is nothing else to do with
+  /// the text once its field is gone.
+  static Future<void> _flush(
+    NotesRepository repo,
+    String id, {
+    String? title,
+    String? body,
+  }) async {
+    try {
+      await repo.updateText(id, title: title, body: body);
+    } on Object catch (error, stack) {
+      debugPrint('note $id not saved on leaving: $error\n$stack');
+    }
+  }
+
+  void _scheduleSave() {
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDelay, () => unawaited(_save()));
+  }
+
+  /// Shared by both focus nodes. Losing focus saves -- and either way, a
+  /// field that only ever had focus (never an edit) may need to catch up
+  /// to a note that changed while it was watching from the sidelines;
+  /// `setState` forces the rebuild that lets `_fill` do that.
+  void _onFocusChange() {
     if (_titleFocus.hasFocus || _bodyFocus.hasFocus) return;
     unawaited(_save());
+    if (mounted) setState(() {});
   }
 
-  /// Flips read/edit. Leaving edit mode saves first, the same as
-  /// unfocusing the field does, since the field is about to disappear
-  /// rather than merely lose focus.
-  Future<void> _toggleEditing() async {
-    if (_editing) await _save();
-    setState(() => _editing = !_editing);
-  }
-
-  Future<void> _save() async {
+  /// Writes the dirty fields, and only those, through
+  /// [NotesRepository.updateText] -- never the whole row from
+  /// `noteByIdProvider`'s copy, which can predate a pin, move or delete
+  /// that has already landed and would be written back over it.
+  ///
+  /// Returns false when the write failed. The flags then stay set, so the
+  /// text is neither lost nor overwritten by `_fill`, and the next save --
+  /// or [dispose] -- tries again; a snackbar says so meanwhile.
+  Future<bool> _save() async {
+    _debounce?.cancel();
+    if (!mounted) return true;
     final note = ref.read(noteByIdProvider(widget.noteId)).value;
-    if (note == null) return;
-    final title = _title.text.trim();
-    final body = _body.text;
-    if ((title.isEmpty || title == note.title) && body == note.body) return;
-    await ref
-        .read(notesRepositoryProvider)
-        .save(
-          note.copyWith(title: title.isEmpty ? note.title : title, body: body),
-        );
+    if (note == null) return true;
+    final rawTitle = _title.text.trim();
+    // A title cleared to nothing keeps the stored one: it is not written.
+    final writeTitle = _titleDirty && rawTitle.isNotEmpty;
+    final title = writeTitle ? rawTitle : note.title;
+    final body = _bodyDirty ? _body.text : note.body;
+    if (title == note.title && body == note.body) {
+      // Nothing to write, but a dirty field that trimmed/normalized back
+      // to the stored value still needs its flag dropped -- otherwise
+      // `_fill` would skip it forever, even though there is no write in
+      // flight to wait for.
+      _titleDirty = false;
+      _bodyDirty = false;
+      return true;
+    }
+    // The flags stay set for the whole write, not cleared up front: `_fill`
+    // must keep skipping this field until the note it reads back actually
+    // holds what was just written, or it would blow the stale text in the
+    // controller onto the old, pre-write note the instant focus is lost
+    // (`_onFocusChange`'s `setState` below runs a rebuild before the
+    // repository's stream has emitted the new row -- drift runs the write
+    // in a background isolate in production, so that gap is real). Cleared
+    // only once the field still holds exactly what was written, so a fresh
+    // edit made during the `await` isn't mistaken for having landed.
+    //
+    // Snapshotted as the *raw* field text, before the `await`, and compared
+    // against below the same way -- not against `title`/`body`, which are
+    // normalized (trimmed, or the stored title when the field was left
+    // empty). A trailing space trimmed off, or an empty title that fell
+    // back to the stored one, would otherwise never equal what the field
+    // still holds, so the flag would stick forever: `_fill` would then keep
+    // skipping the field even after its write has landed, letting a later
+    // sync arrive, get silently skipped, and then get overwritten by this
+    // field's own stale text on the next save (a pop, say).
+    final sentTitle = _title.text;
+    final sentBody = _body.text;
+    final repo = _repo = ref.read(notesRepositoryProvider);
+    try {
+      await repo.updateText(
+        widget.noteId,
+        title: writeTitle ? title : null,
+        body: _bodyDirty ? body : null,
+      );
+    } on Object catch (error, stack) {
+      // Any failure, not just an Exception: whatever went wrong, the text
+      // must stay put and the person must hear that it isn't saved.
+      debugPrint('note ${widget.noteId} not saved: $error\n$stack');
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(L.of(context).noteSaveFailed)));
+      }
+      return false;
+    }
+    if (!mounted) return true;
+    _superseded = note;
+    // A field whose flag clears here is settled straight to the value just
+    // written -- the trimmed title, or the stored one when it was left
+    // blank; the body as typed -- rather than waiting on `_fill`, which
+    // would otherwise leave un-normalized text ("Bread ", or a blank
+    // title) showing with nothing left to rebuild it. Taken from what was
+    // written, never re-read from `noteByIdProvider`: the store's stream
+    // lags the write in production (drift's background isolate), so that
+    // read would still hold the pre-write note, and filling from it would
+    // flash the old text back until the stream caught up -- or, if the
+    // field were refocused in between, leave the old text there to be
+    // edited and saved over this write. Only while unfocused, like
+    // `_fill`; `_onBodyChanged` ignores the change for the same reason.
+    if (_title.text == sentTitle) {
+      _titleDirty = false;
+      if (!_titleFocus.hasFocus && _title.text != title) _title.text = title;
+    }
+    if (_body.text == sentBody) {
+      _bodyDirty = false;
+      if (!_bodyFocus.hasFocus && _body.text != body) _body.text = body;
+    }
+    return true;
   }
+
+  void _apply(TextEditingValue Function(TextEditingValue) command) {
+    _body.value = command(_body.value);
+  }
+
+  // Shared by the Ctrl/Cmd+K shortcut and the toolbar's `md-link` button,
+  // so both open the same dialog against this screen's own, stable
+  // context and focus node -- see `NoteFormatToolbar.onInsertLink`.
+  void _insertLink() =>
+      unawaited(promptForLink(context, _body, focusNode: _bodyFocus));
 
   @override
   Widget build(BuildContext context) {
@@ -100,12 +274,20 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       );
     }
     _fill(note);
+    // Cmd on Apple platforms, Ctrl elsewhere -- binding both everywhere
+    // would shadow macOS/iOS's native Ctrl+B / Ctrl+K text-field
+    // navigation, which the platform's own text field still wants.
+    final useMeta =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        await _save();
+        // A failed write keeps the page open, its snackbar showing: leaving
+        // would leave the text to `dispose`'s one unannounced retry.
+        if (!await _save()) return;
         if (!context.mounted) return;
         // Reached directly -- a deep link, a shared URL, a PWA restore --
         // this can be the only page on the stack, with nothing below it
@@ -117,60 +299,98 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          actions: [
-            NotePinAction(note: note),
-            IconButton(
-              key: const Key('note-edit-toggle'),
-              tooltip: _editing ? l.noteReadToggle : l.noteEditToggle,
-              icon: Icon(_editing ? Icons.check_rounded : Icons.edit_outlined),
-              onPressed: () => unawaited(_toggleEditing()),
-            ),
-          ],
-        ),
-        body: MaxWidth(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-            children: [
-              TextField(
-                key: const Key('note-title'),
-                controller: _title,
-                focusNode: _titleFocus,
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
-                style: Theme.of(context).textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.w700),
-                decoration: InputDecoration(
-                  hintText: l.noteTitleHint,
-                  filled: false,
-                  border: InputBorder.none,
+        appBar: AppBar(actions: [NotePinAction(note: note)]),
+        // The toolbar sits in the body, under the scrolling content: the
+        // body is what the keyboard shrinks, so the bar rides directly on
+        // top of it. `bottomNavigationBar` would stay behind the keyboard.
+        body: Column(
+          children: [
+            Expanded(
+              child: MaxWidth(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  children: [
+                    TextField(
+                      key: const Key('note-title'),
+                      controller: _title,
+                      focusNode: _titleFocus,
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (_) {
+                        _titleDirty = true;
+                        _scheduleSave();
+                      },
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        hintText: l.noteTitleHint,
+                        filled: false,
+                        border: InputBorder.none,
+                      ),
+                    ),
+                    CallbackShortcuts(
+                      bindings: {
+                        SingleActivator(
+                          LogicalKeyboardKey.keyB,
+                          control: !useMeta,
+                          meta: useMeta,
+                        ): () =>
+                            _apply((v) => toggleInline(v, '**')),
+                        SingleActivator(
+                          LogicalKeyboardKey.keyI,
+                          control: !useMeta,
+                          meta: useMeta,
+                        ): () =>
+                            _apply((v) => toggleInline(v, '_')),
+                        SingleActivator(
+                          LogicalKeyboardKey.keyX,
+                          control: !useMeta,
+                          meta: useMeta,
+                          shift: true,
+                        ): () =>
+                            _apply((v) => toggleInline(v, '~~')),
+                        SingleActivator(
+                          LogicalKeyboardKey.keyK,
+                          control: !useMeta,
+                          meta: useMeta,
+                        ): _insertLink,
+                      },
+                      child: TextField(
+                        key: const Key('note-body'),
+                        controller: _body,
+                        focusNode: _bodyFocus,
+                        undoController: _undo,
+                        maxLines: null,
+                        minLines: 6,
+                        keyboardType: TextInputType.multiline,
+                        textCapitalization: TextCapitalization.sentences,
+                        inputFormatters: [ListContinuationFormatter()],
+                        decoration: InputDecoration(
+                          hintText: l.noteBodyHint,
+                          filled: false,
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
+                    NoteListPicker(note: note),
+                    NoteDeleteAction(note: note),
+                  ],
                 ),
               ),
-              if (_editing)
-                TextField(
-                  key: const Key('note-body'),
-                  controller: _body,
-                  focusNode: _bodyFocus,
-                  maxLines: null,
-                  minLines: 6,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    hintText: l.noteBodyHint,
-                    filled: false,
-                    border: InputBorder.none,
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: NoteBodyView(body: note.body),
-                ),
-              const SizedBox(height: 16),
-              PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
-              NoteListPicker(note: note),
-              NoteDeleteAction(note: note),
-            ],
-          ),
+            ),
+            ListenableBuilder(
+              listenable: _bodyFocus,
+              builder: (_, _) => _bodyFocus.hasFocus
+                  ? NoteFormatToolbar(
+                      controller: _body,
+                      undoController: _undo,
+                      onInsertLink: _insertLink,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ),
       ),
     );

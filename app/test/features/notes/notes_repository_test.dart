@@ -98,6 +98,53 @@ void main() {
     );
   });
 
+  test('updateText changes only the given fields, keeping the rest', () async {
+    final note = await repository.create(
+      listId: 'l1',
+      title: 'Bread',
+      body: 'flour',
+    );
+    await repository.setPinned(note.id, pinned: true);
+    await repository.moveToList(note.id, 'l2');
+    final before = (await db.noteById(note.id))!;
+
+    await repository.updateText(note.id, body: 'yeast');
+
+    final after = (await db.noteById(note.id))!;
+    expect(after.body, 'yeast');
+    expect(after.title, 'Bread');
+    expect(after.pinned, isTrue);
+    expect(after.listId, 'l2');
+    expect(after.updatedAt, isNot(before.updatedAt));
+
+    await repository.updateText(note.id, title: 'Toast');
+
+    final renamed = (await db.noteById(note.id))!;
+    expect(renamed.title, 'Toast');
+    expect(renamed.body, 'yeast');
+    expect(renamed.pinned, isTrue);
+  });
+
+  test('updateText on a deleted note does nothing', () async {
+    final note = await repository.create(
+      listId: 'l1',
+      title: 'Bread',
+      body: 'flour',
+    );
+    await repository.delete(note.id);
+    final deleted = (await db.noteById(note.id))!;
+
+    await repository.updateText(note.id, title: 'Toast', body: 'yeast');
+
+    expect(await db.noteById(note.id), deleted);
+  });
+
+  test('updateText on a missing note does nothing', () async {
+    await repository.updateText('nope', body: 'yeast');
+
+    expect(await db.noteById('nope'), isNull);
+  });
+
   test('watchAll does not surface a note whose list is deleted', () async {
     final live = TaskList(
       id: 'l1',

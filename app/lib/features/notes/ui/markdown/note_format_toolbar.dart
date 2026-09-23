@@ -17,16 +17,31 @@ bool isWebLink(String url) {
 /// Asks for a URL and links the selection to it. Cancelling changes
 /// nothing. The dialog takes focus from the body; the controller keeps
 /// its selection, so the insert still lands where it was.
+///
+/// [focusNode], when given, is refocused before the edit is written: the
+/// dialog leaves the body unfocused, and writing to an unfocused field
+/// means no debounce save fires and a sync could overwrite the insert
+/// before the user ever notices.
+///
+/// A focus request only takes effect on the next microtask -- [FocusNode]
+/// batches focus changes and applies them together -- so
+/// [FocusManager.applyFocusChangesIfNeeded] forces it through immediately.
+/// Without that, `controller.value` below would still be written while
+/// [focusNode] reports itself unfocused, and any listener deciding "was
+/// this a real edit?" by that flag right now would get it wrong.
 Future<void> promptForLink(
   BuildContext context,
-  TextEditingController controller,
-) async {
+  TextEditingController controller, {
+  FocusNode? focusNode,
+}) async {
   final url = await showDialog<String>(
     context: context,
     builder: (context) => const _LinkDialog(),
   );
   final trimmed = url?.trim() ?? '';
   if (trimmed.isEmpty) return;
+  focusNode?.requestFocus();
+  FocusManager.instance.applyFocusChangesIfNeeded();
   controller.value = insertLink(controller.value, trimmed);
 }
 
@@ -87,11 +102,16 @@ class NoteFormatToolbar extends ConsumerWidget {
   const NoteFormatToolbar({
     required this.controller,
     required this.undoController,
+    this.focusNode,
     super.key,
   });
 
   final TextEditingController controller;
   final UndoHistoryController undoController;
+
+  /// The body field's focus node, passed through to [promptForLink] so it
+  /// can restore focus before writing the inserted link.
+  final FocusNode? focusNode;
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {
     controller.value = command(controller.value);
@@ -145,19 +165,6 @@ class NoteFormatToolbar extends ConsumerWidget {
                       l.mdRedo,
                       undo.canRedo ? undoController.redo : null,
                     ),
-                    // Contextual, and only shown while the cursor sits in a
-                    // web link: kept near the front of the bar, unlike the
-                    // other buttons, so it is never scrolled out of view
-                    // exactly when it becomes relevant.
-                    if (link != null && isWebLink(link))
-                      button(
-                        'md-open-link',
-                        Icons.open_in_new,
-                        l.mdOpenLink,
-                        () => unawaited(
-                          ref.read(openUrlProvider)(Uri.parse(link)),
-                        ),
-                      ),
                     button(
                       'md-bold',
                       Icons.format_bold,
@@ -222,8 +229,26 @@ class NoteFormatToolbar extends ConsumerWidget {
                       'md-link',
                       Icons.link,
                       l.mdLink,
-                      () => unawaited(promptForLink(context, controller)),
+                      () => unawaited(
+                        promptForLink(
+                          context,
+                          controller,
+                          focusNode: focusNode,
+                        ),
+                      ),
                     ),
+                    // Contextual, and only shown while the cursor sits in a
+                    // web link: last, like every other button -- its own
+                    // test scrolls the bar to reach it.
+                    if (link != null && isWebLink(link))
+                      button(
+                        'md-open-link',
+                        Icons.open_in_new,
+                        l.mdOpenLink,
+                        () => unawaited(
+                          ref.read(openUrlProvider)(Uri.parse(link)),
+                        ),
+                      ),
                   ],
                 );
               },

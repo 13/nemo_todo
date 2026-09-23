@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,11 +40,20 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   Timer? _debounce;
   static const _debounceDelay = Duration(seconds: 1);
 
+  // Whether a field holds an edit the store hasn't seen yet. `_save` only
+  // writes a dirty field; a clean one takes the stored note's value
+  // instead. Without this, focusing a field (with no typing) while a sync
+  // changes it, then unfocusing, would save the field's stale text over
+  // the sync -- `_fill` correctly skips a focused field, but the old text
+  // it left behind is otherwise indistinguishable from a real edit.
+  bool _titleDirty = false;
+  bool _bodyDirty = false;
+
   @override
   void initState() {
     super.initState();
-    _titleFocus.addListener(_saveIfUnfocused);
-    _bodyFocus.addListener(_saveIfUnfocused);
+    _titleFocus.addListener(_onFocusChange);
+    _bodyFocus.addListener(_onFocusChange);
     // A listener, not `onChanged`: toolbar buttons and shortcuts write
     // `_body.value` directly, which `onChanged` never hears about.
     _body.addListener(_onBodyChanged);
@@ -56,7 +66,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     _lastBody = _body.text;
     // `_fill` writes only while unfocused, so a sync landing is not
     // mistaken for typing.
-    if (_bodyFocus.hasFocus) _scheduleSave();
+    if (_bodyFocus.hasFocus) {
+      _bodyDirty = true;
+      _scheduleSave();
+    }
   }
 
   @override
@@ -72,12 +85,14 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
 
   /// Keeps the controllers in step with the stored note unless being
   /// edited. Never while a field has focus: an arriving sync would
-  /// otherwise move the cursor out from under whoever is typing.
+  /// otherwise move the cursor out from under whoever is typing. A dirty
+  /// field is skipped too -- it holds an edit `_save` hasn't reconciled
+  /// yet, on the sliver of time between losing focus and that finishing.
   void _fill(Note note) {
-    if (!_titleFocus.hasFocus && _title.text != note.title) {
+    if (!_titleFocus.hasFocus && !_titleDirty && _title.text != note.title) {
       _title.text = note.title;
     }
-    if (!_bodyFocus.hasFocus && _body.text != note.body) {
+    if (!_bodyFocus.hasFocus && !_bodyDirty && _body.text != note.body) {
       _body.text = note.body;
     }
   }
@@ -87,23 +102,32 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     _debounce = Timer(_debounceDelay, () => unawaited(_save()));
   }
 
-  void _saveIfUnfocused() {
+  /// Shared by both focus nodes. Losing focus saves -- and either way, a
+  /// field that only ever had focus (never an edit) may need to catch up
+  /// to a note that changed while it was watching from the sidelines;
+  /// `setState` forces the rebuild that lets `_fill` do that.
+  void _onFocusChange() {
     if (_titleFocus.hasFocus || _bodyFocus.hasFocus) return;
     unawaited(_save());
+    if (mounted) setState(() {});
   }
 
   Future<void> _save() async {
     _debounce?.cancel();
     final note = ref.read(noteByIdProvider(widget.noteId)).value;
     if (note == null) return;
-    final title = _title.text.trim();
-    final body = _body.text;
-    if ((title.isEmpty || title == note.title) && body == note.body) return;
+    final rawTitle = _title.text.trim();
+    final title = _titleDirty && rawTitle.isNotEmpty ? rawTitle : note.title;
+    final body = _bodyDirty ? _body.text : note.body;
+    // Cleared up front, synchronously: whatever the fields hold has now
+    // been folded into `title`/`body`, dirty or not, so nothing typed
+    // after this point should be lost to the flag still reading true.
+    _titleDirty = false;
+    _bodyDirty = false;
+    if (title == note.title && body == note.body) return;
     await ref
         .read(notesRepositoryProvider)
-        .save(
-          note.copyWith(title: title.isEmpty ? note.title : title, body: body),
-        );
+        .save(note.copyWith(title: title, body: body));
   }
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {
@@ -122,6 +146,12 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       );
     }
     _fill(note);
+    // Cmd on Apple platforms, Ctrl elsewhere -- binding both everywhere
+    // would shadow macOS/iOS's native Ctrl+B / Ctrl+K text-field
+    // navigation, which the platform's own text field still wants.
+    final useMeta =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
 
     return PopScope(
       canPop: false,
@@ -156,7 +186,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                       focusNode: _titleFocus,
                       maxLines: null,
                       textCapitalization: TextCapitalization.sentences,
-                      onChanged: (_) => _scheduleSave(),
+                      onChanged: (_) {
+                        _titleDirty = true;
+                        _scheduleSave();
+                      },
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w700),
                       decoration: InputDecoration(
@@ -167,33 +200,32 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                     ),
                     CallbackShortcuts(
                       bindings: {
-                        for (final meta in [false, true]) ...{
-                          SingleActivator(
-                            LogicalKeyboardKey.keyB,
-                            control: !meta,
-                            meta: meta,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '**')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyI,
-                            control: !meta,
-                            meta: meta,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '_')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyX,
-                            control: !meta,
-                            meta: meta,
-                            shift: true,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '~~')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyK,
-                            control: !meta,
-                            meta: meta,
-                          ): () =>
-                              unawaited(promptForLink(context, _body)),
-                        },
+                        SingleActivator(
+                          LogicalKeyboardKey.keyB,
+                          control: !useMeta,
+                          meta: useMeta,
+                        ): () =>
+                            _apply((v) => toggleInline(v, '**')),
+                        SingleActivator(
+                          LogicalKeyboardKey.keyI,
+                          control: !useMeta,
+                          meta: useMeta,
+                        ): () =>
+                            _apply((v) => toggleInline(v, '_')),
+                        SingleActivator(
+                          LogicalKeyboardKey.keyX,
+                          control: !useMeta,
+                          meta: useMeta,
+                          shift: true,
+                        ): () =>
+                            _apply((v) => toggleInline(v, '~~')),
+                        SingleActivator(
+                          LogicalKeyboardKey.keyK,
+                          control: !useMeta,
+                          meta: useMeta,
+                        ): () => unawaited(
+                          promptForLink(context, _body, focusNode: _bodyFocus),
+                        ),
                       },
                       child: TextField(
                         key: const Key('note-body'),
@@ -223,7 +255,11 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
             ListenableBuilder(
               listenable: _bodyFocus,
               builder: (context, _) => _bodyFocus.hasFocus
-                  ? NoteFormatToolbar(controller: _body, undoController: _undo)
+                  ? NoteFormatToolbar(
+                      controller: _body,
+                      undoController: _undo,
+                      focusNode: _bodyFocus,
+                    )
                   : const SizedBox.shrink(),
             ),
           ],

@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
+import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/notes/ui/notes_screen.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
@@ -14,6 +16,19 @@ import '../../support/pump_app.dart';
 void main() {
   TextField bodyField(WidgetTester tester) =>
       tester.widget<TextField>(find.byKey(const Key('note-body')));
+
+  /// Scrolls the format bar's own horizontal list -- not the page's, which
+  /// `find.byType(Scrollable).first` would otherwise catch -- until
+  /// [finder] is actually on screen and tappable.
+  Future<void> scrollToolbar(WidgetTester tester, Finder finder) =>
+      tester.scrollUntilVisible(
+        finder.hitTestable(),
+        200,
+        scrollable: find.descendant(
+          of: find.byType(NoteFormatToolbar),
+          matching: find.byType(Scrollable),
+        ),
+      );
 
   appTest('the body is editable markdown source with no toggle', (
     tester,
@@ -88,6 +103,31 @@ void main() {
     expect(bodyField(tester).controller!.text, '**milk**');
   });
 
+  appTest('meta+B bolds the selection on macOS, where ctrl+B is native', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'milk');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pump();
+
+    expect(bodyField(tester).controller!.text, '**milk**');
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   appTest('enter on a list line continues the list', (tester) async {
     final harness = await pumpApp(tester, initialLocation: '/notes/n1');
     await harness.seedList('l1', 'Kitchen');
@@ -135,7 +175,65 @@ void main() {
         .save(stored.copyWith(body: 'remote'));
     await tester.pump();
 
+    expect((await harness.db.noteById('n1'))!.body, 'remote');
     expect(bodyField(tester).controller!.text, 'local');
+  });
+
+  appTest('focusing the body without typing does not revert a sync that lands '
+      'while it is focused, once it loses focus', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+
+    final stored = (await harness.db.noteById('n1'))!;
+    await harness.container
+        .read(notesRepositoryProvider)
+        .save(stored.copyWith(body: 'remote'));
+    await tester.pump();
+    expect((await harness.db.noteById('n1'))!.body, 'remote');
+
+    // Unfocus without ever having typed -- there is nothing dirty here
+    // to save, so the old ('dough') text the field is still showing
+    // must not overwrite the sync that landed while it was focused.
+    await tester.tap(find.byKey(const Key('note-title')));
+    await tester.pumpAndSettle();
+
+    expect((await harness.db.noteById('n1'))!.body, 'remote');
+    expect(bodyField(tester).controller!.text, 'remote');
+  });
+
+  appTest('focusing the body without typing does not revert a sync that lands '
+      'while it is focused, once the page is popped', (tester) async {
+    // Reached from the list, like the not-found test above, so the page
+    // has something to pop back to.
+    final harness = await pumpApp(tester, initialLocation: '/notes');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bread'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+
+    final stored = (await harness.db.noteById('n1'))!;
+    await harness.container
+        .read(notesRepositoryProvider)
+        .save(stored.copyWith(body: 'remote'));
+    await tester.pump();
+    expect((await harness.db.noteById('n1'))!.body, 'remote');
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect((await harness.db.noteById('n1'))!.body, 'remote');
   });
 
   appTest('open link opens a web link at the cursor', (tester) async {
@@ -165,10 +263,47 @@ void main() {
       offset: 2,
     );
     await tester.pump();
+    // `md-open-link` is the last, contextual button on the bar -- past the
+    // fold on this screen's narrow test viewport until scrolled to.
+    await scrollToolbar(tester, find.byKey(const Key('md-open-link')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('md-open-link')));
     await tester.pump();
 
     expect(opened, [Uri.parse('https://x.y')]);
+  });
+
+  appTest('inserting a link restores focus to the body and saves it', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'docs');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pump();
+
+    // `md-link` sits last on the bar (no link at the cursor here, so
+    // `md-open-link` never appears) -- also past the fold.
+    await scrollToolbar(tester, find.byKey(const Key('md-link')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('md-link')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('md-link-url')), 'https://x.y');
+    await tester.tap(find.byKey(const Key('md-link-ok')));
+    await tester.pumpAndSettle();
+
+    expect(bodyField(tester).controller!.text, '[docs](https://x.y)');
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+
+    await tester.pump(const Duration(milliseconds: 1100));
+    expect((await harness.db.noteById('n1'))!.body, '[docs](https://x.y)');
   });
 
   appTest(

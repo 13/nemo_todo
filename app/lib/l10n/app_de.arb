@@ -303,5 +303,7 @@
   "mdOpenLink": "Link öffnen",
   "mdUndo": "Rückgängig",
   "mdRedo": "Wiederholen",
-  "noteTaskDeleted": "Aufgabe gelöscht"
+  "noteTaskDeleted": "Aufgabe gelöscht",
+  "noteReadToggle": "Formatiert",
+  "noteEditToggle": "Markdown"
 }

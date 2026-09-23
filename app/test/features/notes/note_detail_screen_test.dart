@@ -113,15 +113,13 @@ void main() {
         ),
       );
 
-  appTest('the body is editable markdown source with no toggle', (
-    tester,
-  ) async {
+  appTest('the body opens as editable markdown source', (tester) async {
     final harness = await pumpApp(tester, initialLocation: '/notes/n1');
     await harness.seedList('l1', 'Kitchen');
     await harness.seedNote('n1', 'l1', title: 'Bread', body: '# Dough');
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('note-edit-toggle')), findsNothing);
+    expect(find.byKey(const Key('note-read-view')), findsNothing);
     final field = bodyField(tester);
     expect(field.controller, isA<MarkdownEditingController>());
     expect(field.controller!.text, '# Dough');
@@ -903,5 +901,75 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(NotesScreen), findsOneWidget);
+  });
+
+  appTest('the toggle switches to the read view and back, and is '
+      'remembered', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: '**milk**');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-view-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-view')), findsOneWidget);
+    expect(find.byKey(const Key('note-body')), findsNothing);
+    expect(
+      await harness.container.read(kvStoreProvider).get('notes.readView'),
+      '1',
+    );
+
+    // Reopened, it comes back in the read view.
+    harness.router.go('/notes');
+    await tester.pumpAndSettle();
+    harness.router.go('/notes/n1');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-view')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-view-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-body')), findsOneWidget);
+  });
+
+  appTest('an empty note opens in the editor even after the read view', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.container.read(kvStoreProvider).set('notes.readView', '1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-body')), findsOneWidget);
+  });
+
+  appTest('a checkbox tapped in the read view saves the note', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.container.read(kvStoreProvider).set('notes.readView', '1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: '- [ ] milk');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('read-check-0')));
+    await tester.pumpAndSettle();
+    expect((await harness.db.noteById('n1'))!.body, '- [x] milk');
+  });
+
+  appTest('tapping read-view text edits with the cursor on that line', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.container.read(kvStoreProvider).set('notes.readView', '1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'one\ntwo');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('read-line-1')));
+    await tester.pumpAndSettle();
+    final field = bodyField(tester);
+    expect(field.focusNode!.hasFocus, isTrue);
+    expect(
+      field.controller!.selection,
+      const TextSelection.collapsed(offset: 4),
+    );
   });
 }

@@ -303,5 +303,7 @@
   "mdOpenLink": "Apri link",
   "mdUndo": "Annulla",
   "mdRedo": "Ripeti",
-  "noteTaskDeleted": "Attività eliminata"
+  "noteTaskDeleted": "Attività eliminata",
+  "noteReadToggle": "Formattato",
+  "noteEditToggle": "Markdown"
 }

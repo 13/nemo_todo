@@ -29,3 +29,16 @@ Stream<Note?> noteById(Ref ref, String id) =>
 @riverpod
 Stream<List<Note>> noteSearch(Ref ref, String query) =>
     ref.watch(notesRepositoryProvider).search(query);
+
+/// KvStore key for whether notes open in the read view: `'1'` or `'0'`.
+/// Device-local, like every KvStore entry -- it is how this person likes
+/// to read here, not a property of any note.
+const noteReadViewKey = 'notes.readView';
+
+/// Whether notes open in the formatted read view rather than the editor.
+final noteReadViewProvider = StreamProvider<bool>(
+  (ref) => ref
+      .watch(kvStoreProvider)
+      .watch(noteReadViewKey)
+      .map((value) => value == '1'),
+);

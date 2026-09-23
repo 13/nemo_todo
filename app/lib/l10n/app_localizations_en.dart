@@ -1143,4 +1143,10 @@ class LEn extends L {
 
   @override
   String get noteTaskDeleted => 'Task deleted';
+
+  @override
+  String get noteReadToggle => 'Formatted';
+
+  @override
+  String get noteEditToggle => 'Markdown';
 }

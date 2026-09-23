@@ -1154,4 +1154,10 @@ class LIt extends L {
 
   @override
   String get noteTaskDeleted => 'Attività eliminata';
+
+  @override
+  String get noteReadToggle => 'Formattato';
+
+  @override
+  String get noteEditToggle => 'Markdown';
 }

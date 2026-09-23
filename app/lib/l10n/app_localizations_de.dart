@@ -1153,4 +1153,10 @@ class LDe extends L {
 
   @override
   String get noteTaskDeleted => 'Aufgabe gelöscht';
+
+  @override
+  String get noteReadToggle => 'Formatiert';
+
+  @override
+  String get noteEditToggle => 'Markdown';
 }

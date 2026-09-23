@@ -1922,6 +1922,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Task deleted'**
   String get noteTaskDeleted;
+
+  /// Tooltip of the note app bar button that switches the body to the formatted read view.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatted'**
+  String get noteReadToggle;
+
+  /// Tooltip of the note app bar button that switches the body back to editing its markdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get noteEditToggle;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

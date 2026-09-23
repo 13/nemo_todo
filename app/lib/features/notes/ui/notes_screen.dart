@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/max_width.dart';
+import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/note_card.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
@@ -37,7 +39,10 @@ class NotesScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.navNotes)),
+      appBar: AppBar(
+        title: Text(l.navNotes),
+        actions: const [AccountAction(), SettingsAction()],
+      ),
       floatingActionButton: lists.isEmpty
           ? null
           : FloatingActionButton(

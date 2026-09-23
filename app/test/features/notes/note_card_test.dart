@@ -79,4 +79,29 @@ void main() {
     expect(text.maxLines, 10);
     expect(text.overflow, TextOverflow.ellipsis);
   });
+
+  testWidgets('the preview shows markdown parsed, markers hidden', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      NoteCard(
+        note: _note(
+          body:
+              '# Dough\n**500 g** flour, see [recipe](https://x.io/a_b)\n'
+              '- [x] salt\n- [ ] yeast\n- water\n```\nknead\n```',
+        ),
+      ),
+    );
+
+    final text = tester.widget<Text>(find.textContaining('Dough'));
+    expect(
+      text.textSpan!.toPlainText(),
+      'Dough\n500 g flour, see recipe\n☑ salt\n☐ yeast\n• water\nknead\n',
+    );
+    final bold = (text.textSpan! as TextSpan).children!
+        .cast<TextSpan>()
+        .firstWhere((s) => s.text == '500 g');
+    expect(bold.style?.fontWeight, FontWeight.w700);
+  });
 }

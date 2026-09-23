@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/features/notes/ui/markdown/markdown_preview.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -20,15 +21,21 @@ class NoteTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    final theme = Theme.of(context);
     final preview = note.body.trim();
+    final bodyStyle =
+        theme.listTileTheme.subtitleTextStyle ??
+        theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ) ??
+        const TextStyle();
     return ListTile(
       key: Key('$keyPrefix-${note.id}'),
       title: Text(note.title),
-      // The preview is the markdown source, not rendered: a heading or an
-      // image in a note would otherwise set the height of a row in a list
-      // of them.
-      subtitle: Text(
-        preview.isEmpty ? l.notePreviewEmpty : preview,
+      subtitle: Text.rich(
+        preview.isEmpty
+            ? TextSpan(text: l.notePreviewEmpty)
+            : markdownPreviewSpan(preview, bodyStyle, theme),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

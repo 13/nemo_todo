@@ -281,8 +281,6 @@
   "noteBodyHint": "Schreib etwas",
   "notePreviewEmpty": "Leere Notiz",
   "noteNotFound": "Diese Notiz gibt es nicht mehr.",
-  "noteEditToggle": "Bearbeiten",
-  "noteReadToggle": "Fertig",
   "notePin": "Anheften",
   "noteUnpin": "Nicht mehr anheften",
   "noteDelete": "Löschen",

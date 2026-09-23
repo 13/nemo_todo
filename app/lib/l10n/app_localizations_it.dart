@@ -1087,12 +1087,6 @@ class LIt extends L {
   String get noteNotFound => 'Questa nota non c\'è più.';
 
   @override
-  String get noteEditToggle => 'Modifica';
-
-  @override
-  String get noteReadToggle => 'Fine';
-
-  @override
   String get notePin => 'Fissa';
 
   @override

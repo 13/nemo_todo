@@ -1086,12 +1086,6 @@ class LDe extends L {
   String get noteNotFound => 'Diese Notiz gibt es nicht mehr.';
 
   @override
-  String get noteEditToggle => 'Bearbeiten';
-
-  @override
-  String get noteReadToggle => 'Fertig';
-
-  @override
   String get notePin => 'Anheften';
 
   @override

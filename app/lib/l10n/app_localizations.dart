@@ -1785,18 +1785,6 @@ abstract class L {
   /// **'This note is no longer here.'**
   String get noteNotFound;
 
-  /// No description provided for @noteEditToggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get noteEditToggle;
-
-  /// No description provided for @noteReadToggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get noteReadToggle;
-
   /// No description provided for @notePin.
   ///
   /// In en, this message translates to:

@@ -556,8 +556,6 @@
   "noteBodyHint": "Write something",
   "notePreviewEmpty": "Empty note",
   "noteNotFound": "This note is no longer here.",
-  "noteEditToggle": "Edit",
-  "noteReadToggle": "Done",
   "notePin": "Pin",
   "noteUnpin": "Unpin",
   "noteDelete": "Delete",

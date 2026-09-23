@@ -148,11 +148,12 @@ field's native undo takes it back in one step.
 ### `note_format_toolbar.dart`
 
 `NoteFormatToolbar({required TextEditingController controller, required
-FocusNode focusNode})`. A `Material` bar with a horizontally scrolling row
+UndoHistoryController undoController})`. A `Material` bar with a horizontally scrolling row
 of `IconButton`s, each with a tooltip and key `md-<action>`:
 
 bold, italic, strike, heading, bullet, numbered, checkbox, quote, code,
-code block, link, and -- only when `linkAtCursor` finds one -- open link.
+code block, link, and -- only when `linkAtCursor` finds an http or https
+URL -- open link.
 Undo and redo via an `UndoHistoryController` shared with the field.
 
 Buttons must not steal focus from the body: they use
@@ -173,12 +174,13 @@ URL field; cancelling changes nothing.
   works with soft keyboards and IME too: when the new
   value differs from the old by a single inserted `\n` at the cursor, the
   formatter substitutes `continueList(old)` if it returns non-null.
-- `Scaffold.bottomNavigationBar` holds the toolbar inside a
-  `ListenableBuilder` on `_bodyFocus`, returning `SizedBox.shrink()` when
-  unfocused. `Scaffold` already lifts it above the keyboard via
-  `resizeToAvoidBottomInset`; the bar is wrapped in `Padding` of
-  `MediaQuery.viewInsetsOf(context).bottom` only if testing shows it is
-  not lifted on some platform.
+- The page body becomes a `Column`: the scrolling `ListView` in an
+  `Expanded`, then the toolbar inside a `ListenableBuilder` on
+  `_bodyFocus`, returning `SizedBox.shrink()` when unfocused. The body is
+  what `resizeToAvoidBottomInset` shrinks, so the bar sits directly above
+  the keyboard; `Scaffold.bottomNavigationBar` would stay behind it.
+- The toolbar is wrapped in `TextFieldTapRegion`, so a mouse click on it
+  (web, desktop) is not a tap outside the body and does not unfocus it.
 - A `Timer` restarted on every body or title change calls `_save()` after
   1 s. It is cancelled in `dispose` and before the unfocus/pop saves, which
   still run as today. `_fill` still refuses to overwrite a focused field.

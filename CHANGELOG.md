@@ -13,6 +13,16 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.11.1 - 2026-09-23
+
+### Changed
+
+- Note cards and notes in search results show their text formatted --
+  bold, italic, headings, links, bullets and checkboxes -- instead of the
+  raw markdown characters.
+- The notes screen has the account and settings buttons in its top right
+  corner, like every other screen.
+
 ## 0.11.0 - 2026-09-23
 
 ### Changed

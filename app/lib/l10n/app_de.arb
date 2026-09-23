@@ -305,5 +305,15 @@
   "mdRedo": "Wiederholen",
   "noteTaskDeleted": "Aufgabe gelöscht",
   "noteReadToggle": "Formatiert",
-  "noteEditToggle": "Markdown"
+  "noteEditToggle": "Markdown",
+  "noteMakeTodo": "Als Aufgabe",
+  "noteMakeTodoFromNote": "Aufgabe aus Notiz",
+  "noteOpenTask": "Aufgabe öffnen",
+  "noteTodoPerLine": "Eine Aufgabe pro Zeile",
+  "noteTodoWithSubtasks": "Eine Aufgabe mit Unteraufgaben",
+  "noteTodoChecklistSubtasks": "Checkliste wird zu Unteraufgaben",
+  "noteTodoCreate": "Erstellen",
+  "noteTodoCreated": "{count, plural, =1{Aufgabe erstellt} other{{count} Aufgaben erstellt}}",
+  "noteTodoFailed": "Aufgabe konnte nicht erstellt werden",
+  "commonOpen": "Öffnen"
 }

@@ -1149,4 +1149,42 @@ class LEn extends L {
 
   @override
   String get noteEditToggle => 'Markdown';
+
+  @override
+  String get noteMakeTodo => 'Make todo';
+
+  @override
+  String get noteMakeTodoFromNote => 'Make todo from note';
+
+  @override
+  String get noteOpenTask => 'Open task';
+
+  @override
+  String get noteTodoPerLine => 'One task per line';
+
+  @override
+  String get noteTodoWithSubtasks => 'One task with subtasks';
+
+  @override
+  String get noteTodoChecklistSubtasks => 'Checklist becomes subtasks';
+
+  @override
+  String get noteTodoCreate => 'Create';
+
+  @override
+  String noteTodoCreated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks created',
+      one: 'Task created',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteTodoFailed => 'Couldn\'t create the task';
+
+  @override
+  String get commonOpen => 'Open';
 }

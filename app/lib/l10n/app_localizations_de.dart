@@ -1159,4 +1159,42 @@ class LDe extends L {
 
   @override
   String get noteEditToggle => 'Markdown';
+
+  @override
+  String get noteMakeTodo => 'Als Aufgabe';
+
+  @override
+  String get noteMakeTodoFromNote => 'Aufgabe aus Notiz';
+
+  @override
+  String get noteOpenTask => 'Aufgabe öffnen';
+
+  @override
+  String get noteTodoPerLine => 'Eine Aufgabe pro Zeile';
+
+  @override
+  String get noteTodoWithSubtasks => 'Eine Aufgabe mit Unteraufgaben';
+
+  @override
+  String get noteTodoChecklistSubtasks => 'Checkliste wird zu Unteraufgaben';
+
+  @override
+  String get noteTodoCreate => 'Erstellen';
+
+  @override
+  String noteTodoCreated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben erstellt',
+      one: 'Aufgabe erstellt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteTodoFailed => 'Aufgabe konnte nicht erstellt werden';
+
+  @override
+  String get commonOpen => 'Öffnen';
 }

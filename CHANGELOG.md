@@ -13,6 +13,28 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.11.0 - 2026-09-23
+
+### Changed
+
+- A note's text is always ready to edit: there is no pencil to tap first.
+  Markdown is styled as you type -- bold looks bold, headings are larger,
+  struck-through text and ticked checkboxes are struck -- with the markup
+  characters drawn faint.
+- A note saves a second after you stop typing, as well as when you leave
+  it, and a change you did not make never overwrites one that arrived from
+  another device. If a save fails, the note says so and keeps your text.
+
+### Added
+
+- A formatting toolbar above the keyboard while you write a note: bold,
+  italic, strikethrough, headings, bulleted and numbered lists, checkboxes,
+  quotes, code, code blocks, links, undo and redo. With the cursor in a web
+  link it can open the link.
+- Keyboard shortcuts for notes: Ctrl+B, Ctrl+I, Ctrl+Shift+X and Ctrl+K (Cmd
+  on Mac and iOS). Enter in a list starts the next item; Enter on an empty
+  item ends the list.
+
 ## 0.10.1 - 2026-09-22
 
 ### Changed

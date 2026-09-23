@@ -138,17 +138,50 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     // in a background isolate in production, so that gap is real). Cleared
     // only once the field still holds exactly what was written, so a fresh
     // edit made during the `await` isn't mistaken for having landed.
+    //
+    // Snapshotted as the *raw* field text, before the `await`, and compared
+    // against below the same way -- not against `title`/`body`, which are
+    // normalized (trimmed, or the stored title when the field was left
+    // empty). A trailing space trimmed off, or an empty title that fell
+    // back to the stored one, would otherwise never equal what the field
+    // still holds, so the flag would stick forever: `_fill` would then keep
+    // skipping the field even after its write has landed, letting a later
+    // sync arrive, get silently skipped, and then get overwritten by this
+    // field's own stale text on the next save (a pop, say).
+    final sentTitle = _title.text;
+    final sentBody = _body.text;
     await ref
         .read(notesRepositoryProvider)
         .save(note.copyWith(title: title, body: body));
     if (!mounted) return;
-    if (_title.text == title) _titleDirty = false;
-    if (_body.text == body) _bodyDirty = false;
+    // Clearing a flag can leave the field showing un-normalized text (the
+    // trailing space just trimmed off, or blank where the stored title
+    // should show through) with nothing left to force a rebuild -- so
+    // `setState` is called explicitly here, rather than relying on the
+    // note stream's own next emission, to run `_fill` and pick that up
+    // right away.
+    final current = ref.read(noteByIdProvider(widget.noteId)).value;
+    var needsFill = false;
+    if (_title.text == sentTitle) {
+      _titleDirty = false;
+      if (current != null && _title.text != current.title) needsFill = true;
+    }
+    if (_body.text == sentBody) {
+      _bodyDirty = false;
+      if (current != null && _body.text != current.body) needsFill = true;
+    }
+    if (needsFill) setState(() {});
   }
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {
     _body.value = command(_body.value);
   }
+
+  // Shared by the Ctrl/Cmd+K shortcut and the toolbar's `md-link` button,
+  // so both open the same dialog against this screen's own, stable
+  // context and focus node -- see `NoteFormatToolbar.onInsertLink`.
+  void _insertLink() =>
+      unawaited(promptForLink(context, _body, focusNode: _bodyFocus));
 
   @override
   Widget build(BuildContext context) {
@@ -239,9 +272,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                           LogicalKeyboardKey.keyK,
                           control: !useMeta,
                           meta: useMeta,
-                        ): () => unawaited(
-                          promptForLink(context, _body, focusNode: _bodyFocus),
-                        ),
+                        ): _insertLink,
                       },
                       child: TextField(
                         key: const Key('note-body'),
@@ -270,16 +301,11 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
             ),
             ListenableBuilder(
               listenable: _bodyFocus,
-              // Not `(context, _)`: that would shadow the screen's own
-              // `context` with this builder's, which unmounts every time
-              // the toolbar itself does -- exactly the context
-              // `linkDialogContext` below needs to not be.
               builder: (_, _) => _bodyFocus.hasFocus
                   ? NoteFormatToolbar(
                       controller: _body,
                       undoController: _undo,
-                      focusNode: _bodyFocus,
-                      linkDialogContext: context,
+                      onInsertLink: _insertLink,
                     )
                   : const SizedBox.shrink(),
             ),

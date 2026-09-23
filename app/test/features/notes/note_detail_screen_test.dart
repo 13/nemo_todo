@@ -40,6 +40,9 @@ void main() {
   TextField bodyField(WidgetTester tester) =>
       tester.widget<TextField>(find.byKey(const Key('note-body')));
 
+  TextField titleField(WidgetTester tester) =>
+      tester.widget<TextField>(find.byKey(const Key('note-title')));
+
   /// Scrolls the format bar's own horizontal list -- not the page's, which
   /// `find.byType(Scrollable).first` would otherwise catch -- until
   /// [finder] is actually on screen and tappable.
@@ -320,6 +323,74 @@ void main() {
     await tester.pumpAndSettle();
 
     expect((await harness.db.noteById('n1'))!.body, 'remote');
+  });
+
+  appTest(
+    'a dirty title flag clears against what was typed, not the normalized '
+    'text that was written, so a later sync is not silently skipped',
+    (tester) async {
+      // Reached from the list, like the popped test above, so the page has
+      // something to pop back to.
+      final harness = await pumpApp(tester, initialLocation: '/notes');
+      await harness.seedList('l1', 'Kitchen');
+      // Seeded as something other than "Bread" -- the trimmed text about to
+      // be typed -- so the write below actually changes the stored title
+      // and takes `_save`'s await path, rather than short-circuiting
+      // through its "nothing to write" branch, which clears both flags
+      // unconditionally and would never exercise this bug.
+      await harness.seedNote('n1', 'l1', title: 'Milk');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Milk'));
+      await tester.pumpAndSettle();
+
+      // A trailing space: `_save` writes the trimmed title ("Bread"), which
+      // never equals the raw field text ("Bread "). Comparing the cleared
+      // flag against that normalized value would leave it dirty forever.
+      await tester.enterText(find.byKey(const Key('note-title')), 'Bread ');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      expect((await harness.db.noteById('n1'))!.title, 'Bread');
+
+      // A remote sync renames the note while the title field sits
+      // unfocused. A still-dirty flag would make `_fill` skip this,
+      // leaving the field to show its own stale text instead.
+      final stored = (await harness.db.noteById('n1'))!;
+      await harness.container
+          .read(notesRepositoryProvider)
+          .save(stored.copyWith(title: 'Toast'));
+      await tester.pumpAndSettle();
+
+      expect((await harness.db.noteById('n1'))!.title, 'Toast');
+      expect(titleField(tester).controller!.text, 'Toast');
+
+      // A still-dirty flag would also make `_save` write the field's stale
+      // text back over the sync the moment the page pops.
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect((await harness.db.noteById('n1'))!.title, 'Toast');
+    },
+  );
+
+  appTest('clearing the title field then editing the body reverts the title '
+      'field to the stored title, not a lingering blank', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-title')), '');
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    // An empty title falls back to the stored one, not a blank write.
+    expect((await harness.db.noteById('n1'))!.title, 'Bread');
+    expect((await harness.db.noteById('n1'))!.body, 'flour');
+    // The field itself must catch up to that fallback, not keep showing
+    // the blank text that was typed into it.
+    expect(titleField(tester).controller!.text, 'Bread');
   });
 
   appTest('open link opens a web link at the cursor', (tester) async {

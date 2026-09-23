@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,11 +31,23 @@ void main() {
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           home: Scaffold(
-            body: Column(
-              children: [
-                TextField(controller: controller, undoController: undo),
-                NoteFormatToolbar(controller: controller, undoController: undo),
-              ],
+            // A `Builder` so `onInsertLink` below closes over this
+            // subtree's own context, the way `NoteDetailScreen` closes
+            // over its own stable context -- not the outer `MaterialApp`
+            // context `pumpWidget` itself would otherwise hand this
+            // function.
+            body: Builder(
+              builder: (context) => Column(
+                children: [
+                  TextField(controller: controller, undoController: undo),
+                  NoteFormatToolbar(
+                    controller: controller,
+                    undoController: undo,
+                    onInsertLink: () =>
+                        unawaited(promptForLink(context, controller)),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

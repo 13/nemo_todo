@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/features/notes/ui/markdown/markdown_preview.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -23,9 +24,8 @@ class NoteCard extends StatelessWidget {
     final l = L.of(context);
     final theme = Theme.of(context);
     final title = note.title.trim();
-    // Markdown source, not rendered, for the reason NoteTile gives: a
-    // heading or an image would otherwise set the size of the card.
     final preview = note.body.trim();
+    final bodyStyle = theme.textTheme.bodyMedium ?? const TextStyle();
     return Card.outlined(
       key: Key('note-tile-${note.id}'),
       margin: EdgeInsets.zero,
@@ -64,11 +64,13 @@ class NoteCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
               ],
-              Text(
-                preview.isEmpty ? l.notePreviewEmpty : preview,
+              Text.rich(
+                preview.isEmpty
+                    ? TextSpan(text: l.notePreviewEmpty)
+                    : markdownPreviewSpan(preview, bodyStyle, theme),
                 maxLines: 10,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
+                style: bodyStyle,
               ),
               if (listName case final name?) ...[
                 const SizedBox(height: 12),

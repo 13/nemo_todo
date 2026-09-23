@@ -193,3 +193,22 @@ void _parseInline(String source, int base, List<MdRange> out) {
   delimited(_italicStar, 1, MdStyle.italic);
   delimited(_italicUnder, 1, MdStyle.italic);
 }
+
+/// [text] as it reads with its markdown markers removed: emphasis
+/// delimiters, heading hashes, link brackets and targets. List markers are
+/// left alone -- they are `listMarker`, not `marker`, and callers that want
+/// them gone strip them first.
+String stripMarkdown(String text) {
+  final hidden = List<bool>.filled(text.length, false);
+  for (final r in parseMarkdownRanges(text)) {
+    if (r.style != MdStyle.marker) continue;
+    for (var i = r.start; i < r.end; i++) {
+      hidden[i] = true;
+    }
+  }
+  final out = StringBuffer();
+  for (var i = 0; i < text.length; i++) {
+    if (!hidden[i]) out.write(text[i]);
+  }
+  return out.toString();
+}

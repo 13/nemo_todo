@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/sync_writes.dart';
+import 'package:nemo/core/providers.dart';
+import 'package:nemo/features/notes/data/notes_repository.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
 import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
@@ -12,6 +16,25 @@ import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
+
+/// A [NotesRepository] whose `save` waits on [_gate] before writing anything.
+///
+/// Used to make the gap between `_save` kicking a write off and the write
+/// actually landing observable from a test -- the in-memory test database
+/// otherwise resolves that gap well within a single microtask, before the
+/// widget's next frame, which is not how it works in production (drift runs
+/// the write in a background isolate there).
+class _GatedNotesRepository extends NotesRepository {
+  _GatedNotesRepository(super._db, super._clock, super._newId, this._gate);
+
+  final Completer<void> _gate;
+
+  @override
+  Future<void> save(Note note) async {
+    await _gate.future;
+    await super.save(note);
+  }
+}
 
 void main() {
   TextField bodyField(WidgetTester tester) =>
@@ -106,26 +129,43 @@ void main() {
   appTest('meta+B bolds the selection on macOS, where ctrl+B is native', (
     tester,
   ) async {
+    // `flutter_test` checks that no foundation debug variable is still set
+    // once the test body returns, before `addTearDown` callbacks run -- so
+    // an `addTearDown` reset here is too late and trips that check itself.
+    // A manual reset in `finally` runs in time, on both the pass and the
+    // throw path.
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
-    await harness.seedList('l1', 'Kitchen');
-    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'milk');
-    await tester.pumpAndSettle();
+    try {
+      final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+      await harness.seedList('l1', 'Kitchen');
+      await harness.seedNote('n1', 'l1', title: 'Bread', body: 'milk');
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('note-body')));
-    await tester.pumpAndSettle();
-    bodyField(tester).controller!.selection = const TextSelection(
-      baseOffset: 0,
-      extentOffset: 4,
-    );
-    await tester.pump();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+      await tester.tap(find.byKey(const Key('note-body')));
+      await tester.pumpAndSettle();
+      bodyField(tester).controller!.selection = const TextSelection(
+        baseOffset: 0,
+        extentOffset: 4,
+      );
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
 
-    expect(bodyField(tester).controller!.text, '**milk**');
-    debugDefaultTargetPlatformOverride = null;
+      expect(bodyField(tester).controller!.text, '**milk**');
+
+      // Ctrl+B is left to the platform's own text field on macOS/iOS -- not
+      // bound here, unlike meta+B above -- so it must not touch the text.
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+
+      expect(bodyField(tester).controller!.text, '**milk**');
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   appTest('enter on a list line continues the list', (tester) async {
@@ -179,6 +219,50 @@ void main() {
     expect(bodyField(tester).controller!.text, 'local');
   });
 
+  appTest(
+    'an edit keeps its text on unfocus until the in-flight save lands, not '
+    'just until it is kicked off',
+    (tester) async {
+      final gate = Completer<void>();
+      final harness = await pumpApp(
+        tester,
+        initialLocation: '/notes/n1',
+        overrides: [
+          notesRepositoryProvider.overrideWith(
+            (ref) => _GatedNotesRepository(
+              ref.watch(appDatabaseProvider),
+              ref.watch(hlcClockProvider),
+              ref.watch(idGeneratorProvider),
+              gate,
+            ),
+          ),
+        ],
+      );
+      await harness.seedList('l1', 'Kitchen');
+      await harness.seedNote('n1', 'l1', title: 'Bread', body: 'dough');
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+      // Losing focus kicks `_save` off -- and, through its own `setState`,
+      // forces exactly the rebuild that would run `_fill` early against the
+      // still-unwritten note if the dirty flag were cleared up front.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
+
+      // The gated write hasn't landed yet -- the store still holds the old
+      // text -- so the field must still show what was typed, not fall back
+      // to it.
+      expect((await harness.db.noteById('n1'))!.body, 'dough');
+      expect(bodyField(tester).controller!.text, 'flour');
+
+      gate.complete();
+      await tester.pumpAndSettle();
+
+      expect((await harness.db.noteById('n1'))!.body, 'flour');
+      expect(bodyField(tester).controller!.text, 'flour');
+    },
+  );
+
   appTest('focusing the body without typing does not revert a sync that lands '
       'while it is focused, once it loses focus', (tester) async {
     final harness = await pumpApp(tester, initialLocation: '/notes/n1');
@@ -197,10 +281,12 @@ void main() {
     await tester.pump();
     expect((await harness.db.noteById('n1'))!.body, 'remote');
 
-    // Unfocus without ever having typed -- there is nothing dirty here
-    // to save, so the old ('dough') text the field is still showing
-    // must not overwrite the sync that landed while it was focused.
-    await tester.tap(find.byKey(const Key('note-title')));
+    // Unfocus to nothing -- not into `note-title`, which would leave that
+    // field focused and skip `_onFocusChange`'s "nothing has focus" guard
+    // entirely, exercising no save-on-unfocus path at all. There is nothing
+    // dirty here to save, so the old ('dough') text the field is still
+    // showing must not overwrite the sync that landed while it was focused.
+    FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
 
     expect((await harness.db.noteById('n1'))!.body, 'remote');

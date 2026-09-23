@@ -86,8 +86,9 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   /// Keeps the controllers in step with the stored note unless being
   /// edited. Never while a field has focus: an arriving sync would
   /// otherwise move the cursor out from under whoever is typing. A dirty
-  /// field is skipped too -- it holds an edit `_save` hasn't reconciled
-  /// yet, on the sliver of time between losing focus and that finishing.
+  /// field is skipped too -- `_save` keeps the flag set for the whole
+  /// write, so this stays skipped until the field's text has actually
+  /// landed in the store, not just until the write was kicked off.
   void _fill(Note note) {
     if (!_titleFocus.hasFocus && !_titleDirty && _title.text != note.title) {
       _title.text = note.title;
@@ -119,15 +120,30 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     final rawTitle = _title.text.trim();
     final title = _titleDirty && rawTitle.isNotEmpty ? rawTitle : note.title;
     final body = _bodyDirty ? _body.text : note.body;
-    // Cleared up front, synchronously: whatever the fields hold has now
-    // been folded into `title`/`body`, dirty or not, so nothing typed
-    // after this point should be lost to the flag still reading true.
-    _titleDirty = false;
-    _bodyDirty = false;
-    if (title == note.title && body == note.body) return;
+    if (title == note.title && body == note.body) {
+      // Nothing to write, but a dirty field that trimmed/normalized back
+      // to the stored value still needs its flag dropped -- otherwise
+      // `_fill` would skip it forever, even though there is no write in
+      // flight to wait for.
+      _titleDirty = false;
+      _bodyDirty = false;
+      return;
+    }
+    // The flags stay set for the whole write, not cleared up front: `_fill`
+    // must keep skipping this field until the note it reads back actually
+    // holds what was just written, or it would blow the stale text in the
+    // controller onto the old, pre-write note the instant focus is lost
+    // (`_onFocusChange`'s `setState` below runs a rebuild before the
+    // repository's stream has emitted the new row -- drift runs the write
+    // in a background isolate in production, so that gap is real). Cleared
+    // only once the field still holds exactly what was written, so a fresh
+    // edit made during the `await` isn't mistaken for having landed.
     await ref
         .read(notesRepositoryProvider)
         .save(note.copyWith(title: title, body: body));
+    if (!mounted) return;
+    if (_title.text == title) _titleDirty = false;
+    if (_body.text == body) _bodyDirty = false;
   }
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {
@@ -254,11 +270,16 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
             ),
             ListenableBuilder(
               listenable: _bodyFocus,
-              builder: (context, _) => _bodyFocus.hasFocus
+              // Not `(context, _)`: that would shadow the screen's own
+              // `context` with this builder's, which unmounts every time
+              // the toolbar itself does -- exactly the context
+              // `linkDialogContext` below needs to not be.
+              builder: (_, _) => _bodyFocus.hasFocus
                   ? NoteFormatToolbar(
                       controller: _body,
                       undoController: _undo,
                       focusNode: _bodyFocus,
+                      linkDialogContext: context,
                     )
                   : const SizedBox.shrink(),
             ),

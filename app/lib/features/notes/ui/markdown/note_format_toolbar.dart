@@ -38,6 +38,13 @@ Future<void> promptForLink(
     context: context,
     builder: (context) => const _LinkDialog(),
   );
+  // [context] must still be mounted once the dialog is done: it is either
+  // this call's own (from [NoteFormatToolbar]'s `md-link` button, so long
+  // as its caller passed a [NoteFormatToolbar.linkDialogContext] that
+  // outlives the toolbar itself) or the note screen's own (from its
+  // Ctrl/Cmd+K shortcut) -- either way, [focusNode] and [controller] are
+  // gone the moment it is not, and using either would throw.
+  if (!context.mounted) return;
   final trimmed = url?.trim() ?? '';
   if (trimmed.isEmpty) return;
   focusNode?.requestFocus();
@@ -103,6 +110,7 @@ class NoteFormatToolbar extends ConsumerWidget {
     required this.controller,
     required this.undoController,
     this.focusNode,
+    this.linkDialogContext,
     super.key,
   });
 
@@ -112,6 +120,20 @@ class NoteFormatToolbar extends ConsumerWidget {
   /// The body field's focus node, passed through to [promptForLink] so it
   /// can restore focus before writing the inserted link.
   final FocusNode? focusNode;
+
+  /// A [BuildContext] that outlives this toolbar's own, used for
+  /// [promptForLink]'s post-dialog mounted check in place of this widget's
+  /// own context.
+  ///
+  /// This toolbar is shown only while the body has focus -- built by a
+  /// caller (see `NoteDetailScreen`) that swaps it for nothing the instant
+  /// that focus is lost. The link dialog's own field takes that focus the
+  /// moment it opens, so by the time the dialog closes, this toolbar's own
+  /// context is *already* unmounted on the ordinary, successful path -- not
+  /// only when the screen itself is gone. Falls back to this widget's own
+  /// context when not given, for a caller (such as this file's own test)
+  /// that never hides the toolbar this way.
+  final BuildContext? linkDialogContext;
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {
     controller.value = command(controller.value);
@@ -231,7 +253,7 @@ class NoteFormatToolbar extends ConsumerWidget {
                       l.mdLink,
                       () => unawaited(
                         promptForLink(
-                          context,
+                          linkDialogContext ?? context,
                           controller,
                           focusNode: focusNode,
                         ),

@@ -83,6 +83,18 @@ void main() {
       expect(stylesOf(text, 'b_c'), {MdStyle.marker});
       expect(stylesOf(text, 'ok'), isEmpty);
     });
+
+    test('a URL with balanced parentheses is marked whole', () {
+      const text = '[w](https://en.wikipedia.org/wiki/Foo_(bar)) ok';
+      final close = text.indexOf(' ok') - 1;
+      expect(stylesAt(text, close), {MdStyle.marker});
+      expect(stylesOf(text, 'bar'), {MdStyle.marker});
+      expect(stylesOf(text, 'ok'), isEmpty);
+      expect(
+        parseMarkdownRanges(text),
+        contains(MdRange(2, close + 1, MdStyle.marker)),
+      );
+    });
   });
 
   group('blocks', () {
@@ -104,6 +116,15 @@ void main() {
       expect(stylesOf('- [ ] bread', 'bread'), isEmpty);
       expect(stylesOf('- [x] bread', 'bread'), {MdStyle.taskDone});
       expect(stylesOf('- [X] bread', 'bread'), {MdStyle.taskDone});
+    });
+
+    test('a bare task box with nothing after it is a task marker', () {
+      expect(parseMarkdownRanges('- [x]'), [
+        const MdRange(0, 5, MdStyle.listMarker),
+      ]);
+      expect(parseMarkdownRanges('- [ ]'), [
+        const MdRange(0, 5, MdStyle.listMarker),
+      ]);
     });
 
     test('inline styles work inside list items', () {

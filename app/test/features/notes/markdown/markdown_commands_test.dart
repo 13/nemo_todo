@@ -128,6 +128,14 @@ void main() {
       expect(show(toggleCheckbox(v('- [ ] br|ead'))), '- [x] br|ead');
     });
 
+    test('flips a bare open box with nothing after it', () {
+      expect(show(toggleCheckbox(v('- [ ]|'))), '- [x]|');
+    });
+
+    test('flips a bare checked box with nothing after it back', () {
+      expect(show(toggleCheckbox(v('- [x]|'))), '- [ ]|');
+    });
+
     test('flips a checked box back', () {
       expect(show(toggleCheckbox(v('- [X] br|ead'))), '- [ ] br|ead');
     });
@@ -218,6 +226,19 @@ void main() {
     test('on either edge of a link', () {
       expect(linkAtCursor(at(text.indexOf('['))), 'https://x.y');
       expect(linkAtCursor(at(text.indexOf(')') + 1)), 'https://x.y');
+    });
+
+    test('keeps balanced parentheses in the URL', () {
+      const wiki = '[w](https://en.wikipedia.org/wiki/Foo_(bar)) c';
+      expect(
+        linkAtCursor(
+          const TextEditingValue(
+            text: wiki,
+            selection: TextSelection.collapsed(offset: 1),
+          ),
+        ),
+        'https://en.wikipedia.org/wiki/Foo_(bar)',
+      );
     });
 
     test('outside a link', () {

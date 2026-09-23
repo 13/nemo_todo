@@ -145,17 +145,25 @@ TextEditingValue cycleHeading(TextEditingValue v) {
   return result;
 }
 
-final _openBox = RegExp(r'^(\s*[-*+]) \[ \] ');
-final _checkedBox = RegExp(r'^(\s*[-*+]) \[[xX]\] ');
+// A box may end the line with nothing after it -- `- [ ]`, no trailing
+// space -- or the bullet pattern below would claim it and add a second box.
+final _openBox = RegExp(r'^(\s*[-*+]) \[ \](?: |$)');
+final _checkedBox = RegExp(r'^(\s*[-*+]) \[[xX]\](?: |$)');
 final _bullet = RegExp(r'^(\s*)[-*+] ');
 final _number = RegExp(r'^(\s*)\d+\. ');
 
+/// The space after a box, or nothing when the box ends the line.
+String _rest(Match m) => m[0]!.endsWith(' ') ? ' ' : '';
+
 TextEditingValue toggleCheckbox(TextEditingValue v) => _mapLines(v, (line) {
   if (_openBox.hasMatch(line)) {
-    return line.replaceFirstMapped(_openBox, (m) => '${m[1]} [x] ');
+    return line.replaceFirstMapped(_openBox, (m) => '${m[1]} [x]${_rest(m)}');
   }
   if (_checkedBox.hasMatch(line)) {
-    return line.replaceFirstMapped(_checkedBox, (m) => '${m[1]} [ ] ');
+    return line.replaceFirstMapped(
+      _checkedBox,
+      (m) => '${m[1]} [ ]${_rest(m)}',
+    );
   }
   if (_bullet.hasMatch(line)) {
     return line.replaceFirstMapped(_bullet, (m) => '${m[1]}- [ ] ');
@@ -268,7 +276,9 @@ TextEditingValue? continueList(TextEditingValue v) {
   );
 }
 
-final _linkPattern = RegExp(r'\[[^\]]+\]\(([^)\s]+)\)');
+// The URL may hold one level of balanced parentheses, as Wikipedia's
+// `Foo_(bar)` pages do; otherwise it would end at the first `)`.
+final _linkPattern = RegExp(r'\[[^\]]+\]\(((?:[^()\s]|\([^()\s]*\))+)\)');
 
 /// The URL of the link the cursor is in or touching, if any.
 String? linkAtCursor(TextEditingValue v) {

@@ -65,11 +65,13 @@ final _fence = RegExp(r'^\s*```');
 final _rule = RegExp(r'^\s*([-*_])(?:\s*\1){2,}\s*$');
 final _heading = RegExp('^(#{1,6}) ');
 final _quote = RegExp(r'^>\s?');
-final _task = RegExp(r'^(\s*)[-*+] \[([ xX])\] ');
+// A box may end the line with nothing after it (`- [x]`, no space).
+final _task = RegExp(r'^(\s*)[-*+] \[([ xX])\](?: |$)');
 final _list = RegExp(r'^(\s*)(?:[-*+]|\d+[.)]) ');
 
 final _inlineCode = RegExp('`[^`]+`');
-final _link = RegExp(r'\[([^\]]+)\]\([^)\s]+\)');
+// One level of balanced parentheses in the URL, as in `Foo_(bar)`.
+final _link = RegExp(r'\[([^\]]+)\]\((?:[^()\s]|\([^()\s]*\))+\)');
 final _boldStars = RegExp(r'\*\*(?=\S)(.+?)(?<=\S)\*\*');
 final _boldUnders = RegExp(r'(?<!\w)__(?=\S)(.+?)(?<=\S)__(?!\w)');
 final _strike = RegExp(r'~~(?=\S)(.+?)(?<=\S)~~');

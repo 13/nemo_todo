@@ -14,11 +14,13 @@ bool isWebLink(String url) {
   return uri != null && (uri.isScheme('http') || uri.isScheme('https'));
 }
 
-/// Asks for a URL and links the selection to it. Cancelling changes
-/// nothing. The dialog takes focus from the body; the controller keeps
-/// its selection, so the insert still lands where it was.
+/// Asks for a URL and links the selection to it. Cancelling changes no
+/// text, but still hands focus back to [focusNode]. The dialog takes
+/// focus from the body; the controller keeps its selection, so the insert
+/// still lands where it was.
 ///
-/// [focusNode], when given, is refocused before the edit is written: the
+/// [focusNode], when given, is refocused -- on cancel as well, so the
+/// toolbar and keyboard don't vanish -- before the edit is written: the
 /// dialog leaves the body unfocused, and writing to an unfocused field
 /// means no debounce save fires and a sync could overwrite the insert
 /// before the user ever notices.
@@ -43,10 +45,12 @@ Future<void> promptForLink(
   // [context] is checked for exactly that: once it's gone, [focusNode] and
   // [controller] are gone with it, and touching either would throw.
   if (!context.mounted) return;
-  final trimmed = url?.trim() ?? '';
-  if (trimmed.isEmpty) return;
+  // Refocused whether or not a URL came back: a cancelled dialog must not
+  // leave the body unfocused, taking the toolbar and keyboard with it.
   focusNode?.requestFocus();
   FocusManager.instance.applyFocusChangesIfNeeded();
+  final trimmed = url?.trim() ?? '';
+  if (trimmed.isEmpty) return;
   controller.value = insertLink(controller.value, trimmed);
 }
 

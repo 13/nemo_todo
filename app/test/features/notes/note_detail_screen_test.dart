@@ -745,6 +745,28 @@ void main() {
     expect((await harness.db.noteById('n1'))!.body, '[docs](https://x.y)');
   });
 
+  appTest('cancelling the link dialog keeps the body focused and its bar up', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'docs');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    await scrollToolbar(tester, find.byKey(const Key('md-link')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('md-link')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('md-link-cancel')));
+    await tester.pumpAndSettle();
+
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+    expect(find.byType(NoteFormatToolbar), findsOneWidget);
+    expect(bodyField(tester).controller!.text, 'docs');
+  });
+
   appTest(
     'when the open note is tombstoned elsewhere, show not-found with a back affordance',
     (tester) async {

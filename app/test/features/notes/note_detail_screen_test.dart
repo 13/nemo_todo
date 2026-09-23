@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/sync_writes.dart';
+import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/notes/ui/notes_screen.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
+import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
 
 void main() {
-  appTest('the body renders as markdown and edits as its source', (
+  TextField bodyField(WidgetTester tester) =>
+      tester.widget<TextField>(find.byKey(const Key('note-body')));
+
+  appTest('the body is editable markdown source with no toggle', (
     tester,
   ) async {
     final harness = await pumpApp(tester, initialLocation: '/notes/n1');
@@ -17,20 +23,152 @@ void main() {
     await harness.seedNote('n1', 'l1', title: 'Bread', body: '# Dough');
     await tester.pumpAndSettle();
 
-    // Read mode: the hash is markup, not text on screen.
-    expect(find.text('# Dough'), findsNothing);
-    expect(find.text('Dough'), findsOneWidget);
+    expect(find.byKey(const Key('note-edit-toggle')), findsNothing);
+    final field = bodyField(tester);
+    expect(field.controller, isA<MarkdownEditingController>());
+    expect(field.controller!.text, '# Dough');
+  });
 
-    await tester.tap(find.byKey(const Key('note-edit-toggle')));
+  appTest('the toolbar shows only while the body has focus', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'milk');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('md-bold')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('md-bold')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-title')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('md-bold')), findsNothing);
+  });
+
+  appTest('bold wraps the selection and keeps the body focused', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'milk');
     await tester.pumpAndSettle();
 
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('note-body')))
-          .controller!
-          .text,
-      '# Dough',
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
     );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('md-bold')));
+    await tester.pump();
+
+    expect(bodyField(tester).controller!.text, '**milk**');
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+  });
+
+  appTest('ctrl+B bolds the selection', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'milk');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pump();
+
+    expect(bodyField(tester).controller!.text, '**milk**');
+  });
+
+  appTest('enter on a list line continues the list', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+
+    final body = find.byKey(const Key('note-body'));
+    await tester.enterText(body, '- milk');
+    await tester.enterText(body, '- milk\n');
+    await tester.pump();
+
+    expect(bodyField(tester).controller!.text, '- milk\n- ');
+  });
+
+  appTest('typing saves after a pause without leaving the field', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'flour');
+    await tester.pump(const Duration(milliseconds: 500));
+    expect((await harness.db.noteById('n1'))!.body, '');
+
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
+    expect((await harness.db.noteById('n1'))!.body, 'flour');
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+  });
+
+  appTest('a sync arriving while typing does not replace the text', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('note-body')), 'local');
+    final stored = (await harness.db.noteById('n1'))!;
+    await harness.container
+        .read(notesRepositoryProvider)
+        .save(stored.copyWith(body: 'remote'));
+    await tester.pump();
+
+    expect(bodyField(tester).controller!.text, 'local');
+  });
+
+  appTest('open link opens a web link at the cursor', (tester) async {
+    final opened = <Uri>[];
+    final harness = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        openUrlProvider.overrideWithValue((uri) async {
+          opened.add(uri);
+          return true;
+        }),
+      ],
+    );
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote(
+      'n1',
+      'l1',
+      title: 'Bread',
+      body: '[recipe](https://x.y)',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection.collapsed(
+      offset: 2,
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('md-open-link')));
+    await tester.pump();
+
+    expect(opened, [Uri.parse('https://x.y')]);
   });
 
   appTest(

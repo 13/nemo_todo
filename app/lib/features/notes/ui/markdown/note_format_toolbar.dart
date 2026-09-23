@@ -145,6 +145,19 @@ class NoteFormatToolbar extends ConsumerWidget {
                       l.mdRedo,
                       undo.canRedo ? undoController.redo : null,
                     ),
+                    // Contextual, and only shown while the cursor sits in a
+                    // web link: kept near the front of the bar, unlike the
+                    // other buttons, so it is never scrolled out of view
+                    // exactly when it becomes relevant.
+                    if (link != null && isWebLink(link))
+                      button(
+                        'md-open-link',
+                        Icons.open_in_new,
+                        l.mdOpenLink,
+                        () => unawaited(
+                          ref.read(openUrlProvider)(Uri.parse(link)),
+                        ),
+                      ),
                     button(
                       'md-bold',
                       Icons.format_bold,
@@ -211,15 +224,6 @@ class NoteFormatToolbar extends ConsumerWidget {
                       l.mdLink,
                       () => unawaited(promptForLink(context, controller)),
                     ),
-                    if (link != null && isWebLink(link))
-                      button(
-                        'md-open-link',
-                        Icons.open_in_new,
-                        l.mdOpenLink,
-                        () => unawaited(
-                          ref.read(openUrlProvider)(Uri.parse(link)),
-                        ),
-                      ),
                   ],
                 );
               },

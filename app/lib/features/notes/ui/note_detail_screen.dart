@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/max_width.dart';
-import 'package:nemo/features/notes/ui/note_body_view.dart';
+import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
+import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
+import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/note_editor_sections.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
@@ -26,25 +29,42 @@ class NoteDetailScreen extends ConsumerStatefulWidget {
 
 class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   final _title = TextEditingController();
-  final _body = TextEditingController();
+  final _body = MarkdownEditingController();
+  final _undo = UndoHistoryController();
   final _titleFocus = FocusNode();
   final _bodyFocus = FocusNode();
 
-  // The body opens rendered -- most visits to a note are to read it, not
-  // change it -- and only shows its markdown source once asked to.
-  bool _editing = false;
+  // There is no "Done" to mark the end of an edit any more, so a pause in
+  // typing saves as well as leaving the field does.
+  Timer? _debounce;
+  static const _debounceDelay = Duration(seconds: 1);
 
   @override
   void initState() {
     super.initState();
     _titleFocus.addListener(_saveIfUnfocused);
     _bodyFocus.addListener(_saveIfUnfocused);
+    // A listener, not `onChanged`: toolbar buttons and shortcuts write
+    // `_body.value` directly, which `onChanged` never hears about.
+    _body.addListener(_onBodyChanged);
+  }
+
+  String _lastBody = '';
+
+  void _onBodyChanged() {
+    if (_body.text == _lastBody) return; // selection-only change
+    _lastBody = _body.text;
+    // `_fill` writes only while unfocused, so a sync landing is not
+    // mistaken for typing.
+    if (_bodyFocus.hasFocus) _scheduleSave();
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _title.dispose();
     _body.dispose();
+    _undo.dispose();
     _titleFocus.dispose();
     _bodyFocus.dispose();
     super.dispose();
@@ -62,20 +82,18 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
   }
 
+  void _scheduleSave() {
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDelay, () => unawaited(_save()));
+  }
+
   void _saveIfUnfocused() {
     if (_titleFocus.hasFocus || _bodyFocus.hasFocus) return;
     unawaited(_save());
   }
 
-  /// Flips read/edit. Leaving edit mode saves first, the same as
-  /// unfocusing the field does, since the field is about to disappear
-  /// rather than merely lose focus.
-  Future<void> _toggleEditing() async {
-    if (_editing) await _save();
-    setState(() => _editing = !_editing);
-  }
-
   Future<void> _save() async {
+    _debounce?.cancel();
     final note = ref.read(noteByIdProvider(widget.noteId)).value;
     if (note == null) return;
     final title = _title.text.trim();
@@ -86,6 +104,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         .save(
           note.copyWith(title: title.isEmpty ? note.title : title, body: body),
         );
+  }
+
+  void _apply(TextEditingValue Function(TextEditingValue) command) {
+    _body.value = command(_body.value);
   }
 
   @override
@@ -117,60 +139,94 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          actions: [
-            NotePinAction(note: note),
-            IconButton(
-              key: const Key('note-edit-toggle'),
-              tooltip: _editing ? l.noteReadToggle : l.noteEditToggle,
-              icon: Icon(_editing ? Icons.check_rounded : Icons.edit_outlined),
-              onPressed: () => unawaited(_toggleEditing()),
-            ),
-          ],
-        ),
-        body: MaxWidth(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-            children: [
-              TextField(
-                key: const Key('note-title'),
-                controller: _title,
-                focusNode: _titleFocus,
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
-                style: Theme.of(context).textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.w700),
-                decoration: InputDecoration(
-                  hintText: l.noteTitleHint,
-                  filled: false,
-                  border: InputBorder.none,
+        appBar: AppBar(actions: [NotePinAction(note: note)]),
+        // The toolbar sits in the body, under the scrolling content: the
+        // body is what the keyboard shrinks, so the bar rides directly on
+        // top of it. `bottomNavigationBar` would stay behind the keyboard.
+        body: Column(
+          children: [
+            Expanded(
+              child: MaxWidth(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  children: [
+                    TextField(
+                      key: const Key('note-title'),
+                      controller: _title,
+                      focusNode: _titleFocus,
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (_) => _scheduleSave(),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        hintText: l.noteTitleHint,
+                        filled: false,
+                        border: InputBorder.none,
+                      ),
+                    ),
+                    CallbackShortcuts(
+                      bindings: {
+                        for (final meta in [false, true]) ...{
+                          SingleActivator(
+                            LogicalKeyboardKey.keyB,
+                            control: !meta,
+                            meta: meta,
+                          ): () =>
+                              _apply((v) => toggleInline(v, '**')),
+                          SingleActivator(
+                            LogicalKeyboardKey.keyI,
+                            control: !meta,
+                            meta: meta,
+                          ): () =>
+                              _apply((v) => toggleInline(v, '_')),
+                          SingleActivator(
+                            LogicalKeyboardKey.keyX,
+                            control: !meta,
+                            meta: meta,
+                            shift: true,
+                          ): () =>
+                              _apply((v) => toggleInline(v, '~~')),
+                          SingleActivator(
+                            LogicalKeyboardKey.keyK,
+                            control: !meta,
+                            meta: meta,
+                          ): () =>
+                              unawaited(promptForLink(context, _body)),
+                        },
+                      },
+                      child: TextField(
+                        key: const Key('note-body'),
+                        controller: _body,
+                        focusNode: _bodyFocus,
+                        undoController: _undo,
+                        maxLines: null,
+                        minLines: 6,
+                        keyboardType: TextInputType.multiline,
+                        textCapitalization: TextCapitalization.sentences,
+                        inputFormatters: [ListContinuationFormatter()],
+                        decoration: InputDecoration(
+                          hintText: l.noteBodyHint,
+                          filled: false,
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
+                    NoteListPicker(note: note),
+                    NoteDeleteAction(note: note),
+                  ],
                 ),
               ),
-              if (_editing)
-                TextField(
-                  key: const Key('note-body'),
-                  controller: _body,
-                  focusNode: _bodyFocus,
-                  maxLines: null,
-                  minLines: 6,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    hintText: l.noteBodyHint,
-                    filled: false,
-                    border: InputBorder.none,
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: NoteBodyView(body: note.body),
-                ),
-              const SizedBox(height: 16),
-              PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
-              NoteListPicker(note: note),
-              NoteDeleteAction(note: note),
-            ],
-          ),
+            ),
+            ListenableBuilder(
+              listenable: _bodyFocus,
+              builder: (context, _) => _bodyFocus.hasFocus
+                  ? NoteFormatToolbar(controller: _body, undoController: _undo)
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ),
       ),
     );

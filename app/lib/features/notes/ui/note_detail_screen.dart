@@ -8,14 +8,17 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
+import 'package:nemo/features/notes/ui/make_todo_sheet.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
 import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
+import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/features/notes/ui/note_editor_sections.dart';
 import 'package:nemo/features/notes/ui/note_read_view.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/notes/ui/task_link_chip.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
+import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -317,6 +320,155 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     return _save();
   }
 
+  void _openTask(String id) => unawaited(context.push(Routes.task(id)));
+
+  Future<void> _makeTodoFromEditor() async {
+    final candidates = todoCandidates(_body.value);
+    if (candidates.isEmpty) return;
+    await _makeTodo(candidates: candidates);
+  }
+
+  /// Saves first, so the task is made from what the fields show.
+  Future<void> _makeTodoFromNote() async {
+    await _save();
+    if (!mounted) return;
+    await _makeTodo(wholeNote: wholeNoteTodo(_title.text, _body.text));
+  }
+
+  /// Asks, creates the tasks, links them in the body and offers undo.
+  /// A failure part way deletes what was created and leaves the body as
+  /// it was.
+  Future<void> _makeTodo({
+    List<TodoCandidate> candidates = const [],
+    WholeNoteTodo? wholeNote,
+  }) async {
+    final note = ref.read(noteByIdProvider(widget.noteId)).value;
+    if (note == null) return;
+    final result = await showMakeTodoSheet(
+      context,
+      candidates: candidates,
+      wholeNote: wholeNote,
+      listId: note.listId,
+    );
+    if (result == null || !mounted) return;
+    final l = L.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final tasks = ref.read(tasksRepositoryProvider);
+    final subtasks = ref.read(subtasksRepositoryProvider);
+    final created = <String>[];
+    try {
+      for (final draft in result.tasks) {
+        final task = await tasks.create(
+          listId: result.listId,
+          title: draft.title,
+          notes: draft.notes,
+          dueAt: result.dueAt,
+          priority: result.priority,
+        );
+        created.add(task.id);
+        for (final sub in draft.subtasks) {
+          await subtasks.add(task.id, sub);
+        }
+      }
+    } on Object catch (error, stack) {
+      debugPrint('note ${widget.noteId}: tasks not created: $error\n$stack');
+      for (final id in created) {
+        await tasks.delete(id);
+      }
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.noteTodoFailed)));
+      return;
+    }
+    if (!mounted) return;
+    final body = _body.text;
+    final linked = wholeNote != null
+        ? appendTaskLink(body, created.single)
+        : insertTaskLinks(body, [
+            // One draft per candidate, or one task anchored at the first.
+            if (created.length == candidates.length)
+              for (final (i, id) in created.indexed) (candidates[i].anchor, id)
+            else
+              (candidates.first.anchor, created.single),
+          ]);
+    await _writeBody(linked);
+    if (!mounted) return;
+    // A SnackBar has one action: Undo takes it, and Open (one task only)
+    // sits in the content.
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Expanded(child: Text(l.noteTodoCreated(created.length))),
+              if (created.length == 1)
+                TextButton(
+                  key: const Key('todo-open'),
+                  onPressed: () {
+                    messenger.hideCurrentSnackBar();
+                    _openTask(created.single);
+                  },
+                  child: Text(l.commonOpen),
+                ),
+            ],
+          ),
+          action: SnackBarAction(
+            label: l.commonUndo,
+            onPressed: () => unawaited(_undoTodo(created.toSet())),
+          ),
+        ),
+      );
+  }
+
+  Future<void> _undoTodo(Set<String> ids) async {
+    final tasks = ref.read(tasksRepositoryProvider);
+    for (final id in ids) {
+      await tasks.delete(id);
+    }
+    if (!mounted) return;
+    await _writeBody(removeTaskLinks(_body.text, ids));
+  }
+
+  Future<void> _onLongPressLine(int lineStart, Offset at) async {
+    final body = _body.text;
+    final linked = linkedTaskAt(body, lineStart);
+    final candidate = linked == null ? lineCandidate(body, lineStart) : null;
+    final l = L.of(context);
+    final choice = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
+      items: [
+        if (linked != null)
+          PopupMenuItem(
+            key: const Key('read-menu-open-task'),
+            value: 'open',
+            child: Text(l.noteOpenTask),
+          )
+        else if (candidate != null)
+          PopupMenuItem(
+            key: const Key('read-menu-make-todo'),
+            value: 'todo',
+            child: Text(l.noteMakeTodo),
+          ),
+        PopupMenuItem(
+          key: const Key('read-menu-edit'),
+          value: 'edit',
+          child: Text(l.commonEdit),
+        ),
+      ],
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case 'open':
+        _openTask(linked!);
+      case 'todo':
+        await _makeTodo(candidates: [candidate!]);
+      case 'edit':
+        _editAt(lineStart);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -402,7 +554,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                         body: _body.text,
                         onChanged: (body) => unawaited(_writeBody(body)),
                         onEditAt: _editAt,
-                        onLongPressLine: (_, _) {},
+                        onLongPressLine: (start, at) =>
+                            unawaited(_onLongPressLine(start, at)),
                         onOpenLink: (url) => openNoteLink(context, ref, url),
                         taskChip: (id) => TaskLinkChip(taskId: id),
                       )
@@ -433,6 +586,13 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                             control: !useMeta,
                             meta: useMeta,
                           ): _insertLink,
+                          SingleActivator(
+                            LogicalKeyboardKey.keyT,
+                            control: !useMeta,
+                            meta: useMeta,
+                            shift: true,
+                          ): () =>
+                              unawaited(_makeTodoFromEditor()),
                         },
                         child: TextField(
                           key: const Key('note-body'),
@@ -444,6 +604,25 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                           keyboardType: TextInputType.multiline,
                           textCapitalization: TextCapitalization.sentences,
                           inputFormatters: [ListContinuationFormatter()],
+                          contextMenuBuilder: (context, state) {
+                            final items = [...state.contextMenuButtonItems];
+                            if (!state.textEditingValue.selection.isCollapsed) {
+                              items.insert(
+                                0,
+                                ContextMenuButtonItem(
+                                  label: l.noteMakeTodo,
+                                  onPressed: () {
+                                    state.hideToolbar();
+                                    unawaited(_makeTodoFromEditor());
+                                  },
+                                ),
+                              );
+                            }
+                            return AdaptiveTextSelectionToolbar.buttonItems(
+                              anchors: state.contextMenuAnchors,
+                              buttonItems: items,
+                            );
+                          },
                           decoration: InputDecoration(
                             hintText: l.noteBodyHint,
                             filled: false,
@@ -454,6 +633,12 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                     const SizedBox(height: 16),
                     PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
                     NoteListPicker(note: note),
+                    ListTile(
+                      key: const Key('note-make-todo'),
+                      leading: const Icon(Icons.add_task),
+                      title: Text(l.noteMakeTodoFromNote),
+                      onTap: () => unawaited(_makeTodoFromNote()),
+                    ),
                     NoteDeleteAction(note: note),
                   ],
                 ),
@@ -466,6 +651,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                       controller: _body,
                       undoController: _undo,
                       onInsertLink: _insertLink,
+                      onMakeTodo: () => unawaited(_makeTodoFromEditor()),
+                      onOpenTask: _openTask,
                     )
                   : const SizedBox.shrink(),
             ),

@@ -53,6 +53,8 @@ void main() {
                     onInsertLink: () => unawaited(
                       promptForLink(context, controller, focusNode: focus),
                     ),
+                    onMakeTodo: () {},
+                    onOpenTask: (_) {},
                   ),
                 ],
               ),

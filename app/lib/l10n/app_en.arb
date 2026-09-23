@@ -563,5 +563,20 @@
   "noteDelete": "Delete",
   "noteMoveToList": "Move to list",
   "notesDeleteConfirm": "Delete this note?",
-  "notesDeleted": "Note deleted"
+  "notesDeleted": "Note deleted",
+  "mdBold": "Bold",
+  "mdItalic": "Italic",
+  "mdStrike": "Strikethrough",
+  "mdHeading": "Heading",
+  "mdBulletList": "Bulleted list",
+  "mdNumberedList": "Numbered list",
+  "mdChecklist": "Checkbox",
+  "mdQuote": "Quote",
+  "mdCode": "Code",
+  "mdCodeBlock": "Code block",
+  "mdLink": "Link",
+  "mdLinkUrlHint": "URL",
+  "mdOpenLink": "Open link",
+  "mdUndo": "Undo",
+  "mdRedo": "Redo"
 }

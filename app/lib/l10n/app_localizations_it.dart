@@ -1109,4 +1109,49 @@ class LIt extends L {
 
   @override
   String get notesDeleted => 'Nota eliminata';
+
+  @override
+  String get mdBold => 'Grassetto';
+
+  @override
+  String get mdItalic => 'Corsivo';
+
+  @override
+  String get mdStrike => 'Barrato';
+
+  @override
+  String get mdHeading => 'Titolo';
+
+  @override
+  String get mdBulletList => 'Elenco puntato';
+
+  @override
+  String get mdNumberedList => 'Elenco numerato';
+
+  @override
+  String get mdChecklist => 'Casella di controllo';
+
+  @override
+  String get mdQuote => 'Citazione';
+
+  @override
+  String get mdCode => 'Codice';
+
+  @override
+  String get mdCodeBlock => 'Blocco di codice';
+
+  @override
+  String get mdLink => 'Link';
+
+  @override
+  String get mdLinkUrlHint => 'URL';
+
+  @override
+  String get mdOpenLink => 'Apri link';
+
+  @override
+  String get mdUndo => 'Annulla';
+
+  @override
+  String get mdRedo => 'Ripeti';
 }

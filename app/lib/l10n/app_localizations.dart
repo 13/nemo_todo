@@ -1832,6 +1832,96 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Note deleted'**
   String get notesDeleted;
+
+  /// No description provided for @mdBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get mdBold;
+
+  /// No description provided for @mdItalic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get mdItalic;
+
+  /// No description provided for @mdStrike.
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get mdStrike;
+
+  /// No description provided for @mdHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get mdHeading;
+
+  /// No description provided for @mdBulletList.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulleted list'**
+  String get mdBulletList;
+
+  /// No description provided for @mdNumberedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered list'**
+  String get mdNumberedList;
+
+  /// No description provided for @mdChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkbox'**
+  String get mdChecklist;
+
+  /// No description provided for @mdQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote'**
+  String get mdQuote;
+
+  /// No description provided for @mdCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get mdCode;
+
+  /// No description provided for @mdCodeBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Code block'**
+  String get mdCodeBlock;
+
+  /// No description provided for @mdLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get mdLink;
+
+  /// No description provided for @mdLinkUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get mdLinkUrlHint;
+
+  /// No description provided for @mdOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get mdOpenLink;
+
+  /// No description provided for @mdUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get mdUndo;
+
+  /// No description provided for @mdRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get mdRedo;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

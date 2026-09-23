@@ -288,5 +288,20 @@
   "noteDelete": "Löschen",
   "noteMoveToList": "In andere Liste verschieben",
   "notesDeleteConfirm": "Diese Notiz löschen?",
-  "notesDeleted": "Notiz gelöscht"
+  "notesDeleted": "Notiz gelöscht",
+  "mdBold": "Fett",
+  "mdItalic": "Kursiv",
+  "mdStrike": "Durchgestrichen",
+  "mdHeading": "Überschrift",
+  "mdBulletList": "Aufzählung",
+  "mdNumberedList": "Nummerierte Liste",
+  "mdChecklist": "Kontrollkästchen",
+  "mdQuote": "Zitat",
+  "mdCode": "Code",
+  "mdCodeBlock": "Codeblock",
+  "mdLink": "Link",
+  "mdLinkUrlHint": "URL",
+  "mdOpenLink": "Link öffnen",
+  "mdUndo": "Rückgängig",
+  "mdRedo": "Wiederholen"
 }

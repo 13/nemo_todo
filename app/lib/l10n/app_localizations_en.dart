@@ -1098,4 +1098,49 @@ class LEn extends L {
 
   @override
   String get notesDeleted => 'Note deleted';
+
+  @override
+  String get mdBold => 'Bold';
+
+  @override
+  String get mdItalic => 'Italic';
+
+  @override
+  String get mdStrike => 'Strikethrough';
+
+  @override
+  String get mdHeading => 'Heading';
+
+  @override
+  String get mdBulletList => 'Bulleted list';
+
+  @override
+  String get mdNumberedList => 'Numbered list';
+
+  @override
+  String get mdChecklist => 'Checkbox';
+
+  @override
+  String get mdQuote => 'Quote';
+
+  @override
+  String get mdCode => 'Code';
+
+  @override
+  String get mdCodeBlock => 'Code block';
+
+  @override
+  String get mdLink => 'Link';
+
+  @override
+  String get mdLinkUrlHint => 'URL';
+
+  @override
+  String get mdOpenLink => 'Open link';
+
+  @override
+  String get mdUndo => 'Undo';
+
+  @override
+  String get mdRedo => 'Redo';
 }

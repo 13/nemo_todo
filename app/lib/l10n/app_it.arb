@@ -288,5 +288,20 @@
   "noteDelete": "Elimina",
   "noteMoveToList": "Sposta in un'altra lista",
   "notesDeleteConfirm": "Eliminare questa nota?",
-  "notesDeleted": "Nota eliminata"
+  "notesDeleted": "Nota eliminata",
+  "mdBold": "Grassetto",
+  "mdItalic": "Corsivo",
+  "mdStrike": "Barrato",
+  "mdHeading": "Titolo",
+  "mdBulletList": "Elenco puntato",
+  "mdNumberedList": "Elenco numerato",
+  "mdChecklist": "Casella di controllo",
+  "mdQuote": "Citazione",
+  "mdCode": "Codice",
+  "mdCodeBlock": "Blocco di codice",
+  "mdLink": "Link",
+  "mdLinkUrlHint": "URL",
+  "mdOpenLink": "Apri link",
+  "mdUndo": "Annulla",
+  "mdRedo": "Ripeti"
 }

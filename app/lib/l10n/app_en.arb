@@ -638,5 +638,175 @@
   "commonOpen": "Open",
   "@commonOpen": {
     "description": "Generic action that opens the thing a message is about."
+  },
+  "motivationDayCleared0": "All clear for today. Enjoy it.",
+  "@motivationDayCleared0": {
+    "description": "Message after ticking off a task: today's list is now empty."
+  },
+  "motivationDayCleared1": "That's everything for today. Well done.",
+  "@motivationDayCleared1": {
+    "description": "Message after ticking off a task: today's list is now empty."
+  },
+  "motivationDayCleared2": "Today's list is empty. Nice work.",
+  "@motivationDayCleared2": {
+    "description": "Message after ticking off a task: today's list is now empty."
+  },
+  "motivationDayCleared3": "All done. Time for something you enjoy.",
+  "@motivationDayCleared3": {
+    "description": "Message after ticking off a task: today's list is now empty."
+  },
+  "motivationLastOne0": "One to go.",
+  "@motivationLastOne0": {
+    "description": "Message after ticking off a task: exactly one Today task is left open."
+  },
+  "motivationLastOne1": "Just one left.",
+  "@motivationLastOne1": {
+    "description": "Message after ticking off a task: exactly one Today task is left open."
+  },
+  "motivationLastOne2": "Nearly there. One more.",
+  "@motivationLastOne2": {
+    "description": "Message after ticking off a task: exactly one Today task is left open."
+  },
+  "motivationHalfway0": "Halfway there.",
+  "@motivationHalfway0": {
+    "description": "Message after ticking off a task: this tick crossed half of today's tasks."
+  },
+  "motivationHalfway1": "Half of today, done.",
+  "@motivationHalfway1": {
+    "description": "Message after ticking off a task: this tick crossed half of today's tasks."
+  },
+  "motivationHalfway2": "Good pace. Halfway through.",
+  "@motivationHalfway2": {
+    "description": "Message after ticking off a task: this tick crossed half of today's tasks."
+  },
+  "motivationStreakDay0": "Day {days} in a row.",
+  "@motivationStreakDay0": {
+    "description": "Message after ticking off a task: first completion today, continuing a streak of two days or more.",
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "motivationStreakDay1": "{days} days running. Keep it gentle.",
+  "@motivationStreakDay1": {
+    "description": "Message after ticking off a task: first completion today, continuing a streak of two days or more.",
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "motivationStreakDay2": "Another day, another step. {days} in a row.",
+  "@motivationStreakDay2": {
+    "description": "Message after ticking off a task: first completion today, continuing a streak of two days or more.",
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "motivationFirstOfDay0": "Good start.",
+  "@motivationFirstOfDay0": {
+    "description": "Message after ticking off a task: first completion today, no streak."
+  },
+  "motivationFirstOfDay1": "First one done. The rest is easier.",
+  "@motivationFirstOfDay1": {
+    "description": "Message after ticking off a task: first completion today, no streak."
+  },
+  "motivationFirstOfDay2": "And the day is moving.",
+  "@motivationFirstOfDay2": {
+    "description": "Message after ticking off a task: first completion today, no streak."
+  },
+  "motivationFirstOfDay3": "Off to a good start.",
+  "@motivationFirstOfDay3": {
+    "description": "Message after ticking off a task: first completion today, no streak."
+  },
+  "motivationOverdue0": "That one's been waiting. Good to have it gone.",
+  "@motivationOverdue0": {
+    "description": "Message after ticking off a task: the task was due before today."
+  },
+  "motivationOverdue1": "Off your mind at last.",
+  "@motivationOverdue1": {
+    "description": "Message after ticking off a task: the task was due before today."
+  },
+  "motivationOverdue2": "Finally done. That feels better.",
+  "@motivationOverdue2": {
+    "description": "Message after ticking off a task: the task was due before today."
+  },
+  "motivationProgress0": "{done} of {total} done today.",
+  "@motivationProgress0": {
+    "description": "Message after ticking off a task: a count of today's progress.",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "motivationProgress1": "{done} down, {left} to go.",
+  "@motivationProgress1": {
+    "description": "Message after ticking off a task: a count of today's progress.",
+    "placeholders": {"done": {"type": "int"}, "left": {"type": "int"}}
+  },
+  "motivationGeneric0": "Nice, one less thing.",
+  "@motivationGeneric0": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric1": "Done and dusted.",
+  "@motivationGeneric1": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric2": "Progress feels good.",
+  "@motivationGeneric2": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric3": "Another one done.",
+  "@motivationGeneric3": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric4": "Ticked off.",
+  "@motivationGeneric4": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric5": "That's handled.",
+  "@motivationGeneric5": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric6": "Good work.",
+  "@motivationGeneric6": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric7": "One step further.",
+  "@motivationGeneric7": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric8": "Nicely done.",
+  "@motivationGeneric8": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric9": "Crossed off.",
+  "@motivationGeneric9": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric10": "Keep going, gently.",
+  "@motivationGeneric10": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "motivationGeneric11": "Small steps count.",
+  "@motivationGeneric11": {
+    "description": "Message after ticking off a task: no more specific situation applies."
+  },
+  "todayProgressCount": "{done} of {total} done",
+  "@todayProgressCount": {
+    "description": "Today header's count of tasks completed out of total.",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "todayWelcomeBack0": "Welcome back. One small thing is a good start.",
+  "@todayWelcomeBack0": {
+    "description": "Today header's line: nothing has been completed today yet, after a gap of a day or more."
+  },
+  "todayWelcomeBack1": "Good to see you. Start with something easy.",
+  "@todayWelcomeBack1": {
+    "description": "Today header's line: nothing has been completed today yet, after a gap of a day or more."
+  },
+  "todayFreshStart0": "A fresh start.",
+  "@todayFreshStart0": {
+    "description": "Today header's line: nothing has been completed today yet."
+  },
+  "todayFreshStart1": "Pick one to begin.",
+  "@todayFreshStart1": {
+    "description": "Today header's line: nothing has been completed today yet."
+  },
+  "todayFreshStart2": "One thing at a time.",
+  "@todayFreshStart2": {
+    "description": "Today header's line: nothing has been completed today yet."
+  },
+  "todayAllClear": "All clear. Enjoy the rest of your day.",
+  "@todayAllClear": {
+    "description": "Today header's line: nothing Today shows is open any more."
   }
 }

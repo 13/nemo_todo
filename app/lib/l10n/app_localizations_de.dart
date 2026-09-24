@@ -1209,4 +1209,144 @@ class LDe extends L {
 
   @override
   String get commonOpen => 'Öffnen';
+
+  @override
+  String get motivationDayCleared0 => 'Alles erledigt für heute. Genieß es.';
+
+  @override
+  String get motivationDayCleared1 => 'Das war alles für heute. Gut gemacht.';
+
+  @override
+  String get motivationDayCleared2 => 'Die Liste für heute ist leer. Schön.';
+
+  @override
+  String get motivationDayCleared3 => 'Fertig. Zeit für etwas Schönes.';
+
+  @override
+  String get motivationLastOne0 => 'Noch eins.';
+
+  @override
+  String get motivationLastOne1 => 'Nur noch eins übrig.';
+
+  @override
+  String get motivationLastOne2 => 'Fast geschafft. Noch eins.';
+
+  @override
+  String get motivationHalfway0 => 'Die Hälfte ist geschafft.';
+
+  @override
+  String get motivationHalfway1 => 'Der halbe Tag ist erledigt.';
+
+  @override
+  String get motivationHalfway2 => 'Gutes Tempo. Halbzeit.';
+
+  @override
+  String motivationStreakDay0(int days) {
+    return 'Tag $days in Folge.';
+  }
+
+  @override
+  String motivationStreakDay1(int days) {
+    return '$days Tage am Stück. Ganz entspannt.';
+  }
+
+  @override
+  String motivationStreakDay2(int days) {
+    return 'Ein Tag, ein Schritt. $days in Folge.';
+  }
+
+  @override
+  String get motivationFirstOfDay0 => 'Guter Anfang.';
+
+  @override
+  String get motivationFirstOfDay1 =>
+      'Das Erste ist erledigt. Der Rest geht leichter.';
+
+  @override
+  String get motivationFirstOfDay2 => 'Und der Tag kommt in Schwung.';
+
+  @override
+  String get motivationFirstOfDay3 => 'Ein guter Start.';
+
+  @override
+  String get motivationOverdue0 =>
+      'Das hat gewartet. Gut, dass es erledigt ist.';
+
+  @override
+  String get motivationOverdue1 => 'Endlich aus dem Kopf.';
+
+  @override
+  String get motivationOverdue2 =>
+      'Endlich erledigt. Das fühlt sich besser an.';
+
+  @override
+  String motivationProgress0(int done, int total) {
+    return '$done von $total heute erledigt.';
+  }
+
+  @override
+  String motivationProgress1(int done, int left) {
+    return '$done erledigt, $left noch offen.';
+  }
+
+  @override
+  String get motivationGeneric0 => 'Schön, eins weniger.';
+
+  @override
+  String get motivationGeneric1 => 'Erledigt und abgehakt.';
+
+  @override
+  String get motivationGeneric2 => 'Fortschritt fühlt sich gut an.';
+
+  @override
+  String get motivationGeneric3 => 'Wieder eins erledigt.';
+
+  @override
+  String get motivationGeneric4 => 'Abgehakt.';
+
+  @override
+  String get motivationGeneric5 => 'Das ist erledigt.';
+
+  @override
+  String get motivationGeneric6 => 'Gute Arbeit.';
+
+  @override
+  String get motivationGeneric7 => 'Einen Schritt weiter.';
+
+  @override
+  String get motivationGeneric8 => 'Schön gemacht.';
+
+  @override
+  String get motivationGeneric9 => 'Durchgestrichen.';
+
+  @override
+  String get motivationGeneric10 => 'Weiter so, ganz in Ruhe.';
+
+  @override
+  String get motivationGeneric11 => 'Kleine Schritte zählen.';
+
+  @override
+  String todayProgressCount(int done, int total) {
+    return '$done von $total erledigt';
+  }
+
+  @override
+  String get todayWelcomeBack0 =>
+      'Schön, dass du wieder da bist. Eine Kleinigkeit ist ein guter Anfang.';
+
+  @override
+  String get todayWelcomeBack1 =>
+      'Schön, dich zu sehen. Fang mit etwas Leichtem an.';
+
+  @override
+  String get todayFreshStart0 => 'Ein frischer Anfang.';
+
+  @override
+  String get todayFreshStart1 => 'Such dir eins zum Anfangen aus.';
+
+  @override
+  String get todayFreshStart2 => 'Eins nach dem anderen.';
+
+  @override
+  String get todayAllClear => 'Alles erledigt. Genieß den Rest des Tages.';
 }

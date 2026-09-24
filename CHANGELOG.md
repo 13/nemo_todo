@@ -13,6 +13,20 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## Unreleased
+
+### Added
+
+- A note can switch between its markdown and a formatted read view with
+  the button in its top right corner; the choice is remembered. In the
+  read view checkboxes can be ticked, links open, and tapping the text
+  goes back to editing on that line.
+- Note text can become a todo: select text or put the cursor on a list
+  line and tap the new toolbar button (or Ctrl+Shift+T), long-press a line
+  in the read view, or use "Make todo from note" at the bottom of a note.
+  Several lines become one task each or one task with subtasks. The note
+  keeps its text and links to each task, showing whether it is done.
+
 ## 0.11.1 - 2026-09-23
 
 ### Changed

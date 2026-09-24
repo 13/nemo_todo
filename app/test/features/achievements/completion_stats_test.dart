@@ -155,4 +155,14 @@ void main() {
   test('cleared days are passed through', () {
     expect(of([], cleared: 3).clearedDays, 3);
   });
+
+  test('lastDoneAt is the latest completion, null when none', () {
+    expect(of([]).lastDoneAt, isNull);
+    final s = of([
+      done('a', DateTime(2026, 9, 7, 8)),
+      done('b', DateTime(2026, 9, 7, 12)),
+      done('c', DateTime(2026, 9, 7, 10)),
+    ]);
+    expect(s.lastDoneAt, DateTime(2026, 9, 7, 12).millisecondsSinceEpoch);
+  });
 }

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
+import 'package:nemo/features/notes/ui/make_todo_chip.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
 import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
@@ -1436,5 +1437,106 @@ void main() {
 
     await menuFor(const TextSelection(baseOffset: 11, extentOffset: 15));
     expect(inMenu, findsOneWidget);
+  });
+
+  appTest('the chip shows for a selection while the body has focus, and '
+      'opens the make-todo sheet without blurring the body', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+    final chip = find.byKey(const Key('note-make-todo-chip'));
+    expect(chip, findsNothing);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    // A cursor on plain text: nothing to make.
+    expect(chip, findsNothing);
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pump();
+    expect(chip.hitTestable(), findsOneWidget);
+
+    // Pressed, not yet released: a tap outside a field unfocuses it on
+    // pointer down, so this is where a blur would show.
+    final gesture = await tester.startGesture(tester.getCenter(chip));
+    await tester.pump();
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('todo-create')), findsOneWidget);
+  });
+
+  appTest('the chip goes when the body loses focus', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [ ] milk');
+    await tester.pumpAndSettle();
+    final chip = find.byKey(const Key('note-make-todo-chip'));
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection.collapsed(
+      offset: 8,
+    );
+    await tester.pump();
+    expect(chip, findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-title')));
+    await tester.pumpAndSettle();
+    expect(chip, findsNothing);
+  });
+
+  appTest('the read view shows no chip', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [ ] milk');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection.collapsed(
+      offset: 8,
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('note-make-todo-chip')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-view-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-view')), findsOneWidget);
+    expect(find.byKey(const Key('note-make-todo-chip')), findsNothing);
+  });
+
+  appTest("the browser's context menu is off only while the body has "
+      'focus', (tester) async {
+    final calls = <bool>[];
+    final original = browserContextMenuToggle;
+    browserContextMenuToggle = ({required enabled}) => calls.add(enabled);
+    addTearDown(() => browserContextMenuToggle = original);
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+    await tester.pumpAndSettle();
+    expect(calls, isEmpty);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    expect(calls, [false]);
+
+    // The title is another field, but not the body.
+    await tester.tap(find.byKey(const Key('note-title')));
+    await tester.pumpAndSettle();
+    expect(calls, [false, true]);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    expect(calls, [false, true, false]);
+
+    // Leaving with the body still focused turns it back on.
+    app.router.go('/notes');
+    await tester.pumpAndSettle();
+    expect(calls, [false, true, false, true]);
   });
 }

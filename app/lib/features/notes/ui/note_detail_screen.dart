@@ -10,6 +10,7 @@ import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
+import 'package:nemo/features/notes/ui/make_todo_chip.dart';
 import 'package:nemo/features/notes/ui/make_todo_sheet.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
@@ -124,6 +125,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     _title.dispose();
     _body.dispose();
     _undo.dispose();
+    // Leaving with the body focused never reports the blur.
+    if (_browserMenuOff) setBrowserContextMenuEnabled(enabled: true);
     _titleFocus.dispose();
     _bodyFocus.dispose();
     super.dispose();
@@ -173,9 +176,24 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   /// to a note that changed while it was watching from the sidelines;
   /// `setState` forces the rebuild that lets `_fill` do that.
   void _onFocusChange() {
+    _syncBrowserContextMenu();
     if (_titleFocus.hasFocus || _bodyFocus.hasFocus) return;
     unawaited(_save());
     if (mounted) setState(() {});
+  }
+
+  // Whether this page has turned the browser's context menu off. Tracked
+  // rather than toggled on every focus change: the title's focus changes
+  // run through the same listener, and must not touch it.
+  bool _browserMenuOff = false;
+
+  /// Off while the body has focus, on otherwise -- see
+  /// [setBrowserContextMenuEnabled].
+  void _syncBrowserContextMenu() {
+    final off = _bodyFocus.hasFocus;
+    if (off == _browserMenuOff) return;
+    _browserMenuOff = off;
+    setBrowserContextMenuEnabled(enabled: !off);
   }
 
   /// Writes the dirty fields, and only those, through
@@ -603,123 +621,151 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         body: Column(
           children: [
             Expanded(
-              child: MaxWidth(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                  children: [
-                    TextField(
-                      key: const Key('note-title'),
-                      controller: _title,
-                      focusNode: _titleFocus,
-                      maxLines: null,
-                      textCapitalization: TextCapitalization.sentences,
-                      onChanged: (_) {
-                        _titleDirty = true;
-                        _scheduleSave();
-                      },
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                      decoration: InputDecoration(
-                        hintText: l.noteTitleHint,
-                        filled: false,
-                        border: InputBorder.none,
-                      ),
-                    ),
-                    if (readView)
-                      NoteReadView(
-                        key: const Key('note-read-view'),
-                        body: _body.text,
-                        onChanged: (body) => unawaited(_writeBody(body)),
-                        onEditAt: _editAt,
-                        onLongPressLine: (start, at) =>
-                            unawaited(_onLongPressLine(start, at)),
-                        onOpenLink: (url) => openNoteLink(context, ref, url),
-                        taskChip: (id) => TaskLinkChip(taskId: id),
-                      )
-                    else
-                      CallbackShortcuts(
-                        bindings: {
-                          SingleActivator(
-                            LogicalKeyboardKey.keyB,
-                            control: !useMeta,
-                            meta: useMeta,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '**')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyI,
-                            control: !useMeta,
-                            meta: useMeta,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '_')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyX,
-                            control: !useMeta,
-                            meta: useMeta,
-                            shift: true,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '~~')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyK,
-                            control: !useMeta,
-                            meta: useMeta,
-                          ): _insertLink,
-                          SingleActivator(
-                            LogicalKeyboardKey.keyT,
-                            control: !useMeta,
-                            meta: useMeta,
-                            shift: true,
-                          ): () =>
-                              unawaited(_makeTodoFromEditor()),
-                        },
-                        child: TextField(
-                          key: const Key('note-body'),
-                          controller: _body,
-                          focusNode: _bodyFocus,
-                          undoController: _undo,
+              // The chip floats over the page's bottom-right corner, just
+              // above the format toolbar, rather than taking a row of its
+              // own that would push the page up and down as it comes and
+              // goes.
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  MaxWidth(
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                      children: [
+                        TextField(
+                          key: const Key('note-title'),
+                          controller: _title,
+                          focusNode: _titleFocus,
                           maxLines: null,
-                          minLines: 6,
-                          keyboardType: TextInputType.multiline,
                           textCapitalization: TextCapitalization.sentences,
-                          inputFormatters: [ListContinuationFormatter()],
-                          contextMenuBuilder: (context, state) {
-                            final items = [...state.contextMenuButtonItems];
-                            if (todoCandidates(state.textEditingValue)
-                                .isNotEmpty) {
-                              items.insert(
-                                0,
-                                ContextMenuButtonItem(
-                                  label: l.noteMakeTodo,
-                                  onPressed: () {
-                                    state.hideToolbar();
-                                    unawaited(_makeTodoFromEditor());
-                                  },
-                                ),
-                              );
-                            }
-                            return AdaptiveTextSelectionToolbar.buttonItems(
-                              anchors: state.contextMenuAnchors,
-                              buttonItems: items,
-                            );
+                          onChanged: (_) {
+                            _titleDirty = true;
+                            _scheduleSave();
                           },
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
                           decoration: InputDecoration(
-                            hintText: l.noteBodyHint,
+                            hintText: l.noteTitleHint,
                             filled: false,
                             border: InputBorder.none,
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 16),
-                    PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
-                    NoteListPicker(note: note),
-                    ListTile(
-                      key: const Key('note-make-todo'),
-                      leading: const Icon(Icons.add_task),
-                      title: Text(l.noteMakeTodoFromNote),
-                      onTap: () => unawaited(_makeTodoFromNote()),
+                        if (readView)
+                          NoteReadView(
+                            key: const Key('note-read-view'),
+                            body: _body.text,
+                            onChanged: (body) => unawaited(_writeBody(body)),
+                            onEditAt: _editAt,
+                            onLongPressLine: (start, at) =>
+                                unawaited(_onLongPressLine(start, at)),
+                            onOpenLink: (url) =>
+                                openNoteLink(context, ref, url),
+                            taskChip: (id) => TaskLinkChip(taskId: id),
+                          )
+                        else
+                          CallbackShortcuts(
+                            bindings: {
+                              SingleActivator(
+                                LogicalKeyboardKey.keyB,
+                                control: !useMeta,
+                                meta: useMeta,
+                              ): () =>
+                                  _apply((v) => toggleInline(v, '**')),
+                              SingleActivator(
+                                LogicalKeyboardKey.keyI,
+                                control: !useMeta,
+                                meta: useMeta,
+                              ): () =>
+                                  _apply((v) => toggleInline(v, '_')),
+                              SingleActivator(
+                                LogicalKeyboardKey.keyX,
+                                control: !useMeta,
+                                meta: useMeta,
+                                shift: true,
+                              ): () =>
+                                  _apply((v) => toggleInline(v, '~~')),
+                              SingleActivator(
+                                LogicalKeyboardKey.keyK,
+                                control: !useMeta,
+                                meta: useMeta,
+                              ): _insertLink,
+                              SingleActivator(
+                                LogicalKeyboardKey.keyT,
+                                control: !useMeta,
+                                meta: useMeta,
+                                shift: true,
+                              ): () =>
+                                  unawaited(_makeTodoFromEditor()),
+                            },
+                            child: TextField(
+                              key: const Key('note-body'),
+                              controller: _body,
+                              focusNode: _bodyFocus,
+                              undoController: _undo,
+                              maxLines: null,
+                              minLines: 6,
+                              keyboardType: TextInputType.multiline,
+                              textCapitalization: TextCapitalization.sentences,
+                              inputFormatters: [ListContinuationFormatter()],
+                              contextMenuBuilder: (context, state) {
+                                final items = [...state.contextMenuButtonItems];
+                                if (todoCandidates(state.textEditingValue)
+                                    .isNotEmpty) {
+                                  items.insert(
+                                    0,
+                                    ContextMenuButtonItem(
+                                      label: l.noteMakeTodo,
+                                      onPressed: () {
+                                        state.hideToolbar();
+                                        unawaited(_makeTodoFromEditor());
+                                      },
+                                    ),
+                                  );
+                                }
+                                return AdaptiveTextSelectionToolbar.buttonItems(
+                                  anchors: state.contextMenuAnchors,
+                                  buttonItems: items,
+                                );
+                              },
+                              decoration: InputDecoration(
+                                hintText: l.noteBodyHint,
+                                filled: false,
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        PhotoStrip(
+                          parentKind: PhotoParent.note,
+                          parentId: note.id,
+                        ),
+                        NoteListPicker(note: note),
+                        ListTile(
+                          key: const Key('note-make-todo'),
+                          leading: const Icon(Icons.add_task),
+                          title: Text(l.noteMakeTodoFromNote),
+                          onTap: () => unawaited(_makeTodoFromNote()),
+                        ),
+                        NoteDeleteAction(note: note),
+                      ],
                     ),
-                    NoteDeleteAction(note: note),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    right: 16,
+                    bottom: 8,
+                    child: ListenableBuilder(
+                      listenable: _bodyFocus,
+                      builder: (_, _) => !readView && _bodyFocus.hasFocus
+                          ? MakeTodoChip(
+                              controller: _body,
+                              onMakeTodo: () =>
+                                  unawaited(_makeTodoFromEditor()),
+                              onOpenTask: _openTask,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
               ),
             ),
             ListenableBuilder(

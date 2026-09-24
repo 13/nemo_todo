@@ -70,8 +70,11 @@ class LEn extends L {
   String get upcomingLater => 'Later';
 
   @override
+  String get upcomingNoDate => 'No date';
+
+  @override
   String get upcomingEmpty =>
-      'No upcoming tasks. Add a due date to see tasks here.';
+      'Nothing planned. Tasks with a date or without one show here.';
 
   @override
   String get listsTitle => 'Lists';

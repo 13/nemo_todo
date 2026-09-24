@@ -70,8 +70,11 @@ class LDe extends L {
   String get upcomingLater => 'Später';
 
   @override
+  String get upcomingNoDate => 'Ohne Datum';
+
+  @override
   String get upcomingEmpty =>
-      'Keine anstehenden Aufgaben. Setze ein Fälligkeitsdatum, um Aufgaben hier zu sehen.';
+      'Nichts geplant. Aufgaben mit oder ohne Datum erscheinen hier.';
 
   @override
   String get listsTitle => 'Listen';

@@ -1,5 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/task_tile.dart';
+import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
@@ -35,7 +39,9 @@ void main() {
           title: 'Far away',
           dueAt: dayStartMsFrom(testNow, 30),
         );
-        await repo.create(listId: inbox.id, title: 'No date');
+        // Undated: shown in the "No date" section now, not omitted, so its
+        // title stays clear of that section header's own text.
+        await repo.create(listId: inbox.id, title: 'Someday task');
       },
     );
     expect(find.text('Tomorrow'), findsWidgets);
@@ -43,7 +49,8 @@ void main() {
     expect(find.text('Next week task'), findsOneWidget);
     expect(find.text('Later'), findsOneWidget);
     expect(find.text('Far away'), findsOneWidget);
-    expect(find.text('No date'), findsNothing);
+    expect(find.text('No date'), findsOneWidget, reason: 'section header');
+    expect(find.text('Someday task'), findsOneWidget);
   });
 
   appTest('day headers name the right date across a clock change', (
@@ -75,12 +82,162 @@ void main() {
 
   appTest('empty state and quick add defaults to tomorrow', (tester) async {
     final app = await pumpApp(tester, initialLocation: Routes.upcoming);
-    expect(find.textContaining('No upcoming tasks'), findsOneWidget);
+    expect(find.textContaining('Nothing planned'), findsOneWidget);
     await quickAdd(tester, 'Soon');
     expect(find.text('Soon'), findsOneWidget);
     expect(
       (await app.db.select(app.db.tasks).get()).single.dueAt,
       dayStartMsFrom(testNow, 1),
     );
+  });
+
+  appTest('a dated task and an undated task: No date section after dated', (
+    tester,
+  ) async {
+    late String groceriesId;
+    await pumpApp(
+      tester,
+      initialLocation: Routes.upcoming,
+      seed: (db, inbox) async {
+        final lists = ListsRepository(
+          db,
+          testClock('l'),
+          // A prefix distinct from the inbox's own generator (also 'l',
+          // seeded by pumpApp) so the two never collide on the same id.
+          sequentialIds('gl'),
+        );
+        final groceries = await lists.create(name: 'Groceries');
+        groceriesId = groceries.id;
+        final repo = TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        );
+        await repo.create(
+          listId: inbox.id,
+          title: 'Tomorrow task',
+          dueAt: dayStartMsFrom(testNow, 1),
+        );
+        await repo.create(listId: groceriesId, title: 'Someday task');
+      },
+    );
+    expect(find.text('No date'), findsOneWidget);
+    expect(find.text('Someday task'), findsOneWidget);
+    // Its row shows the list it belongs to.
+    expect(find.text('Groceries'), findsOneWidget);
+    // The "No date" header sits after the dated section, and the undated
+    // task's title sits under that header.
+    final datedY = tester.getTopLeft(find.text('Tomorrow task')).dy;
+    final headerY = tester.getTopLeft(find.text('No date')).dy;
+    final undatedY = tester.getTopLeft(find.text('Someday task')).dy;
+    expect(datedY, lessThan(headerY));
+    expect(headerY, lessThan(undatedY));
+  });
+
+  appTest('only an undated task: no empty state, the section shows', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      initialLocation: Routes.upcoming,
+      seed: (db, inbox) async {
+        await TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        ).create(listId: inbox.id, title: 'Someday task');
+      },
+    );
+    expect(find.textContaining('Nothing planned'), findsNothing);
+    expect(find.text('No date'), findsOneWidget);
+    expect(find.text('Someday task'), findsOneWidget);
+  });
+
+  appTest('nothing at all: the combined empty text shows', (tester) async {
+    await pumpApp(tester, initialLocation: Routes.upcoming);
+    expect(
+      find.text('Nothing planned. Tasks with a date or without one show here.'),
+      findsOneWidget,
+    );
+  });
+
+  appTest('tapping the No date header collapses it, and the choice persists', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: Routes.upcoming,
+      seed: (db, inbox) async {
+        final repo = TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        );
+        await repo.create(
+          listId: inbox.id,
+          title: 'Tomorrow task',
+          dueAt: dayStartMsFrom(testNow, 1),
+        );
+        await repo.create(listId: inbox.id, title: 'Someday task');
+      },
+    );
+    expect(find.text('Someday task'), findsOneWidget);
+
+    await tester.tap(find.text('No date'));
+    await tester.pumpAndSettle();
+    expect(find.text('Someday task'), findsNothing);
+    expect(
+      await app.container.read(kvStoreProvider).get('upcoming.noDateCollapsed'),
+      '1',
+    );
+
+    // Leaving and coming back keeps the section collapsed.
+    app.router.go(Routes.today);
+    await tester.pumpAndSettle();
+    app.router.go(Routes.upcoming);
+    await tester.pumpAndSettle();
+    expect(find.text('Someday task'), findsNothing);
+    expect(find.text('No date'), findsOneWidget);
+
+    await tester.tap(find.text('No date'));
+    await tester.pumpAndSettle();
+    expect(find.text('Someday task'), findsOneWidget);
+    expect(
+      await app.container.read(kvStoreProvider).get('upcoming.noDateCollapsed'),
+      '0',
+    );
+  });
+
+  appTest('ticking the undated task off removes it from the section', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      initialLocation: Routes.upcoming,
+      seed: (db, inbox) async {
+        await TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        ).create(listId: inbox.id, title: 'Someday task');
+      },
+    );
+    expect(find.text('Someday task'), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'Someday task'),
+        matching: find.byType(DoneCheck),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Someday task'), findsNothing);
   });
 }

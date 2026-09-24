@@ -14,7 +14,9 @@ import 'package:nemo/utils/dates.dart';
 import 'package:nemo/utils/format.dart';
 import 'package:nemo_core/nemo_core.dart';
 
-/// Open tasks due after today, one section per day for a week, then Later.
+/// Open tasks due after today, one section per day for a week, then Later,
+/// then a collapsible "No date" section for open tasks with no due date at
+/// all.
 class UpcomingScreen extends ConsumerWidget {
   const UpcomingScreen({super.key});
 
@@ -23,16 +25,21 @@ class UpcomingScreen extends ConsumerWidget {
     final l = L.of(context);
     final now = ref.watch(nowProvider)();
     final locale = Localizations.localeOf(context).toString();
-    final tasks = ref.watch(upcomingTasksProvider);
+    final dated = ref.watch(upcomingTasksProvider);
+    final noDate = ref.watch(noDateTasksProvider);
+    final collapsed = ref.watch(noDateCollapsedProvider).value ?? false;
     return Scaffold(
       appBar: AppBar(
         title: Text(l.navUpcoming),
         actions: const [AccountAction(), SettingsAction()],
       ),
       body: AsyncBody(
-        value: tasks,
+        // Two independent streams over the same local database; combined
+        // into one value so the screen shows a single loading/error state
+        // rather than one section appearing before the other has resolved.
+        value: _combine(dated, noDate),
         data: (items) {
-          if (items.isEmpty) {
+          if (items.dated.isEmpty && items.noDate.isEmpty) {
             return SyncRefresh.scrollable(
               child: EmptyState(
                 icon: Icons.event_available_outlined,
@@ -42,7 +49,7 @@ class UpcomingScreen extends ConsumerWidget {
           }
           final byDay = <int, List<Task>>{};
           final later = <Task>[];
-          for (final t in items) {
+          for (final t in items.dated) {
             final days = daysFromToday(t.dueAt!, now);
             if (days <= 7) {
               byDay.putIfAbsent(days, () => []).add(t);
@@ -62,6 +69,15 @@ class UpcomingScreen extends ConsumerWidget {
                 tasks: byDay[days]!,
               ),
             TaskSection(title: l.upcomingLater, tasks: later),
+            TaskSection(
+              title: l.upcomingNoDate,
+              tasks: items.noDate,
+              collapsible: true,
+              collapsed: collapsed,
+              onToggle: () => ref
+                  .read(kvStoreProvider)
+                  .set(noDateCollapsedKey, collapsed ? '0' : '1'),
+            ),
           ];
           return TaskListView(sections: sections, showList: true);
         },
@@ -73,4 +89,21 @@ class UpcomingScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Waits for both [dated] and [noDate] to have emitted at least once,
+/// rather than showing the dated section before the undated one (or the
+/// reverse) has resolved.
+AsyncValue<({List<Task> dated, List<Task> noDate})> _combine(
+  AsyncValue<List<Task>> dated,
+  AsyncValue<List<Task>> noDate,
+) {
+  if (dated.hasValue && noDate.hasValue) {
+    return AsyncValue.data((dated: dated.value!, noDate: noDate.value!));
+  }
+  final failed = dated.hasError ? dated : (noDate.hasError ? noDate : null);
+  if (failed != null) {
+    return AsyncValue.error(failed.error!, failed.stackTrace!);
+  }
+  return const AsyncValue.loading();
 }

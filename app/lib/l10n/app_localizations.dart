@@ -219,10 +219,16 @@ abstract class L {
   /// **'Later'**
   String get upcomingLater;
 
+  /// No description provided for @upcomingNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No date'**
+  String get upcomingNoDate;
+
   /// No description provided for @upcomingEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No upcoming tasks. Add a due date to see tasks here.'**
+  /// **'Nothing planned. Tasks with a date or without one show here.'**
   String get upcomingEmpty;
 
   /// No description provided for @listsTitle.

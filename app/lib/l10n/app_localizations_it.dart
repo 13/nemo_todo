@@ -70,8 +70,11 @@ class LIt extends L {
   String get upcomingLater => 'Più avanti';
 
   @override
+  String get upcomingNoDate => 'Senza data';
+
+  @override
   String get upcomingEmpty =>
-      'Nessuna attività in programma. Aggiungi una scadenza per vederle qui.';
+      'Niente in programma. Qui compaiono le attività con o senza data.';
 
   @override
   String get listsTitle => 'Liste';

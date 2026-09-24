@@ -228,6 +228,44 @@ final class UpcomingTasksProvider
 
 String _$upcomingTasksHash() => r'4edca54c676891ffcc4ea851d1260f592d2f696a';
 
+@ProviderFor(noDateTasks)
+final noDateTasksProvider = NoDateTasksProvider._();
+
+final class NoDateTasksProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Task>>,
+          List<Task>,
+          Stream<List<Task>>
+        >
+    with $FutureModifier<List<Task>>, $StreamProvider<List<Task>> {
+  NoDateTasksProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'noDateTasksProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$noDateTasksHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Task>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Task>> create(Ref ref) {
+    return noDateTasks(ref);
+  }
+}
+
+String _$noDateTasksHash() => r'e7115225280e79f5d2ea0e3c0d0fd514fb35a74e';
+
 @ProviderFor(searchTasks)
 final searchTasksProvider = SearchTasksFamily._();
 

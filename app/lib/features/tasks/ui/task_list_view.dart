@@ -12,11 +12,30 @@ import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 class TaskSection {
-  const TaskSection({required this.title, required this.tasks, this.color});
+  const TaskSection({
+    required this.title,
+    required this.tasks,
+    this.color,
+    this.collapsible = false,
+    this.collapsed = false,
+    this.onToggle,
+  });
 
   final String title;
   final List<Task> tasks;
   final Color? color;
+
+  /// Whether this section can be folded away, like the Completed section
+  /// already is. Off by default so Today, list detail and tag -- which
+  /// share this class without wanting a toggle -- are unchanged.
+  final bool collapsible;
+
+  /// Whether a [collapsible] section is currently folded away. Ignored
+  /// when [collapsible] is false.
+  final bool collapsed;
+
+  /// Called when the header of a [collapsible] section is tapped.
+  final VoidCallback? onToggle;
 }
 
 /// Sections of task tiles with swipe-to-complete, swipe-to-delete and
@@ -96,21 +115,23 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
     ];
     for (final section in widget.sections) {
       if (section.tasks.isEmpty) continue;
-      slivers
-        ..add(
-          SliverToBoxAdapter(
-            child: SectionHeader(
-              title: section.title,
-              count: section.tasks.length,
-              color: section.color,
-            ),
+      slivers.add(
+        SliverToBoxAdapter(
+          child: SectionHeader(
+            title: section.title,
+            count: section.tasks.length,
+            color: section.color,
+            collapsed: section.collapsible ? section.collapsed : null,
+            onToggle: section.collapsible ? section.onToggle : null,
           ),
-        )
-        ..add(
-          widget.reorderable && widget.sections.length == 1
-              ? _reorderable(section.tasks)
-              : _plain(section.tasks),
-        );
+        ),
+      );
+      if (section.collapsible && section.collapsed) continue;
+      slivers.add(
+        widget.reorderable && widget.sections.length == 1
+            ? _reorderable(section.tasks)
+            : _plain(section.tasks),
+      );
     }
     if (widget.completed.isNotEmpty) {
       slivers.add(

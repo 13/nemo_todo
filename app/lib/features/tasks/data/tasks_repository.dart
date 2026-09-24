@@ -56,6 +56,22 @@ class TasksRepository {
     _dueOrder,
   );
 
+  /// Open tasks without a due date, grouped by their list's order.
+  ///
+  /// A list's sort key alone does not group its tasks: the Inbox and the
+  /// first user list both start from `SortKey.first()`, so their keys tie,
+  /// and every list's Nth task ties the same way. Ordering like
+  /// `ListsRepository.watchAll` (Inbox first, then sort key) and breaking
+  /// remaining ties on the list's id keeps each list's tasks together
+  /// regardless of those ties.
+  Stream<List<Task>> watchNoDate() =>
+      _visible(_db.tasks.done.equals(false) & _db.tasks.dueAt.isNull(), [
+        OrderingTerm.desc(_db.lists.isInbox),
+        OrderingTerm.asc(_db.lists.sortKey),
+        OrderingTerm.asc(_db.lists.id),
+        OrderingTerm.asc(_db.tasks.sortKey),
+      ]);
+
   /// Case-insensitive match on title, notes or tags.
   Stream<List<Task>> search(String query) {
     final q = query.trim();

@@ -42,6 +42,22 @@ Stream<List<Task>> upcomingTasks(Ref ref) =>
     ref.watch(tasksRepositoryProvider).watchUpcoming(ref.watch(nowProvider)());
 
 @riverpod
+Stream<List<Task>> noDateTasks(Ref ref) =>
+    ref.watch(tasksRepositoryProvider).watchNoDate();
+
+/// KvStore key for whether Upcoming's "No date" section is collapsed:
+/// `'1'` or `'0'`. Device-local, like every KvStore entry.
+const noDateCollapsedKey = 'upcoming.noDateCollapsed';
+
+/// Whether Upcoming's "No date" section is collapsed.
+final noDateCollapsedProvider = StreamProvider<bool>(
+  (ref) => ref
+      .watch(kvStoreProvider)
+      .watch(noDateCollapsedKey)
+      .map((value) => value == '1'),
+);
+
+@riverpod
 Stream<List<Task>> searchTasks(Ref ref, String query) =>
     ref.watch(tasksRepositoryProvider).search(query);
 

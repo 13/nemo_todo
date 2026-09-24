@@ -148,6 +148,42 @@ void main() {
     ]);
   }, tags: 'dst');
 
+  test('watchNoDate lists open undated tasks by list, then order', () async {
+    final lists = ListsRepository(db, testClock('x'), sequentialIds('l'));
+    final listA = await lists.create(name: 'A');
+    final listB = await lists.create(name: 'B');
+    final listC = await lists.create(name: 'C');
+
+    // The Inbox and the first user list both start their sort keys from
+    // SortKey.first(), so their tasks tie on it too; interleaving creation
+    // between them is what exposes a query that groups by sort key alone
+    // rather than by list.
+    await tasks.create(listId: inbox, title: 'inbox1');
+    await tasks.create(listId: listA.id, title: 'a1');
+    await tasks.create(listId: inbox, title: 'inbox2');
+    await tasks.create(listId: listA.id, title: 'a2');
+    await tasks.create(listId: listB.id, title: 'b1');
+    final a3 = await tasks.create(listId: listA.id, title: 'a3');
+    await tasks.setDone(a3.id, done: true);
+    await tasks.create(
+      listId: listA.id,
+      title: 'a4',
+      dueAt: dayStartMs(testNow),
+    );
+    final a5 = await tasks.create(listId: listA.id, title: 'a5');
+    await tasks.delete(a5.id);
+    await tasks.create(listId: listC.id, title: 'c1');
+    await lists.delete(listC.id);
+
+    expect((await tasks.watchNoDate().first).map((t) => t.title), [
+      'inbox1',
+      'inbox2',
+      'a1',
+      'a2',
+      'b1',
+    ]);
+  });
+
   test('tasks of a deleted list disappear from today and search', () async {
     final lists = ListsRepository(db, testClock('x'), sequentialIds('l'));
     final work = await lists.create(name: 'Work');

@@ -21,6 +21,8 @@ would ship without them, and nothing would say so.
   results to sync straight away when an account is connected. If the
   server cannot be reached, a short message says your changes are saved
   and will sync later.
+- Upcoming ends with a "No date" section: every open task without a due
+  date, from all lists. Collapse it with its header; the app remembers.
 
 ## 0.13.0 - 2026-09-24
 

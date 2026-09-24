@@ -21,7 +21,7 @@ void main() {
     expect(find.text('Inbox'), findsOneWidget);
     await tester.tap(find.text('Upcoming'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('No upcoming'), findsOneWidget);
+    expect(find.textContaining('Nothing planned'), findsOneWidget);
   });
 
   appTest('wide width uses a rail with a settings button', (tester) async {

@@ -7,6 +7,7 @@ import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/features/tasks/ui/today_progress.dart';
@@ -49,9 +50,11 @@ class TodayScreen extends ConsumerWidget {
               value: tasks,
               data: (items) {
                 if (items.isEmpty) {
-                  return EmptyState(
-                    icon: Icons.wb_sunny_outlined,
-                    message: l.todayEmpty,
+                  return SyncRefresh.scrollable(
+                    child: EmptyState(
+                      icon: Icons.wb_sunny_outlined,
+                      message: l.todayEmpty,
+                    ),
                   );
                 }
                 final overdue = items

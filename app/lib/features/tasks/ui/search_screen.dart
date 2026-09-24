@@ -7,6 +7,7 @@ import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/notes/ui/note_tile.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
+import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -67,28 +68,33 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           : AsyncBody(
               value: results,
               data: (items) => items.isEmpty && notes.isEmpty
-                  ? EmptyState(
-                      icon: Icons.search_off_rounded,
-                      message: l.searchNoResults(_query),
+                  ? SyncRefresh.scrollable(
+                      child: EmptyState(
+                        icon: Icons.search_off_rounded,
+                        message: l.searchNoResults(_query),
+                      ),
                     )
                   // Tasks and then notes, one after another in a single
                   // scroll, each headed section hidden when its own side of
                   // the search turned up nothing.
-                  : CustomScrollView(
-                      slivers: [
-                        if (items.isNotEmpty)
-                          TaskListSlivers(
-                            showList: true,
-                            sections: [
-                              TaskSection(
-                                title: l.searchTasksHeader,
-                                tasks: items.where((t) => !t.done).toList(),
-                              ),
-                            ],
-                            completed: items.where((t) => t.done).toList(),
-                          ),
-                        if (notes.isNotEmpty) ..._noteResultSlivers(notes, l),
-                      ],
+                  : SyncRefresh(
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (items.isNotEmpty)
+                            TaskListSlivers(
+                              showList: true,
+                              sections: [
+                                TaskSection(
+                                  title: l.searchTasksHeader,
+                                  tasks: items.where((t) => !t.done).toList(),
+                                ),
+                              ],
+                              completed: items.where((t) => t.done).toList(),
+                            ),
+                          if (notes.isNotEmpty) ..._noteResultSlivers(notes, l),
+                        ],
+                      ),
                     ),
             ),
     );

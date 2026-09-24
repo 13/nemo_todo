@@ -5,6 +5,7 @@ import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/celebrations/ui/motivation_text.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
+import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -43,16 +44,19 @@ class TaskListView extends StatelessWidget {
   final Widget? header;
 
   @override
-  Widget build(BuildContext context) => CustomScrollView(
-    slivers: [
-      TaskListSlivers(
-        sections: sections,
-        completed: completed,
-        showList: showList,
-        reorderable: reorderable,
-        header: header,
-      ),
-    ],
+  Widget build(BuildContext context) => SyncRefresh(
+    child: CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        TaskListSlivers(
+          sections: sections,
+          completed: completed,
+          showList: showList,
+          reorderable: reorderable,
+          header: header,
+        ),
+      ],
+    ),
   );
 }
 

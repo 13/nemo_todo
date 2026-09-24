@@ -9,6 +9,7 @@ import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/features/lists/ui/list_edit_sheet.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/lists/ui/lists_screen.dart';
+import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -83,9 +84,11 @@ class ListDetailScreen extends ConsumerWidget {
         value: tasks,
         data: (items) {
           if (items.isEmpty) {
-            return EmptyState(
-              icon: listIcon(list.icon),
-              message: l.tasksEmptyList,
+            return SyncRefresh.scrollable(
+              child: EmptyState(
+                icon: listIcon(list.icon),
+                message: l.tasksEmptyList,
+              ),
             );
           }
           return TaskListView(

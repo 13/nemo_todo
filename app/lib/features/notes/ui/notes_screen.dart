@@ -11,6 +11,7 @@ import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/note_card.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
+import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -63,9 +64,11 @@ class NotesScreen extends ConsumerWidget {
               child: const Icon(Icons.add),
             ),
       body: notes.isEmpty
-          ? EmptyState(
-              icon: Icons.sticky_note_2_outlined,
-              message: l.notesEmpty,
+          ? SyncRefresh.scrollable(
+              child: EmptyState(
+                icon: Icons.sticky_note_2_outlined,
+                message: l.notesEmpty,
+              ),
             )
           // Wider than the app's usual 720: a grid of cards uses the room
           // a column of text rows could not.
@@ -101,21 +104,28 @@ class NotesScreen extends ConsumerWidget {
                       ),
                     ),
                   );
-                  return CustomScrollView(
-                    slivers: [
-                      // Keep's rule: the headings appear only once there is
-                      // a pinned note to set apart from the rest.
-                      if (pinned.isNotEmpty) ...[
-                        label(l.notesPinned, const Key('notes-pinned-label')),
-                        grid(pinned),
-                        if (others.isNotEmpty)
-                          label(l.notesOthers, const Key('notes-others-label')),
-                      ] else
-                        const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                      if (others.isNotEmpty) grid(others),
-                      // Room to scroll the last cards out from under the FAB.
-                      const SliverToBoxAdapter(child: SizedBox(height: 88)),
-                    ],
+                  return SyncRefresh(
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        // Keep's rule: the headings appear only once there
+                        // is a pinned note to set apart from the rest.
+                        if (pinned.isNotEmpty) ...[
+                          label(l.notesPinned, const Key('notes-pinned-label')),
+                          grid(pinned),
+                          if (others.isNotEmpty)
+                            label(
+                              l.notesOthers,
+                              const Key('notes-others-label'),
+                            ),
+                        ] else
+                          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                        if (others.isNotEmpty) grid(others),
+                        // Room to scroll the last cards out from under the
+                        // FAB.
+                        const SliverToBoxAdapter(child: SizedBox(height: 88)),
+                      ],
+                    ),
                   );
                 },
               ),

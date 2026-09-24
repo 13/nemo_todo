@@ -5,6 +5,7 @@ import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -32,7 +33,12 @@ class TagScreen extends ConsumerWidget {
       body: AsyncBody(
         value: tasks,
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.tag_rounded, message: l.tagEmpty(tag))
+            ? SyncRefresh.scrollable(
+                child: EmptyState(
+                  icon: Icons.tag_rounded,
+                  message: l.tagEmpty(tag),
+                ),
+              )
             : TaskListView(
                 showList: true,
                 sections: [

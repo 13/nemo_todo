@@ -154,9 +154,15 @@ void main() {
     final listB = await lists.create(name: 'B');
     final listC = await lists.create(name: 'C');
 
-    await tasks.create(listId: listB.id, title: 'b1');
+    // The Inbox and the first user list both start their sort keys from
+    // SortKey.first(), so their tasks tie on it too; interleaving creation
+    // between them is what exposes a query that groups by sort key alone
+    // rather than by list.
+    await tasks.create(listId: inbox, title: 'inbox1');
     await tasks.create(listId: listA.id, title: 'a1');
+    await tasks.create(listId: inbox, title: 'inbox2');
     await tasks.create(listId: listA.id, title: 'a2');
+    await tasks.create(listId: listB.id, title: 'b1');
     final a3 = await tasks.create(listId: listA.id, title: 'a3');
     await tasks.setDone(a3.id, done: true);
     await tasks.create(
@@ -170,6 +176,8 @@ void main() {
     await lists.delete(listC.id);
 
     expect((await tasks.watchNoDate().first).map((t) => t.title), [
+      'inbox1',
+      'inbox2',
       'a1',
       'a2',
       'b1',

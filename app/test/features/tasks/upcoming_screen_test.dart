@@ -11,6 +11,21 @@ import 'package:nemo/utils/dates.dart';
 import '../../support/pump_app.dart';
 import '../../support/test_db.dart';
 
+/// Taps a task's done check and lets the celebration confetti run its
+/// course, as the celebration overlay tests do -- `pumpAndSettle` never
+/// returns while it animates.
+Future<void> tickOff(WidgetTester tester, String title) async {
+  await tester.tap(
+    find.descendant(
+      of: find.widgetWithText(InkWell, title),
+      matching: find.byType(DoneCheck),
+    ),
+  );
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
 void main() {
   appTest('groups by day for a week then Later', (tester) async {
     await pumpApp(
@@ -220,24 +235,26 @@ void main() {
     await pumpApp(
       tester,
       initialLocation: Routes.upcoming,
+      celebrate: true,
       seed: (db, inbox) async {
-        await TasksRepository(
+        final repo = TasksRepository(
           db,
           testClock('s'),
           sequentialIds('t'),
           reminders: const NoopReminderScheduler(),
           now: () => testNow,
-        ).create(listId: inbox.id, title: 'Someday task');
+        );
+        await repo.create(listId: inbox.id, title: 'Warmup task');
+        await repo.create(listId: inbox.id, title: 'Someday task');
       },
     );
     expect(find.text('Someday task'), findsOneWidget);
-    await tester.tap(
-      find.descendant(
-        of: find.widgetWithText(InkWell, 'Someday task'),
-        matching: find.byType(DoneCheck),
-      ),
-    );
-    await tester.pumpAndSettle();
+    // Spend the first-ever-completion achievement (a banner, no pill) on
+    // this one, so the tick below is ordinary.
+    await tickOff(tester, 'Warmup task');
+
+    await tickOff(tester, 'Someday task');
     expect(find.text('Someday task'), findsNothing);
+    expect(find.byKey(const Key('motivation-pill')), findsOneWidget);
   });
 }

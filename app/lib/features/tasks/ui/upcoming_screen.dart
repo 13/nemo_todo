@@ -27,17 +27,19 @@ class UpcomingScreen extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toString();
     final dated = ref.watch(upcomingTasksProvider);
     final noDate = ref.watch(noDateTasksProvider);
-    final collapsed = ref.watch(noDateCollapsedProvider).value ?? false;
+    final collapsed = ref.watch(noDateCollapsedProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(l.navUpcoming),
         actions: const [AccountAction(), SettingsAction()],
       ),
       body: AsyncBody(
-        // Two independent streams over the same local database; combined
+        // Three independent streams over the same local database; combined
         // into one value so the screen shows a single loading/error state
-        // rather than one section appearing before the other has resolved.
-        value: _combine(dated, noDate),
+        // rather than one section appearing before the others have
+        // resolved -- collapsed included, so the No date section never
+        // flashes expanded before its stored collapsed state is in.
+        value: _combine(dated, noDate, collapsed),
         data: (items) {
           if (items.dated.isEmpty && items.noDate.isEmpty) {
             return SyncRefresh.scrollable(
@@ -73,10 +75,10 @@ class UpcomingScreen extends ConsumerWidget {
               title: l.upcomingNoDate,
               tasks: items.noDate,
               collapsible: true,
-              collapsed: collapsed,
+              collapsed: items.collapsed,
               onToggle: () => ref
                   .read(kvStoreProvider)
-                  .set(noDateCollapsedKey, collapsed ? '0' : '1'),
+                  .set(noDateCollapsedKey, items.collapsed ? '0' : '1'),
             ),
           ];
           return TaskListView(sections: sections, showList: true);
@@ -91,17 +93,24 @@ class UpcomingScreen extends ConsumerWidget {
   }
 }
 
-/// Waits for both [dated] and [noDate] to have emitted at least once,
-/// rather than showing the dated section before the undated one (or the
-/// reverse) has resolved.
-AsyncValue<({List<Task> dated, List<Task> noDate})> _combine(
+/// Waits for [dated], [noDate] and [collapsed] to have all emitted at
+/// least once, rather than showing one section before another (or the
+/// No date section before its collapsed state) has resolved.
+AsyncValue<({List<Task> dated, List<Task> noDate, bool collapsed})> _combine(
   AsyncValue<List<Task>> dated,
   AsyncValue<List<Task>> noDate,
+  AsyncValue<bool> collapsed,
 ) {
-  if (dated.hasValue && noDate.hasValue) {
-    return AsyncValue.data((dated: dated.value!, noDate: noDate.value!));
+  if (dated.hasValue && noDate.hasValue && collapsed.hasValue) {
+    return AsyncValue.data((
+      dated: dated.value!,
+      noDate: noDate.value!,
+      collapsed: collapsed.value!,
+    ));
   }
-  final failed = dated.hasError ? dated : (noDate.hasError ? noDate : null);
+  final failed = dated.hasError
+      ? dated
+      : (noDate.hasError ? noDate : (collapsed.hasError ? collapsed : null));
   if (failed != null) {
     return AsyncValue.error(failed.error!, failed.stackTrace!);
   }

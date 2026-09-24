@@ -23,10 +23,10 @@ sync, server and export are untouched:
 | Title | Stays an editable field in both modes |
 | Todo entry points | Editor toolbar button and selection context menu; read view long-press on a line; a "Make todo from note" row at the bottom of the note page beside the list picker and delete |
 | Confirm | Bottom sheet, prefilled, one tap to create |
-| Note afterwards | Text kept; a task link appended per produced task |
+| Note afterwards | Text kept; a task link after each line that became a task (in "one task with subtasks" mode, only after the first line) |
 | Link format | `[→ task](nemo://task/<id>)` -- plain markdown, so search, export and merge are unaffected |
 | Two-way sync | None. Ticking the task does not tick the note's box or vice versa; the read view's chip shows the task's live state instead |
-| Duplicates | A line already carrying a task link offers "Open task" instead of "Make todo" |
+| Duplicates | A line already carrying a task link offers "Open task" instead of "Make todo" (in the editor: for a cursor on that line) |
 
 ## Why this shape
 
@@ -121,10 +121,22 @@ String insertTaskLinks(String body, List<(int anchor, String id)> links);
 /// [body] with the links to [ids] removed again, for undo.
 String removeTaskLinks(String body, Set<String> ids);
 
+/// [v] with the links inserted and its selection shifted past every link
+/// inserted at or before each end, so a cursor at an anchor lands after
+/// its link.
+TextEditingValue insertTaskLinksInValue(
+    TextEditingValue v, List<(int anchor, String id)> links);
+
 /// The whole note as one candidate: title from the note title, the body as
-/// task notes, and its unticked checkbox lines as possible subtasks.
-({String title, String notes, List<String> checklist}) wholeNote(Note n);
+/// task notes (existing task links taken out), its unticked checkbox lines
+/// as possible subtasks, and the notes without those lines for when they
+/// become subtasks.
+({String title, String notes, String notesWithoutChecklist,
+  List<String> checklist}) wholeNoteTodo(String title, String body);
 ```
+
+A multi-line selection that ends at the very start of a line (a whole line
+taken with its line break, or Shift+Down) does not include that line.
 
 Anchor: end of the line for a whole-line candidate; end of the selection
 for a selection within a single line; for the whole note, a new final line
@@ -154,19 +166,30 @@ In the note screen (one helper, `_makeTodo(candidates, {wholeNote})`):
 
 1. `tasksRepository.create(...)` per task; `subtasksRepository.add` per
    subtask.
-2. Body becomes `insertTaskLinks(body, ...)`, saved through the existing
-   save path as one edit (one undo step in the editor).
+2. Body becomes `insertTaskLinksInValue(value, ...)` (or
+   `appendTaskLink` for the whole note), saved through the existing save
+   path as one edit (one undo step in the editor). The cursor moves past a
+   link inserted at it. In "one task with subtasks" mode only the first
+   line gets the link. If the note changed while the sheet was open (a
+   sync, say), the anchors no longer fit: the tasks are created without
+   links and the snackbar says so ("… The note changed meanwhile, so no
+   link was added.").
 3. Snackbar: "Task created" / "N tasks created", actions Open (single task
    only; `Routes.task(id)`) and Undo (delete the tasks, then
-   `removeTaskLinks` on the current body and save).
+   `removeTaskLinks` on the current body and save; each delete on its own,
+   and a task that could not be deleted keeps its link). Undo keeps working
+   after the note page has gone, writing the stored note directly.
 
 ### Entry points
 
 - **Editor toolbar:** `add_task` button "Make todo", enabled when
-  `todoCandidates(value)` is non-empty. When `linkedTaskAt` finds a link at
-  the cursor, it becomes "Open task" (`open_in_new`), like "Open link".
+  `todoCandidates(value)` is non-empty. When the cursor (a collapsed
+  selection) sits on a line where `linkedTaskAt` finds a link, it becomes
+  "Open task" (`open_in_new`), like "Open link"; a selection that starts on
+  a linked line still offers "Make todo" for the other lines.
 - **Editor selection menu:** a "Make todo" item added through the body
-  field's `contextMenuBuilder`, shown when the selection is non-empty.
+  field's `contextMenuBuilder`, shown when `todoCandidates(value)` is
+  non-empty.
 - **Read view long-press:** a small menu at the line with "Make todo" (or
   "Open task" when linked) and "Edit".
 - **Whole note:** a `ListTile` "Make todo from note" (`add_task`) between
@@ -175,13 +198,16 @@ In the note screen (one helper, `_makeTodo(candidates, {wholeNote})`):
 
 ### Task links
 
-- Router: `nemo://task/<id>` maps to `Routes.task(id)`. The editor's "Open
-  link" and the read view both use one helper, `openNoteLink(context, ref,
-  url)`, which routes task links in-app and sends http/https to
-  `openUrlProvider` as today; anything else is ignored.
+- No router mapping for `nemo://`: task links are opened by one helper,
+  `openNoteLink(context, ref, url)` (in `task_link_chip.dart`), which
+  pushes `Routes.task(id)` for `nemo://task/<id>` and sends http/https to
+  `openUrlProvider` as today; anything else is ignored. The read view's
+  link taps use it. The editor's "Open link" stays web-only; a task link
+  on the cursor's line is opened by "Open task" instead.
 - `TaskLinkChip(taskId)` in the read view watches `taskByIdProvider`:
-  outlined `task_alt` while open, filled `check_circle` when done,
-  `outline` colour and "Task deleted" tooltip when gone. The chip shows
+  outlined `task_alt` while open (and while the task is still loading),
+  filled `check_circle` when done, `outline` colour and "Task deleted"
+  label once the store reports it gone. The chip shows
   the task's current title, truncated. Tap opens the task.
 - In the editor, card previews and search rows the link is ordinary
   markdown: faint markers, link text `→ task`.
@@ -199,7 +225,9 @@ task per line"), `noteTodoWithSubtasks` ("One task with subtasks"),
 ## Error handling
 
 - A failed save after a checkbox tap or link insertion shows the existing
-  save-failure state and keeps the text, as the editor does.
+  save-failure state and keeps the text, as the editor does. After
+  make-todo the tasks exist; the save-failure snackbar stays up instead of
+  the success one, and the links stay in the field for the next save.
 - If creating a task fails part way, the tasks already created are
   deleted, the body is left unchanged, and a snackbar says so.
 - A task link whose task is missing still opens the task route, which

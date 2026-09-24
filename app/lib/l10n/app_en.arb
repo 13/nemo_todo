@@ -606,6 +606,14 @@
   "@noteOpenTask": {
     "description": "Action on a note line that already links to a task; opens that task."
   },
+  "noteMakeTodoTip": "Tip: turn selected text into a task with Make todo.",
+  "@noteMakeTodoTip": {
+    "description": "One-time snackbar shown the first time a note body's text is selected on this device."
+  },
+  "noteReadLongPressHint": "Long-press a line to make it a todo.",
+  "@noteReadLongPressHint": {
+    "description": "One-time dismissible hint shown above a note's read view the first time it opens on this device."
+  },
   "noteTodoPerLine": "One task per line",
   "@noteTodoPerLine": {
     "description": "Make-todo sheet choice: each selected line becomes its own task."

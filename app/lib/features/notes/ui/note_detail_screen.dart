@@ -10,6 +10,7 @@ import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
+import 'package:nemo/features/notes/ui/make_todo_chip.dart';
 import 'package:nemo/features/notes/ui/make_todo_sheet.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
@@ -17,6 +18,7 @@ import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/features/notes/ui/note_editor_sections.dart';
 import 'package:nemo/features/notes/ui/note_read_view.dart';
+import 'package:nemo/features/notes/ui/note_tips.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/notes/ui/task_link_chip.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
@@ -75,15 +77,25 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   // provider if that is ever rebuilt.
   late NotesRepository _repo;
 
+  // One-time tips, read from the same KvStore as everything else
+  // device-local. Kept for `dispose`'s sake like `_repo`, though nothing
+  // here writes after the page is gone.
+  late NoteTips _tips;
+
   @override
   void initState() {
     super.initState();
     _repo = ref.read(notesRepositoryProvider);
+    _tips = NoteTips(ref.read(kvStoreProvider));
     _titleFocus.addListener(_onFocusChange);
     _bodyFocus.addListener(_onFocusChange);
     // A listener, not `onChanged`: toolbar buttons and shortcuts write
     // `_body.value` directly, which `onChanged` never hears about.
     _body.addListener(_onBodyChanged);
+    // Selection-only changes are exactly what `_onBodyChanged` ignores (it
+    // only cares about text), so the selection tip needs a listener of its
+    // own.
+    _body.addListener(_checkSelectionTip);
   }
 
   String _lastBody = '';
@@ -107,6 +119,68 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
   }
 
+  // Set as soon as the first non-collapsed selection while focused has
+  // been seen, so a flurry of further selection changes -- while
+  // `_maybeShowSelectionTip`'s KvStore round trip is still in flight, or
+  // once it has answered -- neither ask again nor show the tip twice.
+  bool _selectionTipChecked = false;
+
+  void _checkSelectionTip() {
+    if (_selectionTipChecked) return;
+    if (!_bodyFocus.hasFocus) return;
+    final selection = _body.selection;
+    if (!selection.isValid || selection.isCollapsed) return;
+    // The tip points at the chip, which only shows when the selection has
+    // something to make; a selection without leaves the tip for one with.
+    if (todoCandidates(_body.value).isEmpty) return;
+    _selectionTipChecked = true;
+    unawaited(_maybeShowSelectionTip());
+  }
+
+  Future<void> _maybeShowSelectionTip() async {
+    // Captured before the KvStore round trip, like `_makeTodo` does for its
+    // own snackbar: both outlive the `await` that follows.
+    final messenger = ScaffoldMessenger.of(context);
+    final tip = L.of(context).noteMakeTodoTip;
+    if (!await _tips.shouldShow(NoteTips.makeTodo)) return;
+    await _tips.markShown(NoteTips.makeTodo);
+    if (!mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(tip),
+          behavior: SnackBarBehavior.floating,
+          // Lifted over the format toolbar (48 px) and the chip floating
+          // above it, which the tip is about: covering the chip would hide
+          // the very thing it points to.
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+        ),
+      );
+  }
+
+  // Set once the read view's first build has asked the KvStore whether to
+  // show its hint, so a rebuild -- a sync landing, say -- doesn't ask
+  // again. `_showReadHint` only flips true once that answer is yes;
+  // closing it flips it back without touching the store again.
+  bool _readHintChecked = false;
+  bool _showReadHint = false;
+
+  void _checkReadHint() {
+    if (_readHintChecked) return;
+    _readHintChecked = true;
+    unawaited(_maybeShowReadHint());
+  }
+
+  Future<void> _maybeShowReadHint() async {
+    if (!await _tips.shouldShow(NoteTips.readLongPress)) return;
+    // Marked shown as soon as it is decided to show it, not when closed:
+    // the point is that it has been seen once, whether or not it is
+    // dismissed before the page goes.
+    await _tips.markShown(NoteTips.readLongPress);
+    if (mounted) setState(() => _showReadHint = true);
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -124,6 +198,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     _title.dispose();
     _body.dispose();
     _undo.dispose();
+    // Leaving with the body focused never reports the blur.
+    if (_browserMenuOff) setBrowserContextMenuEnabled(enabled: true);
     _titleFocus.dispose();
     _bodyFocus.dispose();
     super.dispose();
@@ -173,9 +249,24 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   /// to a note that changed while it was watching from the sidelines;
   /// `setState` forces the rebuild that lets `_fill` do that.
   void _onFocusChange() {
+    _syncBrowserContextMenu();
     if (_titleFocus.hasFocus || _bodyFocus.hasFocus) return;
     unawaited(_save());
     if (mounted) setState(() {});
+  }
+
+  // Whether this page has turned the browser's context menu off. Tracked
+  // rather than toggled on every focus change: the title's focus changes
+  // run through the same listener, and must not touch it.
+  bool _browserMenuOff = false;
+
+  /// Off while the body has focus, on otherwise -- see
+  /// [setBrowserContextMenuEnabled].
+  void _syncBrowserContextMenu() {
+    final off = _bodyFocus.hasFocus;
+    if (off == _browserMenuOff) return;
+    _browserMenuOff = off;
+    setBrowserContextMenuEnabled(enabled: !off);
   }
 
   /// Writes the dirty fields, and only those, through
@@ -559,6 +650,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
     _fill(note);
     final readView = _showReadView(note);
+    if (readView) _checkReadHint();
     // Cmd on Apple platforms, Ctrl elsewhere -- binding both everywhere
     // would shadow macOS/iOS's native Ctrl+B / Ctrl+K text-field
     // navigation, which the platform's own text field still wants.
@@ -603,123 +695,169 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         body: Column(
           children: [
             Expanded(
-              child: MaxWidth(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                  children: [
-                    TextField(
-                      key: const Key('note-title'),
-                      controller: _title,
-                      focusNode: _titleFocus,
-                      maxLines: null,
-                      textCapitalization: TextCapitalization.sentences,
-                      onChanged: (_) {
-                        _titleDirty = true;
-                        _scheduleSave();
-                      },
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                      decoration: InputDecoration(
-                        hintText: l.noteTitleHint,
-                        filled: false,
-                        border: InputBorder.none,
-                      ),
-                    ),
-                    if (readView)
-                      NoteReadView(
-                        key: const Key('note-read-view'),
-                        body: _body.text,
-                        onChanged: (body) => unawaited(_writeBody(body)),
-                        onEditAt: _editAt,
-                        onLongPressLine: (start, at) =>
-                            unawaited(_onLongPressLine(start, at)),
-                        onOpenLink: (url) => openNoteLink(context, ref, url),
-                        taskChip: (id) => TaskLinkChip(taskId: id),
-                      )
-                    else
-                      CallbackShortcuts(
-                        bindings: {
-                          SingleActivator(
-                            LogicalKeyboardKey.keyB,
-                            control: !useMeta,
-                            meta: useMeta,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '**')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyI,
-                            control: !useMeta,
-                            meta: useMeta,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '_')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyX,
-                            control: !useMeta,
-                            meta: useMeta,
-                            shift: true,
-                          ): () =>
-                              _apply((v) => toggleInline(v, '~~')),
-                          SingleActivator(
-                            LogicalKeyboardKey.keyK,
-                            control: !useMeta,
-                            meta: useMeta,
-                          ): _insertLink,
-                          SingleActivator(
-                            LogicalKeyboardKey.keyT,
-                            control: !useMeta,
-                            meta: useMeta,
-                            shift: true,
-                          ): () =>
-                              unawaited(_makeTodoFromEditor()),
-                        },
-                        child: TextField(
-                          key: const Key('note-body'),
-                          controller: _body,
-                          focusNode: _bodyFocus,
-                          undoController: _undo,
+              // The chip floats over the page's bottom-right corner, just
+              // above the format toolbar, rather than taking a row of its
+              // own that would push the page up and down as it comes and
+              // goes.
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  MaxWidth(
+                    child: ListView(
+                      // Room at the end for the Make todo chip, which floats
+                      // over the page's last 56 px: the last rows can still
+                      // be scrolled out from under it.
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 64),
+                      children: [
+                        TextField(
+                          key: const Key('note-title'),
+                          controller: _title,
+                          focusNode: _titleFocus,
                           maxLines: null,
-                          minLines: 6,
-                          keyboardType: TextInputType.multiline,
                           textCapitalization: TextCapitalization.sentences,
-                          inputFormatters: [ListContinuationFormatter()],
-                          contextMenuBuilder: (context, state) {
-                            final items = [...state.contextMenuButtonItems];
-                            if (todoCandidates(state.textEditingValue)
-                                .isNotEmpty) {
-                              items.insert(
-                                0,
-                                ContextMenuButtonItem(
-                                  label: l.noteMakeTodo,
-                                  onPressed: () {
-                                    state.hideToolbar();
-                                    unawaited(_makeTodoFromEditor());
-                                  },
-                                ),
-                              );
-                            }
-                            return AdaptiveTextSelectionToolbar.buttonItems(
-                              anchors: state.contextMenuAnchors,
-                              buttonItems: items,
-                            );
+                          onChanged: (_) {
+                            _titleDirty = true;
+                            _scheduleSave();
                           },
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
                           decoration: InputDecoration(
-                            hintText: l.noteBodyHint,
+                            hintText: l.noteTitleHint,
                             filled: false,
                             border: InputBorder.none,
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 16),
-                    PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
-                    NoteListPicker(note: note),
-                    ListTile(
-                      key: const Key('note-make-todo'),
-                      leading: const Icon(Icons.add_task),
-                      title: Text(l.noteMakeTodoFromNote),
-                      onTap: () => unawaited(_makeTodoFromNote()),
+                        if (readView) ...[
+                          if (_showReadHint)
+                            ReadViewHint(
+                              onClose: () =>
+                                  setState(() => _showReadHint = false),
+                            ),
+                          NoteReadView(
+                            key: const Key('note-read-view'),
+                            body: _body.text,
+                            onChanged: (body) => unawaited(_writeBody(body)),
+                            onEditAt: _editAt,
+                            onLongPressLine: (start, at) =>
+                                unawaited(_onLongPressLine(start, at)),
+                            onOpenLink: (url) =>
+                                openNoteLink(context, ref, url),
+                            taskChip: (id) => TaskLinkChip(taskId: id),
+                          ),
+                        ] else
+                          CallbackShortcuts(
+                            bindings: {
+                              SingleActivator(
+                                LogicalKeyboardKey.keyB,
+                                control: !useMeta,
+                                meta: useMeta,
+                              ): () =>
+                                  _apply((v) => toggleInline(v, '**')),
+                              SingleActivator(
+                                LogicalKeyboardKey.keyI,
+                                control: !useMeta,
+                                meta: useMeta,
+                              ): () =>
+                                  _apply((v) => toggleInline(v, '_')),
+                              SingleActivator(
+                                LogicalKeyboardKey.keyX,
+                                control: !useMeta,
+                                meta: useMeta,
+                                shift: true,
+                              ): () =>
+                                  _apply((v) => toggleInline(v, '~~')),
+                              SingleActivator(
+                                LogicalKeyboardKey.keyK,
+                                control: !useMeta,
+                                meta: useMeta,
+                              ): _insertLink,
+                              SingleActivator(
+                                LogicalKeyboardKey.keyT,
+                                control: !useMeta,
+                                meta: useMeta,
+                                shift: true,
+                              ): () =>
+                                  unawaited(_makeTodoFromEditor()),
+                            },
+                            child: TextField(
+                              key: const Key('note-body'),
+                              controller: _body,
+                              focusNode: _bodyFocus,
+                              undoController: _undo,
+                              maxLines: null,
+                              minLines: 6,
+                              keyboardType: TextInputType.multiline,
+                              // Scrolls the line being typed clear of the
+                              // floating chip, whose top is 56 px above the
+                              // page's bottom, with a margin -- not just 20 px
+                              // off the edge, where the chip would cover it.
+                              scrollPadding: const EdgeInsets.fromLTRB(
+                                20,
+                                20,
+                                20,
+                                72,
+                              ),
+                              textCapitalization: TextCapitalization.sentences,
+                              inputFormatters: [ListContinuationFormatter()],
+                              contextMenuBuilder: (context, state) {
+                                final items = [...state.contextMenuButtonItems];
+                                if (todoCandidates(state.textEditingValue)
+                                    .isNotEmpty) {
+                                  items.insert(
+                                    0,
+                                    ContextMenuButtonItem(
+                                      label: l.noteMakeTodo,
+                                      onPressed: () {
+                                        state.hideToolbar();
+                                        unawaited(_makeTodoFromEditor());
+                                      },
+                                    ),
+                                  );
+                                }
+                                return AdaptiveTextSelectionToolbar.buttonItems(
+                                  anchors: state.contextMenuAnchors,
+                                  buttonItems: items,
+                                );
+                              },
+                              decoration: InputDecoration(
+                                hintText: l.noteBodyHint,
+                                filled: false,
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        PhotoStrip(
+                          parentKind: PhotoParent.note,
+                          parentId: note.id,
+                        ),
+                        NoteListPicker(note: note),
+                        ListTile(
+                          key: const Key('note-make-todo'),
+                          leading: const Icon(Icons.add_task),
+                          title: Text(l.noteMakeTodoFromNote),
+                          onTap: () => unawaited(_makeTodoFromNote()),
+                        ),
+                        NoteDeleteAction(note: note),
+                      ],
                     ),
-                    NoteDeleteAction(note: note),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    right: 16,
+                    bottom: 8,
+                    child: ListenableBuilder(
+                      listenable: _bodyFocus,
+                      builder: (_, _) => !readView && _bodyFocus.hasFocus
+                          ? MakeTodoChip(
+                              controller: _body,
+                              onMakeTodo: () =>
+                                  unawaited(_makeTodoFromEditor()),
+                              onOpenTask: _openTask,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
               ),
             ),
             ListenableBuilder(

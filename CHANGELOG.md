@@ -23,6 +23,10 @@ would ship without them, and nothing would say so.
   and will sync later.
 - Upcoming ends with a "No date" section: every open task without a due
   date, from all lists. Collapse it with its header; the app remembers.
+- Selecting text in a note shows a "Make todo" button right above the
+  keyboard, and a one-time tip explains it; the read view says once that
+  a long-press turns a line into a todo. In the web app, right-clicking
+  a note's text now shows the app's menu with "Make todo".
 
 ## 0.13.0 - 2026-09-24
 

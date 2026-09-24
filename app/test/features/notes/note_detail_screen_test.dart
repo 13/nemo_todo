@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
+import 'package:nemo/features/notes/ui/make_todo_chip.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
 import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
@@ -1437,4 +1438,363 @@ void main() {
     await menuFor(const TextSelection(baseOffset: 11, extentOffset: 15));
     expect(inMenu, findsOneWidget);
   });
+
+  appTest('the chip shows for a selection while the body has focus, and '
+      'opens the make-todo sheet without blurring the body', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+    final chip = find.byKey(const Key('note-make-todo-chip'));
+    expect(chip, findsNothing);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    // A cursor on plain text: nothing to make.
+    expect(chip, findsNothing);
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pump();
+    expect(chip.hitTestable(), findsOneWidget);
+
+    // Pressed, not yet released: a tap outside a field unfocuses it on
+    // pointer down, so this is where a blur would show.
+    final gesture = await tester.startGesture(tester.getCenter(chip));
+    await tester.pump();
+    expect(bodyField(tester).focusNode!.hasFocus, isTrue);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('todo-create')), findsOneWidget);
+  });
+
+  appTest('the chip goes when the body loses focus', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [ ] milk');
+    await tester.pumpAndSettle();
+    final chip = find.byKey(const Key('note-make-todo-chip'));
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 6,
+      extentOffset: 10,
+    );
+    await tester.pump();
+    expect(chip, findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-title')));
+    await tester.pumpAndSettle();
+    expect(chip, findsNothing);
+  });
+
+  // Types a long body ending on a line linked to a task, so the field
+  // brings the caret -- at the end of that line, where the chip offers to
+  // open the task -- into view, then checks the chip leaves the line clear.
+  Future<void> expectCaretClearOfChip(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    final body = [
+      for (var i = 0; i < 60; i++) 'line $i',
+      '- milk [→ task](nemo://task/t1)',
+    ];
+    await tester.enterText(find.byKey(const Key('note-body')), body.join('\n'));
+    await tester.pumpAndSettle();
+
+    final chip = find.byKey(const Key('note-make-todo-chip'));
+    expect(chip, findsOneWidget);
+    final editable = tester
+        .state<EditableTextState>(
+          find.descendant(
+            of: find.byKey(const Key('note-body')),
+            matching: find.byType(EditableText),
+          ),
+        )
+        .renderEditable;
+    final caret = MatrixUtils.transformRect(
+      editable.getTransformTo(null),
+      editable.getLocalRectForCaret(
+        TextPosition(offset: bodyField(tester).controller!.text.length),
+      ),
+    );
+    final chipRect = tester.getRect(chip);
+    // The whole line, not just the caret: a short line ends far left of
+    // the chip, but a longer one typed on would run under it.
+    expect(caret.overlaps(chipRect), isFalse);
+    expect(
+      caret.bottom,
+      lessThanOrEqualTo(chipRect.top),
+      reason: 'caret $caret, chip $chipRect',
+    );
+  }
+
+  appTest('the chip stays clear of the line being typed at the bottom', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'start');
+    await tester.pumpAndSettle();
+    await expectCaretClearOfChip(tester);
+  });
+
+  appTest('the chip stays clear of the line being typed with large text', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'start');
+    await tester.pumpAndSettle();
+    // The app really is reading at double size, not ignoring the setting.
+    expect(
+      MediaQuery.textScalerOf(
+        tester.element(find.byKey(const Key('note-body'))),
+      ).scale(10),
+      20,
+    );
+    await expectCaretClearOfChip(tester);
+  });
+
+  appTest('the read view shows no chip, and gives the browser its menu '
+      'back', (tester) async {
+    final calls = <bool>[];
+    final original = browserContextMenuToggle;
+    browserContextMenuToggle = ({required enabled}) => calls.add(enabled);
+    addTearDown(() => browserContextMenuToggle = original);
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [ ] milk');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 6,
+      extentOffset: 10,
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('note-make-todo-chip')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-view-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-view')), findsOneWidget);
+    expect(find.byKey(const Key('note-make-todo-chip')), findsNothing);
+    expect(calls, [false, true]);
+  });
+
+  appTest("the browser's context menu is off only while the body has "
+      'focus', (tester) async {
+    final calls = <bool>[];
+    final original = browserContextMenuToggle;
+    browserContextMenuToggle = ({required enabled}) => calls.add(enabled);
+    addTearDown(() => browserContextMenuToggle = original);
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+    await tester.pumpAndSettle();
+    expect(calls, isEmpty);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    expect(calls, [false]);
+
+    // The title is another field, but not the body.
+    await tester.tap(find.byKey(const Key('note-title')));
+    await tester.pumpAndSettle();
+    expect(calls, [false, true]);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    expect(calls, [false, true, false]);
+
+    // Leaving with the body still focused turns it back on.
+    app.router.go('/notes');
+    await tester.pumpAndSettle();
+    expect(calls, [false, true, false, true]);
+  });
+
+  const makeTodoTip = 'Tip: turn selected text into a task with Make todo.';
+  const readHint = 'Long-press a line to make it a todo.';
+
+  appTest('the first non-collapsed selection in a note body shows the '
+      'make-todo tip once, and remembers it', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsNothing);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    // A cursor, not a selection: no tip yet.
+    expect(find.text(makeTodoTip), findsNothing);
+
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+    expect(
+      await app.container.read(kvStoreProvider).get('tips.noteMakeTodo'),
+      '1',
+    );
+
+    // A second selection on the same screen shows nothing further -- there
+    // is still exactly the one tip on screen, not a second stacked on it.
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 3,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+  });
+
+  appTest('a selection with nothing to make shows no tip, and leaves it '
+      'for one that has', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [x] eggs\nmilk');
+    await tester.pumpAndSettle();
+    final kv = app.container.read(kvStoreProvider);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    // A ticked line with its line break: no chip, so no tip about it.
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 11,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-make-todo-chip')), findsNothing);
+    expect(find.text(makeTodoTip), findsNothing);
+    expect(await kv.get('tips.noteMakeTodo'), isNull);
+
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 11,
+      extentOffset: 15,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+    expect(await kv.get('tips.noteMakeTodo'), '1');
+  });
+
+  appTest('the make-todo tip covers neither the chip nor the toolbar with '
+      'the keyboard up on a phone', (tester) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      size: const Size(360, 740),
+    );
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+    // A 300 px keyboard; pumpApp's teardown resets the view, this included.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+
+    // The snackbar's own card: the SnackBar widget's rect takes in its
+    // margin too, which is empty space meant to overlap what it clears.
+    final tip = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(SnackBar),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    final chip = tester.getRect(find.byKey(const Key('note-make-todo-chip')));
+    final toolbar = tester.getRect(find.byType(NoteFormatToolbar));
+    expect(tip.overlaps(chip), isFalse, reason: 'tip $tip, chip $chip');
+    expect(
+      tip.overlaps(toolbar),
+      isFalse,
+      reason: 'tip $tip, toolbar $toolbar',
+    );
+    expect(tip.bottom, lessThanOrEqualTo(740 - 300));
+  });
+
+  appTest('reopening a note after the make-todo tip has already shown shows it '
+      'no more', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.container.read(kvStoreProvider).set('tips.noteMakeTodo', '1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsNothing);
+  });
+
+  appTest('a note opening in the read view for the first time shows the '
+      'read-view hint, and remembers it', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.container.read(kvStoreProvider).set('notes.readView', '1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('note-read-hint')), findsOneWidget);
+    expect(find.text(readHint), findsOneWidget);
+    expect(
+      await app.container.read(kvStoreProvider).get('tips.noteReadLongPress'),
+      '1',
+    );
+  });
+
+  appTest('closing the read-view hint hides it, and it stays gone on '
+      'reopening', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.container.read(kvStoreProvider).set('notes.readView', '1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-hint')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-read-hint-close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-hint')), findsNothing);
+
+    app.router.go('/notes');
+    await tester.pumpAndSettle();
+    app.router.go('/notes/n1');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-hint')), findsNothing);
+  });
+
+  appTest(
+    'a read view opened after the hint key is already set shows no hint',
+    (tester) async {
+      final app = await pumpApp(tester, initialLocation: '/notes/n1');
+      await app.container.read(kvStoreProvider).set('notes.readView', '1');
+      await app.container
+          .read(kvStoreProvider)
+          .set('tips.noteReadLongPress', '1');
+      await app.seedList('l1', 'Kitchen');
+      await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('note-read-hint')), findsNothing);
+    },
+  );
 }

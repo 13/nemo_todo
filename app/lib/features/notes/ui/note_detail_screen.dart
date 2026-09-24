@@ -130,6 +130,9 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     if (!_bodyFocus.hasFocus) return;
     final selection = _body.selection;
     if (!selection.isValid || selection.isCollapsed) return;
+    // The tip points at the chip, which only shows when the selection has
+    // something to make; a selection without leaves the tip for one with.
+    if (todoCandidates(_body.value).isEmpty) return;
     _selectionTipChecked = true;
     unawaited(_maybeShowSelectionTip());
   }
@@ -144,7 +147,16 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     if (!mounted) return;
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(tip)));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(tip),
+          behavior: SnackBarBehavior.floating,
+          // Lifted over the format toolbar (48 px) and the chip floating
+          // above it, which the tip is about: covering the chip would hide
+          // the very thing it points to.
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+        ),
+      );
   }
 
   // Set once the read view's first build has asked the KvStore whether to

@@ -1478,8 +1478,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('note-body')));
     await tester.pumpAndSettle();
-    bodyField(tester).controller!.selection = const TextSelection.collapsed(
-      offset: 8,
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 6,
+      extentOffset: 10,
     );
     await tester.pump();
     expect(chip, findsOneWidget);
@@ -1489,19 +1490,16 @@ void main() {
     expect(chip, findsNothing);
   });
 
-  appTest('the chip stays clear of the line being typed at the bottom', (
-    tester,
-  ) async {
-    final app = await pumpApp(tester, initialLocation: '/notes/n1');
-    await app.seedList('l1', 'Kitchen');
-    await app.seedNote('n1', 'l1', title: 'Shop', body: 'start');
-    await tester.pumpAndSettle();
-
+  // Types a long body ending on a line linked to a task, so the field
+  // brings the caret -- at the end of that line, where the chip offers to
+  // open the task -- into view, then checks the chip leaves the line clear.
+  Future<void> expectCaretClearOfChip(WidgetTester tester) async {
     await tester.tap(find.byKey(const Key('note-body')));
     await tester.pumpAndSettle();
-    // Long enough to scroll, typed so the field brings the caret -- at
-    // the end of a checklist line, where the chip shows -- into view.
-    final body = [for (var i = 0; i < 60; i++) 'line $i', '- [ ] milk'];
+    final body = [
+      for (var i = 0; i < 60; i++) 'line $i',
+      '- milk [→ task](nemo://task/t1)',
+    ];
     await tester.enterText(find.byKey(const Key('note-body')), body.join('\n'));
     await tester.pumpAndSettle();
 
@@ -1530,6 +1528,35 @@ void main() {
       lessThanOrEqualTo(chipRect.top),
       reason: 'caret $caret, chip $chipRect',
     );
+  }
+
+  appTest('the chip stays clear of the line being typed at the bottom', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'start');
+    await tester.pumpAndSettle();
+    await expectCaretClearOfChip(tester);
+  });
+
+  appTest('the chip stays clear of the line being typed with large text', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'start');
+    await tester.pumpAndSettle();
+    // The app really is reading at double size, not ignoring the setting.
+    expect(
+      MediaQuery.textScalerOf(
+        tester.element(find.byKey(const Key('note-body'))),
+      ).scale(10),
+      20,
+    );
+    await expectCaretClearOfChip(tester);
   });
 
   appTest('the read view shows no chip, and gives the browser its menu '
@@ -1545,8 +1572,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('note-body')));
     await tester.pumpAndSettle();
-    bodyField(tester).controller!.selection = const TextSelection.collapsed(
-      offset: 8,
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 6,
+      extentOffset: 10,
     );
     await tester.pump();
     expect(find.byKey(const Key('note-make-todo-chip')), findsOneWidget);
@@ -1624,6 +1652,80 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text(makeTodoTip), findsOneWidget);
+  });
+
+  appTest('a selection with nothing to make shows no tip, and leaves it '
+      'for one that has', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [x] eggs\nmilk');
+    await tester.pumpAndSettle();
+    final kv = app.container.read(kvStoreProvider);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    // A ticked line with its line break: no chip, so no tip about it.
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 11,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-make-todo-chip')), findsNothing);
+    expect(find.text(makeTodoTip), findsNothing);
+    expect(await kv.get('tips.noteMakeTodo'), isNull);
+
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 11,
+      extentOffset: 15,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+    expect(await kv.get('tips.noteMakeTodo'), '1');
+  });
+
+  appTest('the make-todo tip covers neither the chip nor the toolbar with '
+      'the keyboard up on a phone', (tester) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      size: const Size(360, 740),
+    );
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+    // A 300 px keyboard; pumpApp's teardown resets the view, this included.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+
+    // The snackbar's own card: the SnackBar widget's rect takes in its
+    // margin too, which is empty space meant to overlap what it clears.
+    final tip = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(SnackBar),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    final chip = tester.getRect(find.byKey(const Key('note-make-todo-chip')));
+    final toolbar = tester.getRect(find.byType(NoteFormatToolbar));
+    expect(tip.overlaps(chip), isFalse, reason: 'tip $tip, chip $chip');
+    expect(
+      tip.overlaps(toolbar),
+      isFalse,
+      reason: 'tip $tip, toolbar $toolbar',
+    );
+    expect(tip.bottom, lessThanOrEqualTo(740 - 300));
   });
 
   appTest('reopening a note after the make-todo tip has already shown shows it '

@@ -30,9 +30,10 @@ void _toggleBrowserContextMenu({required bool enabled}) {
 void setBrowserContextMenuEnabled({required bool enabled}) =>
     browserContextMenuToggle(enabled: enabled);
 
-/// "Make todo" -- or "Open task" on a line already linked to one -- right
-/// where the text is being edited, for people who never find the toolbar
-/// button or the selection menu item. Nothing at all when neither applies.
+/// "Make todo" for selected text -- or "Open task" for a cursor on a line
+/// already linked to one -- right where the text is being edited, for
+/// people who never find the toolbar button or the selection menu item.
+/// Nothing at all when neither applies.
 class MakeTodoChip extends StatelessWidget {
   const MakeTodoChip({
     required this.controller,
@@ -56,9 +57,11 @@ class MakeTodoChip extends StatelessWidget {
       listenable: controller,
       builder: (context, _) {
         final value = controller.value;
-        // Decided as the format toolbar does: only a cursor opens a task,
-        // since a selection starting on a linked line can still reach
-        // lines to make tasks of.
+        // Only a cursor opens a task, as in the format toolbar, since a
+        // selection starting on a linked line can still reach lines to make
+        // tasks of. Unlike the toolbar, only a selection offers Make todo:
+        // a chip popping up on every list line being typed would be noise,
+        // and the toolbar button still covers the cursor case.
         final linkedTask =
             value.selection.isValid && value.selection.isCollapsed
             ? linkedTaskAt(value.text, value.selection.start)
@@ -70,7 +73,8 @@ class MakeTodoChip extends StatelessWidget {
             l.noteOpenTask,
             () => onOpenTask(linkedTask),
           );
-        } else if (todoCandidates(value).isNotEmpty) {
+        } else if (!value.selection.isCollapsed &&
+            todoCandidates(value).isNotEmpty) {
           chip = _chip(Icons.add_task, l.noteMakeTodo, onMakeTodo);
         } else {
           return const SizedBox.shrink();

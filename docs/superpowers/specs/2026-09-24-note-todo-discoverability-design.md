@@ -11,9 +11,9 @@ moment it applies, and teach it once. UI only.
 
 | Topic | Decision |
 |---|---|
-| Floating chip | While the body is focused and `todoCandidates(value)` is non-empty (a selection, or the cursor on a list line), an `ActionChip` "✓+ Make todo" (`Icons.add_task`) floats bottom-right just above the format toolbar; tapping it runs the same make-todo flow as the toolbar button. Hidden otherwise. When the cursor is on a line already linked to a task, the chip reads "Open task" instead |
+| Floating chip | While the body is focused and a non-collapsed selection has `todoCandidates(value)` non-empty, an `ActionChip` "✓+ Make todo" (`Icons.add_task`) floats bottom-right just above the format toolbar; tapping it runs the same make-todo flow as the toolbar button. When the cursor (collapsed) is on a line already linked to a task, the chip reads "Open task" instead. Hidden otherwise -- including a cursor on a list line, which the toolbar button still covers: a chip on every list line being typed would be noise |
 | Web right-click | While the note body has focus on the web, `BrowserContextMenu.disableContextMenu()`; re-enabled when it loses focus or the screen goes. Flutter's own menu (with "Make todo") then shows |
-| One-time selection tip | The first time on a device that a non-collapsed selection is made in a note body: a snackbar "Tip: turn selected text into a task with Make todo." with no action, normal duration. KvStore `tips.noteMakeTodo` = `'1'` once shown |
+| One-time selection tip | The first time on a device that a non-collapsed selection with something to make (the chip showing) is made in a note body: a floating snackbar, its bottom margin clearing the toolbar and the chip, "Tip: turn selected text into a task with Make todo." with no action, normal duration. KvStore `tips.noteMakeTodo` = `'1'` once shown |
 | One-time read-view hint | The first time on a device a note opens in the read view: a dismissible line above the body, "Long-press a line to make it a todo." with a close button; KvStore `tips.noteReadLongPress` = `'1'` when closed or after it has been shown once |
 | Existing entry points | Unchanged: toolbar button, selection menu item, read-view long-press, "Make todo from note" row, Ctrl/Cmd+Shift+T |
 
@@ -21,8 +21,8 @@ moment it applies, and teach it once. UI only.
 
 - `note_detail_screen.dart`: a `ListenableBuilder` on `_body` and
   `_bodyFocus` builds the chip in a `Stack` above the toolbar (keyed
-  `note-make-todo-chip`), using `todoCandidates` / `linkedTaskAt` exactly
-  as the toolbar does, calling `_makeTodoFromEditor` / `_openTask`.
+  `note-make-todo-chip`), using `todoCandidates` (selections only) /
+  `linkedTaskAt` (cursor only), calling `_makeTodoFromEditor` / `_openTask`.
   `TextFieldTapRegion` around it so tapping it does not unfocus the body.
 - Web context menu: in the body focus listener, `if (kIsWeb)` disable on
   focus, enable on blur and in `dispose`.
@@ -41,12 +41,16 @@ moment it applies, and teach it once. UI only.
 
 ## Testing
 
-- Chip: shows for a selection and for a cursor on a list line; hidden
-  for a cursor on plain text and when the body is unfocused; tapping it
+- Chip: shows for a selection with something to make; hidden for a
+  cursor on a list line or plain text, for a selection with nothing to
+  make, and when the body is unfocused; tapping it
   opens the make-todo sheet; on a linked line it reads "Open task" and
   opens the task.
-- Tip: first selection shows it and stores the key; a second note and a
-  second selection do not show it again.
+- Tip: first selection with something to make shows it and stores the
+  key; a selection with nothing to make leaves it for later; a second
+  note and a second selection do not show it again. On a 360x740 phone
+  with a 300 px keyboard it covers neither the chip nor the toolbar.
+- Large text (2x): the line being typed stays clear of the chip.
 - Read hint: shown on first read-view open, gone after close and on
   reopen.
 - Web context menu: with `debugDefaultTargetPlatformOverride`/`kIsWeb`

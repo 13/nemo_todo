@@ -50,7 +50,8 @@ void main() {
     expect(calls.opened, isEmpty);
   });
 
-  testWidgets('a cursor on a checklist line offers Make todo', (tester) async {
+  testWidgets('a cursor on a list line shows nothing, though the toolbar '
+      'could make a task of it', (tester) async {
     await pumpChip(
       tester,
       const TextEditingValue(
@@ -58,7 +59,18 @@ void main() {
         selection: TextSelection.collapsed(offset: 8),
       ),
     );
-    expect(find.text('Make todo'), findsOneWidget);
+    expect(find.byKey(const Key('note-make-todo-chip')), findsNothing);
+  });
+
+  testWidgets('a selection with nothing to make shows nothing', (tester) async {
+    await pumpChip(
+      tester,
+      const TextEditingValue(
+        text: '- [x] eggs\nmilk',
+        selection: TextSelection(baseOffset: 0, extentOffset: 11),
+      ),
+    );
+    expect(find.byKey(const Key('note-make-todo-chip')), findsNothing);
   });
 
   testWidgets('a cursor on plain text shows nothing', (tester) async {

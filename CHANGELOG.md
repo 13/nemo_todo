@@ -13,6 +13,14 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.14.2 - 2026-09-24
+
+### Fixed
+
+- Undo snackbars (after deleting a task, list or note, completing a task
+  with a swipe, or moving a task to another day) now go away on their own
+  instead of staying on screen until tapped.
+
 ## 0.14.1 - 2026-09-24
 
 ### Fixed

@@ -9,6 +9,7 @@ import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
+import 'package:nemo/features/tasks/ui/today_progress.dart';
 import 'package:nemo/features/updates/ui/update_banner.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
@@ -68,17 +69,24 @@ class TodayScreen extends ConsumerWidget {
                     .where((t) => !t.done && !overdue.contains(t))
                     .toList();
                 final done = items.where((t) => t.done).toList();
-                return TaskListView(
-                  showList: true,
-                  sections: [
-                    TaskSection(
-                      title: l.todayOverdue,
-                      tasks: overdue,
-                      color: context.nemoColors.overdue,
+                return Column(
+                  children: [
+                    TodayProgress(items: items),
+                    Expanded(
+                      child: TaskListView(
+                        showList: true,
+                        sections: [
+                          TaskSection(
+                            title: l.todayOverdue,
+                            tasks: overdue,
+                            color: context.nemoColors.overdue,
+                          ),
+                          TaskSection(title: l.navToday, tasks: today),
+                        ],
+                        completed: done,
+                      ),
                     ),
-                    TaskSection(title: l.navToday, tasks: today),
                   ],
-                  completed: done,
                 );
               },
             ),

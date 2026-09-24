@@ -10,6 +10,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/achievements/data/achievements_repository.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
@@ -481,5 +482,153 @@ void main() {
     await tester.tap(find.byTooltip('Close'));
     await tester.pump();
     expect(find.byKey(const Key('achievement-banner')), findsNothing);
+  });
+
+  appTest('a tick shows a message pill that goes away', (tester) async {
+    // Three tasks, so the second tick is an ordinary one.
+    await pumpApp(tester, celebrate: true, seed: seedToday(['A', 'B', 'C']));
+    await tickOff(tester, 'A'); // The first achievement: a banner, no pill.
+    expect(find.byKey(const Key('motivation-pill')), findsNothing);
+
+    await tickOff(tester, 'B');
+
+    expect(find.byKey(const Key('motivation-pill')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('motivation-pill')),
+        matching: find.byType(Text),
+      ),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('motivation-pill')), findsNothing);
+  });
+
+  appTest('the pill sits clear of the navigation and quick-add bars', (
+    tester,
+  ) async {
+    await pumpApp(tester, celebrate: true, seed: seedToday(['A', 'B', 'C']));
+    await tickOff(tester, 'A');
+    await tickOff(tester, 'B');
+
+    final pill = tester.getRect(find.byKey(const Key('motivation-pill')));
+    expect(pill.overlaps(tester.getRect(find.byType(NavigationBar))), isFalse);
+    expect(pill.overlaps(tester.getRect(find.byType(QuickAddBar))), isFalse);
+  });
+
+  appTest('the pill never blocks a tap', (tester) async {
+    await pumpApp(tester, celebrate: true, seed: seedToday(['A', 'B', 'C']));
+    await tickOff(tester, 'A');
+    await tickOff(tester, 'B');
+
+    final pill = find.byKey(const Key('motivation-pill'));
+    expect(pill, findsOneWidget);
+    // The pill brings its own IgnorePointer (a descendant of the keyed
+    // widget, not an ancestor), and it is switched on.
+    expect(
+      tester
+          .widget<IgnorePointer>(
+            find.descendant(of: pill, matching: find.byType(IgnorePointer)),
+          )
+          .ignoring,
+      isTrue,
+    );
+    // A tap on the pill goes through to whatever lies beneath it.
+    final text = find.descendant(of: pill, matching: find.byType(Text));
+    final paragraph = tester.renderObject(text);
+    final result = HitTestResult();
+    tester.binding.hitTestInView(
+      result,
+      tester.getCenter(text),
+      tester.view.viewId,
+    );
+    expect(result.path.map((e) => e.target), isNot(contains(paragraph)));
+  });
+
+  appTest('the pill is a live region', (tester) async {
+    await pumpApp(tester, celebrate: true, seed: seedToday(['A', 'B', 'C']));
+    await tickOff(tester, 'A');
+    await tickOff(tester, 'B');
+
+    final text = find.descendant(
+      of: find.byKey(const Key('motivation-pill')),
+      matching: find.byType(Text),
+    );
+    expect(
+      find.ancestor(
+        of: text,
+        matching: find.byWidgetPredicate(
+          (w) => w is Semantics && (w.properties.liveRegion ?? false),
+        ),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  appTest('with celebrations off there is no pill', (tester) async {
+    await pumpApp(
+      tester,
+      celebrate: true,
+      seed: seedToday(['A', 'B', 'C'], kv: {KvKeys.celebrations: 'false'}),
+    );
+    await tickOff(tester, 'A');
+    await tickOff(tester, 'B');
+
+    expect(find.byKey(const Key('motivation-pill')), findsNothing);
+  });
+
+  appTest('reduced motion shows the pill without fading', (tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await pumpApp(tester, celebrate: true, seed: seedToday(['A', 'B', 'C']));
+    await tickOff(tester, 'A');
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'B'),
+        matching: find.byType(DoneCheck),
+      ),
+    );
+    // Frame by frame without letting time pass: a fade would still be at
+    // its start on the frame the pill first appears.
+    final pill = find.byKey(const Key('motivation-pill'));
+    for (var i = 0; i < 20 && pill.evaluate().isEmpty; i++) {
+      await tester.pump();
+    }
+    expect(pill, findsOneWidget);
+    expect(
+      tester
+          .widget<Opacity>(
+            find.descendant(of: pill, matching: find.byType(Opacity)),
+          )
+          .opacity,
+      1,
+    );
+  });
+
+  appTest('the pill fades in', (tester) async {
+    await pumpApp(tester, celebrate: true, seed: seedToday(['A', 'B', 'C']));
+    await tickOff(tester, 'A');
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'B'),
+        matching: find.byType(DoneCheck),
+      ),
+    );
+    final pill = find.byKey(const Key('motivation-pill'));
+    for (var i = 0; i < 20 && pill.evaluate().isEmpty; i++) {
+      await tester.pump();
+    }
+    expect(pill, findsOneWidget);
+    double opacity() => tester
+        .widget<Opacity>(
+          find.descendant(of: pill, matching: find.byType(Opacity)),
+        )
+        .opacity;
+    expect(opacity(), lessThan(1));
+
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(opacity(), 1);
   });
 }

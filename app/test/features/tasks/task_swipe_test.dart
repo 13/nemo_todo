@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/router.dart';
@@ -8,11 +9,17 @@ import 'package:nemo/utils/dates.dart';
 import '../../support/pump_app.dart';
 import '../../support/test_db.dart';
 
-/// Three tasks due today, with celebrations on.
-Future<TestApp> pumpToday(WidgetTester tester) => pumpApp(
+/// Three tasks due today, with celebrations on unless [kv] says otherwise.
+Future<TestApp> pumpToday(
+  WidgetTester tester, {
+  Map<String, String> kv = const {},
+}) => pumpApp(
   tester,
   celebrate: true,
   seed: (db, inbox) async {
+    for (final e in kv.entries) {
+      await KvStore(db).set(e.key, e.value);
+    }
     final tasks = TasksRepository(
       db,
       testClock('seed'),
@@ -78,5 +85,59 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(await isDone(app, 'Second'), isFalse);
     expect(find.byKey(const Key('achievement-banner')), findsNothing);
+  });
+
+  appTest('a swipe completion says its message in the snackbar', (
+    tester,
+  ) async {
+    final app = await pumpToday(tester);
+    // The first completion unlocks an achievement; the second is ordinary.
+    await tester.drag(find.text('First'), const Offset(500, 0));
+    await pumpFrames(tester);
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pump();
+    // Let the first snackbar go, so the one on screen is the second's.
+    ScaffoldMessenger.of(tester.element(find.text('Second')))
+        .removeCurrentSnackBar();
+    await pumpFrames(tester);
+
+    await tester.drag(find.text('Second'), const Offset(500, 0));
+    await pumpFrames(tester);
+
+    expect(await isDone(app, 'Second'), isTrue);
+    final snack = find.byType(SnackBar);
+    expect(snack, findsOneWidget);
+    final text = tester
+        .widget<Text>(
+          find
+              .descendant(
+                of: find.byType(SnackBar),
+                matching: find.byType(Text),
+              )
+              .first,
+        )
+        .data;
+    expect(text, isNot('Task completed'));
+    expect(text, isNotEmpty);
+    expect(find.text('Undo'), findsOneWidget);
+    expect(find.byKey(const Key('motivation-pill')), findsNothing);
+  });
+
+  appTest('with celebrations off a swipe says "Task completed"', (
+    tester,
+  ) async {
+    final app = await pumpToday(tester, kv: {KvKeys.celebrations: 'false'});
+    await tester.drag(find.text('First'), const Offset(500, 0));
+    await pumpFrames(tester);
+    ScaffoldMessenger.of(tester.element(find.text('Second')))
+        .removeCurrentSnackBar();
+    await pumpFrames(tester);
+
+    await tester.drag(find.text('Second'), const Offset(500, 0));
+    await pumpFrames(tester);
+
+    expect(await isDone(app, 'Second'), isTrue);
+    expect(find.text('Task completed'), findsOneWidget);
+    expect(find.byKey(const Key('motivation-pill')), findsNothing);
   });
 }

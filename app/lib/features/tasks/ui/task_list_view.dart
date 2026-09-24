@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
+import 'package:nemo/features/celebrations/ui/motivation_text.dart';
+import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -187,11 +189,23 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
         final repo = ref.read(tasksRepositoryProvider);
         final messenger = ScaffoldMessenger.of(context);
         if (direction == DismissDirection.startToEnd) {
-          await completeTask(ref, task, done: !task.done);
+          // Read before the write: the ticked row can leave this screen.
+          final celebrate = ref.read(celebrationsEnabledProvider);
+          // The snackbar carries the message, so no pill on top of it.
+          final cheer = await completeTask(
+            ref,
+            task,
+            done: !task.done,
+            showPill: false,
+          );
           if (!task.done) {
             messenger.showSnackBar(
               SnackBar(
-                content: Text(l.tasksCompletedSnack),
+                content: Text(
+                  celebrate && cheer != null
+                      ? motivationText(l, cheer.motivation, cheer.context)
+                      : l.tasksCompletedSnack,
+                ),
                 action: SnackBarAction(
                   label: l.commonUndo,
                   // The SnackBar outlives this screen, and this `ref` is

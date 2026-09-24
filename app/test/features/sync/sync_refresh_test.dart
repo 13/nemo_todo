@@ -46,6 +46,19 @@ class _BusyEngine extends SyncEngine {
   Future<void> syncNow() async => calls++;
 
   void finish() => state = const SyncState(status: SyncStatus.idle);
+
+  /// Sets an intermediate status without ending the wait, as the real
+  /// engine does moving through `local` on the way to `signedOut`.
+  void step(SyncStatus status) => state = SyncState(status: status);
+}
+
+/// A `syncNow` that always throws, as an unexpected error would.
+class _ThrowingEngine extends SyncEngine {
+  @override
+  SyncState build() => const SyncState(status: SyncStatus.idle);
+
+  @override
+  Future<void> syncNow() async => throw StateError('boom');
 }
 
 Future<T> _pump<T extends SyncEngine>(
@@ -153,5 +166,51 @@ void main() {
     );
     await _pull(tester, 'empty');
     expect(engine.calls, 1);
+  });
+
+  testWidgets('a busy sync passing through local still waits for signed-out', (
+    tester,
+  ) async {
+    final engine = _BusyEngine();
+    await _pumpBusy(tester, engine);
+    await _pull(tester, 'row');
+    expect(find.byType(RefreshProgressIndicator), findsOneWidget);
+    // `local` unmounts the RefreshIndicator (no account -> no gesture), but
+    // the wait behind it must keep going rather than settle for `local`.
+    engine.step(SyncStatus.local);
+    await tester.pump();
+    engine.step(SyncStatus.signedOut);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Your session has ended. Sign in again in Settings.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('an unexpected error from syncNow is reported, not thrown', (
+    tester,
+  ) async {
+    await _pump(tester, _ThrowingEngine());
+    await _pull(tester, 'row');
+    await tester.pumpAndSettle();
+    expect(find.byType(RefreshProgressIndicator), findsNothing);
+    expect(
+      find.text("Sync didn't work. It will try again shortly."),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a busy sync that never finishes times out with no snackbar', (
+    tester,
+  ) async {
+    final engine = _BusyEngine();
+    await _pumpBusy(tester, engine);
+    await _pull(tester, 'row');
+    expect(find.byType(RefreshProgressIndicator), findsOneWidget);
+    await tester.pump(const Duration(seconds: 61));
+    await tester.pumpAndSettle();
+    expect(find.byType(RefreshProgressIndicator), findsNothing);
+    expect(find.byType(SnackBar), findsNothing);
   });
 }

@@ -161,7 +161,9 @@ class _NoteReadViewState extends State<NoteReadView> {
             child: Text(
               body
                   .substring(line.contentStart, line.end)
-                  .replaceFirst(RegExp(r'\n\s*```.*$'), ''),
+                  // The closing fence, which an empty block has as its
+                  // only content line.
+                  .replaceFirst(RegExp(r'(?:^|\n)\s*```.*$'), ''),
               style: base.copyWith(
                 fontFamily: 'monospace',
                 fontFamilyFallback: const ['Courier New', 'Courier'],

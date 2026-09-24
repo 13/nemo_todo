@@ -33,10 +33,15 @@ class TaskLinkChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
     final colors = Theme.of(context).colorScheme;
-    final task = ref.watch(taskByIdProvider(taskId)).value;
-    final gone = task == null || task.isDeleted;
+    final watched = ref.watch(taskByIdProvider(taskId));
+    final task = watched.value;
+    // Deleted only once the store has said so: until the first answer
+    // the chip shows as an open task, not a flash of "Task deleted".
+    final gone = watched.hasValue && (task == null || task.isDeleted);
     final (IconData icon, Color color, String label) = gone
         ? (Icons.remove_circle_outline, colors.outline, l.noteTaskDeleted)
+        : task == null
+        ? (Icons.task_alt, colors.primary, '')
         : task.done
         ? (Icons.check_circle, colors.primary, task.title)
         : (Icons.task_alt, colors.primary, task.title);

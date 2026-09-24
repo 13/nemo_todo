@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/features/notes/ui/task_link_chip.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
+import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
 
@@ -24,6 +29,32 @@ void main() {
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
 
     await app.container.read(tasksRepositoryProvider).delete('t1');
+    await tester.pumpAndSettle();
+    expect(find.text('Task deleted'), findsOneWidget);
+  });
+
+  testWidgets('a task still loading shows as open, not deleted', (
+    tester,
+  ) async {
+    final pending = StreamController<Task?>();
+    addTearDown(pending.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskByIdProvider('t1').overrideWith((ref) => pending.stream),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
+          home: Scaffold(body: TaskLinkChip(taskId: 't1')),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byIcon(Icons.task_alt), findsOneWidget);
+    expect(find.text('Task deleted'), findsNothing);
+
+    pending.add(null);
     await tester.pumpAndSettle();
     expect(find.text('Task deleted'), findsOneWidget);
   });

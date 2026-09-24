@@ -228,6 +228,9 @@ class _MakeTodoSheetState extends ConsumerState<_MakeTodoSheet> {
                   onChanged: (v) => setState(() => _checklistAsSubtasks = v),
                 ),
               const SizedBox(height: 12),
+              // `initialValue` follows [listId] when it changes -- the
+              // field resets to it on update -- so the note's list shows
+              // even when the lists arrive after the first build.
               DropdownButtonFormField<String>(
                 key: const Key('todo-list'),
                 initialValue: listId,

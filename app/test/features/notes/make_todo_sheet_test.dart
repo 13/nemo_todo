@@ -124,4 +124,31 @@ void main() {
     expect(off!.tasks.single.subtasks, isEmpty);
     expect(off.tasks.single.notes, 'Sunday\n- [ ] milk');
   });
+
+  appTest('the list field shows the note list once lists arrive', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, initialLocation: '/notes');
+    await tester.pumpAndSettle();
+
+    // No 'l1' yet when the sheet opens: it falls back to the Inbox, then
+    // must switch to Kitchen when that list turns up.
+    final r = await open(
+      tester,
+      app,
+      candidates: const [TodoCandidate(title: 'milk', anchor: 4)],
+      interact: () async {
+        await app.seedList('l1', 'Kitchen');
+        await tester.pumpAndSettle();
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('todo-list')),
+            matching: find.text('Kitchen'),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+    expect(r!.listId, 'l1');
+  });
 }

@@ -78,4 +78,9 @@ void main() {
     expect(opened, 'https://a.io');
     expect(at, isNull);
   });
+
+  testWidgets('an empty code block shows no fence', (tester) async {
+    await _pump(tester, body: '```\n```');
+    expect(find.textContaining('```', findRichText: true), findsNothing);
+  });
 }

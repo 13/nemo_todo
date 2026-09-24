@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,11 @@ class CelebrationOverlay extends ConsumerStatefulWidget {
 
 /// How far above the bottom safe area the message pill sits.
 const _pillLift = 200.0;
+
+/// How far above the keyboard's top the message pill sits while it is up:
+/// Today's quick-add bar rides on the keyboard (about 106), plus the same
+/// little room between as [_pillLift] leaves.
+const _pillKeyboardLift = 120.0;
 
 class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
   final _confetti = ConfettiController(
@@ -246,8 +252,14 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
             left: 16,
             right: 16,
             // Clear of the navigation bar (80) and Today's quick-add bar
-            // on top of it (about 106), with a little room between.
-            bottom: MediaQuery.paddingOf(context).bottom + _pillLift,
+            // on top of it (about 106), with a little room between. The
+            // keyboard hides the navigation bar and the quick-add bar rides
+            // on top of it instead, so with the keyboard up the pill clears
+            // that bar, or it would be drawn behind the keyboard.
+            bottom: max(
+              MediaQuery.paddingOf(context).bottom + _pillLift,
+              MediaQuery.viewInsetsOf(context).bottom + _pillKeyboardLift,
+            ),
             child: Center(
               child: MotivationPill(
                 key: const Key('motivation-pill'),

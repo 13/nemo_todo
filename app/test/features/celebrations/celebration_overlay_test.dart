@@ -505,6 +505,55 @@ void main() {
     expect(find.byKey(const Key('motivation-pill')), findsNothing);
   });
 
+  appTest('a second tick replaces the message and keeps the pill up', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      celebrate: true,
+      seed: seedToday(['A', 'B', 'C', 'D']),
+    );
+    await tickOff(tester, 'A'); // The first achievement: a banner, no pill.
+    final pill = find.byKey(const Key('motivation-pill'));
+    String pillText() => tester
+        .widget<Text>(find.descendant(of: pill, matching: find.byType(Text)))
+        .data!;
+    double opacity() => tester
+        .widget<Opacity>(
+          find.descendant(of: pill, matching: find.byType(Opacity)),
+        )
+        .opacity;
+
+    await tickOff(tester, 'B');
+    final first = pillText();
+    await tickOff(tester, 'C'); // Well inside the first message's hold.
+
+    expect(pill, findsOneWidget);
+    expect(pillText(), isNot(first));
+    final second = pillText();
+    // Past the point where the first tick's timers would have hidden the
+    // pill and taken it away, still inside the second tick's hold.
+    await tester.pump(const Duration(seconds: 2));
+    expect(pill, findsOneWidget);
+    expect(pillText(), second);
+    expect(opacity(), 1);
+  });
+
+  appTest('clearing Today shows the pill along with the confetti', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      celebrate: true,
+      seed: seedToday(['Only'], kv: {KvKeys.achievements: 'false'}),
+    );
+
+    await tickOff(tester, 'Only');
+
+    expect(confetti(tester), ConfettiControllerState.playing);
+    expect(find.byKey(const Key('motivation-pill')), findsOneWidget);
+  });
+
   appTest('the pill sits clear of the navigation and quick-add bars', (
     tester,
   ) async {
@@ -515,6 +564,25 @@ void main() {
     final pill = tester.getRect(find.byKey(const Key('motivation-pill')));
     expect(pill.overlaps(tester.getRect(find.byType(NavigationBar))), isFalse);
     expect(pill.overlaps(tester.getRect(find.byType(QuickAddBar))), isFalse);
+  });
+
+  appTest('with the keyboard up the pill sits above it and quick add', (
+    tester,
+  ) async {
+    await pumpApp(tester, celebrate: true, seed: seedToday(['A', 'B', 'C']));
+    await tickOff(tester, 'A');
+    // A 300 px keyboard; pumpApp's teardown resets the view, this included.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pump();
+    await tickOff(tester, 'B');
+
+    final pill = tester.getRect(find.byKey(const Key('motivation-pill')));
+    final quickAdd = tester.getRect(find.byType(QuickAddBar));
+    final keyboardTop = tester.view.physicalSize.height - 300;
+    expect(pill.bottom, lessThanOrEqualTo(keyboardTop));
+    expect(pill.overlaps(quickAdd), isFalse);
+    expect(pill.bottom, lessThanOrEqualTo(quickAdd.top));
   });
 
   appTest('the pill never blocks a tap', (tester) async {

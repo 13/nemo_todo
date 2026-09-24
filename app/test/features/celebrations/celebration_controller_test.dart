@@ -47,6 +47,18 @@ class _GatedRepository extends AchievementsRepository {
   }
 }
 
+/// A repository whose Today counts cannot be read.
+class _CountlessRepository extends AchievementsRepository {
+  // The parameter is private in the super constructor (`this._db`), so it
+  // cannot share its name across libraries.
+  // ignore: matching_super_parameters
+  _CountlessRepository(super.db, {super.now});
+
+  @override
+  Future<({int done, int open})> todayCounts() =>
+      Future.error(StateError('no counts'));
+}
+
 void main() {
   late AppDatabase db;
   late TasksRepository tasks;
@@ -138,6 +150,66 @@ void main() {
     celebrate = false;
     await tick(await add('Second'));
     expect(events, hasLength(1));
+  });
+
+  test('a task due earlier today at a set time was overdue', () async {
+    await tick(await add('Warm-up'));
+    // Due at 09:00 today, ticked at 10:00: Today lists it under Overdue.
+    final t = await tasks.create(
+      listId: inbox,
+      title: 'Nine',
+      dueAt: DateTime(
+        testNow.year,
+        testNow.month,
+        testNow.day,
+        9,
+      ).millisecondsSinceEpoch,
+      dueHasTime: true,
+    );
+    await add('Other', dueToday: true);
+    await tick(t);
+    expect(cheerOf(events.last)!.context.wasOverdue, isTrue);
+  });
+
+  test('a task due later today at a set time was not overdue', () async {
+    await tick(await add('Warm-up'));
+    final t = await tasks.create(
+      listId: inbox,
+      title: 'Eleven',
+      dueAt: DateTime(
+        testNow.year,
+        testNow.month,
+        testNow.day,
+        11,
+      ).millisecondsSinceEpoch,
+      dueHasTime: true,
+    );
+    await add('Other', dueToday: true);
+    await tick(t);
+    expect(cheerOf(events.last)!.context.wasOverdue, isFalse);
+  });
+
+  test('a tick still celebrates when the message cannot be chosen', () async {
+    final countless = _CountlessRepository(db, now: () => testNow);
+    final quiet = CelebrationController(
+      countless,
+      now: () => testNow,
+      celebrate: () => true,
+      showAchievements: () => true,
+    );
+    addTearDown(quiet.dispose);
+    final quietEvents = <CelebrationEvent>[];
+    quiet.events.listen(quietEvents.add);
+    await quiet.backfill();
+    // The first completion unlocks an achievement; the second is a tick.
+    for (final title in ['First', 'Second']) {
+      final t = await add(title);
+      await tasks.setDone(t.id, done: true);
+      await quiet.onCompleted(t);
+    }
+    await pumpEventQueue();
+    expect(quietEvents.last, isA<TickCelebration>());
+    expect((quietEvents.last as TickCelebration).cheer, isNull);
   });
 
   test('onCompleted returns what it emitted, and passes showPill', () async {

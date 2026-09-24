@@ -177,7 +177,13 @@ class CelebrationController {
         wasInToday: wasInToday,
         firstToday: await _repo.doneTodayCount() == 1,
         streak: (await _repo.stats()).currentStreak,
-        wasOverdue: task.dueAt != null && task.dueAt! < dayStartMs(_now()),
+        // As the Today screen's Overdue section has it: a time already
+        // passed today counts, not only an earlier day.
+        wasOverdue: isOverdue(
+          dueAt: task.dueAt,
+          hasTime: task.dueHasTime,
+          now: _now(),
+        ),
         cleared: cleared,
       );
       final motivation = pickMotivation(

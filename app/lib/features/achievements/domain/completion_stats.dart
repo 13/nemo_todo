@@ -10,6 +10,7 @@ class CompletionStats {
     this.bestStreak = 0,
     this.clearedDays = 0,
     this.maxSubtasksOnDoneTask = 0,
+    this.lastDoneAt,
   });
 
   /// Worked out from every task and subtask row on the device.
@@ -28,10 +29,12 @@ class CompletionStats {
     ];
 
     var onTime = 0;
+    int? last;
     final days = <DateTime>{};
     for (final t in done) {
       final doneAt = t.doneAt;
       if (doneAt == null) continue;
+      if (last == null || doneAt > last) last = doneAt;
       days.add(startOfDay(DateTime.fromMillisecondsSinceEpoch(doneAt)));
       final dueAt = t.dueAt;
       if (dueAt == null) continue;
@@ -60,6 +63,7 @@ class CompletionStats {
       bestStreak: _bestStreak(days),
       clearedDays: clearedDays,
       maxSubtasksOnDoneTask: maxSubtasks,
+      lastDoneAt: last,
     );
   }
 
@@ -78,6 +82,10 @@ class CompletionStats {
 
   /// The longest live checklist on a done task.
   final int maxSubtasksOnDoneTask;
+
+  /// When the latest completion happened, in epoch milliseconds; null
+  /// before the first one.
+  final int? lastDoneAt;
 
   // Days are stepped by calendar date rather than by 24 hours, which is
   // what keeps a daylight saving change from breaking a streak.

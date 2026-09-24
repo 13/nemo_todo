@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
@@ -8,9 +9,12 @@ import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/celebrations/data/celebration_sound.dart';
 import 'package:nemo/features/celebrations/ui/achievement_banner.dart';
 import 'package:nemo/features/celebrations/ui/celebration_controller.dart';
+import 'package:nemo/features/celebrations/ui/motivation_pill.dart';
+import 'package:nemo/features/celebrations/ui/motivation_text.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/sync/ui/sync_state.dart';
+import 'package:nemo/l10n/app_localizations.dart';
 
 /// Shows what a completion earned, above every screen.
 ///
@@ -30,6 +34,14 @@ class CelebrationOverlay extends ConsumerStatefulWidget {
   ConsumerState<CelebrationOverlay> createState() => _CelebrationOverlayState();
 }
 
+/// How far above the bottom safe area the message pill sits.
+const _pillLift = 200.0;
+
+/// How far above the keyboard's top the message pill sits while it is up:
+/// Today's quick-add bar rides on the keyboard (about 106), plus the same
+/// little room between as [_pillLift] leaves.
+const _pillKeyboardLift = 120.0;
+
 class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
   final _confetti = ConfettiController(
     duration: const Duration(milliseconds: 600),
@@ -38,6 +50,13 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
   List<Achievement>? _banner;
   Timer? _hideBanner;
   Timer? _stopConfetti;
+
+  /// The message pill: its text while it is on screen (fading out
+  /// included), and whether it is showing or on its way out.
+  String? _pillText;
+  bool _pillVisible = false;
+  Timer? _hidePill;
+  Timer? _removePill;
 
   /// The confetti and the banner, in an [Overlay] of their own: this sits
   /// outside the navigator's overlay, and the banner's close button shows a
@@ -60,6 +79,8 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
     unawaited(_events?.cancel());
     _hideBanner?.cancel();
     _stopConfetti?.cancel();
+    _hidePill?.cancel();
+    _removePill?.cancel();
     // The Overlay below has already unmounted, so the entry no longer
     // reports itself mounted, but it still has to be removed before it
     // can be disposed; removing from an unmounted Overlay is a no-op.
@@ -78,6 +99,16 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
   void _show(CelebrationEvent event) {
     if (!mounted) return;
     final celebrate = ref.read(celebrationsEnabledProvider);
+    final cheer = switch (event) {
+      TickCelebration(:final cheer, :final showPill) when showPill => cheer,
+      DayClearedCelebration(:final cheer, :final showPill) when showPill =>
+        cheer,
+      _ => null,
+    };
+    // This sits in MaterialApp.builder, below the app's Localizations.
+    if (cheer != null && celebrate) {
+      _showPill(motivationText(L.of(context), cheer.motivation, cheer.context));
+    }
     final big = event is! TickCelebration;
     if (celebrate) {
       unawaited(
@@ -107,6 +138,27 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
         _hideBanner = Timer(const Duration(seconds: 4), _closeBanner);
       }
     }
+  }
+
+  /// Shows [text] in the pill, replacing whatever it said before at once.
+  void _showPill(String text) {
+    _hidePill?.cancel();
+    _removePill?.cancel();
+    _pillText = text;
+    _pillVisible = true;
+    _layer.markNeedsBuild();
+    // 150 ms to fade in, then about two and a half seconds to be read.
+    _hidePill = Timer(const Duration(milliseconds: 2650), () {
+      if (!mounted) return;
+      _pillVisible = false;
+      _layer.markNeedsBuild();
+      // Gone from the tree once the 200 ms fade out is over.
+      _removePill = Timer(const Duration(milliseconds: 200), () {
+        if (!mounted) return;
+        _pillText = null;
+        _layer.markNeedsBuild();
+      });
+    });
   }
 
   void _closeBanner() {
@@ -192,6 +244,28 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
                     ),
                   ),
                 ),
+              ),
+            ),
+          ),
+        if (_pillText case final text?)
+          Positioned(
+            left: 16,
+            right: 16,
+            // Clear of the navigation bar (80) and Today's quick-add bar
+            // on top of it (about 106), with a little room between. The
+            // keyboard hides the navigation bar and the quick-add bar rides
+            // on top of it instead, so with the keyboard up the pill clears
+            // that bar, or it would be drawn behind the keyboard.
+            bottom: max(
+              MediaQuery.paddingOf(context).bottom + _pillLift,
+              MediaQuery.viewInsetsOf(context).bottom + _pillKeyboardLift,
+            ),
+            child: Center(
+              child: MotivationPill(
+                key: const Key('motivation-pill'),
+                text: text,
+                visible: _pillVisible,
+                animate: !MediaQuery.disableAnimationsOf(context),
               ),
             ),
           ),

@@ -2000,6 +2000,252 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Open'**
   String get commonOpen;
+
+  /// Message after ticking off a task: today's list is now empty.
+  ///
+  /// In en, this message translates to:
+  /// **'All clear for today. Enjoy it.'**
+  String get motivationDayCleared0;
+
+  /// Message after ticking off a task: today's list is now empty.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s everything for today. Well done.'**
+  String get motivationDayCleared1;
+
+  /// Message after ticking off a task: today's list is now empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s list is empty. Nice work.'**
+  String get motivationDayCleared2;
+
+  /// Message after ticking off a task: today's list is now empty.
+  ///
+  /// In en, this message translates to:
+  /// **'All done. Time for something you enjoy.'**
+  String get motivationDayCleared3;
+
+  /// Message after ticking off a task: exactly one Today task is left open.
+  ///
+  /// In en, this message translates to:
+  /// **'One to go.'**
+  String get motivationLastOne0;
+
+  /// Message after ticking off a task: exactly one Today task is left open.
+  ///
+  /// In en, this message translates to:
+  /// **'Just one left.'**
+  String get motivationLastOne1;
+
+  /// Message after ticking off a task: exactly one Today task is left open.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearly there. One more.'**
+  String get motivationLastOne2;
+
+  /// Message after ticking off a task: this tick crossed half of today's tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Halfway there.'**
+  String get motivationHalfway0;
+
+  /// Message after ticking off a task: this tick crossed half of today's tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Half of today, done.'**
+  String get motivationHalfway1;
+
+  /// Message after ticking off a task: this tick crossed half of today's tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Good pace. Halfway through.'**
+  String get motivationHalfway2;
+
+  /// Message after ticking off a task: first completion today, continuing a streak of two days or more.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {days} in a row.'**
+  String motivationStreakDay0(int days);
+
+  /// Message after ticking off a task: first completion today, continuing a streak of two days or more.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days running. Keep it gentle.'**
+  String motivationStreakDay1(int days);
+
+  /// Message after ticking off a task: first completion today, continuing a streak of two days or more.
+  ///
+  /// In en, this message translates to:
+  /// **'Another day, another step. {days} in a row.'**
+  String motivationStreakDay2(int days);
+
+  /// Message after ticking off a task: first completion today, no streak.
+  ///
+  /// In en, this message translates to:
+  /// **'Good start.'**
+  String get motivationFirstOfDay0;
+
+  /// Message after ticking off a task: first completion today, no streak.
+  ///
+  /// In en, this message translates to:
+  /// **'First one done. The rest is easier.'**
+  String get motivationFirstOfDay1;
+
+  /// Message after ticking off a task: first completion today, no streak.
+  ///
+  /// In en, this message translates to:
+  /// **'And the day is moving.'**
+  String get motivationFirstOfDay2;
+
+  /// Message after ticking off a task: first completion today, no streak.
+  ///
+  /// In en, this message translates to:
+  /// **'Off to a good start.'**
+  String get motivationFirstOfDay3;
+
+  /// Message after ticking off a task: the task was due before today.
+  ///
+  /// In en, this message translates to:
+  /// **'That one\'s been waiting. Good to have it gone.'**
+  String get motivationOverdue0;
+
+  /// Message after ticking off a task: the task was due before today.
+  ///
+  /// In en, this message translates to:
+  /// **'Off your mind at last.'**
+  String get motivationOverdue1;
+
+  /// Message after ticking off a task: the task was due before today.
+  ///
+  /// In en, this message translates to:
+  /// **'Finally done. That feels better.'**
+  String get motivationOverdue2;
+
+  /// Message after ticking off a task: a count of today's progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done today.'**
+  String motivationProgress0(int done, int total);
+
+  /// Message after ticking off a task: a count of today's progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} down, {left} to go.'**
+  String motivationProgress1(int done, int left);
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice, one less thing.'**
+  String get motivationGeneric0;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Done and dusted.'**
+  String get motivationGeneric1;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress feels good.'**
+  String get motivationGeneric2;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Another one done.'**
+  String get motivationGeneric3;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticked off.'**
+  String get motivationGeneric4;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s handled.'**
+  String get motivationGeneric5;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Good work.'**
+  String get motivationGeneric6;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'One step further.'**
+  String get motivationGeneric7;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Nicely done.'**
+  String get motivationGeneric8;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossed off.'**
+  String get motivationGeneric9;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going, gently.'**
+  String get motivationGeneric10;
+
+  /// Message after ticking off a task: no more specific situation applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Small steps count.'**
+  String get motivationGeneric11;
+
+  /// Today header's count of tasks completed out of total.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String todayProgressCount(int done, int total);
+
+  /// Today header's line: nothing has been completed today yet, after 3 or more days without a completion.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back. One small thing is a good start.'**
+  String get todayWelcomeBack0;
+
+  /// Today header's line: nothing has been completed today yet, after 3 or more days without a completion.
+  ///
+  /// In en, this message translates to:
+  /// **'Good to see you. Start with something easy.'**
+  String get todayWelcomeBack1;
+
+  /// Today header's line: nothing has been completed today yet.
+  ///
+  /// In en, this message translates to:
+  /// **'A fresh start.'**
+  String get todayFreshStart0;
+
+  /// Today header's line: nothing has been completed today yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one to begin.'**
+  String get todayFreshStart1;
+
+  /// Today header's line: nothing has been completed today yet.
+  ///
+  /// In en, this message translates to:
+  /// **'One thing at a time.'**
+  String get todayFreshStart2;
+
+  /// Today header's line: nothing Today shows is open any more.
+  ///
+  /// In en, this message translates to:
+  /// **'All clear. Enjoy the rest of your day.'**
+  String get todayAllClear;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

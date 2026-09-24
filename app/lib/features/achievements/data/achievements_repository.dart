@@ -66,6 +66,53 @@ class AchievementsRepository {
     return (await query.get()).isEmpty;
   }
 
+  /// Today as the Today screen shows it: tasks due today or earlier, in a
+  /// list that still exists, split into those completed today and those
+  /// still open.
+  Future<({int done, int open})> todayCounts() async {
+    final today = dayStartMs(_now());
+    final tomorrow = dayStartMsFrom(_now(), 1);
+    final rows =
+        await (_db.select(_db.tasks).join([
+              innerJoin(
+                _db.lists,
+                _db.lists.id.equalsExp(_db.tasks.listId),
+                useColumns: false,
+              ),
+            ])..where(
+              _db.tasks.deletedAt.isNull() &
+                  _db.lists.deletedAt.isNull() &
+                  _db.tasks.dueAt.isNotNull() &
+                  _db.tasks.dueAt.isSmallerThanValue(tomorrow) &
+                  (_db.tasks.done.equals(false) |
+                      _db.tasks.doneAt.isBiggerOrEqualValue(today)),
+            ))
+            .map((r) => r.readTable(_db.tasks))
+            .get();
+    final done = rows.where((t) => t.done).length;
+    return (done: done, open: rows.length - done);
+  }
+
+  /// Tasks completed today, whatever their due date.
+  Future<int> doneTodayCount() async {
+    final today = dayStartMs(_now());
+    final rows =
+        await (_db.select(_db.tasks).join([
+              innerJoin(
+                _db.lists,
+                _db.lists.id.equalsExp(_db.tasks.listId),
+                useColumns: false,
+              ),
+            ])..where(
+              _db.tasks.deletedAt.isNull() &
+                  _db.lists.deletedAt.isNull() &
+                  _db.tasks.done.equals(true) &
+                  _db.tasks.doneAt.isBiggerOrEqualValue(today),
+            ))
+            .get();
+    return rows.length;
+  }
+
   /// Counts today as a cleared day, once however often it is cleared.
   Future<void> recordClearedDay() async {
     final day = startOfDay(_now()).toIso8601String().substring(0, 10);

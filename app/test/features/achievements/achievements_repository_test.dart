@@ -146,4 +146,24 @@ void main() {
     await tasks.setDone(a.id, done: true);
     await reached;
   });
+
+  test('todayCounts and doneTodayCount follow Today', () async {
+    final a = await tasks.create(
+      listId: inbox,
+      title: 'A',
+      dueAt: dayStartMs(testNow),
+    );
+    await tasks.create(listId: inbox, title: 'B', dueAt: dayStartMs(testNow));
+    final c = await tasks.create(listId: inbox, title: 'C'); // no due date
+    await tasks.create(
+      listId: inbox,
+      title: 'Later',
+      dueAt: dayStartMsFrom(testNow, 3),
+    );
+    await tasks.setDone(a.id, done: true);
+    await tasks.setDone(c.id, done: true);
+
+    expect(await repo.todayCounts(), (done: 1, open: 1));
+    expect(await repo.doneTodayCount(), 2);
+  });
 }

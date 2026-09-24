@@ -310,6 +310,8 @@
   "noteMakeTodo": "Als Aufgabe",
   "noteMakeTodoFromNote": "Aufgabe aus Notiz",
   "noteOpenTask": "Aufgabe öffnen",
+  "noteMakeTodoTip": "Tipp: Markierten Text mit „Als Aufgabe“ in eine Aufgabe verwandeln.",
+  "noteReadLongPressHint": "Zeile lange drücken, um daraus eine Aufgabe zu machen.",
   "noteTodoPerLine": "Eine Aufgabe pro Zeile",
   "noteTodoWithSubtasks": "Eine Aufgabe mit Unteraufgaben",
   "noteTodoChecklistSubtasks": "Checkliste wird zu Unteraufgaben",

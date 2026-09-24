@@ -1174,6 +1174,14 @@ class LIt extends L {
   String get noteOpenTask => 'Apri attività';
 
   @override
+  String get noteMakeTodoTip =>
+      'Suggerimento: trasforma il testo selezionato in un\'attività con Crea attività.';
+
+  @override
+  String get noteReadLongPressHint =>
+      'Tieni premuta una riga per farne un\'attività.';
+
+  @override
   String get noteTodoPerLine => 'Un\'attività per riga';
 
   @override

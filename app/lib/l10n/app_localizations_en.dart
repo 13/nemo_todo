@@ -1163,6 +1163,13 @@ class LEn extends L {
   String get noteOpenTask => 'Open task';
 
   @override
+  String get noteMakeTodoTip =>
+      'Tip: turn selected text into a task with Make todo.';
+
+  @override
+  String get noteReadLongPressHint => 'Long-press a line to make it a todo.';
+
+  @override
   String get noteTodoPerLine => 'One task per line';
 
   @override

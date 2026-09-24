@@ -1173,6 +1173,14 @@ class LDe extends L {
   String get noteOpenTask => 'Aufgabe öffnen';
 
   @override
+  String get noteMakeTodoTip =>
+      'Tipp: Markierten Text mit „Als Aufgabe“ in eine Aufgabe verwandeln.';
+
+  @override
+  String get noteReadLongPressHint =>
+      'Zeile lange drücken, um daraus eine Aufgabe zu machen.';
+
+  @override
   String get noteTodoPerLine => 'Eine Aufgabe pro Zeile';
 
   @override

@@ -1588,4 +1588,111 @@ void main() {
     await tester.pumpAndSettle();
     expect(calls, [false, true, false, true]);
   });
+
+  const makeTodoTip = 'Tip: turn selected text into a task with Make todo.';
+  const readHint = 'Long-press a line to make it a todo.';
+
+  appTest('the first non-collapsed selection in a note body shows the '
+      'make-todo tip once, and remembers it', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsNothing);
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    // A cursor, not a selection: no tip yet.
+    expect(find.text(makeTodoTip), findsNothing);
+
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+    expect(
+      await app.container.read(kvStoreProvider).get('tips.noteMakeTodo'),
+      '1',
+    );
+
+    // A second selection on the same screen shows nothing further -- there
+    // is still exactly the one tip on screen, not a second stacked on it.
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 3,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsOneWidget);
+  });
+
+  appTest('reopening a note after the make-todo tip has already shown shows it '
+      'no more', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.container.read(kvStoreProvider).set('tips.noteMakeTodo', '1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 4,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(makeTodoTip), findsNothing);
+  });
+
+  appTest('a note opening in the read view for the first time shows the '
+      'read-view hint, and remembers it', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.container.read(kvStoreProvider).set('notes.readView', '1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('note-read-hint')), findsOneWidget);
+    expect(find.text(readHint), findsOneWidget);
+    expect(
+      await app.container.read(kvStoreProvider).get('tips.noteReadLongPress'),
+      '1',
+    );
+  });
+
+  appTest('closing the read-view hint hides it, and it stays gone on '
+      'reopening', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.container.read(kvStoreProvider).set('notes.readView', '1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-hint')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-read-hint-close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-hint')), findsNothing);
+
+    app.router.go('/notes');
+    await tester.pumpAndSettle();
+    app.router.go('/notes/n1');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-hint')), findsNothing);
+  });
+
+  appTest(
+    'a read view opened after the hint key is already set shows no hint',
+    (tester) async {
+      final app = await pumpApp(tester, initialLocation: '/notes/n1');
+      await app.container.read(kvStoreProvider).set('notes.readView', '1');
+      await app.container
+          .read(kvStoreProvider)
+          .set('tips.noteReadLongPress', '1');
+      await app.seedList('l1', 'Kitchen');
+      await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('note-read-hint')), findsNothing);
+    },
+  );
 }

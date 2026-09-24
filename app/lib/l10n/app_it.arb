@@ -310,6 +310,8 @@
   "noteMakeTodo": "Crea attività",
   "noteMakeTodoFromNote": "Attività dalla nota",
   "noteOpenTask": "Apri attività",
+  "noteMakeTodoTip": "Suggerimento: trasforma il testo selezionato in un'attività con Crea attività.",
+  "noteReadLongPressHint": "Tieni premuta una riga per farne un'attività.",
   "noteTodoPerLine": "Un'attività per riga",
   "noteTodoWithSubtasks": "Un'attività con sottoattività",
   "noteTodoChecklistSubtasks": "La checklist diventa sottoattività",

@@ -1959,6 +1959,18 @@ abstract class L {
   /// **'Open task'**
   String get noteOpenTask;
 
+  /// One-time snackbar shown the first time a note body's text is selected on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: turn selected text into a task with Make todo.'**
+  String get noteMakeTodoTip;
+
+  /// One-time dismissible hint shown above a note's read view the first time it opens on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press a line to make it a todo.'**
+  String get noteReadLongPressHint;
+
   /// Make-todo sheet choice: each selected line becomes its own task.
   ///
   /// In en, this message translates to:

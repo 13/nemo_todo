@@ -18,6 +18,7 @@ import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
 import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/features/notes/ui/note_editor_sections.dart';
 import 'package:nemo/features/notes/ui/note_read_view.dart';
+import 'package:nemo/features/notes/ui/note_tips.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/notes/ui/task_link_chip.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
@@ -76,15 +77,25 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   // provider if that is ever rebuilt.
   late NotesRepository _repo;
 
+  // One-time tips, read from the same KvStore as everything else
+  // device-local. Kept for `dispose`'s sake like `_repo`, though nothing
+  // here writes after the page is gone.
+  late NoteTips _tips;
+
   @override
   void initState() {
     super.initState();
     _repo = ref.read(notesRepositoryProvider);
+    _tips = NoteTips(ref.read(kvStoreProvider));
     _titleFocus.addListener(_onFocusChange);
     _bodyFocus.addListener(_onFocusChange);
     // A listener, not `onChanged`: toolbar buttons and shortcuts write
     // `_body.value` directly, which `onChanged` never hears about.
     _body.addListener(_onBodyChanged);
+    // Selection-only changes are exactly what `_onBodyChanged` ignores (it
+    // only cares about text), so the selection tip needs a listener of its
+    // own.
+    _body.addListener(_checkSelectionTip);
   }
 
   String _lastBody = '';
@@ -106,6 +117,56 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       _bodyDirty = true;
       _scheduleSave();
     }
+  }
+
+  // Set as soon as the first non-collapsed selection while focused has
+  // been seen, so a flurry of further selection changes -- while
+  // `_maybeShowSelectionTip`'s KvStore round trip is still in flight, or
+  // once it has answered -- neither ask again nor show the tip twice.
+  bool _selectionTipChecked = false;
+
+  void _checkSelectionTip() {
+    if (_selectionTipChecked) return;
+    if (!_bodyFocus.hasFocus) return;
+    final selection = _body.selection;
+    if (!selection.isValid || selection.isCollapsed) return;
+    _selectionTipChecked = true;
+    unawaited(_maybeShowSelectionTip());
+  }
+
+  Future<void> _maybeShowSelectionTip() async {
+    // Captured before the KvStore round trip, like `_makeTodo` does for its
+    // own snackbar: both outlive the `await` that follows.
+    final messenger = ScaffoldMessenger.of(context);
+    final tip = L.of(context).noteMakeTodoTip;
+    if (!await _tips.shouldShow(NoteTips.makeTodo)) return;
+    await _tips.markShown(NoteTips.makeTodo);
+    if (!mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(tip)));
+  }
+
+  // Set once the read view's first build has asked the KvStore whether to
+  // show its hint, so a rebuild -- a sync landing, say -- doesn't ask
+  // again. `_showReadHint` only flips true once that answer is yes;
+  // closing it flips it back without touching the store again.
+  bool _readHintChecked = false;
+  bool _showReadHint = false;
+
+  void _checkReadHint() {
+    if (_readHintChecked) return;
+    _readHintChecked = true;
+    unawaited(_maybeShowReadHint());
+  }
+
+  Future<void> _maybeShowReadHint() async {
+    if (!await _tips.shouldShow(NoteTips.readLongPress)) return;
+    // Marked shown as soon as it is decided to show it, not when closed:
+    // the point is that it has been seen once, whether or not it is
+    // dismissed before the page goes.
+    await _tips.markShown(NoteTips.readLongPress);
+    if (mounted) setState(() => _showReadHint = true);
   }
 
   @override
@@ -577,6 +638,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
     _fill(note);
     final readView = _showReadView(note);
+    if (readView) _checkReadHint();
     // Cmd on Apple platforms, Ctrl elsewhere -- binding both everywhere
     // would shadow macOS/iOS's native Ctrl+B / Ctrl+K text-field
     // navigation, which the platform's own text field still wants.
@@ -653,7 +715,12 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                             border: InputBorder.none,
                           ),
                         ),
-                        if (readView)
+                        if (readView) ...[
+                          if (_showReadHint)
+                            ReadViewHint(
+                              onClose: () =>
+                                  setState(() => _showReadHint = false),
+                            ),
                           NoteReadView(
                             key: const Key('note-read-view'),
                             body: _body.text,
@@ -664,8 +731,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                             onOpenLink: (url) =>
                                 openNoteLink(context, ref, url),
                             taskChip: (id) => TaskLinkChip(taskId: id),
-                          )
-                        else
+                          ),
+                        ] else
                           CallbackShortcuts(
                             bindings: {
                               SingleActivator(

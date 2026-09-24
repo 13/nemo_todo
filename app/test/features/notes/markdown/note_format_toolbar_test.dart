@@ -53,6 +53,8 @@ void main() {
                     onInsertLink: () => unawaited(
                       promptForLink(context, controller, focusNode: focus),
                     ),
+                    onMakeTodo: () {},
+                    onOpenTask: (_) {},
                   ),
                 ],
               ),
@@ -188,5 +190,21 @@ void main() {
     expect(isWebLink('javascript:alert(1)'), isFalse);
     expect(isWebLink('file:///etc/passwd'), isFalse);
     expect(isWebLink('mailto:a@b.c'), isFalse);
+  });
+
+  testWidgets('a selection from a linked line still offers make todo; only '
+      'a cursor on it offers the task', (tester) async {
+    const text = 'milk [→ task](nemo://task/t1)\nbread';
+    await pump(tester, sel(text, 0, text.length));
+    expect(find.byKey(const Key('md-open-task')), findsNothing);
+    final make = tester.widget<IconButton>(
+      find.byKey(const Key('md-make-todo')),
+    );
+    expect(make.onPressed, isNotNull);
+
+    controller.value = at(text, 2);
+    await tester.pump();
+    expect(find.byKey(const Key('md-open-task')), findsOneWidget);
+    expect(find.byKey(const Key('md-make-todo')), findsNothing);
   });
 }

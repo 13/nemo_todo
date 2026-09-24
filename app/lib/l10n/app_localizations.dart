@@ -1916,6 +1916,90 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Redo'**
   String get mdRedo;
+
+  /// Label of a task link chip in a note when the linked task no longer exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Task deleted'**
+  String get noteTaskDeleted;
+
+  /// Tooltip of the note app bar button that switches the body to the formatted read view.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatted'**
+  String get noteReadToggle;
+
+  /// Tooltip of the note app bar button that switches the body back to editing its markdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get noteEditToggle;
+
+  /// Action that turns the selected note text or line into a task.
+  ///
+  /// In en, this message translates to:
+  /// **'Make todo'**
+  String get noteMakeTodo;
+
+  /// Row on the note page that turns the whole note into a task.
+  ///
+  /// In en, this message translates to:
+  /// **'Make todo from note'**
+  String get noteMakeTodoFromNote;
+
+  /// Action on a note line that already links to a task; opens that task.
+  ///
+  /// In en, this message translates to:
+  /// **'Open task'**
+  String get noteOpenTask;
+
+  /// Make-todo sheet choice: each selected line becomes its own task.
+  ///
+  /// In en, this message translates to:
+  /// **'One task per line'**
+  String get noteTodoPerLine;
+
+  /// Make-todo sheet choice: the first selected line is the task, the rest its subtasks.
+  ///
+  /// In en, this message translates to:
+  /// **'One task with subtasks'**
+  String get noteTodoWithSubtasks;
+
+  /// Make-todo sheet switch for a whole note: its open checkboxes become subtasks of the new task.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist becomes subtasks'**
+  String get noteTodoChecklistSubtasks;
+
+  /// Make-todo sheet button that creates the task(s).
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get noteTodoCreate;
+
+  /// Snackbar after make-todo created tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Task created} other{{count} tasks created}}'**
+  String noteTodoCreated(int count);
+
+  /// Snackbar after make-todo created tasks while the note was changed elsewhere, so the links were left out.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Task created. The note changed meanwhile, so no link was added.} other{{count} tasks created. The note changed meanwhile, so no links were added.}}'**
+  String noteTodoCreatedNoLink(int count);
+
+  /// Snackbar when creating tasks from a note fails; nothing was changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the task'**
+  String get noteTodoFailed;
+
+  /// Generic action that opens the thing a message is about.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get commonOpen;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

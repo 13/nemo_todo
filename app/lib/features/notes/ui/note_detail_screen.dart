@@ -5,14 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/db/app_database.dart';
+import 'package:nemo/core/db/sync_writes.dart';
+import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
+import 'package:nemo/features/notes/ui/make_todo_sheet.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_editing_controller.dart';
 import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart';
+import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/features/notes/ui/note_editor_sections.dart';
+import 'package:nemo/features/notes/ui/note_read_view.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
+import 'package:nemo/features/notes/ui/task_link_chip.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
+import 'package:nemo/features/tasks/data/tasks_repository.dart';
+import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -78,6 +87,14 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   }
 
   String _lastBody = '';
+
+  // The mode chosen on this page, which wins over the stored preference
+  // from the first toggle on: the preference's stream answers a frame or
+  // more after the write, and the page must switch at once. Null until
+  // then, when the preference decides -- except for an empty note, which
+  // opens in the editor since there is nothing to read.
+  bool? _readView;
+  bool? _openedEmpty;
 
   void _onBodyChanged() {
     if (_body.text == _lastBody) return; // selection-only change
@@ -262,6 +279,273 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   void _insertLink() =>
       unawaited(promptForLink(context, _body, focusNode: _bodyFocus));
 
+  bool _showReadView(Note note) {
+    _openedEmpty ??= note.body.trim().isEmpty;
+    if (_readView case final chosen?) return chosen;
+    if (_openedEmpty!) return false;
+    return ref.watch(noteReadViewProvider).value ?? false;
+  }
+
+  Future<void> _setReadView(bool read) async {
+    if (read) {
+      _bodyFocus.unfocus();
+      await _save();
+    }
+    if (!mounted) return;
+    setState(() => _readView = read);
+    await ref.read(kvStoreProvider).set(noteReadViewKey, read ? '1' : '0');
+  }
+
+  /// Leaves the read view for the editor, the cursor at [offset].
+  void _editAt(int offset) {
+    unawaited(_setReadView(false));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _body.selection = TextSelection.collapsed(offset: offset);
+      _bodyFocus.requestFocus();
+    });
+  }
+
+  /// Writes [body] as an edit of the body, through the same save path as
+  /// typing: for writes that come from outside the field -- a checkbox in
+  /// the read view, task links from make-todo. [selection], when given, is
+  /// where the cursor goes; otherwise it stays where it was.
+  Future<bool> _writeBody(String body, {TextSelection? selection}) {
+    final sel = selection ?? _body.selection;
+    _body.value = TextEditingValue(
+      text: body,
+      selection: sel.isValid && sel.end <= body.length
+          ? sel
+          : TextSelection.collapsed(offset: body.length),
+    );
+    _bodyDirty = true;
+    // The read view draws from `_body.text`; nothing else rebuilds it.
+    setState(() {});
+    return _save();
+  }
+
+  void _openTask(String id) => unawaited(context.push(Routes.task(id)));
+
+  Future<void> _makeTodoFromEditor() async {
+    final candidates = todoCandidates(_body.value);
+    if (candidates.isEmpty) return;
+    await _makeTodo(candidates: candidates, anchoredIn: _body.text);
+  }
+
+  /// Saves first, so the task is made from what the fields show.
+  Future<void> _makeTodoFromNote() async {
+    await _save();
+    if (!mounted) return;
+    await _makeTodo(wholeNote: wholeNoteTodo(_title.text, _body.text));
+  }
+
+  /// Asks, creates the tasks, links them in the body and offers undo.
+  /// A failure part way deletes what was created and leaves the body as
+  /// it was.
+  ///
+  /// [anchoredIn] is the body the [candidates]' anchors point into. The
+  /// sheet stays up as long as the person likes, and a sync can change the
+  /// body meanwhile; the anchors would then land links in the wrong place,
+  /// so none are added. A whole-note link goes at the end and needs no
+  /// anchor.
+  Future<void> _makeTodo({
+    List<TodoCandidate> candidates = const [],
+    WholeNoteTodo? wholeNote,
+    String? anchoredIn,
+  }) async {
+    final note = ref.read(noteByIdProvider(widget.noteId)).value;
+    if (note == null) return;
+    final result = await showMakeTodoSheet(
+      context,
+      candidates: candidates,
+      wholeNote: wholeNote,
+      listId: note.listId,
+    );
+    if (result == null || !mounted) return;
+    final l = L.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    // Read now, while `ref` is usable: Undo sits in a snackbar that
+    // outlives this page, and must still work after it has gone.
+    final tasks = ref.read(tasksRepositoryProvider);
+    final subtasks = ref.read(subtasksRepositoryProvider);
+    final notes = ref.read(notesRepositoryProvider);
+    final db = ref.read(appDatabaseProvider);
+    final created = <String>[];
+    try {
+      for (final draft in result.tasks) {
+        final task = await tasks.create(
+          listId: result.listId,
+          title: draft.title,
+          notes: draft.notes,
+          dueAt: result.dueAt,
+          priority: result.priority,
+        );
+        created.add(task.id);
+        for (final sub in draft.subtasks) {
+          await subtasks.add(task.id, sub);
+        }
+      }
+    } on Object catch (error, stack) {
+      debugPrint('note ${widget.noteId}: tasks not created: $error\n$stack');
+      // Each on its own, so one that fails neither stops the rest nor
+      // swallows the snackbar.
+      for (final id in created) {
+        try {
+          await tasks.delete(id);
+        } on Object catch (error, stack) {
+          debugPrint('task $id not rolled back: $error\n$stack');
+        }
+      }
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.noteTodoFailed)));
+      return;
+    }
+    if (!mounted) return;
+    final body = _body.text;
+    final link = wholeNote != null || body == anchoredIn;
+    if (link) {
+      // Through the value, not just the text, so a cursor at an anchor
+      // moves past the link that lands there.
+      final linked = wholeNote != null
+          ? TextEditingValue(
+              text: appendTaskLink(body, created.single),
+              selection: _body.selection,
+            )
+          : insertTaskLinksInValue(_body.value, [
+              // One draft per candidate, or one task anchored at the first.
+              if (created.length == candidates.length)
+                for (final (i, id) in created.indexed)
+                  (candidates[i].anchor, id)
+              else
+                (candidates.first.anchor, created.single),
+            ]);
+      final saved = await _writeBody(linked.text, selection: linked.selection);
+      // A failed write has put up its own snackbar: the tasks exist and
+      // the links sit in the field, dirty, for the next save to retry --
+      // but the note is not saved, and that is what must stay on screen,
+      // not a success message over it.
+      if (!saved || !mounted) return;
+    }
+    // A SnackBar has one action: Undo takes it, and Open (one task only)
+    // sits in the content.
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  link
+                      ? l.noteTodoCreated(created.length)
+                      : l.noteTodoCreatedNoLink(created.length),
+                ),
+              ),
+              if (created.length == 1)
+                TextButton(
+                  key: const Key('todo-open'),
+                  onPressed: () {
+                    messenger.hideCurrentSnackBar();
+                    _openTask(created.single);
+                  },
+                  child: Text(l.commonOpen),
+                ),
+            ],
+          ),
+          // An action makes a snackbar persist by default; this one
+          // would then sit over the format bar until dismissed.
+          persist: false,
+          action: SnackBarAction(
+            label: l.commonUndo,
+            onPressed: () => unawaited(
+              _undoTodo(
+                created.toSet(),
+                tasks: tasks,
+                notes: link ? notes : null,
+                db: db,
+              ),
+            ),
+          ),
+        ),
+      );
+  }
+
+  /// Deletes the tasks and, given [notes], takes their links out of the
+  /// body: through the editor while the page is up, so the edit is one
+  /// the fields know about, or straight onto the stored note once it has
+  /// gone. Uses no `ref`, which may be gone by the time Undo is tapped.
+  Future<void> _undoTodo(
+    Set<String> ids, {
+    required TasksRepository tasks,
+    required NotesRepository? notes,
+    required AppDatabase db,
+  }) async {
+    // Each on its own, like the rollback: one that fails neither stops the
+    // rest nor the links coming out. A task that could not be deleted
+    // keeps its link, so the note does not lose track of it.
+    final deleted = <String>{};
+    for (final id in ids) {
+      try {
+        await tasks.delete(id);
+        deleted.add(id);
+      } on Object catch (error, stack) {
+        debugPrint('task $id not undone: $error\n$stack');
+      }
+    }
+    if (notes == null || deleted.isEmpty) return;
+    if (mounted) {
+      final updated = removeTaskLinksInValue(_body.value, deleted);
+      await _writeBody(updated.text, selection: updated.selection);
+      return;
+    }
+    final stored = await db.noteById(widget.noteId);
+    if (stored == null) return;
+    final body = removeTaskLinks(stored.body, deleted);
+    if (body != stored.body) {
+      await notes.updateText(widget.noteId, body: body);
+    }
+  }
+
+  Future<void> _onLongPressLine(int lineStart, Offset at) async {
+    final body = _body.text;
+    final linked = linkedTaskAt(body, lineStart);
+    final candidate = linked == null ? lineCandidate(body, lineStart) : null;
+    final l = L.of(context);
+    final choice = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
+      items: [
+        if (linked != null)
+          PopupMenuItem(
+            key: const Key('read-menu-open-task'),
+            value: 'open',
+            child: Text(l.noteOpenTask),
+          )
+        else if (candidate != null)
+          PopupMenuItem(
+            key: const Key('read-menu-make-todo'),
+            value: 'todo',
+            child: Text(l.noteMakeTodo),
+          ),
+        PopupMenuItem(
+          key: const Key('read-menu-edit'),
+          value: 'edit',
+          child: Text(l.commonEdit),
+        ),
+      ],
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case 'open':
+        _openTask(linked!);
+      case 'todo':
+        await _makeTodo(candidates: [candidate!], anchoredIn: body);
+      case 'edit':
+        _editAt(lineStart);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -274,6 +558,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       );
     }
     _fill(note);
+    final readView = _showReadView(note);
     // Cmd on Apple platforms, Ctrl elsewhere -- binding both everywhere
     // would shadow macOS/iOS's native Ctrl+B / Ctrl+K text-field
     // navigation, which the platform's own text field still wants.
@@ -299,7 +584,19 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(actions: [NotePinAction(note: note)]),
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              key: const Key('note-view-toggle'),
+              tooltip: readView ? l.noteEditToggle : l.noteReadToggle,
+              icon: Icon(
+                readView ? Icons.edit_outlined : Icons.visibility_outlined,
+              ),
+              onPressed: () => unawaited(_setReadView(!readView)),
+            ),
+            NotePinAction(note: note),
+          ],
+        ),
         // The toolbar sits in the body, under the scrolling content: the
         // body is what the keyboard shrinks, so the bar rides directly on
         // top of it. `bottomNavigationBar` would stay behind the keyboard.
@@ -328,53 +625,98 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                         border: InputBorder.none,
                       ),
                     ),
-                    CallbackShortcuts(
-                      bindings: {
-                        SingleActivator(
-                          LogicalKeyboardKey.keyB,
-                          control: !useMeta,
-                          meta: useMeta,
-                        ): () =>
-                            _apply((v) => toggleInline(v, '**')),
-                        SingleActivator(
-                          LogicalKeyboardKey.keyI,
-                          control: !useMeta,
-                          meta: useMeta,
-                        ): () =>
-                            _apply((v) => toggleInline(v, '_')),
-                        SingleActivator(
-                          LogicalKeyboardKey.keyX,
-                          control: !useMeta,
-                          meta: useMeta,
-                          shift: true,
-                        ): () =>
-                            _apply((v) => toggleInline(v, '~~')),
-                        SingleActivator(
-                          LogicalKeyboardKey.keyK,
-                          control: !useMeta,
-                          meta: useMeta,
-                        ): _insertLink,
-                      },
-                      child: TextField(
-                        key: const Key('note-body'),
-                        controller: _body,
-                        focusNode: _bodyFocus,
-                        undoController: _undo,
-                        maxLines: null,
-                        minLines: 6,
-                        keyboardType: TextInputType.multiline,
-                        textCapitalization: TextCapitalization.sentences,
-                        inputFormatters: [ListContinuationFormatter()],
-                        decoration: InputDecoration(
-                          hintText: l.noteBodyHint,
-                          filled: false,
-                          border: InputBorder.none,
+                    if (readView)
+                      NoteReadView(
+                        key: const Key('note-read-view'),
+                        body: _body.text,
+                        onChanged: (body) => unawaited(_writeBody(body)),
+                        onEditAt: _editAt,
+                        onLongPressLine: (start, at) =>
+                            unawaited(_onLongPressLine(start, at)),
+                        onOpenLink: (url) => openNoteLink(context, ref, url),
+                        taskChip: (id) => TaskLinkChip(taskId: id),
+                      )
+                    else
+                      CallbackShortcuts(
+                        bindings: {
+                          SingleActivator(
+                            LogicalKeyboardKey.keyB,
+                            control: !useMeta,
+                            meta: useMeta,
+                          ): () =>
+                              _apply((v) => toggleInline(v, '**')),
+                          SingleActivator(
+                            LogicalKeyboardKey.keyI,
+                            control: !useMeta,
+                            meta: useMeta,
+                          ): () =>
+                              _apply((v) => toggleInline(v, '_')),
+                          SingleActivator(
+                            LogicalKeyboardKey.keyX,
+                            control: !useMeta,
+                            meta: useMeta,
+                            shift: true,
+                          ): () =>
+                              _apply((v) => toggleInline(v, '~~')),
+                          SingleActivator(
+                            LogicalKeyboardKey.keyK,
+                            control: !useMeta,
+                            meta: useMeta,
+                          ): _insertLink,
+                          SingleActivator(
+                            LogicalKeyboardKey.keyT,
+                            control: !useMeta,
+                            meta: useMeta,
+                            shift: true,
+                          ): () =>
+                              unawaited(_makeTodoFromEditor()),
+                        },
+                        child: TextField(
+                          key: const Key('note-body'),
+                          controller: _body,
+                          focusNode: _bodyFocus,
+                          undoController: _undo,
+                          maxLines: null,
+                          minLines: 6,
+                          keyboardType: TextInputType.multiline,
+                          textCapitalization: TextCapitalization.sentences,
+                          inputFormatters: [ListContinuationFormatter()],
+                          contextMenuBuilder: (context, state) {
+                            final items = [...state.contextMenuButtonItems];
+                            if (todoCandidates(state.textEditingValue)
+                                .isNotEmpty) {
+                              items.insert(
+                                0,
+                                ContextMenuButtonItem(
+                                  label: l.noteMakeTodo,
+                                  onPressed: () {
+                                    state.hideToolbar();
+                                    unawaited(_makeTodoFromEditor());
+                                  },
+                                ),
+                              );
+                            }
+                            return AdaptiveTextSelectionToolbar.buttonItems(
+                              anchors: state.contextMenuAnchors,
+                              buttonItems: items,
+                            );
+                          },
+                          decoration: InputDecoration(
+                            hintText: l.noteBodyHint,
+                            filled: false,
+                            border: InputBorder.none,
+                          ),
                         ),
                       ),
-                    ),
                     const SizedBox(height: 16),
                     PhotoStrip(parentKind: PhotoParent.note, parentId: note.id),
                     NoteListPicker(note: note),
+                    ListTile(
+                      key: const Key('note-make-todo'),
+                      leading: const Icon(Icons.add_task),
+                      title: Text(l.noteMakeTodoFromNote),
+                      onTap: () => unawaited(_makeTodoFromNote()),
+                    ),
                     NoteDeleteAction(note: note),
                   ],
                 ),
@@ -387,6 +729,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                       controller: _body,
                       undoController: _undo,
                       onInsertLink: _insertLink,
+                      onMakeTodo: () => unawaited(_makeTodoFromEditor()),
+                      onOpenTask: _openTask,
                     )
                   : const SizedBox.shrink(),
             ),

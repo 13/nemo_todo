@@ -302,5 +302,19 @@
   "mdLinkUrlHint": "URL",
   "mdOpenLink": "Apri link",
   "mdUndo": "Annulla",
-  "mdRedo": "Ripeti"
+  "mdRedo": "Ripeti",
+  "noteTaskDeleted": "Attività eliminata",
+  "noteReadToggle": "Formattato",
+  "noteEditToggle": "Markdown",
+  "noteMakeTodo": "Crea attività",
+  "noteMakeTodoFromNote": "Attività dalla nota",
+  "noteOpenTask": "Apri attività",
+  "noteTodoPerLine": "Un'attività per riga",
+  "noteTodoWithSubtasks": "Un'attività con sottoattività",
+  "noteTodoChecklistSubtasks": "La checklist diventa sottoattività",
+  "noteTodoCreate": "Crea",
+  "noteTodoCreated": "{count, plural, =1{Attività creata} other{{count} attività create}}",
+  "noteTodoCreatedNoLink": "{count, plural, =1{Attività creata. Nel frattempo la nota è cambiata, quindi non è stato aggiunto alcun link.} other{{count} attività create. Nel frattempo la nota è cambiata, quindi non sono stati aggiunti link.}}",
+  "noteTodoFailed": "Impossibile creare l'attività",
+  "commonOpen": "Apri"
 }

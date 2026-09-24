@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
+import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
 import 'package:nemo/l10n/app_localizations.dart';
 
@@ -112,6 +113,8 @@ class NoteFormatToolbar extends ConsumerWidget {
     required this.controller,
     required this.undoController,
     required this.onInsertLink,
+    required this.onMakeTodo,
+    required this.onOpenTask,
     super.key,
   });
 
@@ -130,6 +133,12 @@ class NoteFormatToolbar extends ConsumerWidget {
   /// caller's own callback closes over its own, longer-lived context and
   /// focus node instead.
   final VoidCallback onInsertLink;
+
+  /// Turns what the cursor or selection is on into a task.
+  final VoidCallback onMakeTodo;
+
+  /// Opens the task linked on the cursor's line.
+  final ValueChanged<String> onOpenTask;
 
   void _apply(TextEditingValue Function(TextEditingValue) command) {
     controller.value = command(controller.value);
@@ -167,6 +176,14 @@ class NoteFormatToolbar extends ConsumerWidget {
               builder: (context, _) {
                 final link = linkAtCursor(controller.value);
                 final undo = undoController.value;
+                final value = controller.value;
+                // Only for a cursor: a selection that starts on a linked
+                // line can still reach lines to make tasks of.
+                final linkedTask =
+                    value.selection.isValid && value.selection.isCollapsed
+                    ? linkedTaskAt(value.text, value.selection.start)
+                    : null;
+                final canMakeTodo = todoCandidates(value).isNotEmpty;
                 return ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -225,6 +242,20 @@ class NoteFormatToolbar extends ConsumerWidget {
                       l.mdChecklist,
                       () => _apply(toggleCheckbox),
                     ),
+                    if (linkedTask != null)
+                      button(
+                        'md-open-task',
+                        Icons.open_in_new,
+                        l.noteOpenTask,
+                        () => onOpenTask(linkedTask),
+                      )
+                    else
+                      button(
+                        'md-make-todo',
+                        Icons.add_task,
+                        l.noteMakeTodo,
+                        canMakeTodo ? onMakeTodo : null,
+                      ),
                     button(
                       'md-quote',
                       Icons.format_quote,

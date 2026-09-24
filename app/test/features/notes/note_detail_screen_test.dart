@@ -13,6 +13,8 @@ import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/notes/ui/notes_screen.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
+import 'package:nemo/features/tasks/data/tasks_repository.dart';
+import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
@@ -93,6 +95,59 @@ class _FailingOnceNotesRepository extends NotesRepository {
   }
 }
 
+/// A [TasksRepository] whose [failOnCreate]th `create` (1-based) throws,
+/// and whose `delete` throws for the first [failDeletes] calls: a
+/// make-todo that fails part way, with a rollback that partly fails too.
+class _FailingTasksRepository extends TasksRepository {
+  _FailingTasksRepository(
+    super._db,
+    super._clock,
+    super._newId, {
+    required super.reminders,
+    required this.failOnCreate,
+    this.failDeletes = 0,
+  });
+
+  final int failOnCreate;
+  int failDeletes;
+  var _creates = 0;
+
+  @override
+  Future<Task> create({
+    required String listId,
+    required String title,
+    int? dueAt,
+    bool dueHasTime = false,
+    bool remind = false,
+    int priority = 0,
+    List<String> tags = const [],
+    String notes = '',
+    Repeat? repeat,
+  }) async {
+    if (++_creates == failOnCreate) throw StateError('disk full');
+    return await super.create(
+      listId: listId,
+      title: title,
+      dueAt: dueAt,
+      dueHasTime: dueHasTime,
+      remind: remind,
+      priority: priority,
+      tags: tags,
+      notes: notes,
+      repeat: repeat,
+    );
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    if (failDeletes > 0) {
+      failDeletes--;
+      throw StateError('disk full');
+    }
+    await super.delete(id);
+  }
+}
+
 void main() {
   TextField bodyField(WidgetTester tester) =>
       tester.widget<TextField>(find.byKey(const Key('note-body')));
@@ -113,15 +168,13 @@ void main() {
         ),
       );
 
-  appTest('the body is editable markdown source with no toggle', (
-    tester,
-  ) async {
+  appTest('the body opens as editable markdown source', (tester) async {
     final harness = await pumpApp(tester, initialLocation: '/notes/n1');
     await harness.seedList('l1', 'Kitchen');
     await harness.seedNote('n1', 'l1', title: 'Bread', body: '# Dough');
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('note-edit-toggle')), findsNothing);
+    expect(find.byKey(const Key('note-read-view')), findsNothing);
     final field = bodyField(tester);
     expect(field.controller, isA<MarkdownEditingController>());
     expect(field.controller!.text, '# Dough');
@@ -903,5 +956,485 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(NotesScreen), findsOneWidget);
+  });
+
+  appTest('the toggle switches to the read view and back, and is '
+      'remembered', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: '**milk**');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-view-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-view')), findsOneWidget);
+    expect(find.byKey(const Key('note-body')), findsNothing);
+    expect(
+      await harness.container.read(kvStoreProvider).get('notes.readView'),
+      '1',
+    );
+
+    // Reopened, it comes back in the read view.
+    harness.router.go('/notes');
+    await tester.pumpAndSettle();
+    harness.router.go('/notes/n1');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-read-view')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('note-view-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-body')), findsOneWidget);
+    expect(
+      await harness.container.read(kvStoreProvider).get('notes.readView'),
+      '0',
+    );
+  });
+
+  appTest('an empty note opens in the editor even after the read view', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.container.read(kvStoreProvider).set('notes.readView', '1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-body')), findsOneWidget);
+  });
+
+  appTest('a checkbox tapped in the read view saves the note', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.container.read(kvStoreProvider).set('notes.readView', '1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: '- [ ] milk');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('read-check-0')));
+    await tester.pumpAndSettle();
+    expect((await harness.db.noteById('n1'))!.body, '- [x] milk');
+  });
+
+  appTest('tapping read-view text edits with the cursor on that line', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes/n1');
+    await harness.container.read(kvStoreProvider).set('notes.readView', '1');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread', body: 'one\ntwo');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('read-line-1')));
+    await tester.pumpAndSettle();
+    final field = bodyField(tester);
+    expect(field.focusNode!.hasFocus, isTrue);
+    expect(
+      field.controller!.selection,
+      const TextSelection.collapsed(offset: 4),
+    );
+  });
+
+  Future<List<Task>> liveTasks(TestApp app) async => [
+    for (final t in await app.db.select(app.db.tasks).get())
+      if (t.deletedAt == null) t,
+  ];
+
+  appTest('make todo from a checklist line creates the task and links it', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [ ] milk\nbread');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection.collapsed(
+      offset: 3,
+    );
+    await tester.pump();
+    await scrollToolbar(tester, find.byKey(const Key('md-make-todo')));
+    await tester.tap(find.byKey(const Key('md-make-todo')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    final task = (await liveTasks(app)).single;
+    expect(task.title, 'milk');
+    expect(task.listId, 'l1');
+    final note = await app.db.noteById('n1');
+    expect(note!.body, '- [ ] milk [→ task](nemo://task/${task.id})\nbread');
+    expect(find.text('Task created'), findsOneWidget);
+
+    // The snackbar times out like a plain one, though it has an action,
+    // so it no longer sits over the format bar.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Task created'), findsNothing);
+
+    // Now linked: the button offers the task instead.
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection.collapsed(
+      offset: 3,
+    );
+    await tester.pump();
+    await scrollToolbar(tester, find.byKey(const Key('md-open-task')));
+    expect(find.byKey(const Key('md-make-todo')), findsNothing);
+  });
+
+  appTest('undo deletes the tasks and takes the links out', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = const TextSelection(
+      baseOffset: 0,
+      extentOffset: 10,
+    );
+    await tester.pump();
+    await scrollToolbar(tester, find.byKey(const Key('md-make-todo')));
+    await tester.tap(find.byKey(const Key('md-make-todo')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+    expect(await liveTasks(app), hasLength(2));
+    expect(find.text('2 tasks created'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(await liveTasks(app), isEmpty);
+    final note = await app.db.noteById('n1');
+    expect(note!.body, 'milk\nbread');
+  });
+
+  appTest('make todo from the whole note carries its checklist', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'Sunday\n- [ ] milk');
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('note-make-todo')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('note-make-todo')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    final task = (await liveTasks(app)).single;
+    expect(task.title, 'Shop');
+    expect(task.notes, 'Sunday');
+    final subs = await app.db.select(app.db.subtasks).get();
+    expect(subs.single.title, 'milk');
+    final note = await app.db.noteById('n1');
+    expect(note!.body, 'Sunday\n- [ ] milk\n[→ task](nemo://task/${task.id})');
+  });
+
+  appTest('long-press in the read view makes a todo of the line, and the '
+      'chip opens the task', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.container.read(kvStoreProvider).set('notes.readView', '1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'intro\ncall Bob');
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.byKey(const Key('read-line-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('read-menu-make-todo')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    final task = (await liveTasks(app)).single;
+    expect(task.title, 'call Bob');
+    await tester.tap(find.byKey(Key('task-link-chip-${task.id}')));
+    await tester.pumpAndSettle();
+    expect(app.router.state.uri.path, '/tasks/${task.id}');
+  });
+
+  Future<void> makeTodoFromSelection(
+    WidgetTester tester,
+    TextSelection selection,
+  ) async {
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    bodyField(tester).controller!.selection = selection;
+    await tester.pump();
+    await scrollToolbar(tester, find.byKey(const Key('md-make-todo')));
+    await tester.tap(find.byKey(const Key('md-make-todo')));
+    await tester.pumpAndSettle();
+  }
+
+  appTest('undo still works after the note has been left', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await makeTodoFromSelection(
+      tester,
+      const TextSelection(baseOffset: 0, extentOffset: 4),
+    );
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+    final task = (await liveTasks(app)).single;
+    expect(
+      (await app.db.noteById('n1'))!.body,
+      'milk [→ task](nemo://task/${task.id})\nbread',
+    );
+
+    app.router.go('/notes');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('note-body')), findsNothing);
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    expect(await liveTasks(app), isEmpty);
+    expect((await app.db.noteById('n1'))!.body, 'milk\nbread');
+  });
+
+  appTest('a note changed while the sheet is open gets no link', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await makeTodoFromSelection(
+      tester,
+      const TextSelection(baseOffset: 0, extentOffset: 4),
+    );
+    // A sync lands while the sheet is up.
+    await app.container
+        .read(notesRepositoryProvider)
+        .updateText('n1', body: 'eggs\nmilk\nbread');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    final task = (await liveTasks(app)).single;
+    expect(task.title, 'milk');
+    expect((await app.db.noteById('n1'))!.body, 'eggs\nmilk\nbread');
+    expect(bodyField(tester).controller!.text, 'eggs\nmilk\nbread');
+    expect(
+      find.text(
+        'Task created. The note changed meanwhile, so no link was added.',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(await liveTasks(app), isEmpty);
+    expect((await app.db.noteById('n1'))!.body, 'eggs\nmilk\nbread');
+  });
+
+  appTest('a failed create deletes the tasks already made', (tester) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        tasksRepositoryProvider.overrideWith(
+          (ref) => _FailingTasksRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+            reminders: ref.watch(reminderSchedulerProvider),
+            failOnCreate: 2,
+          ),
+        ),
+      ],
+    );
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await makeTodoFromSelection(
+      tester,
+      const TextSelection(baseOffset: 0, extentOffset: 10),
+    );
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    expect(await liveTasks(app), isEmpty);
+    expect((await app.db.noteById('n1'))!.body, 'milk\nbread');
+    expect(find.text("Couldn't create the task"), findsOneWidget);
+  });
+
+  appTest('a rollback delete that fails does not stop the others', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        tasksRepositoryProvider.overrideWith(
+          (ref) => _FailingTasksRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+            reminders: ref.watch(reminderSchedulerProvider),
+            failOnCreate: 3,
+            failDeletes: 1,
+          ),
+        ),
+      ],
+    );
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread\neggs');
+    await tester.pumpAndSettle();
+
+    await makeTodoFromSelection(
+      tester,
+      const TextSelection(baseOffset: 0, extentOffset: 15),
+    );
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    // The first delete failed; the second task is still rolled back.
+    expect((await liveTasks(app)).map((t) => t.title), ['milk']);
+    expect((await app.db.noteById('n1'))!.body, 'milk\nbread\neggs');
+    expect(find.text("Couldn't create the task"), findsOneWidget);
+  });
+
+  appTest('after make todo the cursor sits after the new link', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [ ] milk');
+    await tester.pumpAndSettle();
+
+    await makeTodoFromSelection(
+      tester,
+      const TextSelection.collapsed(offset: 10),
+    );
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    final task = (await liveTasks(app)).single;
+    final controller = bodyField(tester).controller!;
+    expect(controller.text, '- [ ] milk [→ task](nemo://task/${task.id})');
+    expect(
+      controller.selection,
+      TextSelection.collapsed(offset: controller.text.length),
+    );
+  });
+
+  appTest('a link that cannot be saved keeps the save failure showing', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        notesRepositoryProvider.overrideWith(
+          (ref) => _FailingNotesRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+          ),
+        ),
+      ],
+    );
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await makeTodoFromSelection(
+      tester,
+      const TextSelection(baseOffset: 0, extentOffset: 4),
+    );
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+
+    expect((await liveTasks(app)).single.title, 'milk');
+    expect(find.text("Couldn't save the note"), findsOneWidget);
+    expect(find.text('Task created'), findsNothing);
+  });
+
+  appTest('undo takes out the links of the tasks it deleted even when '
+      'one delete fails', (tester) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: '/notes/n1',
+      overrides: [
+        tasksRepositoryProvider.overrideWith(
+          (ref) => _FailingTasksRepository(
+            ref.watch(appDatabaseProvider),
+            ref.watch(hlcClockProvider),
+            ref.watch(idGeneratorProvider),
+            reminders: ref.watch(reminderSchedulerProvider),
+            // No create fails; a delete is made to fail below.
+            failOnCreate: 0,
+          ),
+        ),
+      ],
+    );
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'milk\nbread');
+    await tester.pumpAndSettle();
+
+    await makeTodoFromSelection(
+      tester,
+      const TextSelection(baseOffset: 0, extentOffset: 10),
+    );
+    await tester.tap(find.byKey(const Key('todo-create')));
+    await tester.pumpAndSettle();
+    final milk = (await liveTasks(app)).firstWhere((t) => t.title == 'milk');
+
+    (app.container.read(
+      tasksRepositoryProvider,
+    ) as _FailingTasksRepository).failDeletes = 1;
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    // The first delete failed, so milk and its link stay; bread is gone.
+    expect((await liveTasks(app)).map((t) => t.title), ['milk']);
+    expect(
+      (await app.db.noteById('n1'))!.body,
+      'milk [→ task](nemo://task/${milk.id})\nbread',
+    );
+  });
+
+  appTest('the body menu offers make todo only when there is something to '
+      'make', (tester) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: '- [x] eggs\nmilk');
+    await tester.pumpAndSettle();
+
+    Future<void> menuFor(TextSelection selection) async {
+      await tester.tap(find.byKey(const Key('note-body')));
+      await tester.pumpAndSettle();
+      bodyField(tester).controller!.selection = selection;
+      await tester.pump();
+      tester
+          .state<EditableTextState>(
+            find.descendant(
+              of: find.byKey(const Key('note-body')),
+              matching: find.byType(EditableText),
+            ),
+          )
+          .showToolbar();
+      await tester.pumpAndSettle();
+    }
+
+    final inMenu = find.descendant(
+      of: find.byType(AdaptiveTextSelectionToolbar),
+      matching: find.text('Make todo'),
+    );
+    // A ticked line with its line break: nothing to make.
+    await menuFor(const TextSelection(baseOffset: 0, extentOffset: 11));
+    expect(find.byType(AdaptiveTextSelectionToolbar), findsOneWidget);
+    expect(inMenu, findsNothing);
+
+    await menuFor(const TextSelection(baseOffset: 11, extentOffset: 15));
+    expect(inMenu, findsOneWidget);
   });
 }

@@ -1150,4 +1150,63 @@ class LDe extends L {
 
   @override
   String get mdRedo => 'Wiederholen';
+
+  @override
+  String get noteTaskDeleted => 'Aufgabe gelöscht';
+
+  @override
+  String get noteReadToggle => 'Formatiert';
+
+  @override
+  String get noteEditToggle => 'Markdown';
+
+  @override
+  String get noteMakeTodo => 'Als Aufgabe';
+
+  @override
+  String get noteMakeTodoFromNote => 'Aufgabe aus Notiz';
+
+  @override
+  String get noteOpenTask => 'Aufgabe öffnen';
+
+  @override
+  String get noteTodoPerLine => 'Eine Aufgabe pro Zeile';
+
+  @override
+  String get noteTodoWithSubtasks => 'Eine Aufgabe mit Unteraufgaben';
+
+  @override
+  String get noteTodoChecklistSubtasks => 'Checkliste wird zu Unteraufgaben';
+
+  @override
+  String get noteTodoCreate => 'Erstellen';
+
+  @override
+  String noteTodoCreated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben erstellt',
+      one: 'Aufgabe erstellt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteTodoCreatedNoLink(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Aufgaben erstellt. Die Notiz wurde inzwischen geändert, daher wurden keine Links eingefügt.',
+      one: 'Aufgabe erstellt. Die Notiz wurde inzwischen geändert, daher wurde kein Link eingefügt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteTodoFailed => 'Aufgabe konnte nicht erstellt werden';
+
+  @override
+  String get commonOpen => 'Öffnen';
 }

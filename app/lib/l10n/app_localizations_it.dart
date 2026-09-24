@@ -1151,4 +1151,63 @@ class LIt extends L {
 
   @override
   String get mdRedo => 'Ripeti';
+
+  @override
+  String get noteTaskDeleted => 'Attività eliminata';
+
+  @override
+  String get noteReadToggle => 'Formattato';
+
+  @override
+  String get noteEditToggle => 'Markdown';
+
+  @override
+  String get noteMakeTodo => 'Crea attività';
+
+  @override
+  String get noteMakeTodoFromNote => 'Attività dalla nota';
+
+  @override
+  String get noteOpenTask => 'Apri attività';
+
+  @override
+  String get noteTodoPerLine => 'Un\'attività per riga';
+
+  @override
+  String get noteTodoWithSubtasks => 'Un\'attività con sottoattività';
+
+  @override
+  String get noteTodoChecklistSubtasks => 'La checklist diventa sottoattività';
+
+  @override
+  String get noteTodoCreate => 'Crea';
+
+  @override
+  String noteTodoCreated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività create',
+      one: 'Attività creata',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteTodoCreatedNoLink(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count attività create. Nel frattempo la nota è cambiata, quindi non sono stati aggiunti link.',
+      one: 'Attività creata. Nel frattempo la nota è cambiata, quindi non è stato aggiunto alcun link.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteTodoFailed => 'Impossibile creare l\'attività';
+
+  @override
+  String get commonOpen => 'Apri';
 }

@@ -302,5 +302,19 @@
   "mdLinkUrlHint": "URL",
   "mdOpenLink": "Link öffnen",
   "mdUndo": "Rückgängig",
-  "mdRedo": "Wiederholen"
+  "mdRedo": "Wiederholen",
+  "noteTaskDeleted": "Aufgabe gelöscht",
+  "noteReadToggle": "Formatiert",
+  "noteEditToggle": "Markdown",
+  "noteMakeTodo": "Als Aufgabe",
+  "noteMakeTodoFromNote": "Aufgabe aus Notiz",
+  "noteOpenTask": "Aufgabe öffnen",
+  "noteTodoPerLine": "Eine Aufgabe pro Zeile",
+  "noteTodoWithSubtasks": "Eine Aufgabe mit Unteraufgaben",
+  "noteTodoChecklistSubtasks": "Checkliste wird zu Unteraufgaben",
+  "noteTodoCreate": "Erstellen",
+  "noteTodoCreated": "{count, plural, =1{Aufgabe erstellt} other{{count} Aufgaben erstellt}}",
+  "noteTodoCreatedNoLink": "{count, plural, =1{Aufgabe erstellt. Die Notiz wurde inzwischen geändert, daher wurde kein Link eingefügt.} other{{count} Aufgaben erstellt. Die Notiz wurde inzwischen geändert, daher wurden keine Links eingefügt.}}",
+  "noteTodoFailed": "Aufgabe konnte nicht erstellt werden",
+  "commonOpen": "Öffnen"
 }

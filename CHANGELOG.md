@@ -23,10 +23,10 @@ would ship without them, and nothing would say so.
   goes back to editing on that line.
 - Note text can become a todo: select text or put the cursor on a list
   line and tap the new toolbar button (or Ctrl+Shift+T, Cmd+Shift+T on
-  Mac), long-press a line
-  in the read view, or use "Make todo from note" at the bottom of a note.
-  Several lines become one task each or one task with subtasks. The note
-  keeps its text and links to each task, showing whether it is done.
+  Mac), long-press a line in the read view, or use "Make todo from note"
+  at the bottom of a note. Several lines become one task each or one
+  task with subtasks. The note keeps its text and links to each task,
+  showing whether it is done.
 
 ## 0.11.1 - 2026-09-23
 

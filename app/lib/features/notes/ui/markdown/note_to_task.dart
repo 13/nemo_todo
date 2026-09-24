@@ -66,6 +66,8 @@ List<TodoCandidate> todoCandidates(TextEditingValue v) {
   }
   final selected = text.substring(sel.start, sel.end);
   if (!selected.contains('\n')) {
+    final (ls, le) = _lineAt(text, sel.start);
+    if (_linked(text.substring(ls, le))) return const [];
     final title = plainLine(selected);
     return title.isEmpty
         ? const []
@@ -121,11 +123,14 @@ String insertTaskLinks(String body, List<(int, String)> links) {
   return out;
 }
 
-/// [v] with the links of [insertTaskLinks] in its text, and its selection
-/// moved along with the text: each end past every link inserted at or
-/// before it. A cursor at an anchor -- the end of the line it made a task
-/// of -- so ends up after the link, where typing (or Enter, continuing
-/// the list) belongs, not wedged between the line and its link.
+/// [v] with the links of [insertTaskLinks] in its text, and a collapsed
+/// cursor at the old selection's end, shifted past every link inserted at
+/// or before it. A cursor at an anchor -- the end of the line it made a
+/// task of -- so ends up after the link, where typing (or Enter,
+/// continuing the list) belongs, not wedged between the line and its
+/// link. Collapsed rather than kept as a range: a selection spanning the
+/// text would otherwise grow to cover the new links too, instead of the
+/// plain text it was drawn over.
 TextEditingValue insertTaskLinksInValue(
   TextEditingValue v,
   List<(int, String)> links,
@@ -139,13 +144,9 @@ TextEditingValue insertTaskLinksInValue(
     return out;
   }
 
-  final sel = v.selection;
   return TextEditingValue(
     text: insertTaskLinks(v.text, links),
-    selection: sel.copyWith(
-      baseOffset: shifted(sel.baseOffset),
-      extentOffset: shifted(sel.extentOffset),
-    ),
+    selection: TextSelection.collapsed(offset: shifted(v.selection.end)),
   );
 }
 
@@ -166,6 +167,28 @@ String removeTaskLinks(String body, Set<String> ids) {
         .replaceAll(RegExp(' $link'), '');
   }
   return out;
+}
+
+/// [v] with the links to [ids] taken out by [removeTaskLinks], a collapsed
+/// cursor kept on the same text: shifted left by whatever [removeTaskLinks]
+/// took out before it, clamped to the new text's length. Found by running
+/// [removeTaskLinks] on the text up to the cursor alone -- whatever that
+/// shrinks by is exactly what disappeared ahead of it. A selection that
+/// spans text, rather than a plain cursor, is left where it was: there is
+/// no single place left to pin one end of it to.
+TextEditingValue removeTaskLinksInValue(TextEditingValue v, Set<String> ids) {
+  final text = removeTaskLinks(v.text, ids);
+  final sel = v.selection;
+  if (!sel.isValid || !sel.isCollapsed) {
+    return TextEditingValue(text: text, selection: sel);
+  }
+  final kept = removeTaskLinks(v.text.substring(0, sel.start), ids);
+  return TextEditingValue(
+    text: text,
+    selection: TextSelection.collapsed(
+      offset: kept.length.clamp(0, text.length),
+    ),
+  );
 }
 
 /// The whole note as a task: its title, its body as notes, and its open

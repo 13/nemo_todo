@@ -41,7 +41,10 @@ class TaskLinkChip extends ConsumerWidget {
     final (IconData icon, Color color, String label) = gone
         ? (Icons.remove_circle_outline, colors.outline, l.noteTaskDeleted)
         : task == null
-        ? (Icons.task_alt, colors.primary, '')
+        // Still loading, or the stream errored with nothing to fall back
+        // on: the link text itself, not a blank chip, while there is no
+        // title to show yet.
+        ? (Icons.task_alt, colors.primary, '→ task')
         : task.done
         ? (Icons.check_circle, colors.primary, task.title)
         : (Icons.task_alt, colors.primary, task.title);

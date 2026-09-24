@@ -495,7 +495,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
     if (notes == null || deleted.isEmpty) return;
     if (mounted) {
-      await _writeBody(removeTaskLinks(_body.text, deleted));
+      final updated = removeTaskLinksInValue(_body.value, deleted);
+      await _writeBody(updated.text, selection: updated.selection);
       return;
     }
     final stored = await db.noteById(widget.noteId);

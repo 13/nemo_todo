@@ -58,4 +58,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Task deleted'), findsOneWidget);
   });
+
+  testWidgets('a task whose stream errors shows as open, with the link text', (
+    tester,
+  ) async {
+    final failing = StreamController<Task?>();
+    addTearDown(failing.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskByIdProvider('t1').overrideWith((ref) => failing.stream),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
+          home: Scaffold(body: TaskLinkChip(taskId: 't1')),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    failing.addError(StateError('watch failed'));
+    await tester.pump();
+    expect(find.byIcon(Icons.task_alt), findsOneWidget);
+    expect(find.text('Task deleted'), findsNothing);
+    expect(find.text('→ task'), findsOneWidget);
+  });
 }

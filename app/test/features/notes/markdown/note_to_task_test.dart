@@ -55,6 +55,11 @@ void main() {
     test('a cursor on plain text gives nothing', () {
       expect(todoCandidates(_sel('just words', 3)), isEmpty);
     });
+
+    test('a selection on an already-linked line gives nothing', () {
+      const text = 'call Bob [→ task](nemo://task/t1) today';
+      expect(todoCandidates(_sel(text, 0, 4)), isEmpty);
+    });
   });
 
   test('lineCandidate takes any non-empty unlinked line', () {
@@ -96,7 +101,8 @@ void main() {
       expect(out.selection, TextSelection.collapsed(offset: out.text.length));
     });
 
-    test('shifts each end of a selection by the links before it', () {
+    test('collapses to the old selection end, shifted past the links '
+        'before it', () {
       const link = ' [→ task](nemo://task/a)';
       final out = insertTaskLinksInValue(
         const TextEditingValue(
@@ -109,9 +115,25 @@ void main() {
         out.text,
         'milk [→ task](nemo://task/a)\nbread [→ task](nemo://task/b)',
       );
-      expect(out.selection.baseOffset, 2);
-      expect(out.selection.extentOffset, out.text.length);
+      expect(out.selection, TextSelection.collapsed(offset: out.text.length));
       expect(out.text.indexOf('\n'), 4 + link.length);
+    });
+
+    test('does not extend a selection ending before a link over it', () {
+      final out = insertTaskLinksInValue(
+        const TextEditingValue(
+          text: 'milk\nbread',
+          selection: TextSelection(baseOffset: 0, extentOffset: 4),
+        ),
+        [(4, 'a')],
+      );
+      expect(out.text, 'milk [→ task](nemo://task/a)\nbread');
+      expect(
+        out.selection,
+        const TextSelection.collapsed(
+          offset: 4 + ' [→ task](nemo://task/a)'.length,
+        ),
+      );
     });
   });
 
@@ -126,6 +148,41 @@ void main() {
   test("removeTaskLinks leaves other tasks' links alone", () {
     const body = 'a [→ task](nemo://task/x) b [→ task](nemo://task/y)';
     expect(removeTaskLinks(body, {'x'}), 'a b [→ task](nemo://task/y)');
+  });
+
+  group('removeTaskLinksInValue', () {
+    test('shifts a cursor after the link left by what was removed', () {
+      const text = '- [ ] milk [→ task](nemo://task/a)';
+      final out = removeTaskLinksInValue(_sel(text, text.length), {'a'});
+      expect(out.text, '- [ ] milk');
+      expect(out.selection, TextSelection.collapsed(offset: out.text.length));
+    });
+
+    test('sums the removed links before a cursor past several of them', () {
+      const text =
+          'milk [→ task](nemo://task/a)\nbread [→ task](nemo://task/b)';
+      final out = removeTaskLinksInValue(_sel(text, text.length), {'a', 'b'});
+      expect(out.text, 'milk\nbread');
+      expect(out.selection, TextSelection.collapsed(offset: out.text.length));
+    });
+
+    test('leaves a cursor before the link alone', () {
+      const text = 'one\nmilk [→ task](nemo://task/a)\nthree';
+      final out = removeTaskLinksInValue(_sel(text, 0), {'a'});
+      expect(out.text, 'one\nmilk\nthree');
+      expect(out.selection, const TextSelection.collapsed(offset: 0));
+    });
+
+    test('leaves a range selection where it was', () {
+      const text = 'milk [→ task](nemo://task/a)\nbread';
+      const sel = TextSelection(baseOffset: 0, extentOffset: 4);
+      final out = removeTaskLinksInValue(
+        const TextEditingValue(text: text, selection: sel),
+        {'a'},
+      );
+      expect(out.text, 'milk\nbread');
+      expect(out.selection, sel);
+    });
   });
 
   test('wholeNoteTodo splits out the open checklist', () {

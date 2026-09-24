@@ -1349,4 +1349,12 @@ class LDe extends L {
 
   @override
   String get todayAllClear => 'Alles erledigt. Genieß den Rest des Tages.';
+
+  @override
+  String get syncPullFailed =>
+      'Synchronisieren hat nicht geklappt. Es wird gleich erneut versucht.';
+
+  @override
+  String get syncPullSignedOut =>
+      'Deine Sitzung ist abgelaufen. Melde dich in den Einstellungen erneut an.';
 }

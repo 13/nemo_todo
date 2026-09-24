@@ -2246,6 +2246,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'All clear. Enjoy the rest of your day.'**
   String get todayAllClear;
+
+  /// Snackbar after pulling down to sync when it failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync didn\'t work. It will try again shortly.'**
+  String get syncPullFailed;
+
+  /// Snackbar after pulling down to sync when the session ended.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended. Sign in again in Settings.'**
+  String get syncPullSignedOut;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

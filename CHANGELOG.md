@@ -13,6 +13,15 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## Unreleased
+
+### Added
+
+- Pull down on Today, Upcoming, Lists, a list, a tag, Notes or search
+  results to sync straight away when an account is connected. If the
+  server cannot be reached, a short message says your changes are saved
+  and will sync later.
+
 ## 0.13.0 - 2026-09-24
 
 ### Added

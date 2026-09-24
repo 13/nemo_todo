@@ -6,6 +6,7 @@ import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -32,9 +33,11 @@ class UpcomingScreen extends ConsumerWidget {
         value: tasks,
         data: (items) {
           if (items.isEmpty) {
-            return EmptyState(
-              icon: Icons.event_available_outlined,
-              message: l.upcomingEmpty,
+            return SyncRefresh.scrollable(
+              child: EmptyState(
+                icon: Icons.event_available_outlined,
+                message: l.upcomingEmpty,
+              ),
             );
           }
           final byDay = <int, List<Task>>{};

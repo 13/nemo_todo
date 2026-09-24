@@ -357,5 +357,7 @@
   "todayFreshStart0": "Un nuovo inizio.",
   "todayFreshStart1": "Scegline una per iniziare.",
   "todayFreshStart2": "Una cosa alla volta.",
-  "todayAllClear": "Tutto fatto. Goditi il resto della giornata."
+  "todayAllClear": "Tutto fatto. Goditi il resto della giornata.",
+  "syncPullFailed": "La sincronizzazione non è riuscita. Riproverà a breve.",
+  "syncPullSignedOut": "La sessione è scaduta. Accedi di nuovo nelle Impostazioni."
 }

@@ -13,6 +13,13 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.14.1 - 2026-09-24
+
+### Fixed
+
+- 0.14.0 was never built or published, because a check failed; this
+  release is the first to carry its changes, listed below.
+
 ## 0.14.0 - 2026-09-24
 
 ### Added

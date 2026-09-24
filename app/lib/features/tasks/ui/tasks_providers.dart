@@ -42,6 +42,10 @@ Stream<List<Task>> upcomingTasks(Ref ref) =>
     ref.watch(tasksRepositoryProvider).watchUpcoming(ref.watch(nowProvider)());
 
 @riverpod
+Stream<List<Task>> noDateTasks(Ref ref) =>
+    ref.watch(tasksRepositoryProvider).watchNoDate();
+
+@riverpod
 Stream<List<Task>> searchTasks(Ref ref, String query) =>
     ref.watch(tasksRepositoryProvider).search(query);
 

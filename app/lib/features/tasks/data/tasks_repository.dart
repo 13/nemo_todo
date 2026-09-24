@@ -56,6 +56,12 @@ class TasksRepository {
     _dueOrder,
   );
 
+  /// Open tasks without a due date, grouped by their list's order.
+  Stream<List<Task>> watchNoDate() => _visible(
+    _db.tasks.done.equals(false) & _db.tasks.dueAt.isNull(),
+    [OrderingTerm.asc(_db.lists.sortKey), OrderingTerm.asc(_db.tasks.sortKey)],
+  );
+
   /// Case-insensitive match on title, notes or tags.
   Stream<List<Task>> search(String query) {
     final q = query.trim();

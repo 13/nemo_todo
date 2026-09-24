@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/achievements/data/achievements_repository.dart';
+import 'package:nemo/features/celebrations/domain/motivation.dart';
 import 'package:nemo/features/celebrations/ui/celebration_controller.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
@@ -75,6 +77,7 @@ void main() {
       now: () => testNow,
       celebrate: () => celebrate,
       showAchievements: () => announce,
+      random: Random(1),
     );
     events = [];
     controller.events.listen(events.add);
@@ -101,6 +104,50 @@ void main() {
   List<String> unlockedIds(CelebrationEvent e) => [
     for (final a in (e as AchievementsUnlocked).achievements) a.id,
   ];
+
+  CelebrationCheer? cheerOf(CelebrationEvent e) => switch (e) {
+    TickCelebration(:final cheer) => cheer,
+    DayClearedCelebration(:final cheer) => cheer,
+    AchievementsUnlocked() => null,
+  };
+
+  test("a tick carries a message with Today's counts", () async {
+    await tick(await add('Warm-up')); // unlocks first_done
+    final a = await add('A', dueToday: true);
+    await add('B', dueToday: true);
+    await add('C', dueToday: true);
+    await tick(a);
+    final cheer = cheerOf(events.last)!;
+    expect(cheer.context.todayDone, 1);
+    expect(cheer.context.todayTotal, 3);
+    expect(cheer.context.wasInToday, isTrue);
+    expect(cheer.context.firstToday, isFalse, reason: 'Warm-up came first');
+  });
+
+  test('clearing the day carries the day-cleared message', () async {
+    await tick(await add('Warm-up'));
+    await tick(await add('B', dueToday: true)); // unlocks cleared_today
+    await tick(await add('C', dueToday: true));
+    final event = events.last as DayClearedCelebration;
+    expect(event.cheer!.motivation.kind, MotivationKind.dayCleared);
+  });
+
+  test('no message with celebrations off, none on an unlock', () async {
+    await tick(await add('First'));
+    expect(events.single, isA<AchievementsUnlocked>());
+    celebrate = false;
+    await tick(await add('Second'));
+    expect(events, hasLength(1));
+  });
+
+  test('onCompleted returns what it emitted, and passes showPill', () async {
+    await tick(await add('Warm-up'));
+    final t = await add('A');
+    await tasks.setDone(t.id, done: true);
+    final event = await controller.onCompleted(t, showPill: false);
+    expect(event, isA<TickCelebration>());
+    expect((event! as TickCelebration).showPill, isFalse);
+  });
 
   test('the first completion unlocks the first achievement', () async {
     await tick(await add('A'));

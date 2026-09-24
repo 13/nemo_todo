@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:nemo/core/providers.dart';
 import 'package:nemo/features/achievements/data/achievements_repository.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/achievements/ui/achievements_providers.dart';
+import 'package:nemo/features/celebrations/domain/motivation.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -15,14 +17,34 @@ sealed class CelebrationEvent {
   const CelebrationEvent();
 }
 
+/// What to say about a completion, with what it was said about.
+class CelebrationCheer {
+  const CelebrationCheer(this.motivation, this.context);
+
+  final Motivation motivation;
+  final MotivationContext context;
+}
+
 /// An ordinary completion.
 class TickCelebration extends CelebrationEvent {
-  const TickCelebration();
+  const TickCelebration({this.cheer, this.showPill = true});
+
+  /// Null when choosing a message failed.
+  final CelebrationCheer? cheer;
+
+  /// False when the caller shows [cheer] itself (the swipe's snackbar).
+  final bool showPill;
 }
 
 /// The last open task Today showed is done.
 class DayClearedCelebration extends CelebrationEvent {
-  const DayClearedCelebration();
+  const DayClearedCelebration({this.cheer, this.showPill = true});
+
+  /// Null when choosing a message failed.
+  final CelebrationCheer? cheer;
+
+  /// False when the caller shows [cheer] itself (the swipe's snackbar).
+  final bool showPill;
 }
 
 class AchievementsUnlocked extends CelebrationEvent {
@@ -42,15 +64,21 @@ class CelebrationController {
     required DateTime Function() now,
     required this.celebrate,
     required this.showAchievements,
+    Random? random,
     // The field is private and `now` is the public name callers use; an
     // initializing formal would have to share the field's (private) name.
     // ignore: prefer_initializing_formals
-  }) : _now = now;
+  }) : _now = now,
+       _random = random ?? Random();
 
   final AchievementsRepository _repo;
   final DateTime Function() _now;
   final bool Function() celebrate;
   final bool Function() showAchievements;
+  final Random _random;
+
+  /// The messages shown last, oldest first, so the next one can differ.
+  final _recent = <Motivation>[];
   final _events = StreamController<CelebrationEvent>.broadcast();
 
   Stream<CelebrationEvent> get events => _events.stream;
@@ -71,13 +99,27 @@ class CelebrationController {
   /// runs (a sync finishing) cannot record this tap's unlock first and
   /// swallow its banner. A failing [write] throws to the caller; a
   /// celebration going wrong never does.
-  Future<void> onCompleted(Task task, {Future<void> Function()? write}) =>
-      _inTurn(() async {
-        if (write != null) await write();
-        await _celebrate(task);
-      });
+  ///
+  /// Returns the event this completion emitted, null when none; with
+  /// [showPill] false the caller shows the message itself.
+  Future<CelebrationEvent?> onCompleted(
+    Task task, {
+    Future<void> Function()? write,
+    bool showPill = true,
+  }) {
+    // Captured inside the step rather than read from the chain, whose
+    // shared tail swallows errors and carries no value.
+    CelebrationEvent? emitted;
+    return _inTurn(() async {
+      if (write != null) await write();
+      emitted = await _celebrate(task, showPill: showPill);
+    }).then((_) => emitted);
+  }
 
-  Future<void> _celebrate(Task task) async {
+  Future<CelebrationEvent?> _celebrate(
+    Task task, {
+    required bool showPill,
+  }) async {
     try {
       final dueAt = task.dueAt;
       final wasInToday = dueAt != null && dueAt < dayStartMsFrom(_now(), 1);
@@ -102,13 +144,53 @@ class CelebrationController {
       } else if (!celebrate()) {
         event = null;
       } else if (cleared) {
-        event = const DayClearedCelebration();
+        event = DayClearedCelebration(
+          cheer: await _cheer(task, cleared: true, wasInToday: wasInToday),
+          showPill: showPill,
+        );
       } else {
-        event = const TickCelebration();
+        event = TickCelebration(
+          cheer: await _cheer(task, cleared: false, wasInToday: wasInToday),
+          showPill: showPill,
+        );
       }
       if (event != null && !_events.isClosed) _events.add(event);
+      return event;
     } on Object catch (error, stack) {
       debugPrint('Celebration failed: $error\n$stack');
+      return null;
+    }
+  }
+
+  /// Picks what to say; null if gathering the context fails, so the tick
+  /// still gets its bounce without words.
+  Future<CelebrationCheer?> _cheer(
+    Task task, {
+    required bool cleared,
+    required bool wasInToday,
+  }) async {
+    try {
+      final counts = await _repo.todayCounts();
+      final context = MotivationContext(
+        todayDone: counts.done,
+        todayTotal: counts.done + counts.open,
+        wasInToday: wasInToday,
+        firstToday: await _repo.doneTodayCount() == 1,
+        streak: (await _repo.stats()).currentStreak,
+        wasOverdue: task.dueAt != null && task.dueAt! < dayStartMs(_now()),
+        cleared: cleared,
+      );
+      final motivation = pickMotivation(
+        context,
+        recent: _recent,
+        random: _random,
+      );
+      _recent.add(motivation);
+      if (_recent.length > motivationMemory) _recent.removeAt(0);
+      return CelebrationCheer(motivation, context);
+    } on Object catch (error, stack) {
+      debugPrint('Choosing a message failed: $error\n$stack');
+      return null;
     }
   }
 

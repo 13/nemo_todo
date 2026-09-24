@@ -15,6 +15,8 @@ import '../../support/test_db.dart';
 /// anything else: enough to prove a pull reached the engine, without the
 /// spinner-timing behaviour `sync_refresh_test.dart` already covers.
 class _SignedInEngine extends SyncEngine {
+  // A test fake: the count is read by the test, not by any provider.
+  // ignore: riverpod_lint/avoid_public_notifier_properties
   int calls = 0;
 
   @override

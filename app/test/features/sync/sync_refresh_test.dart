@@ -17,6 +17,8 @@ class _FakeSyncEngine extends SyncEngine {
   final SyncStatus initial;
   final SyncStatus end;
   final Completer<void> gate;
+  // A test fake: the count is read by the test, not by any provider.
+  // ignore: riverpod_lint/avoid_public_notifier_properties
   int calls = 0;
 
   @override
@@ -37,6 +39,8 @@ class _FakeSyncEngine extends SyncEngine {
 /// A run is already going: `syncNow` only marks "go again" and returns at
 /// once, as the real engine does.
 class _BusyEngine extends SyncEngine {
+  // A test fake: the count is read by the test, not by any provider.
+  // ignore: riverpod_lint/avoid_public_notifier_properties
   int calls = 0;
 
   @override

@@ -787,11 +787,11 @@
   },
   "todayWelcomeBack0": "Welcome back. One small thing is a good start.",
   "@todayWelcomeBack0": {
-    "description": "Today header's line: nothing has been completed today yet, after a gap of a day or more."
+    "description": "Today header's line: nothing has been completed today yet, after 3 or more days without a completion."
   },
   "todayWelcomeBack1": "Good to see you. Start with something easy.",
   "@todayWelcomeBack1": {
-    "description": "Today header's line: nothing has been completed today yet, after a gap of a day or more."
+    "description": "Today header's line: nothing has been completed today yet, after 3 or more days without a completion."
   },
   "todayFreshStart0": "A fresh start.",
   "@todayFreshStart0": {

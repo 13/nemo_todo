@@ -1238,14 +1238,14 @@ class LIt extends L {
   String get motivationHalfway0 => 'Sei a metà.';
 
   @override
-  String get motivationHalfway1 => 'Metà della giornata, fatta.';
+  String get motivationHalfway1 => 'Metà delle cose di oggi, fatte.';
 
   @override
   String get motivationHalfway2 => 'Buon ritmo. Sei a metà.';
 
   @override
   String motivationStreakDay0(int days) {
-    return '$days giorni di fila.';
+    return '$days° giorno di fila.';
   }
 
   @override
@@ -1282,12 +1282,24 @@ class LIt extends L {
 
   @override
   String motivationProgress0(int done, int total) {
-    return '$done su $total fatte oggi.';
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done su $total fatte oggi.',
+      one: '1 su $total fatta oggi.',
+    );
+    return '$_temp0';
   }
 
   @override
   String motivationProgress1(int done, int left) {
-    return '$done fatte, ne mancano $left.';
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done fatte, ne mancano $left.',
+      one: '1 fatta, ne mancano $left.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1315,7 +1327,7 @@ class LIt extends L {
   String get motivationGeneric7 => 'Un passo avanti.';
 
   @override
-  String get motivationGeneric8 => 'Fatto bene.';
+  String get motivationGeneric8 => 'Ottimo.';
 
   @override
   String get motivationGeneric9 => 'Cancellata dalla lista.';
@@ -1328,12 +1340,18 @@ class LIt extends L {
 
   @override
   String todayProgressCount(int done, int total) {
-    return '$done su $total fatte';
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done su $total fatte',
+      one: '1 su $total fatta',
+    );
+    return '$_temp0';
   }
 
   @override
   String get todayWelcomeBack0 =>
-      'Bentornato. Una piccola cosa è un buon inizio.';
+      'Che bello riaverti qui. Una piccola cosa è un buon inizio.';
 
   @override
   String get todayWelcomeBack1 =>

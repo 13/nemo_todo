@@ -49,6 +49,32 @@ void main() {
     );
   });
 
+  test('Italian agrees with a count of one', () async {
+    final l = await L.delegate.load(const Locale('it'));
+    const one = MotivationContext(
+      todayDone: 1,
+      todayTotal: 5,
+      wasInToday: true,
+      firstToday: false,
+      streak: 4,
+      wasOverdue: false,
+      cleared: false,
+    );
+    String progress(int v, MotivationContext c) =>
+        motivationText(l, Motivation(MotivationKind.progress, v), c);
+
+    expect(progress(0, one), '1 su 5 fatta oggi.');
+    expect(progress(0, _c), '3 su 5 fatte oggi.');
+    expect(progress(1, one), '1 fatta, ne mancano 4.');
+    expect(progress(1, _c), '3 fatte, ne mancano 2.');
+    expect(l.todayProgressCount(1, 5), '1 su 5 fatta');
+    expect(l.todayProgressCount(3, 5), '3 su 5 fatte');
+    expect(
+      motivationText(l, const Motivation(MotivationKind.streakDay, 0), _c),
+      '4° giorno di fila.',
+    );
+  });
+
   test('an out-of-range variant falls back to the first', () async {
     final l = await L.delegate.load(const Locale('en'));
     expect(

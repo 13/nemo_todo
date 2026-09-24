@@ -1223,7 +1223,7 @@ class LDe extends L {
   String get motivationDayCleared3 => 'Fertig. Zeit für etwas Schönes.';
 
   @override
-  String get motivationLastOne0 => 'Noch eins.';
+  String get motivationLastOne0 => 'Noch eine übrig.';
 
   @override
   String get motivationLastOne1 => 'Nur noch eins übrig.';
@@ -1235,7 +1235,7 @@ class LDe extends L {
   String get motivationHalfway0 => 'Die Hälfte ist geschafft.';
 
   @override
-  String get motivationHalfway1 => 'Der halbe Tag ist erledigt.';
+  String get motivationHalfway1 => 'Die Hälfte für heute ist erledigt.';
 
   @override
   String get motivationHalfway2 => 'Gutes Tempo. Halbzeit.';

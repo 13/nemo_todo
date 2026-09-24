@@ -2211,13 +2211,13 @@ abstract class L {
   /// **'{done} of {total} done'**
   String todayProgressCount(int done, int total);
 
-  /// Today header's line: nothing has been completed today yet, after a gap of a day or more.
+  /// Today header's line: nothing has been completed today yet, after 3 or more days without a completion.
   ///
   /// In en, this message translates to:
   /// **'Welcome back. One small thing is a good start.'**
   String get todayWelcomeBack0;
 
-  /// Today header's line: nothing has been completed today yet, after a gap of a day or more.
+  /// Today header's line: nothing has been completed today yet, after 3 or more days without a completion.
   ///
   /// In en, this message translates to:
   /// **'Good to see you. Start with something easy.'**

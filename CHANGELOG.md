@@ -13,6 +13,17 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## Unreleased
+
+### Added
+
+- Ticking a task off now shows a short, varied message: a word of
+  encouragement, how far along today is, "one to go", or a note when a
+  streak continues. Swiping a task done puts the message in the Undo bar.
+- The Today screen shows how many of today's tasks are done, with a calm
+  line to start the day, a welcome back after a break, and a note when
+  everything is done. Messages follow the Celebrations switch in Settings.
+
 ## 0.12.0 - 2026-09-24
 
 ### Added

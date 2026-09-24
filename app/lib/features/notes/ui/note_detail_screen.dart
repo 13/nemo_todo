@@ -630,7 +630,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                 children: [
                   MaxWidth(
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                      // Room at the end for the Make todo chip, which floats
+                      // over the page's last 56 px: the last rows can still
+                      // be scrolled out from under it.
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 64),
                       children: [
                         TextField(
                           key: const Key('note-title'),
@@ -705,6 +708,16 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                               maxLines: null,
                               minLines: 6,
                               keyboardType: TextInputType.multiline,
+                              // Scrolls the line being typed clear of the
+                              // floating chip, whose top is 56 px above the
+                              // page's bottom, with a margin -- not just 20 px
+                              // off the edge, where the chip would cover it.
+                              scrollPadding: const EdgeInsets.fromLTRB(
+                                20,
+                                20,
+                                20,
+                                72,
+                              ),
                               textCapitalization: TextCapitalization.sentences,
                               inputFormatters: [ListContinuationFormatter()],
                               contextMenuBuilder: (context, state) {

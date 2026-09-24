@@ -1489,7 +1489,55 @@ void main() {
     expect(chip, findsNothing);
   });
 
-  appTest('the read view shows no chip', (tester) async {
+  appTest('the chip stays clear of the line being typed at the bottom', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, initialLocation: '/notes/n1');
+    await app.seedList('l1', 'Kitchen');
+    await app.seedNote('n1', 'l1', title: 'Shop', body: 'start');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('note-body')));
+    await tester.pumpAndSettle();
+    // Long enough to scroll, typed so the field brings the caret -- at
+    // the end of a checklist line, where the chip shows -- into view.
+    final body = [for (var i = 0; i < 60; i++) 'line $i', '- [ ] milk'];
+    await tester.enterText(find.byKey(const Key('note-body')), body.join('\n'));
+    await tester.pumpAndSettle();
+
+    final chip = find.byKey(const Key('note-make-todo-chip'));
+    expect(chip, findsOneWidget);
+    final editable = tester
+        .state<EditableTextState>(
+          find.descendant(
+            of: find.byKey(const Key('note-body')),
+            matching: find.byType(EditableText),
+          ),
+        )
+        .renderEditable;
+    final caret = MatrixUtils.transformRect(
+      editable.getTransformTo(null),
+      editable.getLocalRectForCaret(
+        TextPosition(offset: bodyField(tester).controller!.text.length),
+      ),
+    );
+    final chipRect = tester.getRect(chip);
+    // The whole line, not just the caret: a short line ends far left of
+    // the chip, but a longer one typed on would run under it.
+    expect(caret.overlaps(chipRect), isFalse);
+    expect(
+      caret.bottom,
+      lessThanOrEqualTo(chipRect.top),
+      reason: 'caret $caret, chip $chipRect',
+    );
+  });
+
+  appTest('the read view shows no chip, and gives the browser its menu '
+      'back', (tester) async {
+    final calls = <bool>[];
+    final original = browserContextMenuToggle;
+    browserContextMenuToggle = ({required enabled}) => calls.add(enabled);
+    addTearDown(() => browserContextMenuToggle = original);
     final app = await pumpApp(tester, initialLocation: '/notes/n1');
     await app.seedList('l1', 'Kitchen');
     await app.seedNote('n1', 'l1', title: 'Shop', body: '- [ ] milk');
@@ -1507,6 +1555,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('note-read-view')), findsOneWidget);
     expect(find.byKey(const Key('note-make-todo-chip')), findsNothing);
+    expect(calls, [false, true]);
   });
 
   appTest("the browser's context menu is off only while the body has "

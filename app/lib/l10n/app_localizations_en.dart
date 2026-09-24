@@ -1337,4 +1337,11 @@ class LEn extends L {
 
   @override
   String get todayAllClear => 'All clear. Enjoy the rest of your day.';
+
+  @override
+  String get syncPullFailed => 'Sync didn\'t work. It will try again shortly.';
+
+  @override
+  String get syncPullSignedOut =>
+      'Your session has ended. Sign in again in Settings.';
 }

@@ -1368,4 +1368,12 @@ class LIt extends L {
 
   @override
   String get todayAllClear => 'Tutto fatto. Goditi il resto della giornata.';
+
+  @override
+  String get syncPullFailed =>
+      'La sincronizzazione non è riuscita. Riproverà a breve.';
+
+  @override
+  String get syncPullSignedOut =>
+      'La sessione è scaduta. Accedi di nuovo nelle Impostazioni.';
 }

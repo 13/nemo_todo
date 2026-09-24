@@ -808,5 +808,13 @@
   "todayAllClear": "All clear. Enjoy the rest of your day.",
   "@todayAllClear": {
     "description": "Today header's line: nothing Today shows is open any more."
+  },
+  "syncPullFailed": "Sync didn't work. It will try again shortly.",
+  "@syncPullFailed": {
+    "description": "Snackbar after pulling down to sync when it failed."
+  },
+  "syncPullSignedOut": "Your session has ended. Sign in again in Settings.",
+  "@syncPullSignedOut": {
+    "description": "Snackbar after pulling down to sync when the session ended."
   }
 }

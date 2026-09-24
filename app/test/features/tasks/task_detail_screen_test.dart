@@ -8,6 +8,7 @@ import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
+import '../../support/snack_bar.dart';
 import '../../support/test_db.dart';
 
 void main() {
@@ -309,6 +310,7 @@ void main() {
     await tester.pumpAndSettle();
     expect((await app.db.taskById('t1'))!.isDeleted, isTrue);
     expect(find.byKey(const Key('task-title')), findsNothing);
+    await expectSnackBarTimesOut(tester);
   });
 
   appTest('unknown task shows a message', (tester) async {

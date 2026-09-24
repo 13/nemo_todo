@@ -7,6 +7,7 @@ import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
 
 import '../../support/pump_app.dart';
+import '../../support/snack_bar.dart';
 import '../../support/test_db.dart';
 
 /// Three tasks due today, with celebrations on unless [kv] says otherwise.
@@ -50,6 +51,20 @@ Future<bool> isDone(TestApp app, String title) async =>
         .done;
 
 void main() {
+  appTest('the swipe snackbars go away on their own', (tester) async {
+    await pumpToday(tester, kv: {KvKeys.celebrations: 'false'});
+
+    await tester.drag(find.text('First'), const Offset(500, 0));
+    await pumpFrames(tester);
+    expect(find.text('Task completed'), findsOneWidget);
+    await expectSnackBarTimesOut(tester);
+
+    await tester.drag(find.text('Second'), const Offset(-500, 0));
+    await pumpFrames(tester);
+    expect(find.text('Task deleted'), findsOneWidget);
+    await expectSnackBarTimesOut(tester);
+  });
+
   appTest('a swipe completion celebrates like a tap', (tester) async {
     final app = await pumpToday(tester);
 

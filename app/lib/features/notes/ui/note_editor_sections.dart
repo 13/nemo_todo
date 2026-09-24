@@ -117,6 +117,8 @@ class NoteDeleteAction extends ConsumerWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l.notesDeleted),
+        // An action would keep it up until tapped.
+        persist: false,
         action: SnackBarAction(
           label: l.commonUndo,
           onPressed: () => repo.restore(note.id),

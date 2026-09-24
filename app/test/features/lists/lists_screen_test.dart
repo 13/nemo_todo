@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/router.dart';
 
 import '../../support/pump_app.dart';
+import '../../support/snack_bar.dart';
 
 void main() {
   appTest('shows the inbox, creates, opens and deletes a list', (tester) async {
@@ -42,6 +43,7 @@ void main() {
     expect(find.text('List deleted'), findsOneWidget);
     expect(find.text('Groceries'), findsNothing);
     expect(find.text('2 open tasks'), findsNothing);
+    await expectSnackBarTimesOut(tester);
   });
 
   appTest('long-press opens the menu with edit', (tester) async {

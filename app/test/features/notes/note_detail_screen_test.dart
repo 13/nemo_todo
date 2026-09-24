@@ -19,6 +19,7 @@ import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
+import '../../support/snack_bar.dart';
 
 /// A [NotesRepository] whose `updateText` -- the screen's save path --
 /// waits on [_gate] before writing anything.
@@ -941,6 +942,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect((await harness.db.noteById('n1'))!.isDeleted, isFalse);
+  });
+
+  appTest('the note-deleted snackbar goes away on its own', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/notes');
+    await harness.seedList('l1', 'Kitchen');
+    await harness.seedNote('n1', 'l1', title: 'Bread');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bread'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('note-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-note')));
+    await tester.pumpAndSettle();
+
+    await expectSnackBarTimesOut(tester);
+    expect((await harness.db.noteById('n1'))!.isDeleted, isTrue);
   });
 
   appTest('deleting a note opened directly, with nothing else on the stack, '

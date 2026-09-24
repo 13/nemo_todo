@@ -110,6 +110,8 @@ Future<void> showRescheduleSheet(
                   ),
                 ),
         ),
+        // An action would keep it up until tapped.
+        persist: false,
         action: SnackBarAction(
           label: l.commonUndo,
           onPressed: () => repo.save(

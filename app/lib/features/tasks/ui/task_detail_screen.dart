@@ -115,6 +115,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l.tasksDeleted),
+        // An action would keep it up until tapped.
+        persist: false,
         action: SnackBarAction(
           label: l.commonUndo,
           onPressed: () => repo.restore(task.id),

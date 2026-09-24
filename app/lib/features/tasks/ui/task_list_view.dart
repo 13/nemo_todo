@@ -231,6 +231,8 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
                       ? motivationText(l, cheer.motivation, cheer.context)
                       : l.tasksCompletedSnack,
                 ),
+                // An action would keep it up until tapped.
+                persist: false,
                 action: SnackBarAction(
                   label: l.commonUndo,
                   // The SnackBar outlives this screen, and this `ref` is
@@ -248,6 +250,8 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(l.tasksDeleted),
+            // An action would keep it up until tapped.
+            persist: false,
             action: SnackBarAction(
               label: l.commonUndo,
               onPressed: () => repo.restore(task.id),

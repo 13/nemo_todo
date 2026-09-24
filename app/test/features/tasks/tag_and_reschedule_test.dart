@@ -9,6 +9,7 @@ import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
 
 import '../../support/pump_app.dart';
+import '../../support/snack_bar.dart';
 import '../../support/test_db.dart';
 
 void main() {
@@ -64,7 +65,7 @@ void main() {
     expect(find.text('No tasks tagged #nothing.'), findsOneWidget);
   });
 
-  appTest('a long press moves a task to tomorrow, and undo puts it back', (
+  appTest('a long press moves a task to tomorrow, and the snackbar goes', (
     tester,
   ) async {
     final app = await pumpApp(
@@ -86,6 +87,27 @@ void main() {
     expect((await app.db.taskById('t1'))!.dueAt, dayStartMsFrom(testNow, 1));
     expect(find.text('Moved to Tomorrow.'), findsOneWidget);
     expect(find.text('Call the bank'), findsNothing, reason: 'no longer today');
+    // Undo is offered, not forced: left alone, the snackbar goes.
+    await expectSnackBarTimesOut(tester);
+    expect((await app.db.taskById('t1'))!.dueAt, dayStartMsFrom(testNow, 1));
+  });
+
+  appTest('undo on the reschedule snackbar puts the task back', (tester) async {
+    final app = await pumpApp(
+      tester,
+      seed: (db, inbox) async {
+        await repo(db).create(
+          listId: inbox.id,
+          title: 'Call the bank',
+          dueAt: dayStartMs(testNow),
+        );
+      },
+    );
+
+    await tester.longPress(find.text('Call the bank'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('reschedule-tomorrow')));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Undo'));
     await tester.pumpAndSettle();

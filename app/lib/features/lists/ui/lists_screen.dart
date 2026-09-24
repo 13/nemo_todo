@@ -216,6 +216,8 @@ Future<bool> confirmDeleteList(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l.listsDeleted),
+        // An action would keep it up until tapped.
+        persist: false,
         action: SnackBarAction(
           label: l.commonUndo,
           onPressed: () => repo.restore(list.id),

@@ -10,27 +10,36 @@ import 'package:nemo_core/nemo_core.dart';
 import '../../support/pump_app.dart';
 import '../../support/test_db.dart';
 
-/// [testNow]'s day of the year, which picks the line's variant.
-final int _dayOfYear = testNow.difference(DateTime(testNow.year)).inDays;
+/// [now]'s day of the year, counted in calendar days, which picks the
+/// line's variant.
+int _dayOfYearOf(DateTime now) => DateTime.utc(
+  now.year,
+  now.month,
+  now.day,
+).difference(DateTime.utc(now.year)).inDays;
+
+final int _dayOfYear = _dayOfYearOf(testNow);
 
 Future<void> _seedDueToday(
   AppDatabase db,
   TaskList inbox,
   List<String> titles, {
   List<bool> done = const [],
+  DateTime? now,
 }) async {
+  final today = now ?? testNow;
   final tasks = TasksRepository(
     db,
     testClock('seed'),
     sequentialIds('task'),
     reminders: const NoopReminderScheduler(),
-    now: () => testNow,
+    now: () => today,
   );
   for (var i = 0; i < titles.length; i++) {
     final t = await tasks.create(
       listId: inbox.id,
       title: titles[i],
-      dueAt: dayStartMs(testNow),
+      dueAt: dayStartMs(today),
     );
     if (i < done.length && done[i]) await tasks.setDone(t.id, done: true);
   }
@@ -103,6 +112,27 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // The night after Europe's clocks went forward on 29 March 2026: counted
+  // in hours, the day since New Year is an hour short of a whole one.
+  appTest('the line is picked by calendar day across a clock change', (
+    tester,
+  ) async {
+    final now = DateTime(2026, 3, 30, 0, 30);
+    await pumpApp(
+      tester,
+      celebrate: true,
+      now: now,
+      seed: (db, inbox) => _seedDueToday(db, inbox, ['A', 'B'], now: now),
+    );
+    expect(_dayOfYearOf(now), 88);
+    const freshStart = [
+      'A fresh start.',
+      'Pick one to begin.',
+      'One thing at a time.',
+    ];
+    expect(find.text(freshStart[88 % freshStart.length]), findsOneWidget);
+  }, tags: 'dst');
 
   appTest('none done today, last completion 4 days ago: a welcome-back line', (
     tester,

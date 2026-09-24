@@ -77,7 +77,13 @@ class TodayProgress extends ConsumerWidget {
     required int total,
   }) {
     final now = ref.watch(nowProvider)();
-    final dayOfYear = now.difference(DateTime(now.year)).inDays;
+    // Counted between UTC dates: local midnights are 23 or 25 hours apart
+    // across a daylight-saving change, which would repeat or skip a day.
+    final dayOfYear = DateTime.utc(
+      now.year,
+      now.month,
+      now.day,
+    ).difference(DateTime.utc(now.year)).inDays;
     if (done == total) {
       return todayLineText(l, TodayLine.allClear, dayOfYear);
     }

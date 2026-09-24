@@ -177,7 +177,10 @@ class NoteFormatToolbar extends ConsumerWidget {
                 final link = linkAtCursor(controller.value);
                 final undo = undoController.value;
                 final value = controller.value;
-                final linkedTask = value.selection.isValid
+                // Only for a cursor: a selection that starts on a linked
+                // line can still reach lines to make tasks of.
+                final linkedTask =
+                    value.selection.isValid && value.selection.isCollapsed
                     ? linkedTaskAt(value.text, value.selection.start)
                     : null;
                 final canMakeTodo = todoCandidates(value).isNotEmpty;

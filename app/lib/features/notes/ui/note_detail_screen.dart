@@ -308,9 +308,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
 
   /// Writes [body] as an edit of the body, through the same save path as
   /// typing: for writes that come from outside the field -- a checkbox in
-  /// the read view, task links from make-todo.
-  Future<bool> _writeBody(String body) {
-    final sel = _body.selection;
+  /// the read view, task links from make-todo. [selection], when given, is
+  /// where the cursor goes; otherwise it stays where it was.
+  Future<bool> _writeBody(String body, {TextSelection? selection}) {
+    final sel = selection ?? _body.selection;
     _body.value = TextEditingValue(
       text: body,
       selection: sel.isValid && sel.end <= body.length
@@ -404,19 +405,27 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     final body = _body.text;
     final link = wholeNote != null || body == anchoredIn;
     if (link) {
-      await _writeBody(
-        wholeNote != null
-            ? appendTaskLink(body, created.single)
-            : insertTaskLinks(body, [
-                // One draft per candidate, or one task anchored at the first.
-                if (created.length == candidates.length)
-                  for (final (i, id) in created.indexed)
-                    (candidates[i].anchor, id)
-                else
-                  (candidates.first.anchor, created.single),
-              ]),
-      );
-      if (!mounted) return;
+      // Through the value, not just the text, so a cursor at an anchor
+      // moves past the link that lands there.
+      final linked = wholeNote != null
+          ? TextEditingValue(
+              text: appendTaskLink(body, created.single),
+              selection: _body.selection,
+            )
+          : insertTaskLinksInValue(_body.value, [
+              // One draft per candidate, or one task anchored at the first.
+              if (created.length == candidates.length)
+                for (final (i, id) in created.indexed)
+                  (candidates[i].anchor, id)
+              else
+                (candidates.first.anchor, created.single),
+            ]);
+      final saved = await _writeBody(linked.text, selection: linked.selection);
+      // A failed write has put up its own snackbar: the tasks exist and
+      // the links sit in the field, dirty, for the next save to retry --
+      // but the note is not saved, and that is what must stay on screen,
+      // not a success message over it.
+      if (!saved || !mounted) return;
     }
     // A SnackBar has one action: Undo takes it, and Open (one task only)
     // sits in the content.
@@ -472,17 +481,26 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     required NotesRepository? notes,
     required AppDatabase db,
   }) async {
+    // Each on its own, like the rollback: one that fails neither stops the
+    // rest nor the links coming out. A task that could not be deleted
+    // keeps its link, so the note does not lose track of it.
+    final deleted = <String>{};
     for (final id in ids) {
-      await tasks.delete(id);
+      try {
+        await tasks.delete(id);
+        deleted.add(id);
+      } on Object catch (error, stack) {
+        debugPrint('task $id not undone: $error\n$stack');
+      }
     }
-    if (notes == null) return;
+    if (notes == null || deleted.isEmpty) return;
     if (mounted) {
-      await _writeBody(removeTaskLinks(_body.text, ids));
+      await _writeBody(removeTaskLinks(_body.text, deleted));
       return;
     }
     final stored = await db.noteById(widget.noteId);
     if (stored == null) return;
-    final body = removeTaskLinks(stored.body, ids);
+    final body = removeTaskLinks(stored.body, deleted);
     if (body != stored.body) {
       await notes.updateText(widget.noteId, body: body);
     }
@@ -664,7 +682,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                           inputFormatters: [ListContinuationFormatter()],
                           contextMenuBuilder: (context, state) {
                             final items = [...state.contextMenuButtonItems];
-                            if (!state.textEditingValue.selection.isCollapsed) {
+                            if (todoCandidates(state.textEditingValue)
+                                .isNotEmpty) {
                               items.insert(
                                 0,
                                 ContextMenuButtonItem(

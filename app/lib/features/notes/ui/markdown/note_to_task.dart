@@ -73,7 +73,10 @@ List<TodoCandidate> todoCandidates(TextEditingValue v) {
   }
   final out = <TodoCandidate>[];
   var (ls, _) = _lineAt(text, sel.start);
-  while (ls <= sel.end && ls <= text.length) {
+  // `<`, not `<=`: a selection that ends at the very start of a line --
+  // a whole line taken with its line break, or Shift+Down -- does not
+  // reach into that line.
+  while (ls < sel.end && ls <= text.length) {
     final (_, le) = _lineAt(text, ls);
     final line = text.substring(ls, le);
     final title = plainLine(line);
@@ -118,6 +121,34 @@ String insertTaskLinks(String body, List<(int, String)> links) {
   return out;
 }
 
+/// [v] with the links of [insertTaskLinks] in its text, and its selection
+/// moved along with the text: each end past every link inserted at or
+/// before it. A cursor at an anchor -- the end of the line it made a task
+/// of -- so ends up after the link, where typing (or Enter, continuing
+/// the list) belongs, not wedged between the line and its link.
+TextEditingValue insertTaskLinksInValue(
+  TextEditingValue v,
+  List<(int, String)> links,
+) {
+  int shifted(int offset) {
+    if (offset < 0) return offset;
+    var out = offset;
+    for (final (anchor, id) in links) {
+      if (anchor <= offset) out += ' ${taskLink(id)}'.length;
+    }
+    return out;
+  }
+
+  final sel = v.selection;
+  return TextEditingValue(
+    text: insertTaskLinks(v.text, links),
+    selection: sel.copyWith(
+      baseOffset: shifted(sel.baseOffset),
+      extentOffset: shifted(sel.extentOffset),
+    ),
+  );
+}
+
 /// [body] with a task link on a new last line.
 String appendTaskLink(String body, String id) =>
     body.isEmpty ? taskLink(id) : '$body\n${taskLink(id)}';
@@ -139,7 +170,10 @@ String removeTaskLinks(String body, Set<String> ids) {
 
 /// The whole note as a task: its title, its body as notes, and its open
 /// checkboxes as possible subtasks -- with the body minus those lines for
-/// when they become subtasks.
+/// when they become subtasks. Task links already in the note are left out
+/// of the notes: in a task's notes they would only point at other tasks
+/// from a place nobody reads them as links. A line that held nothing but
+/// links goes with them.
 ({
   String title,
   String notes,
@@ -147,7 +181,13 @@ String removeTaskLinks(String body, Set<String> ids) {
   List<String> checklist,
 })
 wholeNoteTodo(String title, String body) {
-  final lines = body.split('\n');
+  final lines = [
+    for (final line in body.split('\n'))
+      if (!_taskLinkAny.hasMatch(line))
+        line
+      else if (line.replaceAll(_taskLinkAny, '').trim().isNotEmpty)
+        line.replaceAll(_taskLinkAny, ''),
+  ];
   final checklist = <String>[];
   final kept = <String>[];
   for (final line in lines) {
@@ -159,7 +199,7 @@ wholeNoteTodo(String title, String body) {
   }
   return (
     title: title.trim(),
-    notes: body,
+    notes: lines.join('\n'),
     notesWithoutChecklist: kept.join('\n'),
     checklist: checklist,
   );

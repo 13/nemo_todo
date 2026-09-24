@@ -42,6 +42,16 @@ void main() {
       expect(c.anchor, text.length);
     });
 
+    test('a selection ending at the start of the next line leaves that '
+        'line out', () {
+      expect(todoCandidates(_sel('a\nb', 0, 2)).map((c) => c.title), ['a']);
+      const text = 'one\ntwo\nthree';
+      expect(todoCandidates(_sel(text, 0, 8)).map((c) => c.title), [
+        'one',
+        'two',
+      ]);
+    });
+
     test('a cursor on plain text gives nothing', () {
       expect(todoCandidates(_sel('just words', 3)), isEmpty);
     });
@@ -73,6 +83,38 @@ void main() {
     expect(removeTaskLinks(out, {'a', 'b'}), body);
   });
 
+  group('insertTaskLinksInValue', () {
+    test('moves a cursor at an anchor past the link', () {
+      final out = insertTaskLinksInValue(
+        const TextEditingValue(
+          text: '- [ ] milk',
+          selection: TextSelection.collapsed(offset: 10),
+        ),
+        [(10, 'a')],
+      );
+      expect(out.text, '- [ ] milk [→ task](nemo://task/a)');
+      expect(out.selection, TextSelection.collapsed(offset: out.text.length));
+    });
+
+    test('shifts each end of a selection by the links before it', () {
+      const link = ' [→ task](nemo://task/a)';
+      final out = insertTaskLinksInValue(
+        const TextEditingValue(
+          text: 'milk\nbread',
+          selection: TextSelection(baseOffset: 2, extentOffset: 10),
+        ),
+        [(4, 'a'), (10, 'b')],
+      );
+      expect(
+        out.text,
+        'milk [→ task](nemo://task/a)\nbread [→ task](nemo://task/b)',
+      );
+      expect(out.selection.baseOffset, 2);
+      expect(out.selection.extentOffset, out.text.length);
+      expect(out.text.indexOf('\n'), 4 + link.length);
+    });
+  });
+
   test('appendTaskLink puts the link on a new last line, and undoes', () {
     expect(appendTaskLink('', 'a'), '[→ task](nemo://task/a)');
     final out = appendTaskLink('text\n', 'a');
@@ -96,5 +138,16 @@ void main() {
     expect(w.checklist, ['milk', 'jam']);
     expect(w.notes, 'For Sunday\n- [ ] milk\n- [x] eggs\n- [ ] **jam**');
     expect(w.notesWithoutChecklist, 'For Sunday\n- [x] eggs');
+  });
+
+  test('wholeNoteTodo leaves existing task links out of the notes', () {
+    final w = wholeNoteTodo(
+      'Shop',
+      'call Bob [→ task](nemo://task/t1)\n- [ ] milk\n'
+          '[→ task](nemo://task/t2)',
+    );
+    expect(w.notes, 'call Bob\n- [ ] milk');
+    expect(w.notesWithoutChecklist, 'call Bob');
+    expect(w.checklist, ['milk']);
   });
 }

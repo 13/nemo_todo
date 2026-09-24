@@ -1194,6 +1194,18 @@ class LIt extends L {
   }
 
   @override
+  String noteTodoCreatedNoLink(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count attività create. Nel frattempo la nota è cambiata, quindi non sono stati aggiunti link.',
+      one: 'Attività creata. Nel frattempo la nota è cambiata, quindi non è stato aggiunto alcun link.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get noteTodoFailed => 'Impossibile creare l\'attività';
 
   @override

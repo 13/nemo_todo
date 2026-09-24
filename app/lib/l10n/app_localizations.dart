@@ -1983,6 +1983,12 @@ abstract class L {
   /// **'{count, plural, =1{Task created} other{{count} tasks created}}'**
   String noteTodoCreated(int count);
 
+  /// Snackbar after make-todo created tasks while the note was changed elsewhere, so the links were left out.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Task created. The note changed meanwhile, so no link was added.} other{{count} tasks created. The note changed meanwhile, so no links were added.}}'**
+  String noteTodoCreatedNoLink(int count);
+
   /// Snackbar when creating tasks from a note fails; nothing was changed.
   ///
   /// In en, this message translates to:

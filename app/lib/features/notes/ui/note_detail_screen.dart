@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/db/app_database.dart';
+import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
@@ -18,6 +20,7 @@ import 'package:nemo/features/notes/ui/note_read_view.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/notes/ui/task_link_chip.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
+import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -325,7 +328,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   Future<void> _makeTodoFromEditor() async {
     final candidates = todoCandidates(_body.value);
     if (candidates.isEmpty) return;
-    await _makeTodo(candidates: candidates);
+    await _makeTodo(candidates: candidates, anchoredIn: _body.text);
   }
 
   /// Saves first, so the task is made from what the fields show.
@@ -338,9 +341,16 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   /// Asks, creates the tasks, links them in the body and offers undo.
   /// A failure part way deletes what was created and leaves the body as
   /// it was.
+  ///
+  /// [anchoredIn] is the body the [candidates]' anchors point into. The
+  /// sheet stays up as long as the person likes, and a sync can change the
+  /// body meanwhile; the anchors would then land links in the wrong place,
+  /// so none are added. A whole-note link goes at the end and needs no
+  /// anchor.
   Future<void> _makeTodo({
     List<TodoCandidate> candidates = const [],
     WholeNoteTodo? wholeNote,
+    String? anchoredIn,
   }) async {
     final note = ref.read(noteByIdProvider(widget.noteId)).value;
     if (note == null) return;
@@ -353,8 +363,12 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     if (result == null || !mounted) return;
     final l = L.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    // Read now, while `ref` is usable: Undo sits in a snackbar that
+    // outlives this page, and must still work after it has gone.
     final tasks = ref.read(tasksRepositoryProvider);
     final subtasks = ref.read(subtasksRepositoryProvider);
+    final notes = ref.read(notesRepositoryProvider);
+    final db = ref.read(appDatabaseProvider);
     final created = <String>[];
     try {
       for (final draft in result.tasks) {
@@ -372,8 +386,14 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       }
     } on Object catch (error, stack) {
       debugPrint('note ${widget.noteId}: tasks not created: $error\n$stack');
+      // Each on its own, so one that fails neither stops the rest nor
+      // swallows the snackbar.
       for (final id in created) {
-        await tasks.delete(id);
+        try {
+          await tasks.delete(id);
+        } on Object catch (error, stack) {
+          debugPrint('task $id not rolled back: $error\n$stack');
+        }
       }
       messenger
         ..hideCurrentSnackBar()
@@ -382,17 +402,22 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
     if (!mounted) return;
     final body = _body.text;
-    final linked = wholeNote != null
-        ? appendTaskLink(body, created.single)
-        : insertTaskLinks(body, [
-            // One draft per candidate, or one task anchored at the first.
-            if (created.length == candidates.length)
-              for (final (i, id) in created.indexed) (candidates[i].anchor, id)
-            else
-              (candidates.first.anchor, created.single),
-          ]);
-    await _writeBody(linked);
-    if (!mounted) return;
+    final link = wholeNote != null || body == anchoredIn;
+    if (link) {
+      await _writeBody(
+        wholeNote != null
+            ? appendTaskLink(body, created.single)
+            : insertTaskLinks(body, [
+                // One draft per candidate, or one task anchored at the first.
+                if (created.length == candidates.length)
+                  for (final (i, id) in created.indexed)
+                    (candidates[i].anchor, id)
+                else
+                  (candidates.first.anchor, created.single),
+              ]),
+      );
+      if (!mounted) return;
+    }
     // A SnackBar has one action: Undo takes it, and Open (one task only)
     // sits in the content.
     messenger
@@ -401,7 +426,13 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         SnackBar(
           content: Row(
             children: [
-              Expanded(child: Text(l.noteTodoCreated(created.length))),
+              Expanded(
+                child: Text(
+                  link
+                      ? l.noteTodoCreated(created.length)
+                      : l.noteTodoCreatedNoLink(created.length),
+                ),
+              ),
               if (created.length == 1)
                 TextButton(
                   key: const Key('todo-open'),
@@ -413,21 +444,48 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                 ),
             ],
           ),
+          // An action makes a snackbar persist by default; this one
+          // would then sit over the format bar until dismissed.
+          persist: false,
           action: SnackBarAction(
             label: l.commonUndo,
-            onPressed: () => unawaited(_undoTodo(created.toSet())),
+            onPressed: () => unawaited(
+              _undoTodo(
+                created.toSet(),
+                tasks: tasks,
+                notes: link ? notes : null,
+                db: db,
+              ),
+            ),
           ),
         ),
       );
   }
 
-  Future<void> _undoTodo(Set<String> ids) async {
-    final tasks = ref.read(tasksRepositoryProvider);
+  /// Deletes the tasks and, given [notes], takes their links out of the
+  /// body: through the editor while the page is up, so the edit is one
+  /// the fields know about, or straight onto the stored note once it has
+  /// gone. Uses no `ref`, which may be gone by the time Undo is tapped.
+  Future<void> _undoTodo(
+    Set<String> ids, {
+    required TasksRepository tasks,
+    required NotesRepository? notes,
+    required AppDatabase db,
+  }) async {
     for (final id in ids) {
       await tasks.delete(id);
     }
-    if (!mounted) return;
-    await _writeBody(removeTaskLinks(_body.text, ids));
+    if (notes == null) return;
+    if (mounted) {
+      await _writeBody(removeTaskLinks(_body.text, ids));
+      return;
+    }
+    final stored = await db.noteById(widget.noteId);
+    if (stored == null) return;
+    final body = removeTaskLinks(stored.body, ids);
+    if (body != stored.body) {
+      await notes.updateText(widget.noteId, body: body);
+    }
   }
 
   Future<void> _onLongPressLine(int lineStart, Offset at) async {
@@ -463,7 +521,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       case 'open':
         _openTask(linked!);
       case 'todo':
-        await _makeTodo(candidates: [candidate!]);
+        await _makeTodo(candidates: [candidate!], anchoredIn: body);
       case 'edit':
         _editAt(lineStart);
     }

@@ -1183,6 +1183,18 @@ class LEn extends L {
   }
 
   @override
+  String noteTodoCreatedNoLink(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count tasks created. The note changed meanwhile, so no links were added.',
+      one: 'Task created. The note changed meanwhile, so no link was added.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get noteTodoFailed => 'Couldn\'t create the task';
 
   @override

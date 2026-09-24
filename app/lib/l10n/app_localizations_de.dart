@@ -1193,6 +1193,18 @@ class LDe extends L {
   }
 
   @override
+  String noteTodoCreatedNoLink(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Aufgaben erstellt. Die Notiz wurde inzwischen geändert, daher wurden keine Links eingefügt.',
+      one: 'Aufgabe erstellt. Die Notiz wurde inzwischen geändert, daher wurde kein Link eingefügt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get noteTodoFailed => 'Aufgabe konnte nicht erstellt werden';
 
   @override

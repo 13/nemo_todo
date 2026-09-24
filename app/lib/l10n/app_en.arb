@@ -626,6 +626,11 @@
     "description": "Snackbar after make-todo created tasks.",
     "placeholders": {"count": {"type": "int"}}
   },
+  "noteTodoCreatedNoLink": "{count, plural, =1{Task created. The note changed meanwhile, so no link was added.} other{{count} tasks created. The note changed meanwhile, so no links were added.}}",
+  "@noteTodoCreatedNoLink": {
+    "description": "Snackbar after make-todo created tasks while the note was changed elsewhere, so the links were left out.",
+    "placeholders": {"count": {"type": "int"}}
+  },
   "noteTodoFailed": "Couldn't create the task",
   "@noteTodoFailed": {
     "description": "Snackbar when creating tasks from a note fails; nothing was changed."

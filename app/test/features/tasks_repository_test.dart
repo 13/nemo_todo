@@ -430,4 +430,17 @@ void main() {
       ['Fix the tap'],
     );
   });
+
+  test('watchOpenDated lists open dated tasks in due order', () async {
+    int at(int day) => DateTime(2026, 9, day).millisecondsSinceEpoch;
+    await tasks.create(listId: inbox, title: 'Later', dueAt: at(9));
+    await tasks.create(listId: inbox, title: 'Undated');
+    final done = await tasks.create(listId: inbox, title: 'Done', dueAt: at(7));
+    await tasks.setDone(done.id, done: true);
+    await tasks.create(listId: inbox, title: 'Sooner', dueAt: at(8));
+    final titles = [
+      for (final t in await tasks.watchOpenDated().first) t.title,
+    ];
+    expect(titles, ['Sooner', 'Later']);
+  });
 }

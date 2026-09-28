@@ -56,6 +56,13 @@ class TasksRepository {
     _dueOrder,
   );
 
+  /// Open tasks with a due date, in Today's order: what the daily list is
+  /// built from.
+  Stream<List<Task>> watchOpenDated() => _visible(
+    _db.tasks.done.equals(false) & _db.tasks.dueAt.isNotNull(),
+    _dueOrder,
+  );
+
   /// Open tasks without a due date, grouped by their list's order.
   ///
   /// A list's sort key alone does not group its tasks: the Inbox and the

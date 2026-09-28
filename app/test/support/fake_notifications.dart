@@ -17,6 +17,7 @@ class FakeApi implements NotificationsApi {
   final List<int> cancelled = [];
   bool initialized = false;
   bool permission = true;
+  bool failSchedule = false;
 
   @override
   Future<void> initialize({void Function(String? payload)? onTap}) async =>
@@ -36,14 +37,17 @@ class FakeApi implements NotificationsApi {
     String channelId = 'reminders',
     List<String>? lines,
     String? payload,
-  }) async => scheduled[id] = (
-    title: title,
-    body: body,
-    at: epochMs,
-    channelId: channelId,
-    lines: lines,
-    payload: payload,
-  );
+  }) async {
+    if (failSchedule) throw StateError('plugin failed');
+    scheduled[id] = (
+      title: title,
+      body: body,
+      at: epochMs,
+      channelId: channelId,
+      lines: lines,
+      payload: payload,
+    );
+  }
 
   @override
   Future<void> cancel(int id) async {

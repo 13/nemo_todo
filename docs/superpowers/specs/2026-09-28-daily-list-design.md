@@ -21,7 +21,7 @@ reminders.
 | Channel | Own channel `daily_list` ("Daily list"), separately mutable from `reminders` |
 | Title | "5 tasks today", or "3 today · 2 overdue" when some are overdue |
 | Body | Collapsed: first titles joined by ", ". Expanded (inbox style): up to 6 titles, overdue first then Today's order, then "+N more" |
-| Tap | Opens `/today` (`AppRoutes.today`) |
+| Tap | Opens `/today` (`Routes.today`) |
 | Freshness | Precomputed: the next 7 occurrences are scheduled from current data and rebuilt on every change |
 | Timing | Inexact, `allowWhileIdle`, like reminders; a few minutes late is fine |
 
@@ -141,16 +141,14 @@ A provider holds the scheduler and calls `refresh()`:
   `settings_controller.dart`, same shape as `CelebrationsEnabled`.
 - Tile in the settings screen near the other notification-related
   settings: a `SwitchListTile` "Daily list", subtitle "Every day at
-  08:00"; tapping the subtitle opens `showTimePicker`. When turned on and
-  permission is refused, the switch stays on and the subtitle reads
-  "Notifications are off for nemo" with a button opening the app's system
-  notification settings.
+  08:00"; a "Time" row below it opens `showTimePicker`. When turned on
+  and permission is refused, the switch stays off, exactly like a task's
+  reminder switch.
 
 ## Localisation
 
-New en/de/it keys: `dailyListTitle`, `dailyListSubtitle` (time
-placeholder), `dailyListPermissionOff`, `dailyListChannelName`,
-`dailyListChannelDescription`, `dailyListToday` (plural count),
+New en/de/it keys: `dailyListTitle`, `dailyListHint`, `dailyListTime`, `dailyListChannelName`,
+`dailyListChannelDescription`, `dailyListToday` and `dailyListOverdue` (plural counts),
 `dailyListTodayOverdue` (two counts), `dailyListMore` (count).
 
 ## Out of scope
@@ -173,4 +171,4 @@ schedules.
 - Trigger provider: several task writes in quick succession cause one
   refresh; changing the time causes one.
 - Settings tile widget tests: hidden when unsupported; switch persists;
-  time picker persists; permission refused shows the hint.
+  time picker persists; permission refused leaves it off.

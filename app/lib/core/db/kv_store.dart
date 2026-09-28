@@ -46,6 +46,11 @@ abstract final class KvKeys {
   /// ISO 4217 code the amounts on a task are written in. Device-local,
   /// like every other setting here.
   static const currency = 'currency';
+
+  /// The daily list notification: `"true"` when on; unset is off. Its time
+  /// in minutes after local midnight; unset is 480 (08:00).
+  static const dailyList = 'daily_list';
+  static const dailyListMinutes = 'daily_list_minutes';
 }
 
 /// Typed access to the `kv` table.

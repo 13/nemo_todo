@@ -24,6 +24,8 @@ class AppBootstrap {
     this.celebrationSound = false,
     this.achievements = true,
     this.currency = 'EUR',
+    this.dailyList = false,
+    this.dailyListMinutes = 480,
   });
 
   final String nodeId;
@@ -57,6 +59,12 @@ class AppBootstrap {
   /// decides the default the first time.
   final String currency;
 
+  /// The daily list notification is on.
+  final bool dailyList;
+
+  /// When the daily list arrives: minutes after local midnight.
+  final int dailyListMinutes;
+
   static Future<AppBootstrap> load(AppDatabase db) async {
     final kv = KvStore(db);
     var nodeId = await kv.get(KvKeys.nodeId);
@@ -80,6 +88,9 @@ class AppBootstrap {
       celebrationSound: await kv.get(KvKeys.celebrationSound) == 'true',
       achievements: await kv.get(KvKeys.achievements) != 'false',
       currency: await kv.get(KvKeys.currency) ?? defaultCurrencyCode(),
+      dailyList: await kv.get(KvKeys.dailyList) == 'true',
+      dailyListMinutes:
+          int.tryParse(await kv.get(KvKeys.dailyListMinutes) ?? '') ?? 480,
     );
   }
 }

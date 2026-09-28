@@ -630,6 +630,54 @@ class LEn extends L {
   String get remindersDueNow => 'Due now';
 
   @override
+  String get dailyListTitle => 'Daily list';
+
+  @override
+  String get dailyListHint => 'A morning notification with what\'s due today';
+
+  @override
+  String get dailyListTime => 'Time';
+
+  @override
+  String get dailyListChannelName => 'Daily list';
+
+  @override
+  String get dailyListChannelDescription =>
+      'Once a day: what\'s due today and overdue';
+
+  @override
+  String dailyListToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks today',
+      one: '1 task today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dailyListOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count overdue tasks',
+      one: '1 overdue task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dailyListTodayOverdue(int today, int overdue) {
+    return '$today today · $overdue overdue';
+  }
+
+  @override
+  String dailyListMore(int count) {
+    return '+$count more';
+  }
+
+  @override
   String get startupErrorTitle => 'nemo cannot open its database';
 
   @override

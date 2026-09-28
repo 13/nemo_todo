@@ -96,6 +96,11 @@ void main() {
     await settleSync(tester);
     await tester.tap(find.byKey(const Key('confirm-sign-out')));
     await settleSync(tester);
+    tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .jumpTo(0);
+    await tester.pump();
 
     expect(find.text('Connect to a server'), findsOneWidget);
     expect(await app.db.listById(app.inbox.id), isNotNull);
@@ -183,6 +188,11 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('delete-account-confirm')));
     await settleSync(tester);
+    tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .jumpTo(0);
+    await tester.pump();
 
     expect(client.deletions, ['password123']);
     expect(find.text('Account deleted.'), findsOneWidget);

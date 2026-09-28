@@ -1155,6 +1155,60 @@ abstract class L {
   /// **'Due now'**
   String get remindersDueNow;
 
+  /// No description provided for @dailyListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily list'**
+  String get dailyListTitle;
+
+  /// No description provided for @dailyListHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A morning notification with what\'s due today'**
+  String get dailyListHint;
+
+  /// No description provided for @dailyListTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get dailyListTime;
+
+  /// No description provided for @dailyListChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily list'**
+  String get dailyListChannelName;
+
+  /// No description provided for @dailyListChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Once a day: what\'s due today and overdue'**
+  String get dailyListChannelDescription;
+
+  /// No description provided for @dailyListToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task today} other{{count} tasks today}}'**
+  String dailyListToday(int count);
+
+  /// No description provided for @dailyListOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 overdue task} other{{count} overdue tasks}}'**
+  String dailyListOverdue(int count);
+
+  /// No description provided for @dailyListTodayOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'{today} today · {overdue} overdue'**
+  String dailyListTodayOverdue(int today, int overdue);
+
+  /// No description provided for @dailyListMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String dailyListMore(int count);
+
   /// No description provided for @startupErrorTitle.
   ///
   /// In en, this message translates to:

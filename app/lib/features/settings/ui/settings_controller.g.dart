@@ -301,3 +301,119 @@ abstract class _$CurrencyCode extends $Notifier<String> {
     return element.handleCreate(ref, build);
   }
 }
+
+/// A morning notification with what is due; off unless chosen.
+
+@ProviderFor(DailyListEnabled)
+final dailyListEnabledProvider = DailyListEnabledProvider._();
+
+/// A morning notification with what is due; off unless chosen.
+final class DailyListEnabledProvider
+    extends $NotifierProvider<DailyListEnabled, bool> {
+  /// A morning notification with what is due; off unless chosen.
+  DailyListEnabledProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dailyListEnabledProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dailyListEnabledHash();
+
+  @$internal
+  @override
+  DailyListEnabled create() => DailyListEnabled();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$dailyListEnabledHash() => r'b67470c6b2ce1dc645876f2c0e1a3390ce25db1d';
+
+/// A morning notification with what is due; off unless chosen.
+
+abstract class _$DailyListEnabled extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// When the daily list arrives: minutes after local midnight.
+
+@ProviderFor(DailyListMinutes)
+final dailyListMinutesProvider = DailyListMinutesProvider._();
+
+/// When the daily list arrives: minutes after local midnight.
+final class DailyListMinutesProvider
+    extends $NotifierProvider<DailyListMinutes, int> {
+  /// When the daily list arrives: minutes after local midnight.
+  DailyListMinutesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dailyListMinutesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dailyListMinutesHash();
+
+  @$internal
+  @override
+  DailyListMinutes create() => DailyListMinutes();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$dailyListMinutesHash() => r'badc1b36192166f35de06d154838ac0dd0098b18';
+
+/// When the daily list arrives: minutes after local midnight.
+
+abstract class _$DailyListMinutes extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

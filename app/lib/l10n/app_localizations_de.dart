@@ -637,6 +637,55 @@ class LDe extends L {
   String get remindersDueNow => 'Jetzt fällig';
 
   @override
+  String get dailyListTitle => 'Tagesliste';
+
+  @override
+  String get dailyListHint =>
+      'Eine Benachrichtigung am Morgen mit allem, was heute fällig ist';
+
+  @override
+  String get dailyListTime => 'Uhrzeit';
+
+  @override
+  String get dailyListChannelName => 'Tagesliste';
+
+  @override
+  String get dailyListChannelDescription =>
+      'Einmal am Tag: was heute fällig und was überfällig ist';
+
+  @override
+  String dailyListToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben heute',
+      one: '1 Aufgabe heute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dailyListOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count überfällige Aufgaben',
+      one: '1 überfällige Aufgabe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dailyListTodayOverdue(int today, int overdue) {
+    return '$today heute · $overdue überfällig';
+  }
+
+  @override
+  String dailyListMore(int count) {
+    return '+$count weitere';
+  }
+
+  @override
   String get startupErrorTitle => 'nemo kann seine Datenbank nicht öffnen';
 
   @override

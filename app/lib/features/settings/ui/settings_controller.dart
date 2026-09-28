@@ -64,3 +64,27 @@ class CurrencyCode extends _$CurrencyCode {
     await ref.read(kvStoreProvider).set(KvKeys.currency, code);
   }
 }
+
+/// A morning notification with what is due; off unless chosen.
+@Riverpod(keepAlive: true)
+class DailyListEnabled extends _$DailyListEnabled {
+  @override
+  bool build() => ref.watch(bootstrapProvider).dailyList;
+
+  Future<void> set({required bool enabled}) async {
+    state = enabled;
+    await ref.read(kvStoreProvider).set(KvKeys.dailyList, '$enabled');
+  }
+}
+
+/// When the daily list arrives: minutes after local midnight.
+@Riverpod(keepAlive: true)
+class DailyListMinutes extends _$DailyListMinutes {
+  @override
+  int build() => ref.watch(bootstrapProvider).dailyListMinutes;
+
+  Future<void> set(int minutes) async {
+    state = minutes;
+    await ref.read(kvStoreProvider).set(KvKeys.dailyListMinutes, '$minutes');
+  }
+}

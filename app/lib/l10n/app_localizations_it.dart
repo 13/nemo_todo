@@ -637,6 +637,54 @@ class LIt extends L {
   String get remindersDueNow => 'In scadenza ora';
 
   @override
+  String get dailyListTitle => 'Lista del giorno';
+
+  @override
+  String get dailyListHint => 'Una notifica al mattino con ciò che scade oggi';
+
+  @override
+  String get dailyListTime => 'Orario';
+
+  @override
+  String get dailyListChannelName => 'Lista del giorno';
+
+  @override
+  String get dailyListChannelDescription =>
+      'Una volta al giorno: cosa scade oggi e cosa è in ritardo';
+
+  @override
+  String dailyListToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività oggi',
+      one: '1 attività oggi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dailyListOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività in ritardo',
+      one: '1 attività in ritardo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dailyListTodayOverdue(int today, int overdue) {
+    return '$today oggi · $overdue in ritardo';
+  }
+
+  @override
+  String dailyListMore(int count) {
+    return '+$count altre';
+  }
+
+  @override
   String get startupErrorTitle => 'nemo non riesce ad aprire il suo database';
 
   @override

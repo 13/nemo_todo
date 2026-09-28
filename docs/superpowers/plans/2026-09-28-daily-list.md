@@ -20,7 +20,10 @@
 - Seven mornings scheduled ahead; each built as a local `DateTime(y, m, d + i, h, min)`.
 - Refused permission when switching on: the switch stays off (same as the task sheet's reminder switch).
 - A notification error never fails a task write or a setting change: caught and `debugPrint`ed.
-- Toolchain: `export PATH=~/fvm/versions/3.47.2/bin:$PATH`, run from `app/`; codegen `dart run build_runner build --delete-conflicting-outputs`; l10n `flutter gen-l10n`; `flutter test --concurrency=2 <file or dir>`, one process at a time, 600 s timeout; `flutter analyze` clean before each commit.
+- Toolchain: every shell starts with `export PATH="$HOME/fvm/versions/3.47.2/bin:$PATH"` (the pre-commit hook runs the generators and fails without it); run from `app/`; codegen `dart run build_runner build --delete-conflicting-outputs`; l10n `flutter gen-l10n`.
+- **Never background a test run**: foreground, 600 s timeout, one test process at a time (`flutter test --concurrency=2 <file or dir>`) -- this machine OOM-kills concurrent Flutter suites.
+- `flutter analyze` must exit 0; capture it as `flutter analyze > /tmp/analyze.txt 2>&1; echo "EXIT=$?"`.
+- Append tests; never rewrite a test file wholesale. `dart format lib test` before committing. Stage by explicit path after `git status --short` (the `git add` lines below name directories only as a guide).
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Branch `feat/daily-list` off `main` (create it before Task 1).
 

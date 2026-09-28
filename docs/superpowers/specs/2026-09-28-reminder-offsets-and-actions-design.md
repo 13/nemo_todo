@@ -84,11 +84,17 @@ posts one notification.
 
 - `notificationId(taskId, offset)` = `"$taskId:$offset".hashCode &
   0x7fffffff`; `snoozeId(taskId)` = `"$taskId:snooze".hashCode &
-  0x7fffffff`. Non-negative, so clear of the daily list's `-1..-7`.
+  0x7fffffff`. Non-negative, so clear of the daily list's `-1..-7`. The
+  0.14 id (`taskId.hashCode & 0x7fffffff`) is cancelled on every sync so an
+  upgraded reminder never fires twice.
+- `effectiveReminders` is `remind ? (reminders.isEmpty ? [0] : reminders)
+  : []`: `remind` stays the switch, and every writer uses
+  `withReminders(list)`, which sets both.
 - `sync(task)`: cancel the ids of every timed preset and the snooze id;
   if `wantsReminder` (now: `effectiveReminders` not empty, open, not
   deleted, dated), schedule each offset whose fire time is still ahead.
-- Payload: `{"taskId": ..., "offset": ...}`; actions `done`, `snooze10`,
+- Payload: `Routes.task(id)`, so a plain tap opens the task through the
+  daily list's tap routing and an action reads the id back from it; actions `done`, `snooze10`,
   `snooze60`, each `showsUserInterface: false`, `cancelNotification:
   true`.
 - Body by distance from fire time to due: "Due now", "Due in 15 min",
@@ -97,9 +103,9 @@ posts one notification.
   function passed in, like `now`.
 - `snooze(task, Duration)`: schedules `snoozeId` at now + duration with
   the same title, body "Snoozed", same buttons.
-- `resyncAll()`: re-syncs every open, dated task. Called when the daily
-  list time changes (all-day fire times move) and after import (existing
-  pass, moved here).
+- When the daily list time changes, the daily list's refresher re-syncs
+  every open, dated task, since all-day fire times move. Import keeps its
+  existing re-sync pass.
 
 ### `NotificationsApi` changes
 

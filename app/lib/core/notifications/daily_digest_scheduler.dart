@@ -28,15 +28,34 @@ class DigestStrings {
 /// How many mornings are scheduled ahead, so the list keeps coming on days
 /// the app is not opened.
 const dailyDigestDays = 7;
+
+/// How many distinct notification ids the daily list cycles through: today
+/// plus the [dailyDigestDays] scheduled ahead, so today's id never collides
+/// with a later morning's.
+const dailyDigestSlots = 8;
 const dailyDigestChannelId = 'daily_list';
 
 /// Where a tap on the daily list goes: `Routes.today`, spelled out so this
 /// file does not pull in the router and every screen with it.
 const dailyDigestPayload = '/today';
 
-/// Notification id of the [day]th scheduled morning. Negative, so it never
-/// meets a reminder's, which are `hashCode & 0x7fffffff`.
-int dailyDigestId(int day) => -(day + 1);
+/// Notification id for [day]'s morning, keyed by [day]'s local calendar
+/// date rather than its position among the scheduled mornings. That way a
+/// refresh that runs after today's notification has already fired -- or
+/// while it is still showing -- lands on the same id every time, instead of
+/// today's list shifting to whatever id "tomorrow" used yesterday.
+///
+/// Negative, so it never meets a reminder's, which are
+/// `hashCode & 0x7fffffff`. `%` in Dart is the always-non-negative Euclidean
+/// modulo, so this holds for any date, not just ones after 1970.
+int dailyDigestId(DateTime day) {
+  final dayNumber = DateTime.utc(
+    day.year,
+    day.month,
+    day.day,
+  ).difference(DateTime.utc(1970)).inDays;
+  return -(1 + dayNumber % dailyDigestSlots);
+}
 
 abstract interface class DailyDigestScheduler {
   /// Replaces the scheduled mornings with ones built from current data.
@@ -94,20 +113,37 @@ class AndroidDailyDigestScheduler implements DailyDigestScheduler {
   }
 
   Future<void> _rebuild() async {
-    for (var i = 0; i < dailyDigestDays; i++) {
-      await _api.cancel(dailyDigestId(i));
-    }
     final s = settings();
-    if (!s.enabled) return;
     final now = _now();
+    final todayId = dailyDigestId(_day(now, 0));
+
+    if (!s.enabled) {
+      // Today's list included: switching off means no more notification at
+      // all, even the one already showing.
+      for (var i = 0; i < dailyDigestSlots; i++) {
+        await _api.cancel(dailyDigestId(_day(now, i)));
+      }
+      return;
+    }
+
     final first = _morning(now, 0, s.minutes).isAfter(now) ? 0 : 1;
+    // Cancel every slot this cycle could touch, except today's once its
+    // time has passed: cancelling it would also pull an already-showing
+    // notification out of the shade, and nothing here is going to
+    // reschedule it (the loop below starts at `first`, which skips today
+    // in that case).
+    for (var i = 0; i < dailyDigestSlots; i++) {
+      final id = dailyDigestId(_day(now, i));
+      if (first == 1 && id == todayId) continue;
+      await _api.cancel(id);
+    }
     final tasks = await loadTasks();
     for (var i = 0; i < dailyDigestDays; i++) {
       final fireAt = _morning(now, first + i, s.minutes);
       final digest = buildDigest(tasks, fireAt);
       if (digest == null) continue;
       await _api.scheduleAt(
-        id: dailyDigestId(i),
+        id: dailyDigestId(_day(now, first + i)),
         title: strings.title(digest.todayCount, digest.overdueCount),
         body: digest.lines.join(', '),
         lines: [
@@ -132,4 +168,10 @@ class AndroidDailyDigestScheduler implements DailyDigestScheduler {
     minutes ~/ 60,
     minutes % 60,
   );
+
+  /// [now]'s calendar date, [days] later. Built from calendar fields, like
+  /// [_morning], so it lands on the right date across a daylight-saving
+  /// change instead of drifting by an hour through `Duration` arithmetic.
+  static DateTime _day(DateTime now, int days) =>
+      DateTime(now.year, now.month, now.day + days);
 }

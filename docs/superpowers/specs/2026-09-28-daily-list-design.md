@@ -39,7 +39,9 @@ Scheduling a week ahead therefore keeps the daily list arriving when the
 app is not opened for a few days, instead of stopping after one. The
 known gap: a change made on another device reaches this one only when
 the app next syncs, so a shared list edited elsewhere can be stale in the
-morning.
+morning. Likewise, a time-zone change made while the app is closed only
+takes effect at the next start or resume -- the scheduled mornings keep
+firing at the old zone's wall-clock time until then.
 
 ## Components
 
@@ -89,14 +91,19 @@ class AndroidDailyDigestScheduler implements DailyDigestScheduler {
 
 `refresh()`:
 
-1. Cancel ids `dailyDigestId(0..6)`.
-2. If off, stop.
-3. Occurrences: today at the chosen time if that is still ahead of `now`,
+1. If off, cancel all 8 slot ids (`dailyDigestId(today)` through
+   `dailyDigestId(today + 7)`, today's included) and stop.
+2. Occurrences: today at the chosen time if that is still ahead of `now`,
    otherwise tomorrow; then the following six days. Each is built as a
    local `DateTime(y, m, d, hour, minute)`, so a daylight-saving change
    keeps the wall-clock time.
+3. Cancel every slot id this cycle could touch -- all 8 when today's time
+   is still ahead, all but today's once it has passed. Leaving today's
+   alone in that case matters: cancelling it would also pull an
+   already-showing notification out of the shade, and nothing reschedules
+   it until tomorrow becomes "today".
 4. Load candidates once; for each occurrence, `buildDigest`; schedule the
-   non-null ones with id `dailyDigestId(i)`, payload `/today`.
+   non-null ones with id `dailyDigestId(day)`, payload `/today`.
 
 Calls are serialised (a refresh arriving while one runs sets "go again"),
 and every error is caught and logged: a failing notification never fails
@@ -105,8 +112,18 @@ a task write.
 ### Notification ids
 
 Reminder ids are `taskId.hashCode & 0x7fffffff`, never negative. The
-daily list uses `-1` to `-7` (`dailyDigestId(i) = -(i + 1)`), so the two
-cannot collide and no existing reminder has to move.
+daily list uses 8 ids, `-1` to `-8`, one per slot in an 8-day cycle:
+`dailyDigestId(day)` keys off `day`'s local calendar date (the number of
+calendar days since a fixed epoch, `mod 8`), not off the day's position
+among the mornings currently scheduled. Today plus the 7 scheduled ahead
+never collide, so the two id spaces cannot meet and no existing reminder
+has to move.
+
+Keying by date rather than position is what lets `refresh()` leave
+today's notification alone once its time has passed (see below): a
+refresh always lands on the same id for a given calendar day, whether it
+runs before or after that day's notification fired, so "today" never
+shifts to the id "tomorrow" used on some earlier refresh.
 
 ### `NotificationsApi` changes
 
@@ -164,10 +181,13 @@ schedules.
   first; cap at 6 lines with `more`; a task due tomorrow appears only in
   tomorrow's digest; an all-day task (no time) counts as today.
 - `AndroidDailyDigestScheduler` with a fake `NotificationsApi` and a
-  fixed clock: off cancels all seven and schedules none; time already
-  passed today starts tomorrow; empty days are skipped; a DST-change day
-  keeps 08:00 local; payload and channel are set; a refresh during a
-  refresh runs once more, not in parallel; an api error is swallowed.
+  fixed clock: off cancels all eight slots, today's included, and
+  schedules none; time already passed today starts tomorrow and leaves
+  today's own notification uncancelled; empty days are skipped; a
+  DST-change day keeps 08:00 local; ids stay negative and distinct across
+  8 consecutive days, including across a DST change; payload and channel
+  are set; a refresh during a refresh runs once more, not in parallel; an
+  api error is swallowed.
 - Trigger provider: several task writes in quick succession cause one
   refresh; changing the time causes one.
 - Settings tile widget tests: hidden when unsupported; switch persists;

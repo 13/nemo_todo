@@ -177,7 +177,7 @@
   "remindersChannelDescription": "Benachrichtigungen, wenn eine Aufgabe fällig ist",
   "remindersDueNow": "Jetzt fällig",
   "dailyListTitle": "Tagesliste",
-  "dailyListHint": "Eine Benachrichtigung am Morgen mit allem, was heute fällig ist",
+  "dailyListHint": "Einmal am Tag eine Benachrichtigung mit allem, was fällig und überfällig ist",
   "dailyListTime": "Uhrzeit",
   "dailyListChannelName": "Tagesliste",
   "dailyListChannelDescription": "Einmal am Tag: was heute fällig und was überfällig ist",

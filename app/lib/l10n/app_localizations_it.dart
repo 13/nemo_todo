@@ -640,7 +640,8 @@ class LIt extends L {
   String get dailyListTitle => 'Lista del giorno';
 
   @override
-  String get dailyListHint => 'Una notifica al mattino con ciò che scade oggi';
+  String get dailyListHint =>
+      'Una volta al giorno, una notifica con ciò che scade e ciò che è in ritardo';
 
   @override
   String get dailyListTime => 'Orario';

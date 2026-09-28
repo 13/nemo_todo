@@ -312,7 +312,7 @@
   "remindersChannelDescription": "Notifications when a task is due",
   "remindersDueNow": "Due now",
   "dailyListTitle": "Daily list",
-  "dailyListHint": "A morning notification with what's due today",
+  "dailyListHint": "Once a day, a notification with what's due and overdue",
   "dailyListTime": "Time",
   "dailyListChannelName": "Daily list",
   "dailyListChannelDescription": "Once a day: what's due today and overdue",

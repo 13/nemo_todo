@@ -23,10 +23,10 @@ void main() {
   late CountingScheduler scheduler;
   late String inbox;
 
-  // Ruling R2: the debounce is overridden to 50ms and settle() waits
-  // 150ms (not 10/30) -- five sequential DB writes can take longer than
-  // 10ms and would split into two refreshes, making "a write reschedules
-  // once" flaky.
+  // The debounce is overridden to 50ms and settle() waits 150ms (not
+  // 10/30) -- five sequential DB writes must land inside one debounce
+  // window, and they can take longer than 10ms, which would split them
+  // into two refreshes and make "a write reschedules once" flaky.
   Future<void> settle() =>
       Future<void>.delayed(const Duration(milliseconds: 150));
 

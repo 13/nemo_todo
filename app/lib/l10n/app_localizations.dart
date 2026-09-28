@@ -1164,7 +1164,7 @@ abstract class L {
   /// No description provided for @dailyListHint.
   ///
   /// In en, this message translates to:
-  /// **'A morning notification with what\'s due today'**
+  /// **'Once a day, a notification with what\'s due and overdue'**
   String get dailyListHint;
 
   /// No description provided for @dailyListTime.

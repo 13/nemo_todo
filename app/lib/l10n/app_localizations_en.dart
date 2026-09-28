@@ -633,7 +633,8 @@ class LEn extends L {
   String get dailyListTitle => 'Daily list';
 
   @override
-  String get dailyListHint => 'A morning notification with what\'s due today';
+  String get dailyListHint =>
+      'Once a day, a notification with what\'s due and overdue';
 
   @override
   String get dailyListTime => 'Time';

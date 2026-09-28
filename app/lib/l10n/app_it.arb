@@ -177,7 +177,7 @@
   "remindersChannelDescription": "Notifiche quando un'attività è in scadenza",
   "remindersDueNow": "In scadenza ora",
   "dailyListTitle": "Lista del giorno",
-  "dailyListHint": "Una notifica al mattino con ciò che scade oggi",
+  "dailyListHint": "Una volta al giorno, una notifica con ciò che scade e ciò che è in ritardo",
   "dailyListTime": "Orario",
   "dailyListChannelName": "Lista del giorno",
   "dailyListChannelDescription": "Una volta al giorno: cosa scade oggi e cosa è in ritardo",

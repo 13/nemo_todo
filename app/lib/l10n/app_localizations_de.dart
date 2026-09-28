@@ -641,7 +641,7 @@ class LDe extends L {
 
   @override
   String get dailyListHint =>
-      'Eine Benachrichtigung am Morgen mit allem, was heute fällig ist';
+      'Einmal am Tag eine Benachrichtigung mit allem, was fällig und überfällig ist';
 
   @override
   String get dailyListTime => 'Uhrzeit';

@@ -96,7 +96,11 @@ Future<_Notifications> _openNotifications(ValueNotifier<String?> tapped) async {
   );
   final api = LocalNotificationsApi();
   await api.initialize(onTap: (payload) => tapped.value = payload);
-  tapped.value = await api.launchPayload();
+  // Only overwrite `tapped` when the launch actually came from a
+  // notification -- a live tap can arrive between `initialize` and here,
+  // and a null launch payload must not clobber it.
+  final launched = await api.launchPayload();
+  if (launched != null) tapped.value = launched;
   return (
     api: api,
     reminders: AndroidReminderScheduler(

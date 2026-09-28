@@ -13,9 +13,6 @@ class _RecordingScheduler implements ReminderScheduler {
   final synced = <Task>[];
 
   @override
-  Future<void> init() async {}
-
-  @override
   Future<bool> ensurePermission() async => true;
 
   @override

@@ -15,9 +15,6 @@ class RecordingScheduler implements ReminderScheduler {
   final cancelled = <String>[];
 
   @override
-  Future<void> init() async {}
-
-  @override
   Future<bool> ensurePermission() async => true;
 
   @override

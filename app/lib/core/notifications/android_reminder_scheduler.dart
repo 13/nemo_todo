@@ -24,9 +24,6 @@ class AndroidReminderScheduler implements ReminderScheduler {
   static int notificationId(String taskId) => taskId.hashCode & 0x7fffffff;
 
   @override
-  Future<void> init() => _api.initialize();
-
-  @override
   Future<bool> ensurePermission() => _api.requestPermission();
 
   @override

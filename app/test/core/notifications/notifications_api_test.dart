@@ -18,6 +18,7 @@ void main() {
           return switch (call.method) {
             'initialize' => true,
             'requestNotificationsPermission' => true,
+            'getNotificationAppLaunchDetails' => null,
             _ => null,
           };
         });
@@ -59,6 +60,35 @@ void main() {
     final specifics = args['platformSpecifics']! as Map<Object?, Object?>;
     expect(specifics['channelId'], 'reminders');
     expect(specifics['channelName'], 'Reminders');
+  });
+
+  test('schedules on a given channel with inbox lines and a payload', () async {
+    final notifications = api();
+    await notifications.initialize();
+    await notifications.scheduleAt(
+      id: -1,
+      title: '3 tasks today',
+      body: 'Dentist, Milk, Taxes',
+      epochMs: DateTime.utc(2099, 9, 7, 6).millisecondsSinceEpoch,
+      channelName: 'Daily list',
+      channelDescription: 'desc',
+      channelId: 'daily_list',
+      lines: ['Dentist', 'Milk', 'Taxes'],
+      payload: '/today',
+    );
+    final args =
+        calls.singleWhere((c) => c.method == 'zonedSchedule').arguments
+            as Map<Object?, Object?>;
+    expect(args['id'], -1);
+    expect(args['payload'], '/today');
+    final specifics = args['platformSpecifics']! as Map<Object?, Object?>;
+    expect(specifics['channelId'], 'daily_list');
+    final style = specifics['styleInformation']! as Map<Object?, Object?>;
+    expect(style['lines'], ['Dentist', 'Milk', 'Taxes']);
+  });
+
+  test('no launch payload when the app was not opened from one', () async {
+    expect(await api().launchPayload(), isNull);
   });
 
   test('cancels a reminder by id', () async {

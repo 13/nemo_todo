@@ -70,12 +70,12 @@ Future<ReminderScheduler> _openReminders() async {
   final l = await L.delegate.load(
     WidgetsBinding.instance.platformDispatcher.locale,
   );
-  final scheduler = AndroidReminderScheduler(
-    LocalNotificationsApi(),
+  final api = LocalNotificationsApi();
+  await api.initialize();
+  return AndroidReminderScheduler(
+    api,
     channelName: l.remindersChannelName,
     channelDescription: l.remindersChannelDescription,
     body: l.remindersDueNow,
   );
-  await scheduler.init();
-  return scheduler;
 }

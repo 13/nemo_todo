@@ -2,8 +2,6 @@ import 'package:nemo_core/nemo_core.dart';
 
 /// Schedules a local notification at a task's due time.
 abstract interface class ReminderScheduler {
-  Future<void> init();
-
   /// Asks for notification permission where needed; true when granted.
   Future<bool> ensurePermission();
 
@@ -17,9 +15,6 @@ abstract interface class ReminderScheduler {
 /// Web and tests: reminders are not available.
 class NoopReminderScheduler implements ReminderScheduler {
   const NoopReminderScheduler();
-
-  @override
-  Future<void> init() async {}
 
   @override
   Future<bool> ensurePermission() async => false;

@@ -13,6 +13,15 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## Unreleased
+
+### Added
+
+- A daily list: once a day, at a time you choose in Settings, the Android
+  app shows one notification with what is due today and what is overdue,
+  and opens Today when tapped. Days with nothing due stay quiet. Off until
+  you turn it on.
+
 ## 0.14.2 - 2026-09-24
 
 ### Fixed

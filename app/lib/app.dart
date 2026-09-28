@@ -8,6 +8,7 @@ import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
+import 'package:nemo/features/daily_list/daily_list_providers.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
@@ -36,6 +37,18 @@ class _NemoAppState extends ConsumerState<NemoApp> {
   /// the moment the session appears.
   final _session = ValueNotifier<int>(0);
 
+  late final ValueNotifier<String?> _tapped = ref.read(
+    notificationRouteProvider,
+  );
+
+  void _followTap() {
+    final route = _tapped.value;
+    // Only app routes; a payload from anything else is ignored.
+    if (route == null || !route.startsWith('/')) return;
+    _tapped.value = null;
+    _router.go(route);
+  }
+
   late final GoRouter _router = AppRouter.router(
     initialLocation: _guarded ? Routes.starting : Routes.today,
     refreshListenable: _guarded ? _session : null,
@@ -52,6 +65,8 @@ class _NemoAppState extends ConsumerState<NemoApp> {
   @override
   void initState() {
     super.initState();
+    _tapped.addListener(_followTap);
+    ref.read(dailyListRefresherProvider);
     // The stored session is read after the first frame is scheduled, so a
     // cold start never waits on the platform keychain.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -62,11 +77,13 @@ class _NemoAppState extends ConsumerState<NemoApp> {
           .requestSync(delay: const Duration(milliseconds: 200));
       // Quiet unless something is actually newer, and at most daily.
       unawaited(ref.read(updateControllerProvider.notifier).check());
+      _followTap(); // A tap that started the app.
     });
   }
 
   @override
   void dispose() {
+    _tapped.removeListener(_followTap);
     _router.dispose();
     _session.dispose();
     super.dispose();

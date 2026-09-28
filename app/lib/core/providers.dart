@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/notifications/daily_digest_scheduler.dart';
+import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -188,3 +190,18 @@ final photoDownloadEagerProvider = Provider<bool>((_) => !kIsWeb);
 final photoStoreProvider = Provider<PhotoStore>(
   (_) => throw UnimplementedError('override photoStoreProvider in main'),
 );
+
+/// The notification plugin; null where there is none (web, tests).
+final notificationsApiProvider = Provider<NotificationsApi?>((_) => null);
+
+/// Daily list text from the device locale; set with the api in `main`.
+final digestStringsProvider = Provider<DigestStrings?>((_) => null);
+
+/// A route asked for by a tapped notification. `NemoApp` goes there and
+/// clears it; `main` sets it before the first frame when a tap started the
+/// app.
+final notificationRouteProvider = Provider<ValueNotifier<String?>>((ref) {
+  final route = ValueNotifier<String?>(null);
+  ref.onDispose(route.dispose);
+  return route;
+});

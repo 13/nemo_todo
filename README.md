@@ -8,8 +8,9 @@ host yourself.
 - The Android app works completely offline from the first launch, and an
   account is optional. Whether one is connected is on screen wherever you
   are, next to the settings button.
-- Lists with colours and icons, due dates with reminders, subtasks, notes,
-  tags and four priorities, plus Today, Upcoming, search and per-tag views.
+- Lists with colours and icons, due dates with reminders, and a daily list
+  each morning, subtasks, notes, tags and four priorities, plus Today,
+  Upcoming, search and per-tag views.
 - Quick add understands `#tags`, `!high` and a trailing "tomorrow" or
   weekday; a long press on a task moves it to another day.
 - Photos on a task, taken with the camera or picked from the device, synced

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/app.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/notifications/android_reminder_scheduler.dart';
+import 'package:nemo/core/notifications/daily_digest_scheduler.dart';
 import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/providers.dart';
@@ -24,15 +25,24 @@ const startupTimeout = Duration(seconds: 15);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase.open();
+  // Where a tapped notification asks to go; NemoApp follows it.
+  final tapped = ValueNotifier<String?>(null);
   try {
-    final boot = await _prepare(db).timeout(startupTimeout);
+    final boot = await _prepare(db, tapped).timeout(startupTimeout);
     final photoStore = await openPhotoStore();
     runApp(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           bootstrapProvider.overrideWithValue(boot.bootstrap),
-          reminderSchedulerProvider.overrideWithValue(boot.reminders),
+          reminderSchedulerProvider.overrideWithValue(
+            boot.notifications.reminders,
+          ),
+          notificationsApiProvider.overrideWithValue(boot.notifications.api),
+          digestStringsProvider.overrideWithValue(
+            boot.notifications.digestStrings,
+          ),
+          notificationRouteProvider.overrideWithValue(tapped),
           photoStoreProvider.overrideWithValue(photoStore),
         ],
         child: const NemoApp(),
@@ -46,9 +56,16 @@ Future<void> main() async {
   }
 }
 
+typedef _Notifications = ({
+  NotificationsApi? api,
+  ReminderScheduler reminders,
+  DigestStrings? digestStrings,
+});
+
 /// Everything that has to exist before the first frame.
-Future<({AppBootstrap bootstrap, ReminderScheduler reminders})> _prepare(
+Future<({AppBootstrap bootstrap, _Notifications notifications})> _prepare(
   AppDatabase db,
+  ValueNotifier<String?> tapped,
 ) async {
   final boot = await AppBootstrap.load(db);
   // The Inbox exists before the first frame, so every screen can rely on it.
@@ -57,25 +74,46 @@ Future<({AppBootstrap bootstrap, ReminderScheduler reminders})> _prepare(
     HlcClock(node: boot.nodeId, last: boot.hlcLast),
     const Uuid().v4,
   ).ensureInbox();
-  return (bootstrap: boot, reminders: await _openReminders());
+  return (bootstrap: boot, notifications: await _openNotifications(tapped));
 }
 
 /// Local notifications on Android; nothing to schedule elsewhere.
-Future<ReminderScheduler> _openReminders() async {
+///
+/// A tap while the app runs lands in [tapped]; so does the tap that
+/// started it, read once here.
+Future<_Notifications> _openNotifications(ValueNotifier<String?> tapped) async {
   if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
-    return const NoopReminderScheduler();
+    return (
+      api: null,
+      reminders: const NoopReminderScheduler(),
+      digestStrings: null,
+    );
   }
-  // Strings for the notification channel come from the device locale, which
-  // is fixed for the life of the channel; the app locale may differ later.
+  // Strings for the notification channels come from the device locale,
+  // which is fixed for the life of a channel; the app locale may differ.
   final l = await L.delegate.load(
     WidgetsBinding.instance.platformDispatcher.locale,
   );
   final api = LocalNotificationsApi();
-  await api.initialize();
-  return AndroidReminderScheduler(
-    api,
-    channelName: l.remindersChannelName,
-    channelDescription: l.remindersChannelDescription,
-    body: l.remindersDueNow,
+  await api.initialize(onTap: (payload) => tapped.value = payload);
+  tapped.value = await api.launchPayload();
+  return (
+    api: api,
+    reminders: AndroidReminderScheduler(
+      api,
+      channelName: l.remindersChannelName,
+      channelDescription: l.remindersChannelDescription,
+      body: l.remindersDueNow,
+    ),
+    digestStrings: DigestStrings(
+      channelName: l.dailyListChannelName,
+      channelDescription: l.dailyListChannelDescription,
+      title: (today, overdue) => overdue == 0
+          ? l.dailyListToday(today)
+          : today == 0
+          ? l.dailyListOverdue(overdue)
+          : l.dailyListTodayOverdue(today, overdue),
+      more: l.dailyListMore,
+    ),
   );
 }

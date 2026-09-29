@@ -104,8 +104,11 @@ Handler webAppHandler(String webDir) {
 /// A path under a build's own prefix: `v/<build>/<file>`.
 final _underBuild = RegExp(r'^v/([0-9a-f]{12})/(.*)$');
 
-/// The page, with everything it loads pointed at [build]'s own path, and
-/// the manifest left where it is.
+/// The page, with everything it loads pointed at [build]'s own path, the
+/// manifest left where it is, and the app's theme on `<html>` when the app
+/// has left it in the `nemo-theme` cookie: the loading screen paints before
+/// the app runs, and would otherwise follow the device's theme where the
+/// app is set to the other one.
 Response _page(
   Request request,
   File index,
@@ -117,7 +120,7 @@ Response _page(
     return Response.notModified(headers: headers);
   }
   var base = '/';
-  final html = index
+  var html = index
       .readAsStringSync()
       .replaceFirstMapped(RegExp('<base href="([^"]*)">'), (m) {
         base = m[1]!;
@@ -127,6 +130,10 @@ Response _page(
         RegExp('<link rel="manifest" href="(?![a-z]+:|/)([^"]*)">'),
         (m) => '<link rel="manifest" href="$base${m[1]}">',
       );
+  final theme = _cookie(request, 'nemo-theme');
+  if (theme == 'light' || theme == 'dark') {
+    html = html.replaceFirst('<html>', '<html data-theme="$theme">');
+  }
   return Response.ok(
     request.method == 'HEAD' ? null : html,
     headers: {
@@ -135,6 +142,17 @@ Response _page(
       ...headers,
     },
   );
+}
+
+/// The value of the cookie called [name] in [request], if it sent one.
+String? _cookie(Request request, String name) {
+  for (final pair in (request.headers['cookie'] ?? '').split(';')) {
+    final at = pair.indexOf('=');
+    if (at > 0 && pair.substring(0, at).trim() == name) {
+      return pair.substring(at + 1).trim();
+    }
+  }
+  return null;
 }
 
 /// [request], asking for [path] instead.

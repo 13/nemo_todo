@@ -15,3 +15,11 @@ void removeSplash() {
     () => splash.remove(),
   );
 }
+
+/// Leaves the app's theme -- `light`, `dark` or `system` -- where the
+/// server can read it when it next serves the page, so the loading screen
+/// paints in the app's theme rather than the device's.
+void rememberTheme(String mode) {
+  web.document.cookie =
+      'nemo-theme=$mode; path=/; max-age=31536000; samesite=lax';
+}

@@ -489,6 +489,31 @@ void main() {
     expect(buildOf(rebuilt), isNot(build));
   });
 
+  test("the page carries the app's theme for its loading screen", () async {
+    final dir = await Directory.systemTemp.createTemp('nemo-web');
+    addTearDown(() => dir.delete(recursive: true));
+    await File('${dir.path}/index.html')
+        .writeAsString('<!DOCTYPE html>\n<html>\n<head><base href="/"></head>');
+    server = await TestServer.start(webDir: dir.path);
+
+    Future<String> page(String? cookie) async =>
+        (await http.get(server.uri('/'), headers: {'cookie': ?cookie})).body;
+
+    // The loading screen paints before the app can say which theme it
+    // uses, so the app leaves it in a cookie and the page is served with
+    // it; without one the page follows the device.
+    expect(await page('nemo-theme=dark'), contains('<html data-theme="dark">'));
+    expect(
+      await page('a=1; nemo-theme=light; b=2'),
+      contains('<html data-theme="light">'),
+    );
+    for (final cookie in [null, 'nemo-theme=system', 'nemo-theme="><x']) {
+      final body = await page(cookie);
+      expect(body, contains('\n<html>\n'), reason: '$cookie');
+      expect(body, isNot(contains('data-theme')), reason: '$cookie');
+    }
+  });
+
   test('acceptsEncoding reads accept-encoding', () {
     expect(acceptsEncoding(null, 'gzip'), isFalse);
     expect(acceptsEncoding('', 'gzip'), isFalse);

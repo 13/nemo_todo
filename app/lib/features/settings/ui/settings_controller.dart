@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/splash/splash.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'settings_controller.g.dart';
@@ -13,6 +14,7 @@ class ThemeModeController extends _$ThemeModeController {
 
   Future<void> set(ThemeMode mode) async {
     state = mode;
+    rememberTheme(mode.name);
     await ref.read(kvStoreProvider).set(KvKeys.themeMode, mode.name);
   }
 }

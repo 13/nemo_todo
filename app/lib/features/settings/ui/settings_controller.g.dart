@@ -45,7 +45,7 @@ final class ThemeModeControllerProvider
 }
 
 String _$themeModeControllerHash() =>
-    r'adfdcb58e346afe7c6f58a834acd304150bc50bb';
+    r'22c8eac04d8d4a3650d702ce2729b6fcfd3559c9';
 
 /// Theme preference, persisted in the key-value store.
 

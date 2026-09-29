@@ -30,6 +30,9 @@ Future<void> main() async {
   final tapped = ValueNotifier<String?>(null);
   try {
     final boot = await _prepare(db, tapped).timeout(startupTimeout);
+    // Set before this was remembered, or in another tab: the page's next
+    // loading screen should match whatever the app now uses.
+    rememberTheme(boot.bootstrap.themeMode.name);
     final photoStore = await openPhotoStore();
     _run(
       ProviderScope(

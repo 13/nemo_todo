@@ -87,6 +87,50 @@ void main() {
     await rig.finish();
   });
 
+  testWidgets('a title left focused but untouched does not undo a rename '
+      'synced in from the other phone', (tester) async {
+    final rig = await _Rig.pump(tester, srv);
+    final (anna, ben) = (rig.left, rig.right);
+    await rig.connect(anna, signUp: true);
+    await rig.quickAdd(anna, 'Buy milk');
+    await rig.untilSynced(anna, 'the new task reached the server');
+    await rig.connect(ben);
+    await rig.rename(ben, 'Buy milk', 'Buy oat milk');
+    await rig.untilSynced(ben, "ben's rename reached the server");
+
+    // Anna, not synced since, opens the task and puts the cursor in its
+    // title, but types nothing. (After ben's rename: the two phones share
+    // one keyboard focus here, which his typing would have taken.)
+    await tester.tap(anna.on(find.text('Buy milk')));
+    await tester.pumpAndSettle();
+    final title = anna.on(find.byKey(const Key('task-title')));
+    await tester.tap(title);
+    await tester.pumpAndSettle();
+
+    // The nudge the server's live events would give her phone, which this
+    // rig leaves out: ben's rename lands while her title has focus.
+    anna.container.read(syncEngineProvider.notifier).requestSync();
+    await rig.untilSynced(anna, "ben's rename came down to anna");
+    await tester.pumpAndSettle();
+    expect((await anna.task('Buy oat milk')).id, isNotEmpty);
+    expect(
+      tester.widget<TextField>(title).focusNode!.hasFocus,
+      isTrue,
+      reason: 'the rename landed under a focused field',
+    );
+    expect(tester.widget<TextField>(title).controller!.text, 'Buy milk');
+
+    // Leaving the page must not write her field's old text over it.
+    await rig.back(anna);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(anna.on(find.text('Buy oat milk')), findsOneWidget);
+    expect(anna.state.pending, 0);
+    expect((await anna.task('Buy oat milk')).id, isNotEmpty);
+    expect(await rig.serverTitles(), ['Buy oat milk']);
+    await rig.finish();
+  });
+
   group('both phones rename one task offline', () {
     /// Both signed in with one task between them; then the server goes
     /// away and each renames the task, anna first. Each tries to sync,
@@ -423,9 +467,16 @@ class _Rig {
     await tester.enterText(phone.on(find.byKey(const Key('task-title'))), to);
     // Past the editor's own debounce, so the edit is saved and stamped now.
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.pageBack();
+    await back(phone);
     await tester.pumpAndSettle();
     expect(phone.on(find.text(to)), findsOneWidget);
+  }
+
+  /// Goes back a page on [phone]: its own app bar's back button, since
+  /// the other phone may be showing one too.
+  Future<void> back(_Phone phone) async {
+    await tester.tap(phone.on(find.byTooltip('Back')));
+    await tester.pumpAndSettle();
   }
 
   /// Pulls [phone]'s list down by [row], and waits for the sync that

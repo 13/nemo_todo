@@ -4,6 +4,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
+import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -311,6 +312,169 @@ void main() {
     expect((await app.db.taskById('t1'))!.isDeleted, isTrue);
     expect(find.byKey(const Key('task-title')), findsNothing);
     await expectSnackBarTimesOut(tester);
+  });
+
+  group('a sync landing while the page is open', () {
+    // Another device's edit, landing in the store the way a pull does:
+    // behind the page's back, with a newer stamp than anything it wrote.
+    Future<void> remoteEdit(TestApp app, {String? title, String? notes}) async {
+      final stored = (await app.db.taskById('t1'))!;
+      await app.container
+          .read(tasksRepositoryProvider)
+          .save(
+            stored.copyWith(
+              title: title ?? stored.title,
+              notes: notes ?? stored.notes,
+            ),
+          );
+    }
+
+    TextField field(WidgetTester tester, String key) =>
+        tester.widget<TextField>(find.byKey(Key(key)));
+
+    for (final (key, isTitle) in [
+      ('task-title', true),
+      ('task-notes', false),
+    ]) {
+      final what = isTitle ? 'title' : 'notes';
+
+      appTest('is not overwritten by a focused but unedited $what field on '
+          'leaving', (tester) async {
+        final app = await pumpApp(
+          tester,
+          initialLocation: Routes.task('t1'),
+          seed: seed,
+        );
+        await tester.tap(find.byKey(Key(key)));
+        await tester.pumpAndSettle();
+        expect(field(tester, key).focusNode!.hasFocus, isTrue);
+
+        await remoteEdit(
+          app,
+          title: isTitle ? 'Remote' : null,
+          notes: isTitle ? null : 'remote',
+        );
+        await tester.pumpAndSettle();
+        // Focused, so the field keeps what it showed rather than moving
+        // the text out from under the cursor.
+        expect(
+          field(tester, key).controller!.text,
+          isTitle ? 'Draft' : 'first',
+        );
+
+        app.router.go(Routes.today);
+        await tester.pumpAndSettle();
+
+        final task = (await app.db.taskById('t1'))!;
+        expect(task.title, isTitle ? 'Remote' : 'Draft');
+        expect(task.notes, isTitle ? 'first' : 'remote');
+      });
+
+      appTest('shows a sync once its focused, unedited $what field is '
+          'left', (tester) async {
+        final app = await pumpApp(
+          tester,
+          initialLocation: Routes.task('t1'),
+          seed: seed,
+        );
+        await tester.tap(find.byKey(Key(key)));
+        await tester.pumpAndSettle();
+
+        await remoteEdit(
+          app,
+          title: isTitle ? 'Remote' : null,
+          notes: isTitle ? null : 'remote',
+        );
+        await tester.pumpAndSettle();
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+
+        expect(
+          field(tester, key).controller!.text,
+          isTitle ? 'Remote' : 'remote',
+        );
+        final task = (await app.db.taskById('t1'))!;
+        expect(task.title, isTitle ? 'Remote' : 'Draft');
+        expect(task.notes, isTitle ? 'first' : 'remote');
+      });
+
+      appTest('loses to typing in the $what field, the later edit', (
+        tester,
+      ) async {
+        final app = await pumpApp(
+          tester,
+          initialLocation: Routes.task('t1'),
+          seed: seed,
+        );
+        await tester.enterText(find.byKey(Key(key)), 'Mine');
+        await remoteEdit(
+          app,
+          title: isTitle ? 'Remote' : null,
+          notes: isTitle ? null : 'remote',
+        );
+        await tester.pumpAndSettle();
+        expect(field(tester, key).controller!.text, 'Mine');
+
+        app.router.go(Routes.today);
+        await tester.pumpAndSettle();
+
+        final task = (await app.db.taskById('t1'))!;
+        expect(isTitle ? task.title : task.notes, 'Mine');
+      });
+    }
+
+    appTest('an edit already saved is not written again over a sync that '
+        'lands after it, while the field still has focus', (tester) async {
+      final app = await pumpApp(
+        tester,
+        initialLocation: Routes.task('t1'),
+        seed: seed,
+      );
+      await tester.enterText(find.byKey(const Key('task-title')), 'Mine');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+      expect((await app.db.taskById('t1'))!.title, 'Mine');
+
+      await remoteEdit(app, title: 'Remote');
+      await tester.pumpAndSettle();
+      app.router.go(Routes.today);
+      await tester.pumpAndSettle();
+
+      expect((await app.db.taskById('t1'))!.title, 'Remote');
+    });
+
+    appTest('refreshes an unfocused field in place', (tester) async {
+      final app = await pumpApp(
+        tester,
+        initialLocation: Routes.task('t1'),
+        seed: seed,
+      );
+      await remoteEdit(app, title: 'Remote', notes: 'remote');
+      await tester.pumpAndSettle();
+      expect(field(tester, 'task-title').controller!.text, 'Remote');
+      expect(field(tester, 'task-notes').controller!.text, 'remote');
+    });
+
+    appTest("editing one field does not write the other one's stale text", (
+      tester,
+    ) async {
+      final app = await pumpApp(
+        tester,
+        initialLocation: Routes.task('t1'),
+        seed: seed,
+      );
+      await tester.tap(find.byKey(const Key('task-title')));
+      await tester.pumpAndSettle();
+      await remoteEdit(app, title: 'Remote', notes: 'remote');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('task-notes')), 'mine');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      final task = (await app.db.taskById('t1'))!;
+      expect(task.title, 'Remote');
+      expect(task.notes, 'mine');
+    });
   });
 
   appTest('unknown task shows a message', (tester) async {

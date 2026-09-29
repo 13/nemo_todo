@@ -31,6 +31,14 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
   final _timeFocus = FocusNode();
   final _costFocus = FocusNode();
 
+  // Whether a field holds typing the store hasn't seen yet, set only by
+  // its `onChanged`. A clean field takes the stored value when saving, so
+  // one that merely had focus while a sync changed it never writes its
+  // older text back over the newer value.
+  bool _solutionDirty = false;
+  bool _timeDirty = false;
+  bool _costDirty = false;
+
   /// Null until someone taps the toggle, so "never touched" falls back to
   /// [_hasAny] instead of always starting closed.
   bool? _expanded;
@@ -75,18 +83,21 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
   }
 
   /// Never refills a field that has focus: an arriving sync would
-  /// otherwise move the cursor out from under whoever is typing.
+  /// otherwise move the cursor out from under whoever is typing. Nor one
+  /// holding typing not yet saved.
   void _fill(Task task, String locale) {
-    if (!_solutionFocus.hasFocus && _solution.text != task.solution) {
+    if (!_solutionFocus.hasFocus &&
+        !_solutionDirty &&
+        _solution.text != task.solution) {
       _solution.text = task.solution;
     }
     final minutes = task.timeSpentMinutes;
-    if (!_timeFocus.hasFocus) {
+    if (!_timeFocus.hasFocus && !_timeDirty) {
       final shown = minutes == null ? '' : '$minutes';
       if (_time.text != shown) _time.text = shown;
     }
     final cost = task.costMinor;
-    if (!_costFocus.hasFocus) {
+    if (!_costFocus.hasFocus && !_costDirty) {
       // Written back with the separator [locale] itself writes numbers
       // with, so an amount nobody touched still reads as that locale
       // would type it, not always with a literal dot.
@@ -133,22 +144,31 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
     if (mounted) setState(() {});
   }
 
+  /// Writes the fields that were typed in, and only those; typing wins
+  /// over a sync that landed while it went on, being the later edit.
   Future<void> _save() async {
     final task = widget.task;
     // An unreadable time or amount leaves what is stored alone. Writing
     // null there would turn a slip into "took no time", which is a real
     // answer somebody may have meant to record.
-    final minutes = _time.text.trim().isEmpty
+    final minutes = !_timeDirty
+        ? task.timeSpentMinutes
+        : _time.text.trim().isEmpty
         ? null
         : parseMinutes(_time.text) ?? task.timeSpentMinutes;
-    final cost = _cost.text.trim().isEmpty
+    final cost = !_costDirty
+        ? task.costMinor
+        : _cost.text.trim().isEmpty
         ? null
         : parseMinorUnits(_cost.text, locale: _locale) ?? task.costMinor;
     final updated = task.copyWith(
-      solution: _solution.text,
+      solution: _solutionDirty ? _solution.text : task.solution,
       timeSpentMinutes: minutes,
       costMinor: cost,
     );
+    _solutionDirty = false;
+    _timeDirty = false;
+    _costDirty = false;
     if (updated == task) return;
     await widget.save(updated);
   }
@@ -220,6 +240,7 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
             key: const Key('task-solution'),
             controller: _solution,
             focusNode: _solutionFocus,
+            onChanged: (_) => _solutionDirty = true,
             maxLines: null,
             minLines: 2,
             textCapitalization: TextCapitalization.sentences,
@@ -240,6 +261,7 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
                   key: const Key('task-time-spent'),
                   controller: _time,
                   focusNode: _timeFocus,
+                  onChanged: (_) => _timeDirty = true,
                   decoration: InputDecoration(hintText: l.tasksTimeSpentHint),
                 ),
               ),
@@ -249,6 +271,7 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
                   key: const Key('task-cost'),
                   controller: _cost,
                   focusNode: _costFocus,
+                  onChanged: (_) => _costDirty = true,
                   decoration: InputDecoration(hintText: l.tasksCostHint),
                 ),
               ),

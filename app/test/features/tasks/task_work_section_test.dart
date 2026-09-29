@@ -248,4 +248,66 @@ void main() {
 
     expect(find.text('-12.05'), findsOneWidget);
   });
+
+  appTest('a focused but unedited field does not write its stale text '
+      'over a sync', (tester) async {
+    final harness = await pumpApp(tester, initialLocation: '/tasks/t1');
+    await harness.seedList('l1', 'Home');
+    await harness.seedTask('t1', 'l1', title: 'Fix the tap');
+    await tester.pumpAndSettle();
+    await scrollIntoView(tester, find.byKey(const Key('task-work-toggle')));
+    await tester.tap(find.byKey(const Key('task-work-toggle')));
+    await tester.pumpAndSettle();
+
+    await scrollIntoView(tester, find.byKey(const Key('task-solution')));
+    await tester.tap(find.byKey(const Key('task-solution')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('task-solution')))
+          .focusNode!
+          .hasFocus,
+      isTrue,
+    );
+    final stored = (await harness.db.taskById('t1'))!;
+    await harness.container
+        .read(tasksRepositoryProvider)
+        .save(stored.copyWith(solution: 'Remote washer', timeSpentMinutes: 5));
+    await tester.pumpAndSettle();
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    final task = (await harness.db.taskById('t1'))!;
+    expect(task.solution, 'Remote washer');
+    expect(task.timeSpentMinutes, 5);
+    expect(find.text('Remote washer'), findsOneWidget);
+  });
+
+  appTest('typing wins over a sync that lands while it goes on', (
+    tester,
+  ) async {
+    final harness = await pumpApp(tester, initialLocation: '/tasks/t1');
+    await harness.seedList('l1', 'Home');
+    await harness.seedTask('t1', 'l1', title: 'Fix the tap');
+    await tester.pumpAndSettle();
+    await scrollIntoView(tester, find.byKey(const Key('task-work-toggle')));
+    await tester.tap(find.byKey(const Key('task-work-toggle')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('task-solution')), 'Mine');
+    final stored = (await harness.db.taskById('t1'))!;
+    await harness.container
+        .read(tasksRepositoryProvider)
+        .save(stored.copyWith(solution: 'Remote washer', timeSpentMinutes: 5));
+    await tester.pumpAndSettle();
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    final task = (await harness.db.taskById('t1'))!;
+    expect(task.solution, 'Mine');
+    // The field nobody typed in keeps the sync's value.
+    expect(task.timeSpentMinutes, 5);
+  });
 }

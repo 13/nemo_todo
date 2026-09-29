@@ -105,6 +105,13 @@ does the renaming, and tags only once CI has passed on the release commit.
 - When signing in on a second device leaves two Inboxes and nemo folds
   them into one, the notes in the extra Inbox move across with its tasks
   instead of disappearing with it.
+- A task's title, notes, solution, time or cost no longer undoes a newer
+  one synced in from another device. A field that had the cursor in it
+  while the change arrived saved its older text over it on leaving, even
+  with nothing typed; now only what you actually typed is saved, and a
+  field you are not editing shows the synced text. What you type still
+  wins over a change that arrives while you type it. Typing in a task and
+  leaving it within half a second no longer loses the last of it either.
 - The server exits when it is told to stop. It used to close everything
   and then stay running, so `docker stop` and every update waited ten
   seconds before Docker killed it; a stop sent the moment it started

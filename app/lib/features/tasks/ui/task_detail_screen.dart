@@ -10,6 +10,7 @@ import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/photos/ui/photo_strip.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
+import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/subtasks_section.dart';
 import 'package:nemo/features/tasks/ui/task_detail_sections.dart';
@@ -46,9 +47,37 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   Timer? _debounce;
   Task? _task;
 
+  // Whether a field holds typing the store hasn't seen yet. Set only by
+  // the fields' `onChanged`, which hears the keyboard and never `_adopt`
+  // filling them, so text a field merely still shows -- because it had
+  // focus when a sync changed the task underneath it -- is never taken
+  // for an edit and written back, with a fresh stamp, over the newer one.
+  bool _titleDirty = false;
+  bool _notesDirty = false;
+
+  // The task a save of ours just replaced, while `taskByIdProvider` may
+  // still be holding it: the store's stream lags the write in production
+  // (drift's background isolate), and adopting it in that window would
+  // put the pre-write text back in the fields for a frame.
+  Task? _superseded;
+
+  // Kept for `dispose`, where Riverpod no longer allows `ref`: leaving the
+  // page inside the debounce still has typing to write. Refreshed on every
+  // save made while the page is up.
+  late TasksRepository _repo;
+  bool _disposing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _repo = ref.read(tasksRepositoryProvider);
+    _titleFocus.addListener(_onFocusChange);
+    _notesFocus.addListener(_onFocusChange);
+  }
+
   @override
   void dispose() {
-    _debounce?.cancel();
+    _disposing = true;
     _flushText();
     _title.dispose();
     _notes.dispose();
@@ -57,38 +86,66 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     super.dispose();
   }
 
-  /// Keeps controllers in step with the stored task unless being edited.
+  /// Leaving a field saves what was typed in it straight away, and lets
+  /// `_adopt` show anything a sync brought in while it had focus.
+  void _onFocusChange() {
+    _flushText();
+    if (mounted) setState(() {});
+  }
+
+  /// Keeps controllers in step with the stored task unless being edited:
+  /// never while a field has focus, where a sync would move the text out
+  /// from under the cursor, nor while it holds typing not yet saved.
   void _adopt(Task task) {
+    if (task == _superseded) return;
+    _superseded = null;
     _task = task;
-    if (!_titleFocus.hasFocus && _title.text != task.title) {
+    if (!_titleFocus.hasFocus && !_titleDirty && _title.text != task.title) {
       _title.text = task.title;
     }
-    if (!_notesFocus.hasFocus && _notes.text != task.notes) {
+    if (!_notesFocus.hasFocus && !_notesDirty && _notes.text != task.notes) {
       _notes.text = task.notes;
     }
   }
 
-  void _onTextChanged() {
+  void _onTitleChanged(String _) {
+    _titleDirty = true;
+    _scheduleFlush();
+  }
+
+  void _onNotesChanged(String _) {
+    _notesDirty = true;
+    _scheduleFlush();
+  }
+
+  void _scheduleFlush() {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), _flushText);
   }
 
+  /// Writes the fields that were typed in, and only those: a clean field
+  /// takes the stored task's value, which may be newer than its text.
+  /// Typing does win over a sync that landed while it was going on -- it
+  /// is the later edit of the two.
   void _flushText() {
+    _debounce?.cancel();
     final task = _task;
-    if (task == null) return;
-    final title = _title.text.trim();
-    final notes = _notes.text;
-    if ((title.isEmpty || title == task.title) && notes == task.notes) return;
-    unawaited(
-      _save(
-        task.copyWith(title: title.isEmpty ? task.title : title, notes: notes),
-      ),
-    );
+    if (task == null || !(_titleDirty || _notesDirty)) return;
+    final typed = _title.text.trim();
+    // A title cleared to nothing keeps the stored one.
+    final title = _titleDirty && typed.isNotEmpty ? typed : task.title;
+    final notes = _notesDirty ? _notes.text : task.notes;
+    _titleDirty = false;
+    _notesDirty = false;
+    if (title == task.title && notes == task.notes) return;
+    unawaited(_save(task.copyWith(title: title, notes: notes)));
   }
 
   Future<void> _save(Task task) {
+    _superseded = _task;
     _task = task;
-    return ref.read(tasksRepositoryProvider).save(task);
+    if (!_disposing) _repo = ref.read(tasksRepositoryProvider);
+    return _repo.save(task);
   }
 
   Future<void> _delete(Task task) async {
@@ -181,7 +238,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     key: const Key('task-title'),
                     controller: _title,
                     focusNode: _titleFocus,
-                    onChanged: (_) => _onTextChanged(),
+                    onChanged: _onTitleChanged,
                     maxLines: null,
                     textCapitalization: TextCapitalization.sentences,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -201,7 +258,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
               key: const Key('task-notes'),
               controller: _notes,
               focusNode: _notesFocus,
-              onChanged: (_) => _onTextChanged(),
+              onChanged: _onNotesChanged,
               maxLines: null,
               minLines: 2,
               textCapitalization: TextCapitalization.sentences,

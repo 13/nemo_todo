@@ -187,6 +187,14 @@ abstract final class MacosTheme {
     final label = textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600);
     // Controls keep the arrow, as on a Mac.
     const arrow = WidgetStatePropertyAll<MouseCursor>(SystemMouseCursors.basic);
+    // The accent where it is a ground for white: a button, the chosen day.
+    // Dark's system blue is 3.6:1 under white, so there it deepens to the
+    // blue white reads on, as an accent never needs to.
+    final fill = legibleOn(scheme.primary, [scheme.onPrimary]);
+    WidgetStateProperty<Color?> filledWhenSelected() =>
+        WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? fill : null,
+        );
     final buttonStyle = ButtonStyle(
       mouseCursor: arrow,
       shape: const WidgetStatePropertyAll(capsule),
@@ -321,7 +329,13 @@ abstract final class MacosTheme {
         shape: capsule,
         extendedTextStyle: label,
       ),
-      filledButtonTheme: FilledButtonThemeData(style: buttonStyle),
+      filledButtonTheme: FilledButtonThemeData(
+        style: buttonStyle.copyWith(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.disabled) ? null : fill,
+          ),
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(style: buttonStyle),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: buttonStyle.copyWith(
@@ -391,7 +405,8 @@ abstract final class MacosTheme {
           ),
           foregroundColor: WidgetStatePropertyAll(scheme.onSurface),
           textStyle: WidgetStatePropertyAll(label),
-          visualDensity: VisualDensity.compact,
+          // Compact for a pointer; a finger's 48 px on a phone.
+          visualDensity: phone ? VisualDensity.standard : VisualDensity.compact,
         ),
       ),
       // A macOS switch: a white knob on the accent when on, on grey when off.
@@ -443,6 +458,9 @@ abstract final class MacosTheme {
         dividerColor: nemo.separator,
         todayBorder: BorderSide(color: scheme.primary),
         todayForegroundColor: selectedOr(scheme.onPrimary, scheme.primary),
+        todayBackgroundColor: filledWhenSelected(),
+        dayBackgroundColor: filledWhenSelected(),
+        yearBackgroundColor: filledWhenSelected(),
         dayOverlayColor: WidgetStatePropertyAll(
           scheme.onSurface.withValues(alpha: 0.06),
         ),
@@ -481,7 +499,7 @@ abstract final class MacosTheme {
           scheme.onSurfaceVariant,
         ),
         dialBackgroundColor: field,
-        dialHandColor: scheme.primary,
+        dialHandColor: fill,
         dialTextColor: selectedColor(scheme.onPrimary, scheme.onSurface),
         entryModeIconColor: scheme.onSurfaceVariant,
         cancelButtonStyle: buttonStyle,

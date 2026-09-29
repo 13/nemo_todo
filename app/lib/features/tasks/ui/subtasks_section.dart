@@ -59,6 +59,7 @@ class _SubtasksSectionState extends ConsumerState<SubtasksSection> {
                 key: ValueKey('subtask-${subtasks[i].id}'),
                 contentPadding: EdgeInsets.zero,
                 leading: Checkbox(
+                  semanticLabel: subtasks[i].title,
                   value: subtasks[i].done,
                   onChanged: (v) =>
                       repo.save(subtasks[i].copyWith(done: v ?? false)),

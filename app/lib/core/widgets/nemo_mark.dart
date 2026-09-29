@@ -17,11 +17,17 @@ class NemoMark extends StatelessWidget {
   final double size;
   final Color? color;
 
+  // Art, always beside the app's name or in place of a picture: a screen
+  // reader has nothing to say about it.
   @override
-  Widget build(BuildContext context) => SizedBox.square(
-    dimension: size,
-    child: CustomPaint(
-      painter: _NemoMarkPainter(color ?? Theme.of(context).colorScheme.primary),
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SizedBox.square(
+      dimension: size,
+      child: CustomPaint(
+        painter: _NemoMarkPainter(
+          color ?? Theme.of(context).colorScheme.primary,
+        ),
+      ),
     ),
   );
 }

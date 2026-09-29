@@ -71,17 +71,30 @@ class MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
+    final theme = Theme.of(context);
+    final secondary = theme.colorScheme.onSurfaceVariant;
     final c = color ?? secondary;
-    final text = tintLabel || context.nemoColors.tintedMetaText ? c : secondary;
+    final text = tintLabel
+        ? c
+        : context.nemoColors.tintedMetaText
+        // A list's colour is picked to show as an icon; as small text it
+        // is taken just deep enough to read.
+        ? legibleOn(c, [
+            theme.colorScheme.surface,
+            theme.scaffoldBackgroundColor,
+          ])
+        : secondary;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         AppIcon(icon, size: 14, color: c),
         const SizedBox(width: 3),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: text),
+        // Wraps rather than running off the row when the text is large.
+        Flexible(
+          child: Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(color: text),
+          ),
         ),
       ],
     );

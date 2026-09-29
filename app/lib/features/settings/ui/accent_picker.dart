@@ -28,16 +28,24 @@ class AccentPicker extends ConsumerWidget {
     ];
     void pick(int? accent) =>
         ref.read(accentControllerProvider.notifier).set(accent);
+    // Each disc sits in a finger's 48 px, and neighbouring targets share
+    // the gap between discs, so the discs keep their spacing: the padding
+    // here gives back the 8 px each target reaches beyond its disc.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.settingsAccent, style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              l.settingsAccent,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: -_Swatch.reach,
+            runSpacing: -_Swatch.reach,
             children: [
               _Swatch(
                 key: const Key('accent-default'),
@@ -80,6 +88,9 @@ class _Swatch extends StatelessWidget {
   final VoidCallback onTap;
   final IconData? icon;
 
+  /// How far the tap target reaches past the disc on each side.
+  static const double reach = (kMinInteractiveDimension - 32) / 2;
+
   @override
   Widget build(BuildContext context) {
     final mark = ThemeData.estimateBrightnessForColor(color) == Brightness.dark
@@ -90,28 +101,32 @@ class _Swatch extends StatelessWidget {
       child: Semantics(
         label: label,
         selected: selected,
+        inMutuallyExclusiveGroup: true,
         button: true,
         child: InkResponse(
           onTap: onTap,
           radius: 22,
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected
-                    ? Theme.of(context).colorScheme.onSurface
-                    : Colors.transparent,
-                width: 2.5,
+          child: Padding(
+            padding: const EdgeInsets.all(reach),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Colors.transparent,
+                  width: 2.5,
+                ),
               ),
+              child: selected
+                  ? AppIcon(Icons.check_rounded, size: 18, color: mark)
+                  : icon == null
+                  ? null
+                  : AppIcon(icon, size: 16, color: mark),
             ),
-            child: selected
-                ? AppIcon(Icons.check_rounded, size: 18, color: mark)
-                : icon == null
-                ? null
-                : AppIcon(icon, size: 16, color: mark),
           ),
         ),
       ),

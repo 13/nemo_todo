@@ -80,7 +80,13 @@ class MacSidebar extends ConsumerWidget {
               children: [
                 const NemoMark(size: 20),
                 const SizedBox(width: 8),
-                Text(L.of(context).appName, style: text.titleSmall),
+                Flexible(
+                  child: Text(
+                    L.of(context).appName,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.titleSmall,
+                  ),
+                ),
               ],
             ),
           ),
@@ -110,10 +116,13 @@ class MacSidebar extends ConsumerWidget {
                             : scheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        items[4].label,
-                        style: text.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                      Flexible(
+                        child: Text(
+                          items[4].label,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],
@@ -124,13 +133,15 @@ class MacSidebar extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: GridView.count(
-              crossAxisCount: 2,
+            child: GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 1.75,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                mainAxisExtent: SidebarTile.height(context),
+              ),
               children: [
                 for (final (i, color, count) in tiles)
                   SidebarTile(

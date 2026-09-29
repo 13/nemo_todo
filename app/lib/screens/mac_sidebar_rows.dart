@@ -33,12 +33,28 @@ class SidebarTile extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// Its height in the sidebar's grid: what it was drawn at, and as much
+  /// again as its count and name grow with larger text.
+  static double height(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final scaler = MediaQuery.textScalerOf(context);
+    double lines(TextScaler scaler) => [text.titleMedium, text.labelLarge]
+        .map((s) => scaler.scale(s?.fontSize ?? 14) * (s?.height ?? 1.2))
+        .reduce((a, b) => a + b);
+    // Two columns in the sidebar's width, as wide as 1.75 of their height.
+    const drawn = (248 - 2 * 10 - 8) / 2 / 1.75;
+    return drawn + lines(scaler) - lines(TextScaler.noScaling);
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final light = Theme.of(context).brightness == Brightness.light;
     final ink = selected ? Colors.white : scheme.onSurface;
+    // Chosen, the tile is its colour with white on it: deep enough that
+    // the white reads.
+    final color = selected ? legibleOn(this.color, [Colors.white]) : this.color;
     return Semantics(
       selected: selected,
       button: true,

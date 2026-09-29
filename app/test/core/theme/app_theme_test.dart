@@ -41,12 +41,17 @@ void main() {
           expect(contrast(s.primary, bg), greaterThan(4.5));
         }
         // No blue is both text on a dark window and a ground for white
-        // text at 4.5:1; macOS keeps white on system blue at 3.6:1, which
-        // is what WCAG asks of controls and bold labels.
+        // text at 4.5:1; macOS keeps white on system blue at 3.6:1 where
+        // it marks something, which is what WCAG asks of controls...
         final onPrimary = style == AppStyle.macos && brightness == .dark
             ? 3.5
             : 4.5;
         expect(contrast(s.onPrimary, s.primary), greaterThan(onPrimary));
+        // ...and a filled button, whose label is text, takes a deeper blue.
+        final fill =
+            theme.filledButtonTheme.style?.backgroundColor?.resolve({}) ??
+            s.primary;
+        expect(contrast(s.onPrimary, fill), greaterThanOrEqualTo(4.5));
       });
 
       test('$name: Android draws its bars legibly over the app', () {
@@ -94,6 +99,45 @@ void main() {
           }
         }
       }
+    }
+  });
+
+  test("a list's colour as a task's small text reads, in every style", () {
+    for (final style in AppStyle.values) {
+      for (final b in Brightness.values) {
+        final theme = AppTheme.build(style, b);
+        final nemo = theme.extension<NemoColors>()!;
+        final grounds = [
+          theme.colorScheme.surface,
+          theme.scaffoldBackgroundColor,
+        ];
+        for (final c in nemo.listPalette) {
+          final text = legibleOn(c, grounds);
+          for (final bg in grounds) {
+            expect(
+              contrast(text, bg),
+              greaterThanOrEqualTo(4.5),
+              reason: '${style.name} ${b.name} $c',
+            );
+          }
+          // Only as far from the colour as it has to be: the same hue.
+          if (contrast(c, grounds.first) >= 4.5) expect(text, c);
+          expect(
+            HSLColor.fromColor(text).hue,
+            closeTo(HSLColor.fromColor(c).hue, 1),
+          );
+        }
+      }
+    }
+  });
+
+  test('contrastRatio is WCAG’s, and legibleOn reaches it', () {
+    expect(contrastRatio(Colors.black, Colors.white), closeTo(21, 0.01));
+    expect(contrastRatio(Colors.white, Colors.white), 1);
+    // White on white goes grey, black on black lightens: just far enough.
+    for (final c in [Colors.white, Colors.black]) {
+      final text = legibleOn(c, [c]);
+      expect(contrastRatio(text, c), inInclusiveRange(4.5, 5));
     }
   });
 

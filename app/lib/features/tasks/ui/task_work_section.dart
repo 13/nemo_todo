@@ -176,35 +176,41 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InkWell(
-          key: const Key('task-work-toggle'),
-          onTap: () => setState(() => _expanded = !expanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l.tasksWork,
-                    style: Theme.of(context).textTheme.labelLarge
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ),
-                if (!expanded && summary.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
+        Semantics(
+          expanded: expanded,
+          child: InkWell(
+            key: const Key('task-work-toggle'),
+            onTap: () => setState(() => _expanded = !expanded),
+            child: ConstrainedBox(
+              // A finger's height; the row is otherwise its one line of text.
+              constraints: const BoxConstraints(
+                minHeight: kMinInteractiveDimension,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
                     child: Text(
-                      summary,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      l.tasksWork,
+                      style: Theme.of(context).textTheme.labelLarge
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ),
-                AppIcon(
-                  expanded
-                      ? Icons.expand_less_rounded
-                      : Icons.expand_more_rounded,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ],
+                  if (!expanded && summary.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Text(
+                        summary,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  AppIcon(
+                    expanded
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

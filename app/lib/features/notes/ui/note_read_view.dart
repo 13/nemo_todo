@@ -1,7 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_preview.dart';
 import 'package:nemo/features/notes/ui/markdown/read_lines.dart';
+import 'package:nemo/screens/style_adaptation.dart';
 
 /// A note body as formatted text, markers hidden: the read half of the
 /// note screen's toggle.
@@ -131,7 +133,13 @@ class _NoteReadViewState extends State<NoteReadView> {
               Checkbox(
                 key: Key('read-check-$i'),
                 value: line.checked,
-                visualDensity: VisualDensity.compact,
+                semanticLabel: body.substring(line.contentStart, line.end),
+                // Compact beside a pointer; a finger's 48 px elsewhere.
+                visualDensity:
+                    context.appStyle == AppStyle.macos &&
+                        !StyleAdaptation.isPhone(context)
+                    ? VisualDensity.compact
+                    : null,
                 onChanged: (_) =>
                     widget.onChanged(toggleTaskAt(body, line.start)),
               ),

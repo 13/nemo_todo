@@ -35,6 +35,14 @@ class ListsScreen extends ConsumerWidget {
       onPressed: () => showListEditSheet(context),
       extended: true,
     );
+    // A card holds its name and open count on two lines: larger text makes
+    // it taller by what they grow, and wider, so a name still fits.
+    final text = Theme.of(context).textTheme;
+    final scaler = MediaQuery.textScalerOf(context);
+    double lines(TextScaler scaler) => [text.titleMedium, text.labelMedium]
+        .map((s) => scaler.scale(s?.fontSize ?? 14) * (s?.height ?? 1.2))
+        .reduce((a, b) => a + b);
+    final grown = lines(scaler) - lines(TextScaler.noScaling);
     return StyleScaffold(
       title: l.listsTitle,
       actions: const [TaskSearch.button(), AccountAction(), SettingsAction()],
@@ -55,9 +63,9 @@ class ListsScreen extends ConsumerWidget {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                 sliver: SliverGrid.builder(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 220,
-                    mainAxisExtent: 132,
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 220 * scaler.scale(16) / 16,
+                    mainAxisExtent: 132 + grown,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),

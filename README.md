@@ -42,6 +42,11 @@ host yourself.
 - With a mouse and keyboard: a right click opens the menu a long press
   would, and single-key shortcuts (? lists them) add, find, move through,
   tick off and delete tasks.
+- With TalkBack or another screen reader, in every look: a task is read
+  out whole -- title, due date, priority, list -- with its tick as a
+  checkbox and a swipe's or long press's actions in the actions menu; and
+  every button has a name and a finger-sized target, with text readable
+  in light and dark and at twice its size.
 - The web app is the same app: identical screens, with a navigation rail
   instead of a bottom bar on wide windows, and a task opening beside the
   list rather than over it once there is room for both. It is served by

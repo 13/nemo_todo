@@ -256,6 +256,11 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen>
                             hintText: l.noteTitleHint,
                             filled: false,
                             border: InputBorder.none,
+                            // A finger's height, however tight the style's
+                            // field padding.
+                            constraints: const BoxConstraints(
+                              minHeight: kMinInteractiveDimension,
+                            ),
                           ),
                         ),
                         if (readView) ...[

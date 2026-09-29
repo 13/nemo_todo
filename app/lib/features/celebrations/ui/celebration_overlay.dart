@@ -199,27 +199,30 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
       children: [
         Align(
           alignment: Alignment.topCenter,
+          // Decoration: the banner and the pill say what happened.
           child: IgnorePointer(
-            child: ConfettiWidget(
-              confettiController: _confetti,
-              blastDirectionality: BlastDirectionality.explosive,
-              numberOfParticles: 24,
-              emissionFrequency: 0.05,
-              minBlastForce: 10,
-              maxBlastForce: 30,
-              gravity: 0.25,
-              // By default the package emits nothing on any frame slower
-              // than 1/60 s. The frame after play() always is (and every
-              // frame on a busy phone or a throttled browser), so the short
-              // burst never got a single particle out.
-              pauseEmissionOnLowFrameRate: false,
-              // The list colours: every style's are bright and varied,
-              // where its scheme's can be greys (macOS) or all one hue.
-              // nemo's own where the overlay sits outside the app's theme.
-              colors:
-                  (Theme.of(context).extension<NemoColors>() ??
-                          NemoColors.light)
-                      .listPalette,
+            child: ExcludeSemantics(
+              child: ConfettiWidget(
+                confettiController: _confetti,
+                blastDirectionality: BlastDirectionality.explosive,
+                numberOfParticles: 24,
+                emissionFrequency: 0.05,
+                minBlastForce: 10,
+                maxBlastForce: 30,
+                gravity: 0.25,
+                // By default the package emits nothing on any frame slower
+                // than 1/60 s. The frame after play() always is (and every
+                // frame on a busy phone or a throttled browser), so the short
+                // burst never got a single particle out.
+                pauseEmissionOnLowFrameRate: false,
+                // The list colours: every style's are bright and varied,
+                // where its scheme's can be greys (macOS) or all one hue.
+                // nemo's own where the overlay sits outside the app's theme.
+                colors:
+                    (Theme.of(context).extension<NemoColors>() ??
+                            NemoColors.light)
+                        .listPalette,
+              ),
             ),
           ),
         ),

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
@@ -10,6 +12,7 @@ import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/screens/style_adaptation.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo/utils/format.dart';
 import 'package:nemo/utils/quick_add_parser.dart';
@@ -147,6 +150,18 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
 
     // macOS draws a bar like this flat, under a hairline, not on a shadow.
     final flat = context.appStyle == AppStyle.macos || widget.inSheet;
+    // The chips' row: 36 px, and a finger's 48 wherever there is no
+    // pointer -- the extra reaching into the gap above and the padding
+    // below, so nothing moves -- and taller as larger text grows them.
+    final label = Theme.of(context).textTheme.labelLarge;
+    final labelSize = label?.fontSize ?? 14;
+    final grown =
+        (MediaQuery.textScalerOf(context).scale(labelSize) - labelSize) *
+        (label?.height ?? 1.2);
+    final dense =
+        context.appStyle == AppStyle.macos && !StyleAdaptation.isPhone(context);
+    final chipRow = max(dense ? 36.0 : kMinInteractiveDimension, 36 + grown);
+    final reach = min<double>(6, (chipRow - 36) / 2);
     return Material(
       color: widget.inSheet ? Colors.transparent : scheme.surface,
       elevation: flat ? 0 : 3,
@@ -157,7 +172,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          padding: EdgeInsets.fromLTRB(12, 8, 12, 8 - reach),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -186,9 +201,9 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6 - reach),
               SizedBox(
-                height: 36,
+                height: chipRow,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [

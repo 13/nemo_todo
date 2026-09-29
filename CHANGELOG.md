@@ -40,6 +40,13 @@ does the renaming, and tags only once CI has passed on the release commit.
   save, or cancel to keep nothing. Pictures are re-encoded on the phone
   like any other photo, so their location and camera details are dropped.
   It works offline and without an account.
+- With TalkBack or another screen reader, a task is read out as one row:
+  its title, when it is due (or that it is overdue), its priority, list,
+  subtasks, tags and photos. Its tick is a checkbox that says whether the
+  task is done, and what a swipe, a long press or a right click does --
+  mark done, move to another day, delete, show a tag -- is in the row's
+  actions menu.
+- Folding sections, like Completed, say whether they are open.
 
 ### Changed
 
@@ -47,6 +54,28 @@ does the renaming, and tags only once CI has passed on the release commit.
 - The server keeps its count of sign-up and sign-in attempts in its
   database instead of in memory, so restarting it no longer gives someone
   guessing passwords a fresh ten tries a minute.
+- Everything you tap on a phone is at least 48 px across, in every look:
+  a task's tick, the accent and list colours, the date, priority and list
+  chips under the add field, and the section headers that fold. The
+  circles and chips look as they did; only the area that takes the tap
+  grew. The macOS look's segmented switches in Settings are a little
+  taller on a phone; on a Mac's desktop window it keeps its denser rows.
+- In the nemo look in light, a list's name under a task is a shade deeper
+  where its colour was too pale to read as small text.
+- In the macOS look in dark, a filled button and the chosen day in the
+  date picker are a deeper blue, so their white text is readable; the
+  chosen tile in the Mac sidebar deepens in the same way.
+
+### Fixed
+
+- Buttons that a screen reader announced without a name now have one:
+  the search bar and search button in the Material look, clearing a
+  search, the colours and icons when editing a list, and the checkboxes
+  of subtasks and of a note's checklist. The logo and the confetti are
+  skipped rather than read out.
+- With the system's text at twice its size, the lists page, a task's
+  small facts, the Mac sidebar and the achievements page no longer run
+  off the edge or overflow; the list cards grow to fit their names.
 
 ## 0.18.0 - 2026-09-29
 

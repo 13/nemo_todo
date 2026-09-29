@@ -55,6 +55,16 @@ class _ListEditSheetState extends ConsumerState<ListEditSheet> {
     final l = L.of(context);
     final nemo = context.nemoColors;
     final scheme = Theme.of(context).colorScheme;
+    final colorNames = [
+      l.colorTeal,
+      l.colorBlue,
+      l.colorPurple,
+      l.colorPink,
+      l.colorRed,
+      l.colorOrange,
+      l.colorGreen,
+      l.colorGrey,
+    ];
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -84,47 +94,62 @@ class _ListEditSheetState extends ConsumerState<ListEditSheet> {
           ),
           const SizedBox(height: 16),
           Text(l.listsColor, style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 10,
-            children: [
-              for (var i = 0; i < nemo.listPalette.length; i++)
-                InkResponse(
-                  key: Key('list-color-$i'),
-                  onTap: () => setState(() => _color = i),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: nemo.listColor(i),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _color == i
-                            ? scheme.onSurface
-                            : Colors.transparent,
-                        width: 2.5,
+          // Each disc sits in a finger's 48 px; neighbouring targets share
+          // the gap between discs, and the nudge gives back the 8 px the
+          // first reaches past its disc, so the discs stay where they were.
+          Transform.translate(
+            offset: const Offset(-8, 0),
+            child: Wrap(
+              spacing: -6,
+              children: [
+                for (var i = 0; i < nemo.listPalette.length; i++)
+                  Semantics(
+                    label: colorNames[i],
+                    selected: _color == i,
+                    inMutuallyExclusiveGroup: true,
+                    button: true,
+                    child: InkResponse(
+                      key: Key('list-color-$i'),
+                      onTap: () => setState(() => _color = i),
+                      radius: 22,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: nemo.listColor(i),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _color == i
+                                  ? scheme.onSurface
+                                  : Colors.transparent,
+                              width: 2.5,
+                            ),
+                          ),
+                          child: _color == i
+                              ? AppIcon(
+                                  Icons.check,
+                                  size: 18,
+                                  // White on a deep colour, black on a light one:
+                                  // dark themes' palettes are pastels.
+                                  color:
+                                      ThemeData.estimateBrightnessForColor(
+                                            nemo.listColor(i),
+                                          ) ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                )
+                              : null,
+                        ),
                       ),
                     ),
-                    child: _color == i
-                        ? AppIcon(
-                            Icons.check,
-                            size: 18,
-                            // White on a deep colour, black on a light one:
-                            // dark themes' palettes are pastels.
-                            color:
-                                ThemeData.estimateBrightnessForColor(
-                                      nemo.listColor(i),
-                                    ) ==
-                                    Brightness.dark
-                                ? Colors.white
-                                : Colors.black,
-                          )
-                        : null,
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Text(l.listsIcon, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           Wrap(
@@ -136,6 +161,8 @@ class _ListEditSheetState extends ConsumerState<ListEditSheet> {
                   ChoiceChip(
                     key: Key('list-icon-${entry.key}'),
                     label: AppIcon(entry.value, size: 20),
+                    // Names the icon, for a screen reader and a pointer.
+                    tooltip: l.listIconName(entry.key),
                     selected: _icon == entry.key,
                     showCheckmark: false,
                     onSelected: (_) => setState(() => _icon = entry.key),

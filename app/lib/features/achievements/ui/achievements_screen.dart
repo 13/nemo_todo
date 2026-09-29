@@ -51,9 +51,13 @@ class AchievementsScreen extends ConsumerWidget {
                                       color: scheme.tertiary,
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      l.achievementsStreak(stats.currentStreak),
-                                      style: text.bodyMedium,
+                                    Flexible(
+                                      child: Text(
+                                        l.achievementsStreak(
+                                          stats.currentStreak,
+                                        ),
+                                        style: text.bodyMedium,
+                                      ),
                                     ),
                                   ],
                                 ),

@@ -128,7 +128,7 @@ including undated, no-priority, mixed-case titles and a task with no
 `created_at`; `TaskList` and `Task` JSON round trips carry the new fields,
 and a payload from before them reads back as Manual and null.
 
-**Migration.** App 5 → 6 and server 8 → 9 with the repo's
+**Migration.** App 5 → 6 and server 6 → 7 (one step with the rate limiter and housekeeping tables, all unreleased) with the repo's
 `SchemaVerifier` tests: an existing list comes through as Manual, an
 existing task with no `created_at`, and the app's cursor is reset.
 

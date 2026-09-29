@@ -68,6 +68,15 @@ class Lists extends Table with TableInfo {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_inbox IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
+  late final GeneratedColumn<String> taskOrder = GeneratedColumn<String>(
+    'task_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'manual\'',
+    defaultValue: const CustomExpression('\'manual\''),
+  );
   late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
     'updated_at',
     aliasedName,
@@ -93,6 +102,7 @@ class Lists extends Table with TableInfo {
     sortKey,
     ownerId,
     isInbox,
+    taskOrder,
     updatedAt,
     deletedAt,
   ];
@@ -250,6 +260,14 @@ class Tasks extends Table with TableInfo {
     requiredDuringInsert: false,
     $customConstraints: 'NULL',
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<String> sortKey = GeneratedColumn<String>(
     'sort_key',
     aliasedName,
@@ -291,6 +309,7 @@ class Tasks extends Table with TableInfo {
     priority,
     tags,
     repeat,
+    createdAt,
     sortKey,
     updatedAt,
     deletedAt,
@@ -1027,6 +1046,52 @@ class RateLimitHits extends Table with TableInfo {
   bool get dontWriteConstraints => true;
 }
 
+class ServerMeta extends Table with TableInfo {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ServerMeta(this.attachedDatabase, [this._alias]);
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [name, value];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'server_meta';
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  Never map(Map<String, dynamic> data, {String? tablePrefix}) {
+    throw UnsupportedError('TableInfo.map in schema verification code');
+  }
+
+  @override
+  ServerMeta createAlias(String alias) {
+    return ServerMeta(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const ['PRIMARY KEY(name)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
 class DatabaseAtV7 extends GeneratedDatabase {
   DatabaseAtV7(QueryExecutor e) : super(e);
   late final Lists lists = Lists(this);
@@ -1040,6 +1105,7 @@ class DatabaseAtV7 extends GeneratedDatabase {
   late final SyncLog syncLog = SyncLog(this);
   late final Blobs blobs = Blobs(this);
   late final RateLimitHits rateLimitHits = RateLimitHits(this);
+  late final ServerMeta serverMeta = ServerMeta(this);
   late final Index tasksListId = Index(
     'tasks_list_id',
     'CREATE INDEX tasks_list_id ON tasks (list_id)',
@@ -1092,6 +1158,7 @@ class DatabaseAtV7 extends GeneratedDatabase {
     syncLog,
     blobs,
     rateLimitHits,
+    serverMeta,
     tasksListId,
     subtasksTaskId,
     photosParent,

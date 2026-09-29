@@ -75,7 +75,7 @@ class ServerDatabase extends _$ServerDatabase {
   static const _lastHousekeeping = 'last_housekeeping';
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -153,22 +153,21 @@ class ServerDatabase extends _$ServerDatabase {
         await m.addColumn(tasks, tasks.timeSpentMinutes);
         await m.addColumn(tasks, tasks.costMinor);
       }
-      // Version 7 keeps the sign-in rate limiter's counts, which used to
-      // live in memory and start over at every restart. A brand-new table
-      // with nothing to carry over: the counts it would have held were
-      // already lost when the old server stopped.
+      // Version 7 adds, all in one step:
+      // - the sign-in rate limiter's counts, which used to live in memory
+      //   and start over at every restart. A brand-new table with nothing
+      //   to carry over: the counts it would have held were already lost
+      //   when the old server stopped.
+      // - when housekeeping last ran, for `status`. An upgraded server
+      //   simply has no record of it yet, which is the truth.
+      // - how a list is sorted and when a task was added. Neither needs a
+      //   backfill: every list so far was in manual order, and a task with
+      //   no creation time is sorted by its last write. The server never
+      //   reads either; it stores and forwards them.
       if (from < 7) {
         await m.createTable(rateLimitHits);
         await m.create(rateLimitHitsClientKey);
-      }
-      // Version 8 remembers when housekeeping last ran, for `status`. An
-      // upgraded server simply has no record of it yet, which is the truth.
-      if (from < 8) await m.createTable(serverMeta);
-      // Version 9 carries how a list is sorted and when a task was added.
-      // Neither needs a backfill: every list so far was in manual order,
-      // and a task with no creation time is sorted by its last write. The
-      // server never reads either; it stores and forwards them.
-      if (from < 9) {
+        await m.createTable(serverMeta);
         await m.addColumn(lists, lists.taskOrder);
         await m.addColumn(tasks, tasks.createdAt);
       }

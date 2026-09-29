@@ -23,8 +23,18 @@ class QuickAddBar extends ConsumerStatefulWidget {
     required this.listId,
     this.defaultDueAt,
     this.showListPicker = false,
+    this.inSheet = false,
+    this.onAdded,
     super.key,
   });
+
+  /// Drawn inside a sheet (the Material style's way to add): flat, with
+  /// the keyboard up from the start.
+  final bool inSheet;
+
+  /// Called after a task is added, in place of staying ready for the next;
+  /// a sheet closes itself here.
+  final VoidCallback? onAdded;
 
   /// Preselected list; the Inbox is used when null.
   final String? listId;
@@ -102,6 +112,11 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       _dueAt = widget.defaultDueAt;
       _priority = 0;
     });
+    final added = widget.onAdded;
+    if (added != null) {
+      added();
+      return;
+    }
     _focus.requestFocus();
   }
 
@@ -131,12 +146,12 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
     final list = lists.where((x) => x.id == _listId).firstOrNull;
 
     // macOS draws a bar like this flat, under a hairline, not on a shadow.
-    final flat = context.appStyle == AppStyle.macos;
+    final flat = context.appStyle == AppStyle.macos || widget.inSheet;
     return Material(
-      color: scheme.surface,
+      color: widget.inSheet ? Colors.transparent : scheme.surface,
       elevation: flat ? 0 : 3,
       shadowColor: Colors.black.withValues(alpha: 0.2),
-      shape: flat
+      shape: flat && !widget.inSheet
           ? Border(top: BorderSide(color: nemo.separator, width: 0.5))
           : null,
       child: SafeArea(
@@ -153,6 +168,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                       key: const Key('quick-add-field'),
                       controller: _controller,
                       focusNode: _focus,
+                      autofocus: widget.inSheet,
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _submit(),
                       decoration: InputDecoration(

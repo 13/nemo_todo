@@ -34,7 +34,7 @@ class CelebrationSettingsSection extends ConsumerWidget {
           children: [
             SwitchListTile(
               key: const Key('celebrations-switch'),
-              secondary: const AppIcon(Icons.celebration_outlined),
+              secondary: const SettingsIcon(Icons.celebration_outlined),
               title: Text(l.settingsCelebrationsEnabled),
               subtitle: Text(l.settingsCelebrationsEnabledHint),
               value: celebrate,
@@ -44,7 +44,7 @@ class CelebrationSettingsSection extends ConsumerWidget {
             ),
             SwitchListTile(
               key: const Key('celebration-sound-switch'),
-              secondary: const AppIcon(Icons.volume_up_outlined),
+              secondary: const SettingsIcon(Icons.volume_up_outlined),
               title: Text(l.settingsCelebrationSound),
               subtitle: Text(l.settingsCelebrationSoundHint),
               value: sound,
@@ -58,7 +58,7 @@ class CelebrationSettingsSection extends ConsumerWidget {
             ),
             SwitchListTile(
               key: const Key('achievements-switch'),
-              secondary: const AppIcon(Icons.emoji_events_outlined),
+              secondary: const SettingsIcon(Icons.emoji_events_outlined),
               title: Text(l.settingsAchievements),
               subtitle: Text(l.settingsAchievementsHint),
               value: showAchievements,

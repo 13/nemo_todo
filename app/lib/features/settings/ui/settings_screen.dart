@@ -8,6 +8,7 @@ import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/section_header.dart';
+import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/celebrations/ui/celebration_settings_section.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart';
 import 'package:nemo/features/settings/ui/accent_picker.dart';
@@ -131,7 +132,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           if (MediaQuery.sizeOf(context).width >= ShellScreen.railBreakpoint)
             ListTile(
               key: const Key('shortcuts-tile'),
-              leading: const AppIcon(Icons.keyboard_outlined),
+              leading: const SettingsIcon(Icons.keyboard_outlined),
               title: Text(l.shortcutsTitle),
               trailing: const Text('?'),
               onTap: () => showShortcutsHelp(context),
@@ -153,7 +154,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       title: Text(l.settingsTitle),
     );
     if (!mac) {
-      return Scaffold(
+      return StyleScaffold(
+        title: l.settingsTitle,
+        leading: BackButton(
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go(Routes.today),
+        ),
         appBar: appBar,
         body: MaxWidth(
           child: ListView(

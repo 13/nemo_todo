@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -22,7 +21,7 @@ class CurrencyTile extends ConsumerWidget {
     final codes = [if (!_offered.contains(current)) current, ..._offered];
     return ListTile(
       key: const Key('currency-tile'),
-      leading: const AppIcon(Icons.payments_outlined),
+      leading: const SettingsIcon(Icons.payments_outlined),
       title: Text(l.settingsCurrency),
       subtitle: Text(current),
       onTap: () async {

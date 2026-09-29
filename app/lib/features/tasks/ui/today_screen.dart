@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
+import 'package:nemo/core/widgets/new_task_button.dart';
 import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
+import 'package:nemo/features/tasks/ui/task_search.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/features/tasks/ui/today_progress.dart';
 import 'package:nemo/features/updates/ui/update_banner.dart';
@@ -26,7 +30,15 @@ class TodayScreen extends ConsumerWidget {
     final now = ref.watch(nowProvider)();
     final locale = Localizations.localeOf(context).toString();
     final tasks = ref.watch(todayTasksProvider);
-    return Scaffold(
+    final material = context.appStyle == AppStyle.material;
+    return StyleScaffold(
+      title: l.navToday,
+      belowTitle: Text(
+        longDate(locale, now),
+        style: Theme.of(context).textTheme.titleSmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+      searchBar: const TaskSearch.bar(),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,11 +108,22 @@ class TodayScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: QuickAddBar(
-        listId: null,
-        defaultDueAt: dayStartMs(now),
-        showListPicker: true,
-      ),
+      // Android's apps add from a button and a sheet; the others keep the
+      // field at the foot of the screen.
+      bottomNavigationBar: material
+          ? null
+          : QuickAddBar(
+              listId: null,
+              defaultDueAt: dayStartMs(now),
+              showListPicker: true,
+            ),
+      floatingActionButton: material
+          ? NewTaskButton(
+              listId: null,
+              defaultDueAt: dayStartMs(now),
+              showListPicker: true,
+            )
+          : null,
     );
   }
 }

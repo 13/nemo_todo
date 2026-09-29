@@ -7,7 +7,9 @@ import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
+import 'package:nemo/core/widgets/new_task_button.dart';
 import 'package:nemo/core/widgets/quick_add_bar.dart';
+import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/lists/ui/list_edit_sheet.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/lists/ui/lists_screen.dart';
@@ -39,7 +41,45 @@ class ListDetailScreen extends ConsumerWidget {
     final besideSidebar =
         context.appStyle == AppStyle.macos &&
         MediaQuery.sizeOf(context).width >= ShellScreen.railBreakpoint;
-    return Scaffold(
+    final actions = <Widget>[
+      if (sharing?.isShared ?? false)
+        IconButton(
+          tooltip: l.listsMembers,
+          icon: const AppIcon(Icons.people_outline_rounded),
+          onPressed: () => context.push(Routes.members(listId)),
+        ),
+      PopupMenuButton<String>(
+        key: const Key('list-menu'),
+        onSelected: (action) async {
+          switch (action) {
+            case 'edit':
+              await showListEditSheet(context, list: list);
+            case 'members':
+              await context.push(Routes.members(listId));
+            case 'delete':
+              if (await confirmDeleteList(context, ref, list) &&
+                  context.mounted) {
+                context.go(Routes.lists);
+              }
+          }
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(l.commonEdit)),
+          PopupMenuItem(value: 'members', child: Text(l.listsMembers)),
+          if (!list.isInbox)
+            PopupMenuItem(value: 'delete', child: Text(l.commonDelete)),
+        ],
+      ),
+    ];
+    final name = list.isInbox ? l.listsInbox : list.name;
+    final material = context.appStyle == AppStyle.material;
+    return StyleScaffold(
+      title: name,
+      leading: BackButton(
+        onPressed: () =>
+            context.canPop() ? context.pop() : context.go(Routes.lists),
+      ),
+      actions: actions,
       appBar: AppBar(
         automaticallyImplyLeading: !besideSidebar,
         leading: besideSidebar
@@ -72,36 +112,7 @@ class ListDetailScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-        actions: [
-          if (sharing?.isShared ?? false)
-            IconButton(
-              tooltip: l.listsMembers,
-              icon: const AppIcon(Icons.people_outline_rounded),
-              onPressed: () => context.push(Routes.members(listId)),
-            ),
-          PopupMenuButton<String>(
-            key: const Key('list-menu'),
-            onSelected: (action) async {
-              switch (action) {
-                case 'edit':
-                  await showListEditSheet(context, list: list);
-                case 'members':
-                  await context.push(Routes.members(listId));
-                case 'delete':
-                  if (await confirmDeleteList(context, ref, list) &&
-                      context.mounted) {
-                    context.go(Routes.lists);
-                  }
-              }
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'edit', child: Text(l.commonEdit)),
-              PopupMenuItem(value: 'members', child: Text(l.listsMembers)),
-              if (!list.isInbox)
-                PopupMenuItem(value: 'delete', child: Text(l.commonDelete)),
-            ],
-          ),
-        ],
+        actions: actions,
       ),
       body: AsyncBody(
         value: tasks,
@@ -126,7 +137,8 @@ class ListDetailScreen extends ConsumerWidget {
           );
         },
       ),
-      bottomNavigationBar: QuickAddBar(listId: listId),
+      bottomNavigationBar: material ? null : QuickAddBar(listId: listId),
+      floatingActionButton: material ? NewTaskButton(listId: listId) : null,
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/async_body.dart';
@@ -12,6 +14,7 @@ import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// Full-text search over titles, notes and tags of every list, and over
@@ -43,6 +46,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final notes = ref.watch(noteSearchProvider(_query)).value ?? const <Note>[];
     return Scaffold(
       appBar: AppBar(
+        // The Material style searches from each screen's bar and keeps this
+        // page for the keyboard's / and a tag's way back: a page of its own.
+        leading: context.appStyle == AppStyle.material
+            ? BackButton(
+                onPressed: () =>
+                    context.canPop() ? context.pop() : context.go(Routes.today),
+              )
+            : null,
         title: TextField(
           key: const Key('search-field'),
           controller: _controller,

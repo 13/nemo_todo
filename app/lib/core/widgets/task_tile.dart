@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
@@ -383,6 +384,12 @@ class _DoneCheckState extends State<DoneCheck>
         widget.celebrate &&
         !MediaQuery.disableAnimationsOf(context)) {
       _bounce.forward(from: 0);
+    }
+    // Android's apps answer a tick with a tap under the finger; a
+    // celebration brings its own, so this is for the ticks without one.
+    if (context.appStyle == AppStyle.material &&
+        (widget.done || !widget.celebrate)) {
+      unawaited(HapticFeedback.selectionClick());
     }
     widget.onChanged(!widget.done);
   }

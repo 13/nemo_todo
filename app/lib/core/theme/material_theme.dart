@@ -61,18 +61,49 @@ abstract final class Material3Theme {
       selection: scheme.secondaryContainer,
       tintedMetaText: false,
     );
-    final textTheme = manropeTextTheme(scheme);
+    // Android's own type, Roboto: on Android the copy every device has,
+    // which Flutter asks for by name; on the web, one bundled under a name
+    // of its own so Android never loads it.
+    const fontFamily = kIsWeb ? 'RobotoWeb' : null;
+    // A step towards Material 3 Expressive, which Flutter does not have
+    // yet: rounder surfaces, and buttons that square off a little while
+    // pressed, from the theme alone so the real thing can replace it.
+    const corner = 20.0;
+    OutlinedBorder pressable(Set<WidgetState> s) => RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(
+        s.contains(WidgetState.pressed) ? 12 : 40,
+      ),
+    );
+    final morph = ButtonStyle(
+      shape: WidgetStateProperty.resolveWith(pressable),
+      animationDuration: const Duration(milliseconds: 150),
+    );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      textTheme: textTheme,
+      fontFamily: fontFamily,
       extensions: [nemo, const AppStyleTheme(AppStyle.material)],
       splashFactory: InkSparkle.splashFactory,
+      // Back as Android 14 draws it: the page shrinks to show where the
+      // gesture leads, and lets go or springs back (see app.dart for the
+      // routes that follow this).
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
         systemOverlayStyle: systemBarsFor(scheme),
+        backgroundColor: scheme.surface,
+        scrolledUnderElevation: 3,
       ),
-      // The quick-add field reads as Material's search bar: a filled pill.
+      // Fields are Material's search bar: a filled pill.
       inputDecorationTheme: InputDecorationTheme(
         isDense: true,
         filled: true,
@@ -82,8 +113,45 @@ abstract final class Material3Theme {
           borderSide: BorderSide.none,
         ),
       ),
-      cardTheme: const CardThemeData(margin: EdgeInsets.zero),
-      bottomSheetTheme: const BottomSheetThemeData(showDragHandle: true),
+      // Filled, tonal cards: Material 3's own, with no outline.
+      cardTheme: CardThemeData(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        color: scheme.surfaceContainerHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(corner),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        showDragHandle: true,
+        backgroundColor: scheme.surfaceContainerLow,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.primaryContainer,
+        foregroundColor: scheme.onPrimaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      filledButtonTheme: FilledButtonThemeData(style: morph),
+      elevatedButtonTheme: ElevatedButtonThemeData(style: morph),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: morph),
+      textButtonTheme: TextButtonThemeData(style: morph),
+      // A switch shows a tick in its thumb when on, as Android's do.
+      switchTheme: SwitchThemeData(
+        thumbIcon: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? const Icon(Icons.check_rounded)
+              : null,
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
       navigationBarTheme: const NavigationBarThemeData(
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),

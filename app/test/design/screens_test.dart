@@ -49,6 +49,13 @@ void main() {
       'assets/fonts/Inter-SemiBold.ttf',
       'assets/fonts/Inter-Bold.ttf',
     ]);
+    // The Material style's type: Android's system Roboto, which the web
+    // bundles as RobotoWeb; tests run as Android.
+    await _loadFont('Roboto', [
+      'assets/fonts/RobotoWeb-Regular.ttf',
+      'assets/fonts/RobotoWeb-Medium.ttf',
+      'assets/fonts/RobotoWeb-Bold.ttf',
+    ]);
     // The macOS style's icons.
     await _loadFont('PhosphorRegular', ['assets/fonts/PhosphorRegular.ttf']);
     await _loadFont('PhosphorFill', ['assets/fonts/PhosphorFill.ttf']);
@@ -276,7 +283,7 @@ void main() {
           location: Routes.today,
           dark: dark,
           style: style,
-          then: (t) => t.tap(find.byKey(const Key('quick-add-date'))),
+          then: (t) => _openDate(t, style),
         ),
       );
       appTest(
@@ -298,11 +305,7 @@ void main() {
       for (final (name, location, open)
           in <(String, String, Future<void> Function(WidgetTester)?)>[
             ('settings_wide', Routes.settings, null),
-            (
-              'date_wide',
-              Routes.today,
-              (t) => t.tap(find.byKey(const Key('quick-add-date'))),
-            ),
+            ('date_wide', Routes.today, (t) => _openDate(t, style)),
             (
               'sheet_wide',
               Routes.lists,
@@ -376,4 +379,17 @@ Future<void> _loadFont(String family, List<String> paths) async {
     loader.addFont(Future.value(file.readAsBytesSync().buffer.asByteData()));
   }
   await loader.load();
+}
+
+/// Opens quick add's date: from the bar, or in the Material style from the
+/// sheet its New task button brings up -- on a wide window, the rail's.
+Future<void> _openDate(WidgetTester tester, AppStyle style) async {
+  if (style == AppStyle.material) {
+    final rail = find.byKey(const Key('rail-new-task'));
+    await tester.tap(
+      rail.evaluate().isNotEmpty ? rail : find.byKey(const Key('new-task')),
+    );
+    await tester.pumpAndSettle();
+  }
+  await tester.tap(find.byKey(const Key('quick-add-date')));
 }

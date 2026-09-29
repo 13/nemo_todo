@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
-import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
@@ -111,14 +110,14 @@ class DataTiles extends ConsumerWidget {
           children: [
             ListTile(
               key: const Key('export-data'),
-              leading: const AppIcon(Icons.file_download_outlined),
+              leading: const SettingsIcon(Icons.file_download_outlined),
               title: Text(l.settingsExport),
               subtitle: Text(l.settingsExportHint),
               onTap: () => _export(context, ref),
             ),
             ListTile(
               key: const Key('import-data'),
-              leading: const AppIcon(Icons.file_upload_outlined),
+              leading: const SettingsIcon(Icons.file_upload_outlined),
               title: Text(l.settingsImport),
               subtitle: Text(l.settingsImportHint),
               onTap: () => _import(context, ref),

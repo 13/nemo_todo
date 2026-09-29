@@ -93,6 +93,17 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter-Bold.ttf
           weight: 700
+    # The Material style's type on the web: Roboto (assets/fonts/Roboto-OFL.txt),
+    # subset like Inter. Named apart from Roboto so Android uses the copy
+    # every device already has rather than this one.
+    - family: RobotoWeb
+      fonts:
+        - asset: assets/fonts/RobotoWeb-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/RobotoWeb-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/RobotoWeb-Bold.ttf
+          weight: 700
     # The macOS style's icons: Phosphor (MIT, assets/fonts/Phosphor-LICENSE.txt),
     # subset to the glyphs lib/core/widgets/app_icon.dart names. Bundled
     # rather than taken from phosphor_flutter, whose icon class extends

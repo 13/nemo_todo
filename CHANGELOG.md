@@ -14,6 +14,27 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
+## Unreleased
+
+### Changed
+
+- The Material style now looks like one of Android's own apps rather
+  than nemo in other colours: Roboto, large titles that fold into the bar
+  as you scroll, filled tonal cards, and switches with a tick when on.
+- In the Material style, a task is added from a New task button that
+  opens a sheet with the keyboard up, and the sheet closes once the task
+  is in; on a wide window the button sits at the top of the rail.
+- In the Material style, search is a bar at the top of Today, beside the
+  account, and a search button on the other screens; the bottom bar keeps
+  Today, Upcoming, Lists and Notes.
+- In the Material style, Settings draws each row as a tile of its own
+  with its icon on a tonal circle, as Android 16's Settings does, and a
+  task's repeat is picked from a sheet of choices.
+- On Android, going back follows the back gesture: the page shrinks to
+  show where it leads before letting go.
+- The Material style gives a light tap under the finger when a task is
+  ticked or swiped.
+
 ## 0.17.0 - 2026-09-29
 
 ### Changed

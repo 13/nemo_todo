@@ -175,6 +175,9 @@ class TaskRepeatSection extends StatelessWidget {
     if (context.appStyle == AppStyle.macos) {
       return _RepeatPopUp(task: task, save: save, choices: choices);
     }
+    if (context.appStyle == AppStyle.material) {
+      return _RepeatSheetRow(task: task, save: save, choices: choices);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -366,6 +369,90 @@ class _RepeatPopUp extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// The Material style's repeat: a row naming the rule, opening a sheet of
+/// choices with a radio each, as Android's own apps offer one of many.
+class _RepeatSheetRow extends StatelessWidget {
+  const _RepeatSheetRow({
+    required this.task,
+    required this.save,
+    required this.choices,
+  });
+
+  final Task task;
+  final TaskSaver save;
+  final List<(Repeat?, String)> choices;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final dueAt = task.dueAt;
+    final rule = task.repeatRule;
+    final named = choices.where((c) => c.$1 == rule).firstOrNull;
+    final current = task.repeat != null && rule == null
+        ? task.repeat!
+        : named?.$2 ?? describeRepeat(l, locale, rule!);
+    // By what is stored, so an unreadable rule selects none.
+    final selected = choices.indexWhere((c) => task.repeat == c.$1?.encode());
+    final custom = choices.length;
+    Future<void> pick() async {
+      final picked = await showAppSheet<int>(
+        context: context,
+        showDragHandle: true,
+        // Ten choices are more than a sheet's height on a phone: it scrolls.
+        builder: (sheet) => SafeArea(
+          child: SingleChildScrollView(
+            child: RadioGroup<int>(
+              groupValue: selected >= 0
+                  ? selected
+                  : (rule != null ? custom : null),
+              onChanged: (i) => Navigator.pop(sheet, i),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final (i, (choice, label)) in choices.indexed)
+                    RadioListTile<int>(
+                      key: Key(_repeatKey(choice)),
+                      value: i,
+                      title: Text(label),
+                    ),
+                  RadioListTile<int>(
+                    key: const Key('repeat-custom'),
+                    value: custom,
+                    title: Text(l.repeatCustom),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      if (picked == null || !context.mounted) return;
+      if (picked < custom) {
+        await save(task.copyWith(repeat: choices[picked].$1?.encode()));
+        return;
+      }
+      final made = await showCustomRepeatDialog(
+        context,
+        due: DateTime.fromMillisecondsSinceEpoch(dueAt!),
+        initial: rule,
+      );
+      if (made != null) await save(task.copyWith(repeat: made.encode()));
+    }
+
+    return ListTile(
+      key: const Key('task-repeat'),
+      contentPadding: EdgeInsets.zero,
+      enabled: dueAt != null,
+      leading: const AppIcon(Icons.repeat_rounded),
+      title: Text(l.tasksRepeat),
+      subtitle: Text(dueAt == null ? l.tasksRepeatNeedsDue : current),
+      trailing: const AppIcon(Icons.chevron_right_rounded),
+      onTap: pick,
     );
   }
 }

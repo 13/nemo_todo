@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
@@ -238,6 +241,9 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
         alignment: Alignment.centerRight,
       ),
       confirmDismiss: (direction) async {
+        if (mac || context.appStyle == AppStyle.material) {
+          unawaited(HapticFeedback.lightImpact());
+        }
         final repo = ref.read(tasksRepositoryProvider);
         final messenger = ScaffoldMessenger.of(context);
         if (direction == DismissDirection.startToEnd) {

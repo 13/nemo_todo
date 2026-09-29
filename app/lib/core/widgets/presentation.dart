@@ -184,6 +184,7 @@ class SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (context.appStyle == AppStyle.material) return _android(context);
     if (context.appStyle != AppStyle.macos) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -217,6 +218,41 @@ class SettingsGroup extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+extension on SettingsGroup {
+  /// Android 16's Settings: each row a tile of its own, a hair apart, the
+  /// group's outer corners fully round and the inner ones barely.
+  Widget _android(BuildContext context) {
+    final tile = Theme.of(context).colorScheme.surfaceContainerHigh;
+    const outer = Radius.circular(24);
+    const inner = Radius.circular(6);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, child) in children.indexed) ...[
+            if (i > 0) const SizedBox(height: 2),
+            Material(
+              color: tile,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(
+                  top: i == 0 ? outer : inner,
+                  bottom: i == children.length - 1 ? outer : inner,
+                ),
+              ),
+              child: ListTileTheme.merge(
+                shape: const RoundedRectangleBorder(),
+                child: child,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -258,3 +294,26 @@ PopupMenuItem<T> menuItem<T>(
 /// The line between groups of [menuItem]s, as thin as the window's.
 PopupMenuEntry<T> menuDivider<T>(BuildContext context) =>
     PopupMenuDivider(height: context.appStyle == AppStyle.macos ? 9 : 16);
+
+/// A settings row's icon: in the Material style on a tonal circle, as
+/// Android's Settings draws its own; elsewhere the icon as it is.
+class SettingsIcon extends StatelessWidget {
+  const SettingsIcon(this.icon, {super.key});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    if (context.appStyle != AppStyle.material) return AppIcon(icon);
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        shape: BoxShape.circle,
+      ),
+      child: AppIcon(icon, size: 20, color: scheme.onPrimaryContainer),
+    );
+  }
+}

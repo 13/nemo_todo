@@ -9,10 +9,12 @@ import 'package:nemo/core/widgets/add_action.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/note_card.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
+import 'package:nemo/features/tasks/ui/task_search.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -59,7 +61,9 @@ class NotesScreen extends ConsumerWidget {
               }
             },
           );
-    return Scaffold(
+    return StyleScaffold(
+      title: l.navNotes,
+      actions: const [TaskSearch.button(), AccountAction(), SettingsAction()],
       appBar: AppBar(
         title: Text(l.navNotes),
         actions: [

@@ -88,7 +88,7 @@ class UpdateTile extends ConsumerWidget {
         SettingsGroup(
           children: [
             ListTile(
-              leading: const AppIcon(Icons.system_update_alt_rounded),
+              leading: const SettingsIcon(Icons.system_update_alt_rounded),
               title: Text(
                 version == null
                     ? l.updatesTitle

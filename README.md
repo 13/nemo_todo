@@ -34,7 +34,9 @@ host yourself.
 - Three looks, in light or dark: nemo's own ocean teal; macOS, laid out
   as a Mac app -- Apple's type sizes, thin icons, a sidebar like
   Reminders' and Settings like System Settings -- and as iOS on a phone;
-  and Material 3, in the wallpaper's colours on Android 12 and later.
+  and Material 3 as Android's own apps look -- Roboto, large titles, a
+  New task button, search at the top -- in the wallpaper's colours on
+  Android 12 and later.
 - With a mouse and keyboard: a right click opens the menu a long press
   would, and single-key shortcuts (? lists them) add, find, move through,
   tick off and delete tasks.

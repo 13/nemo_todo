@@ -120,7 +120,7 @@ class SyncSettingsSection extends ConsumerWidget {
             children: [
               ListTile(
                 key: const Key('connect-tile'),
-                leading: const AppIcon(Icons.cloud_off_outlined),
+                leading: const SettingsIcon(Icons.cloud_off_outlined),
                 title: Text(l.settingsConnect),
                 subtitle: Text(
                   auth.serverUrl != null
@@ -161,7 +161,7 @@ class SyncSettingsSection extends ConsumerWidget {
         SettingsGroup(
           children: [
             ListTile(
-              leading: const AppIcon(Icons.cloud_done_outlined),
+              leading: const SettingsIcon(Icons.cloud_done_outlined),
               title: Text(
                 l.settingsConnectedAs(auth.username!, auth.serverUrl!),
               ),
@@ -224,7 +224,7 @@ class SyncSettingsSection extends ConsumerWidget {
               ),
             ListTile(
               key: const Key('change-password'),
-              leading: const AppIcon(Icons.password_rounded),
+              leading: const SettingsIcon(Icons.password_rounded),
               title: Text(l.settingsChangePassword),
               onTap: () => _changePassword(context, ref),
             ),

@@ -10,9 +10,11 @@ import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/lists/ui/list_edit_sheet.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
+import 'package:nemo/features/tasks/ui/task_search.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -33,7 +35,9 @@ class ListsScreen extends ConsumerWidget {
       onPressed: () => showListEditSheet(context),
       extended: true,
     );
-    return Scaffold(
+    return StyleScaffold(
+      title: l.listsTitle,
+      actions: const [TaskSearch.button(), AccountAction(), SettingsAction()],
       appBar: AppBar(
         title: Text(l.listsTitle),
         actions: [
@@ -129,10 +133,17 @@ class ListCard extends ConsumerWidget {
                     Container(
                       width: 36,
                       height: 36,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      // A tonal disc in the Material style, as Keep draws its
+                      // labels; nemo's rounded square elsewhere.
+                      decoration: context.appStyle == AppStyle.material
+                          ? BoxDecoration(
+                              color: color.withValues(alpha: 0.18),
+                              shape: BoxShape.circle,
+                            )
+                          : BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                       child: AppIcon(
                         listIcon(list.icon),
                         color: color,

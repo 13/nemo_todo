@@ -107,6 +107,19 @@ class ShellScreen extends ConsumerWidget {
     }
 
     final mac = context.appStyle == AppStyle.macos;
+    final material = context.appStyle == AppStyle.material;
+    // Android's apps search from the top of the screen, not a tab: the
+    // Material style keeps four destinations, and shows the search page --
+    // the keyboard's /, a tag's way back -- as a page of its own.
+    final shown = material ? items.take(4).toList() : items;
+    if (material && index >= shown.length) {
+      return AppShortcuts(onGo: go, child: child);
+    }
+    // Where a task can be added: the rail's button asks that screen's.
+    final addsTasks =
+        location == Routes.today ||
+        location == Routes.upcoming ||
+        (location.startsWith('${Routes.lists}/') && location != Routes.lists);
     if (wide) {
       return AppShortcuts(
         onGo: go,
@@ -125,10 +138,27 @@ class ShellScreen extends ConsumerWidget {
                   selectedIndex: index,
                   onDestinationSelected: go,
                   groupAlignment: -0.9,
-                  leading: const Padding(
-                    padding: EdgeInsets.only(top: 8, bottom: 16),
-                    child: NemoMark(size: 40),
-                  ),
+                  // A Material rail carries the screen's main action at its
+                  // top; nemo's carries its mark.
+                  leading: material
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 16),
+                          child: addsTasks
+                              ? FloatingActionButton(
+                                  key: const Key('rail-new-task'),
+                                  elevation: 0,
+                                  tooltip: L.of(context).shortcutNewTask,
+                                  onPressed: () => ref
+                                      .read(quickAddFocusRequestsProvider)
+                                      .value++,
+                                  child: const AppIcon(Icons.add_rounded),
+                                )
+                              : const SizedBox(height: 56),
+                        )
+                      : const Padding(
+                          padding: EdgeInsets.only(top: 8, bottom: 16),
+                          child: NemoMark(size: 40),
+                        ),
                   trailing: Expanded(
                     child: Align(
                       alignment: Alignment.bottomCenter,
@@ -149,7 +179,7 @@ class ShellScreen extends ConsumerWidget {
                     ),
                   ),
                   destinations: [
-                    for (final d in items)
+                    for (final d in shown)
                       NavigationRailDestination(
                         icon: AppIcon(d.icon),
                         selectedIcon: AppIcon(d.selectedIcon),
@@ -182,7 +212,7 @@ class ShellScreen extends ConsumerWidget {
       selectedIndex: index,
       onDestinationSelected: go,
       destinations: [
-        for (final d in items)
+        for (final d in shown)
           NavigationDestination(
             icon: AppIcon(d.icon),
             selectedIcon: AppIcon(d.selectedIcon),

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
+import 'package:nemo/core/widgets/new_task_button.dart';
 import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
+import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
+import 'package:nemo/features/tasks/ui/task_search.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
@@ -28,7 +32,10 @@ class UpcomingScreen extends ConsumerWidget {
     final dated = ref.watch(upcomingTasksProvider);
     final noDate = ref.watch(noDateTasksProvider);
     final collapsed = ref.watch(noDateCollapsedProvider);
-    return Scaffold(
+    final material = context.appStyle == AppStyle.material;
+    return StyleScaffold(
+      title: l.navUpcoming,
+      actions: const [TaskSearch.button(), AccountAction(), SettingsAction()],
       appBar: AppBar(
         title: Text(l.navUpcoming),
         actions: const [AccountAction(), SettingsAction()],
@@ -84,11 +91,20 @@ class UpcomingScreen extends ConsumerWidget {
           return TaskListView(sections: sections, showList: true);
         },
       ),
-      bottomNavigationBar: QuickAddBar(
-        listId: null,
-        defaultDueAt: dayStartMsFrom(now, 1),
-        showListPicker: true,
-      ),
+      bottomNavigationBar: material
+          ? null
+          : QuickAddBar(
+              listId: null,
+              defaultDueAt: dayStartMsFrom(now, 1),
+              showListPicker: true,
+            ),
+      floatingActionButton: material
+          ? NewTaskButton(
+              listId: null,
+              defaultDueAt: dayStartMsFrom(now, 1),
+              showListPicker: true,
+            )
+          : null,
     );
   }
 }

@@ -27,10 +27,12 @@ void main() {
       test('$name: text reads on its surfaces', () {
         expect(s.brightness, brightness);
         expect(theme.extension<AppStyleTheme>()!.style, style);
-        expect(
-          theme.textTheme.bodyLarge?.fontFamily,
-          style == AppStyle.macos ? 'Inter' : 'Manrope',
-        );
+        expect(theme.textTheme.bodyLarge?.fontFamily, switch (style) {
+          AppStyle.nemo => 'Manrope',
+          AppStyle.macos => 'Inter',
+          // Android's own; the web's bundled copy is RobotoWeb.
+          AppStyle.material => 'Roboto',
+        });
         for (final bg in [s.surface, window]) {
           expect(contrast(s.onSurface, bg), greaterThan(7));
           expect(contrast(s.onSurfaceVariant, bg), greaterThan(4.5));

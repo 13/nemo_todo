@@ -88,3 +88,14 @@ class RateLimitHits extends Table {
   /// Epoch milliseconds.
   IntColumn get expiresAt => integer()();
 }
+
+/// Odd facts the server remembers about itself, one row per name, such as
+/// when housekeeping last ran. Nothing a client ever sees.
+@DataClassName('ServerMetaEntry')
+class ServerMeta extends Table {
+  TextColumn get name => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {name};
+}

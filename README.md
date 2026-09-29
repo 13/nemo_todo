@@ -370,6 +370,28 @@ It also clears out the record of sign-in attempts whose minute has passed.
 The server does that itself as it goes, so this only catches what one that
 stopped part-way left behind.
 
+`status` shows whether all that is being done, and how big the server has
+grown:
+
+```bash
+docker compose exec nemo nemo_server status
+# database      /data/nemo.db, 3.2 MB
+# accounts      2
+# lists         9 (1 deleted, awaiting purge)
+# tasks         412 (37 deleted, awaiting purge)
+# blobs         58, 41.7 MB
+# sessions      5 active
+# housekeeping  last purge 2 day(s) ago (2026-09-27T03:00:00.000Z)
+```
+
+The database size includes its write-ahead log; the blob figures are the
+photo files the database knows about under `NEMO_BLOB_DIR`. Only a real
+`purge` counts as housekeeping -- a `--dry-run` is not recorded -- so a
+scheduled purge that quietly stopped shows up here as a date that no longer
+moves. These numbers are only ever printed on the command line: the server
+has no endpoint that serves them, since how many people use it is nobody
+else's business.
+
 ### Backups
 
 The database is one SQLite file in the `nemo_data` volume, and copying it

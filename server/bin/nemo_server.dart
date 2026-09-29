@@ -20,6 +20,7 @@ Future<void> main(List<String> args) async {
     ..addCommand(_ResetPasswordCommand())
     ..addCommand(_BackupCommand())
     ..addCommand(_PurgeCommand())
+    ..addCommand(_StatusCommand())
     ..addCommand(_HealthcheckCommand());
   try {
     exitCode = await runner.run(args.isEmpty ? const ['serve'] : args) ?? 0;
@@ -209,6 +210,36 @@ class _PurgeCommand extends Command<int> {
         report.total == 0
             ? 'nothing tombstoned longer than $days day(s)'
             : '${dryRun ? "would remove" : "removed"} $report',
+      );
+      return 0;
+    } finally {
+      await db.close();
+    }
+  }
+}
+
+class _StatusCommand extends Command<int> {
+  @override
+  String get name => 'status';
+
+  @override
+  String get description =>
+      'Show how big the database is, what it holds, and when housekeeping '
+      'last ran. For whoever hosts the server; nothing like it is served '
+      'over HTTP.';
+
+  @override
+  Future<int> run() async {
+    final config = Config.fromEnv(Platform.environment);
+    if (!File(config.dbPath).existsSync()) {
+      stderr.writeln('no database at ${config.dbPath}');
+      return 1;
+    }
+    final db = _openDatabase(config);
+    try {
+      final status = await ServerStatus.read(db, dbPath: config.dbPath);
+      stdout.writeln(
+        status.describe(dbPath: config.dbPath, now: DateTime.now()),
       );
       return 0;
     } finally {

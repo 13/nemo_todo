@@ -23,6 +23,7 @@ part 'server_database.g.dart';
     SyncLog,
     Blobs,
     RateLimitHits,
+    ServerMeta,
   ],
 )
 class ServerDatabase extends _$ServerDatabase {
@@ -54,8 +55,27 @@ class ServerDatabase extends _$ServerDatabase {
   Future<void> backupTo(String path) =>
       customStatement('vacuum into ?', [path]);
 
+  /// When `purge` last ran for real, or null if it never has.
+  Future<DateTime?> lastHousekeeping() async {
+    final row = await (select(
+      serverMeta,
+    )..where((t) => t.name.equals(_lastHousekeeping))).getSingleOrNull();
+    final millis = int.tryParse(row?.value ?? '');
+    return millis == null ? null : DateTime.fromMillisecondsSinceEpoch(millis);
+  }
+
+  Future<void> setLastHousekeeping(DateTime at) =>
+      into(serverMeta).insertOnConflictUpdate(
+        ServerMetaCompanion.insert(
+          name: _lastHousekeeping,
+          value: '${at.millisecondsSinceEpoch}',
+        ),
+      );
+
+  static const _lastHousekeeping = 'last_housekeeping';
+
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -141,6 +161,9 @@ class ServerDatabase extends _$ServerDatabase {
         await m.createTable(rateLimitHits);
         await m.create(rateLimitHitsClientKey);
       }
+      // Version 8 remembers when housekeeping last ran, for `status`. An
+      // upgraded server simply has no record of it yet, which is the truth.
+      if (from < 8) await m.createTable(serverMeta);
     },
   );
 }

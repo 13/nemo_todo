@@ -16,6 +16,14 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ## Unreleased
 
+### Added
+
+- `nemo_server status` shows whoever hosts the server how big the database
+  is, how many accounts, lists, tasks, photo files and signed-in sessions
+  it holds, and when `purge` last ran, so a scheduled purge that stopped
+  running does not go unnoticed. It is a command only; nothing about it is
+  served over HTTP.
+
 ### Changed
 
 - The server keeps its count of sign-up and sign-in attempts in its

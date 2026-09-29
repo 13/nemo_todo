@@ -16,6 +16,7 @@ export 'src/http/handler.dart';
 export 'src/http/middleware.dart';
 export 'src/http/static_handler.dart';
 export 'src/maintenance/purge_service.dart';
+export 'src/maintenance/server_status.dart';
 export 'src/sync/members_service.dart';
 export 'src/sync/sync_log_writer.dart';
 export 'src/sync/sync_service.dart';

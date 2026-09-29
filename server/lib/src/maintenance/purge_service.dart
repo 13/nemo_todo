@@ -171,7 +171,12 @@ class PurgeService {
 
     // Sign-in attempts past their window. The server sweeps these as it
     // goes, but one that stopped before its next sweep leaves some behind.
-    if (!dryRun) await RateLimiter.deleteExpiredHits(_db, _now());
+    if (!dryRun) {
+      await RateLimiter.deleteExpiredHits(_db, _now());
+      // For `status`, so whoever hosts this can tell a scheduled purge
+      // that quietly stopped from one that is still running.
+      await _db.setLastHousekeeping(_now());
+    }
 
     return PurgeReport(
       lists: result.lists,

@@ -27,6 +27,7 @@ void main() {
         'list_members',
         'sync_log',
         'rate_limit_hits',
+        'server_meta',
       ]),
     );
   });

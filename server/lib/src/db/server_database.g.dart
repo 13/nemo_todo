@@ -4161,6 +4161,214 @@ class RateLimitHitsCompanion extends UpdateCompanion<RateLimitHit> {
   }
 }
 
+class $ServerMetaTable extends ServerMeta
+    with TableInfo<$ServerMetaTable, ServerMetaEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ServerMetaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [name, value];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'server_meta';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ServerMetaEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  ServerMetaEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ServerMetaEntry(
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
+    );
+  }
+
+  @override
+  $ServerMetaTable createAlias(String alias) {
+    return $ServerMetaTable(attachedDatabase, alias);
+  }
+}
+
+class ServerMetaEntry extends DataClass implements Insertable<ServerMetaEntry> {
+  final String name;
+  final String value;
+  const ServerMetaEntry({required this.name, required this.value});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    map['value'] = Variable<String>(value);
+    return map;
+  }
+
+  ServerMetaCompanion toCompanion(bool nullToAbsent) {
+    return ServerMetaCompanion(name: Value(name), value: Value(value));
+  }
+
+  factory ServerMetaEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ServerMetaEntry(
+      name: serializer.fromJson<String>(json['name']),
+      value: serializer.fromJson<String>(json['value']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+      'value': serializer.toJson<String>(value),
+    };
+  }
+
+  ServerMetaEntry copyWith({String? name, String? value}) =>
+      ServerMetaEntry(name: name ?? this.name, value: value ?? this.value);
+  ServerMetaEntry copyWithCompanion(ServerMetaCompanion data) {
+    return ServerMetaEntry(
+      name: data.name.present ? data.name.value : this.name,
+      value: data.value.present ? data.value.value : this.value,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServerMetaEntry(')
+          ..write('name: $name, ')
+          ..write('value: $value')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(name, value);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ServerMetaEntry &&
+          other.name == this.name &&
+          other.value == this.value);
+}
+
+class ServerMetaCompanion extends UpdateCompanion<ServerMetaEntry> {
+  final Value<String> name;
+  final Value<String> value;
+  final Value<int> rowid;
+  const ServerMetaCompanion({
+    this.name = const Value.absent(),
+    this.value = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ServerMetaCompanion.insert({
+    required String name,
+    required String value,
+    this.rowid = const Value.absent(),
+  }) : name = Value(name),
+       value = Value(value);
+  static Insertable<ServerMetaEntry> custom({
+    Expression<String>? name,
+    Expression<String>? value,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+      if (value != null) 'value': value,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ServerMetaCompanion copyWith({
+    Value<String>? name,
+    Value<String>? value,
+    Value<int>? rowid,
+  }) {
+    return ServerMetaCompanion(
+      name: name ?? this.name,
+      value: value ?? this.value,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServerMetaCompanion(')
+          ..write('name: $name, ')
+          ..write('value: $value, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$ServerDatabase extends GeneratedDatabase {
   _$ServerDatabase(QueryExecutor e) : super(e);
   $ServerDatabaseManager get managers => $ServerDatabaseManager(this);
@@ -4175,6 +4383,7 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
   late final $SyncLogTable syncLog = $SyncLogTable(this);
   late final $BlobsTable blobs = $BlobsTable(this);
   late final $RateLimitHitsTable rateLimitHits = $RateLimitHitsTable(this);
+  late final $ServerMetaTable serverMeta = $ServerMetaTable(this);
   late final Index tasksListId = Index(
     'tasks_list_id',
     'CREATE INDEX tasks_list_id ON tasks (list_id)',
@@ -4227,6 +4436,7 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     syncLog,
     blobs,
     rateLimitHits,
+    serverMeta,
     tasksListId,
     subtasksTaskId,
     photosParent,
@@ -6874,6 +7084,151 @@ typedef $$RateLimitHitsTableProcessedTableManager =
       RateLimitHit,
       PrefetchHooks Function()
     >;
+typedef $$ServerMetaTableCreateCompanionBuilder = ServerMetaCompanion Function({
+  required String name,
+  required String value,
+  Value<int> rowid,
+});
+typedef $$ServerMetaTableUpdateCompanionBuilder = ServerMetaCompanion Function({
+  Value<String> name,
+  Value<String> value,
+  Value<int> rowid,
+});
+
+class $$ServerMetaTableFilterComposer
+    extends Composer<_$ServerDatabase, $ServerMetaTable> {
+  $$ServerMetaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ServerMetaTableOrderingComposer
+    extends Composer<_$ServerDatabase, $ServerMetaTable> {
+  $$ServerMetaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ServerMetaTableAnnotationComposer
+    extends Composer<_$ServerDatabase, $ServerMetaTable> {
+  $$ServerMetaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+}
+
+class $$ServerMetaTableTableManager
+    extends
+        RootTableManager<
+          _$ServerDatabase,
+          $ServerMetaTable,
+          ServerMetaEntry,
+          $$ServerMetaTableFilterComposer,
+          $$ServerMetaTableOrderingComposer,
+          $$ServerMetaTableAnnotationComposer,
+          $$ServerMetaTableCreateCompanionBuilder,
+          $$ServerMetaTableUpdateCompanionBuilder,
+          (
+            ServerMetaEntry,
+            BaseReferences<_$ServerDatabase, $ServerMetaTable, ServerMetaEntry>,
+          ),
+          ServerMetaEntry,
+          PrefetchHooks Function()
+        > {
+  $$ServerMetaTableTableManager(_$ServerDatabase db, $ServerMetaTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ServerMetaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ServerMetaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ServerMetaTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> name = const Value.absent(),
+            Value<String> value = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => ServerMetaCompanion(name: name, value: value, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String name,
+                required String value,
+                Value<int> rowid = const Value.absent(),
+              }) => ServerMetaCompanion.insert(
+                name: name,
+                value: value,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ServerMetaTable, ServerMetaEntry>(table),
+                  BaseReferences<
+                    _$ServerDatabase,
+                    $ServerMetaTable,
+                    ServerMetaEntry
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ServerMetaTableProcessedTableManager =
+    ProcessedTableManager<
+      _$ServerDatabase,
+      $ServerMetaTable,
+      ServerMetaEntry,
+      $$ServerMetaTableFilterComposer,
+      $$ServerMetaTableOrderingComposer,
+      $$ServerMetaTableAnnotationComposer,
+      $$ServerMetaTableCreateCompanionBuilder,
+      $$ServerMetaTableUpdateCompanionBuilder,
+      (
+        ServerMetaEntry,
+        BaseReferences<_$ServerDatabase, $ServerMetaTable, ServerMetaEntry>,
+      ),
+      ServerMetaEntry,
+      PrefetchHooks Function()
+    >;
 
 class $ServerDatabaseManager {
   final _$ServerDatabase _db;
@@ -6900,4 +7255,6 @@ class $ServerDatabaseManager {
       $$BlobsTableTableManager(_db, _db.blobs);
   $$RateLimitHitsTableTableManager get rateLimitHits =>
       $$RateLimitHitsTableTableManager(_db, _db.rateLimitHits);
+  $$ServerMetaTableTableManager get serverMeta =>
+      $$ServerMetaTableTableManager(_db, _db.serverMeta);
 }

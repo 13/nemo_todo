@@ -211,3 +211,27 @@ jobs:
             NEMO_CHANNEL=main
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Into the local daemon, so the step below can run it.
+          load: true
+
+      # The measuring script needs Node's built-in WebSocket (22 or newer).
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # What the image actually sends a browser, first visit and repeat,
+      # held to a budget in bytes: 0.15.2 shipped repeat visits that
+      # downloaded the whole app again, and every check above passed. Bytes
+      # are held to a budget; timings are printed but vary too much on a
+      # shared runner to hold to anything. Budgets sit just above today's
+      # 2.8 MB and 10 KB; raise them deliberately.
+      - name: Check web app load size
+        run: |
+          docker run -d --name nemo -p 8080:8080 nemo:${{ github.sha }}
+          for _ in $(seq 30); do
+            curl -fsS http://localhost:8080/healthz > /dev/null && break
+            sleep 1
+          done
+          node tool/measure_web_load.mjs http://localhost:8080/ \
+            --runs=3 --max-first-kb=3072 --max-repeat-kb=100
+          docker rm -f nemo > /dev/null

@@ -5,6 +5,13 @@
 //
 //   node tool/measure_web_load.mjs [url] [--network=fast4g|slow4g|none]
 //                                  [--cpu=1] [--runs=5]
+//                                  [--max-first-kb=N] [--max-repeat-kb=N]
+//
+// With a --max, it exits 1 when the median bytes of a first or repeat
+// visit go over it. CI holds the image it builds to these, because bytes
+// are what a regression changes -- 0.15.2 shipped repeat visits that
+// downloaded everything again -- while timings on a shared runner vary
+// too much to hold anything to.
 //
 // Point it at a running server (default http://localhost:8080/). It
 // reports, from the start of navigation:
@@ -33,6 +40,8 @@ const networks = {
   fast4g: { latency: 60, down: (9 * 1024 * 1024) / 8, up: (1.5 * 1024 * 1024) / 8 },
   slow4g: { latency: 150, down: (1.6 * 1024 * 1024) / 8, up: (750 * 1024) / 8 },
 };
+const maxFirstKb = Number(flag('max-first-kb', Infinity));
+const maxRepeatKb = Number(flag('max-repeat-kb', Infinity));
 const networkName = flag('network', 'fast4g');
 if (!(networkName in networks)) throw new Error(`unknown --network ${networkName}`);
 const network = networks[networkName];
@@ -78,6 +87,9 @@ async function main() {
       '--use-angle=swiftshader',
       '--enable-unsafe-swiftshader',
       '--window-size=1280,800',
+      // GitHub's Ubuntu runners forbid the user namespaces Chrome's
+      // sandbox needs. The page is our own build, served locally.
+      ...(process.env.CI ? ['--no-sandbox'] : []),
       'about:blank',
     ],
     { stdio: ['ignore', 'ignore', 'pipe'] },
@@ -128,8 +140,12 @@ async function main() {
     console.log(
       `${url}  network=${networkName} cpu=${cpu}x  median of ${runs} runs (ms from navigation)`,
     );
-    report('first visit', cold);
-    report('repeat visit', warm);
+    const over = [
+      ...budget('first visit', report('first visit', cold), maxFirstKb),
+      ...budget('repeat visit', report('repeat visit', warm), maxRepeatKb),
+    ];
+    for (const line of over) console.error(line);
+    if (over.length) process.exitCode = 1;
   } finally {
     chrome.kill();
     rmSync(profile, { recursive: true, force: true });
@@ -159,6 +175,13 @@ async function load(page, target) {
   return { ...m, bytes };
 }
 
+function budget(label, kb, max) {
+  return kb > max
+    ? [`over budget: ${label} sent ${kb.toFixed(0)} KB, more than ${max} KB`]
+    : [];
+}
+
+// Prints the medians and returns the median bytes, in KB.
 function report(label, results) {
   const median = (key) => {
     const v = results.map((r) => r[key]).filter((x) => x !== undefined).sort((a, b) => a - b);
@@ -169,6 +192,7 @@ function report(label, results) {
   console.log(
     `  ${label.padEnd(13)} ${ms('splash')}  ${ms('engine')}  ${ms('db')}  ${ms('frame')}  bytes ${mb} MB`,
   );
+  return median('bytes') / 1024;
 }
 
 // A DevTools protocol client over one WebSocket, with flattened sessions.

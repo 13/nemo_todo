@@ -14,6 +14,22 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
+## Unreleased
+
+### Added
+
+- Background tint. In the nemo look, Settings has a Background tint
+  under the accent colour: None for plain greys, Subtle as nemo has
+  always looked, or Strong for a cast you notice. The window, cards,
+  sidebar and lines take on the accent you chose rather than staying
+  teal, and text stays as easy to read at every level. Grey as the
+  accent keeps the backgrounds near grey.
+
+### Fixed
+
+- Changing the look to or from Material no longer stutters: the text
+  now eases from one look to the other like everything else.
+
 ## 0.19.0 - 2026-09-29
 
 ### Added

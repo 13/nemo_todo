@@ -11,6 +11,13 @@ import 'package:nemo/core/widgets/nemo_mark.dart';
 ///
 ///   flutter test test/design --update-goldens
 void main() {
+  // These render for a person to look at; without --update-goldens there
+  // is nothing stored to compare against, so a plain `flutter test` would
+  // only fail them. Rendering is what the flag asks for.
+  if (!autoUpdateGoldenFiles) {
+    test('renders only with --update-goldens', () {}, skip: true);
+    return;
+  }
   testWidgets('mark and tile', (tester) async {
     tester.view.physicalSize = const Size(600, 300);
     tester.view.devicePixelRatio = 1;

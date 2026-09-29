@@ -27,6 +27,13 @@ import '../support/test_db.dart';
 /// The images are build output, not checked-in golden assertions: they are
 /// there to be reviewed, and a stray pixel should not fail the build.
 void main() {
+  // These render for a person to look at; without --update-goldens there
+  // is nothing stored to compare against, so a plain `flutter test` would
+  // only fail them. Rendering is what the flag asks for.
+  if (!autoUpdateGoldenFiles) {
+    test('renders only with --update-goldens', () {}, skip: true);
+    return;
+  }
   setUpAll(() async {
     await _loadFont('Manrope', [
       'assets/fonts/Manrope-Regular.ttf',

@@ -37,8 +37,18 @@ if ! $core && ! $server && ! $app && ! $l10n; then
   exit 0
 fi
 
+# Found where tool/check.sh finds it: a Flutter off PATH is common enough
+# that skipping for it meant this hook never ran on such a machine.
+if ! command -v flutter > /dev/null; then
+  for dir in "${FLUTTER_ROOT:-}" "$HOME/flutter"; do
+    if [ -n "$dir" ] && [ -x "$dir/bin/flutter" ]; then
+      PATH="$dir/bin:$PATH"
+      break
+    fi
+  done
+fi
 if ! command -v flutter > /dev/null || ! command -v dart > /dev/null; then
-  echo "pre-commit: no flutter/dart on PATH, leaving generated code to CI" >&2
+  echo "pre-commit: no flutter/dart found, leaving generated code to CI" >&2
   exit 0
 fi
 

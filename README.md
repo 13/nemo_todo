@@ -220,6 +220,15 @@ touches the README or the icons costs nothing, and it regenerates what was
 stale before refusing, so the fix is to stage it and commit again.
 `git commit --no-verify` skips it.
 
+The same install adds a pre-push hook running `tool/check.sh`, which runs
+what CI's test job runs -- generated code, formatting, icons, analysis,
+every package's tests and coverage floors -- in about two minutes rather
+than twenty. Run it by hand any time; `--quick` skips regenerating code.
+Analysis there is `dart analyze`, not `flutter analyze`: the latter can
+report no issues locally without loading the riverpod_lint plugin CI
+enforces. A tree that passed is remembered, so pushing main and then its
+tag checks once. `git push --no-verify` skips it.
+
 The server is compiled with `dart build cli`, not `dart compile exe`: the
 sqlite3 package ships a build hook, and only `dart build` runs hooks and
 places the native library next to the executable.

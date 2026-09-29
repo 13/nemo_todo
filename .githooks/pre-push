@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Runs tool/check.sh -- what CI runs -- before anything is pushed, so a
+# problem is found in two minutes here rather than twenty in CI, and never
+# after a release tag has gone out. 0.15.1 was that release.
+#
+# A tree that has already passed a full check is not checked again, so
+# pushing main and then its tag costs one run, not two. Only the commit
+# checked out, with nothing uncommitted, can be checked: the check runs on
+# the working tree, and anything else would test something other than
+# what is being pushed.
+#
+# Skip a run with `git push --no-verify`.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+checked="$(git rev-parse --git-common-dir)/nemo-checked"
+zero=0000000000000000000000000000000000000000
+head=$(git rev-parse HEAD)
+
+need=false
+while read -r _ local_sha _ _; do
+  # Deleting a ref pushes nothing to check.
+  [ "$local_sha" = "$zero" ] && continue
+  commit=$(git rev-parse "$local_sha^{commit}")
+  tree=$(git rev-parse "$commit^{tree}")
+  if [ -f "$checked" ] && grep -qx "$tree" "$checked"; then
+    continue
+  fi
+  if [ "$commit" != "$head" ]; then
+    echo "pre-push: $commit is not checked out, so it cannot be checked." >&2
+    echo "Check it out and push again, or push with --no-verify." >&2
+    exit 1
+  fi
+  need=true
+done
+
+$need || exit 0
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "pre-push: uncommitted changes would be checked instead of what is" >&2
+  echo "being pushed. Commit or stash them, or push with --no-verify." >&2
+  exit 1
+fi
+
+echo "pre-push: running tool/check.sh (skip with --no-verify)..."
+tool/check.sh

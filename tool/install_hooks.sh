@@ -8,5 +8,6 @@ cd "$(dirname "$0")/.."
 
 git config core.hooksPath .githooks
 echo "hooks installed: $(git config core.hooksPath)"
-echo "skip one with 'git commit --no-verify'; undo with"
+echo "pre-commit checks generated code; pre-push runs tool/check.sh"
+echo "skip one with --no-verify on the commit or push; undo with"
 echo "  git config --unset core.hooksPath"

@@ -687,6 +687,72 @@ abstract class L {
   /// **'Material'**
   String get styleMaterial;
 
+  /// No description provided for @taskMenuDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as done'**
+  String get taskMenuDone;
+
+  /// No description provided for @taskMenuUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as not done'**
+  String get taskMenuUndone;
+
+  /// No description provided for @taskMenuMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to…'**
+  String get taskMenuMove;
+
+  /// No description provided for @shortcutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get shortcutsTitle;
+
+  /// No description provided for @shortcutNewTask.
+  ///
+  /// In en, this message translates to:
+  /// **'New task'**
+  String get shortcutNewTask;
+
+  /// No description provided for @shortcutGoTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Today, Upcoming, Lists, Notes, Search'**
+  String get shortcutGoTo;
+
+  /// No description provided for @shortcutMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous or next task'**
+  String get shortcutMove;
+
+  /// No description provided for @shortcutToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the task done or not done'**
+  String get shortcutToggle;
+
+  /// No description provided for @shortcutDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the task'**
+  String get shortcutDelete;
+
+  /// No description provided for @shortcutClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the task'**
+  String get shortcutClose;
+
+  /// No description provided for @shortcutHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Show these shortcuts'**
+  String get shortcutHelp;
+
   /// No description provided for @settingsAccount.
   ///
   /// In en, this message translates to:

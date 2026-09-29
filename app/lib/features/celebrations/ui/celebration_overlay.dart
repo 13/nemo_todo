@@ -5,6 +5,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/celebrations/data/celebration_sound.dart';
 import 'package:nemo/features/celebrations/ui/achievement_banner.dart';
@@ -192,7 +193,6 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
   }
 
   Widget _buildLayer(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final banner = _banner;
     return Stack(
       fit: StackFit.expand,
@@ -213,13 +213,13 @@ class _CelebrationOverlayState extends ConsumerState<CelebrationOverlay> {
               // frame on a busy phone or a throttled browser), so the short
               // burst never got a single particle out.
               pauseEmissionOnLowFrameRate: false,
-              colors: [
-                scheme.primary,
-                scheme.secondary,
-                scheme.tertiary,
-                scheme.primaryContainer,
-                scheme.tertiaryContainer,
-              ],
+              // The list colours: every style's are bright and varied,
+              // where its scheme's can be greys (macOS) or all one hue.
+              // nemo's own where the overlay sits outside the app's theme.
+              colors:
+                  (Theme.of(context).extension<NemoColors>() ??
+                          NemoColors.light)
+                      .listPalette,
             ),
           ),
         ),

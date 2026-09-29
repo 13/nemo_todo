@@ -7,6 +7,8 @@ import 'package:nemo/features/celebrations/ui/motivation_text.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
+import 'package:nemo/features/tasks/ui/task_menu.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -107,9 +109,29 @@ class TaskListSlivers extends ConsumerStatefulWidget {
 class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
   var _showCompleted = false;
 
+  /// What this list last told the keyboard it shows.
+  List<Task>? _published;
+
+  late final ValueNotifier<List<Task>> _visible = ref.read(
+    visibleTasksProvider,
+  );
+
+  @override
+  void dispose() {
+    // Only if nothing newer has replaced it: the next screen's list builds
+    // before this one goes away.
+    if (identical(_visible.value, _published)) _visible.value = const [];
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    _visible.value = _published = [
+      for (final section in widget.sections)
+        if (!(section.collapsible && section.collapsed)) ...section.tasks,
+      if (_showCompleted) ...widget.completed,
+    ];
     final slivers = <Widget>[
       if (widget.header != null) SliverToBoxAdapter(child: widget.header),
     ];
@@ -246,18 +268,7 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
           // The row moves between sections on its own; no removal here.
           return false;
         }
-        await repo.delete(task.id);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(l.tasksDeleted),
-            // An action would keep it up until tapped.
-            persist: false,
-            action: SnackBarAction(
-              label: l.commonUndo,
-              onPressed: () => repo.restore(task.id),
-            ),
-          ),
-        );
+        if (context.mounted) await deleteTaskWithUndo(context, ref, task);
         return false;
       },
       child: child,

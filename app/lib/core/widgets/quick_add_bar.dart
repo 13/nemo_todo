@@ -5,6 +5,7 @@ import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
@@ -39,11 +40,19 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   int _priority = 0;
   String? _listId;
 
+  /// The keyboard's N, from wherever it was pressed.
+  late final ValueNotifier<int> _focusRequests = ref.read(
+    quickAddFocusRequestsProvider,
+  );
+
+  void _takeFocus() => _focus.requestFocus();
+
   @override
   void initState() {
     super.initState();
     _dueAt = widget.defaultDueAt;
     _listId = widget.listId;
+    _focusRequests.addListener(_takeFocus);
   }
 
   @override
@@ -54,6 +63,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
 
   @override
   void dispose() {
+    _focusRequests.removeListener(_takeFocus);
     _controller.dispose();
     _focus.dispose();
     super.dispose();

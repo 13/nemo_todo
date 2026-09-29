@@ -17,7 +17,7 @@ class NemoColors extends ThemeExtension<NemoColors> {
 
   static const light = NemoColors(
     priorityLow: Color(0xFF2E7DD1),
-    priorityMedium: Color(0xFFD98A00),
+    priorityMedium: Color(0xFFC77E00),
     priorityHigh: Color(0xFFE2503E),
     overdue: Color(0xFFC62828),
     listPalette: [
@@ -26,7 +26,7 @@ class NemoColors extends ThemeExtension<NemoColors> {
       Color(0xFF7B57C8),
       Color(0xFFD64577),
       Color(0xFFE2503E),
-      Color(0xFFD98A00),
+      Color(0xFFC77E00),
       Color(0xFF3F9B4C),
       Color(0xFF5F6B7A),
     ],

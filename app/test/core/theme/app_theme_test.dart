@@ -51,9 +51,6 @@ void main() {
           nemo.priorityMedium,
           nemo.priorityHigh,
         ]) {
-          // nemo's own amber is 2.6:1 on its light window, as it has
-          // always been; the nemo style is kept exactly as it was.
-          if (style == AppStyle.nemo && c == const Color(0xFFD98A00)) continue;
           expect(contrast(c, window), greaterThan(3), reason: '$c');
         }
       });

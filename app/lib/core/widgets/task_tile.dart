@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
@@ -11,6 +14,7 @@ import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
+import 'package:nemo/features/tasks/ui/task_menu.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -74,88 +78,125 @@ class TaskTile extends ConsumerWidget {
           child: MetaChip(icon: Icons.tag_rounded, label: tag),
         ),
     ];
+    // The task open beside the list, which the arrow keys move.
+    final selected = ref.watch(selectedTaskProvider) == task.id;
+    ref.listen(selectedTaskProvider, (_, next) {
+      if (next == task.id) _keepInView(context);
+    });
     final titleStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
       decoration: task.done ? TextDecoration.lineThrough : null,
       color: task.done ? scheme.onSurfaceVariant : scheme.onSurface,
       fontWeight: FontWeight.w500,
     );
-    return InkWell(
-      onTap: () => openTask(context, ref, task.id),
-      onLongPress: onLongPress,
+    return Material(
+      key: selected ? Key('selected-task-${task.id}') : null,
+      color: selected ? nemo.selection : Colors.transparent,
       borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DoneCheck(
-              done: task.done,
-              color: nemo.priority(task.priority),
-              onChanged: (done) => completeTask(ref, task, done: done),
-              celebrate: ref.watch(celebrationsEnabledProvider),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 9),
-                    child: Text(task.title, style: titleStyle),
-                  ),
-                  if (meta.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2, bottom: 4),
-                      child: Wrap(spacing: 10, runSpacing: 2, children: meta),
-                    ),
-                ],
+      child: InkWell(
+        onTap: () => openTask(context, ref, task.id),
+        onLongPress: onLongPress,
+        onSecondaryTapUp: (d) =>
+            showTaskMenu(context, ref, task, d.globalPosition),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DoneCheck(
+                done: task.done,
+                color: nemo.priority(task.priority),
+                onChanged: (done) => completeTask(ref, task, done: done),
+                celebrate: ref.watch(celebrationsEnabledProvider),
               ),
-            ),
-            if (firstPhoto != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8, right: 4),
-                child: Stack(
-                  key: Key('tile-photo-${task.id}'),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    PhotoThumbnail(sha256: firstPhoto.sha256, size: 40),
-                    if (photos > 1)
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: scheme.surface.withValues(alpha: 0.85),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(6),
-                              bottomRight: Radius.circular(10),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 1,
-                            ),
-                            child: Text(
-                              '+${photos - 1}',
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                          ),
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 9),
+                      child: Text(task.title, style: titleStyle),
+                    ),
+                    if (meta.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2, bottom: 4),
+                        child: Wrap(spacing: 10, runSpacing: 2, children: meta),
                       ),
                   ],
                 ),
               ),
-            if (task.priority > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 10, right: 4),
-                child: Icon(
-                  Icons.flag_rounded,
-                  size: 18,
-                  color: nemo.priority(task.priority),
+              if (firstPhoto != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, right: 4),
+                  child: Stack(
+                    key: Key('tile-photo-${task.id}'),
+                    children: [
+                      PhotoThumbnail(sha256: firstPhoto.sha256, size: 40),
+                      if (photos > 1)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: scheme.surface.withValues(alpha: 0.85),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(6),
+                                bottomRight: Radius.circular(10),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
+                              child: Text(
+                                '+${photos - 1}',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
+              if (task.priority > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, right: 4),
+                  child: Icon(
+                    Icons.flag_rounded,
+                    size: 18,
+                    color: nemo.priority(task.priority),
+                  ),
+                ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  /// Scrolls just far enough to show this tile, and not at all if it is
+  /// already in view: the arrow keys can select a task below the fold.
+  static void _keepInView(BuildContext context) {
+    final box = context.findRenderObject();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (box == null || position == null) return;
+    final viewport = RenderAbstractViewport.maybeOf(box);
+    if (viewport == null) return;
+    final atTop = viewport.getOffsetToReveal(box, 0).offset;
+    final atBottom = viewport.getOffsetToReveal(box, 1).offset;
+    final target = position.pixels > atTop
+        ? atTop
+        : position.pixels < atBottom
+        ? atBottom
+        : null;
+    if (target == null) return;
+    unawaited(
+      position.animateTo(
+        target.clamp(position.minScrollExtent, position.maxScrollExtent),
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
       ),
     );
   }

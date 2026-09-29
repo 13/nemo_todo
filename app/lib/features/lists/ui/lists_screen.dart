@@ -86,6 +86,9 @@ class ListCard extends ConsumerWidget {
         onLongPress: list.isInbox
             ? null
             : () => showListMenu(context, ref, list),
+        onSecondaryTapUp: list.isInbox
+            ? null
+            : (d) => showListMenu(context, ref, list, at: d.globalPosition),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -135,44 +138,63 @@ class ListCard extends ConsumerWidget {
   }
 }
 
-/// Edit / members / delete actions for a list.
+/// Edit / members / delete actions for a list: as a sheet from a long
+/// press, or as a menu [at] the pointer from a right click.
 Future<void> showListMenu(
   BuildContext context,
   WidgetRef ref,
-  TaskList list,
-) async {
+  TaskList list, {
+  Offset? at,
+}) async {
   final l = L.of(context);
-  final action = await showModalBottomSheet<String>(
-    context: context,
-    builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: Text(l.commonEdit),
-            onTap: () => Navigator.pop(context, 'edit'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.people_outline_rounded),
-            title: Text(l.listsMembers),
-            onTap: () => Navigator.pop(context, 'members'),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.delete_outline_rounded,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            title: Text(
-              l.commonDelete,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-            onTap: () => Navigator.pop(context, 'delete'),
-          ),
-        ],
+  final error = Theme.of(context).colorScheme.error;
+  final entries = [
+    ('edit', Icons.edit_outlined, l.commonEdit, null),
+    ('members', Icons.people_outline_rounded, l.listsMembers, null),
+    ('delete', Icons.delete_outline_rounded, l.commonDelete, error),
+  ];
+  final String? action;
+  if (at != null) {
+    final overlay =
+        Overlay.of(context).context.findRenderObject()! as RenderBox;
+    action = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        at & const Size(1, 1),
+        Offset.zero & overlay.size,
       ),
-    ),
-  );
+      items: [
+        for (final (value, icon, label, color) in entries)
+          PopupMenuItem(
+            value: value,
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: color),
+                const SizedBox(width: 12),
+                Text(label, style: TextStyle(color: color)),
+              ],
+            ),
+          ),
+      ],
+    );
+  } else {
+    action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (value, icon, label, color) in entries)
+              ListTile(
+                leading: Icon(icon, color: color),
+                title: Text(label, style: TextStyle(color: color)),
+                onTap: () => Navigator.pop(context, value),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
   if (!context.mounted) return;
   switch (action) {
     case 'edit':

@@ -14,6 +14,8 @@ import 'package:nemo/features/sync/ui/sync_settings_section.dart';
 import 'package:nemo/features/updates/ui/update_tile.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
+import 'package:nemo/screens/app_shortcuts.dart';
+import 'package:nemo/screens/shell_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -96,6 +98,15 @@ class SettingsScreen extends ConsumerWidget {
             const DailyListTile(),
             const CurrencyTile(),
             const UpdateTile(),
+            // A window this wide usually has a keyboard to go with it.
+            if (MediaQuery.sizeOf(context).width >= ShellScreen.railBreakpoint)
+              ListTile(
+                key: const Key('shortcuts-tile'),
+                leading: const Icon(Icons.keyboard_outlined),
+                title: Text(l.shortcutsTitle),
+                trailing: const Text('?'),
+                onTap: () => showShortcutsHelp(context),
+              ),
             SectionHeader(title: l.settingsAbout),
             const AboutTile(),
           ],

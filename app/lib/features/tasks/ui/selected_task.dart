@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/screens/shell_screen.dart';
+import 'package:nemo_core/nemo_core.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'selected_task.g.dart';
@@ -37,3 +38,20 @@ void openTask(BuildContext context, WidgetRef ref, String taskId) {
     unawaited(context.push(Routes.task(taskId)));
   }
 }
+
+/// The tasks the current screen lists, top to bottom as shown, for the
+/// keyboard to move through. Written by the task list as it builds; read
+/// only when a key is pressed, so nothing listens to it.
+final visibleTasksProvider = Provider<ValueNotifier<List<Task>>>((ref) {
+  final tasks = ValueNotifier<List<Task>>(const []);
+  ref.onDispose(tasks.dispose);
+  return tasks;
+});
+
+/// Asks whichever quick-add field is on screen to take the keyboard; the
+/// field listens and focuses itself on every change.
+final quickAddFocusRequestsProvider = Provider<ValueNotifier<int>>((ref) {
+  final requests = ValueNotifier<int>(0);
+  ref.onDispose(requests.dispose);
+  return requests;
+});

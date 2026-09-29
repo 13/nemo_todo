@@ -346,6 +346,39 @@ class LIt extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get taskMenuDone => 'Segna come fatto';
+
+  @override
+  String get taskMenuUndone => 'Segna come da fare';
+
+  @override
+  String get taskMenuMove => 'Sposta a…';
+
+  @override
+  String get shortcutsTitle => 'Scorciatoie da tastiera';
+
+  @override
+  String get shortcutNewTask => 'Nuova attività';
+
+  @override
+  String get shortcutGoTo => 'Oggi, Prossime, Liste, Note, Cerca';
+
+  @override
+  String get shortcutMove => 'Attività precedente o successiva';
+
+  @override
+  String get shortcutToggle => 'Segna l’attività come fatta o da fare';
+
+  @override
+  String get shortcutDelete => 'Elimina l’attività';
+
+  @override
+  String get shortcutClose => 'Chiudi l’attività';
+
+  @override
+  String get shortcutHelp => 'Mostra queste scorciatoie';
+
+  @override
   String get settingsAccount => 'Account';
 
   @override

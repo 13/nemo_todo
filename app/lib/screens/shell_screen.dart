@@ -11,6 +11,7 @@ import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_detail_screen.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
+import 'package:nemo/screens/app_shortcuts.dart';
 
 /// Adaptive chrome around the main destinations: a bottom navigation bar on
 /// phones, a navigation rail from 840 dp -- in the macOS style, a floating
@@ -99,62 +100,67 @@ class ShellScreen extends ConsumerWidget {
 
     final mac = context.appStyle == AppStyle.macos;
     if (wide) {
-      return Scaffold(
-        body: Row(
-          children: [
-            if (mac)
-              _Sidebar(items: items, selected: index, onSelected: go)
-            else
-              NavigationRail(
-                selectedIndex: index,
-                onDestinationSelected: go,
-                groupAlignment: -0.9,
-                leading: const Padding(
-                  padding: EdgeInsets.only(top: 8, bottom: 16),
-                  child: NemoMark(size: 40),
-                ),
-                trailing: Expanded(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const AccountAction(inRail: true),
-                          IconButton(
-                            tooltip: L.of(context).navSettings,
-                            icon: const Icon(Icons.settings_outlined),
-                            onPressed: () => context.push(Routes.settings),
-                          ),
-                        ],
+      return AppShortcuts(
+        onGo: go,
+        child: Scaffold(
+          body: Row(
+            children: [
+              if (mac)
+                _Sidebar(items: items, selected: index, onSelected: go)
+              else
+                NavigationRail(
+                  selectedIndex: index,
+                  onDestinationSelected: go,
+                  groupAlignment: -0.9,
+                  leading: const Padding(
+                    padding: EdgeInsets.only(top: 8, bottom: 16),
+                    child: NemoMark(size: 40),
+                  ),
+                  trailing: Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const AccountAction(inRail: true),
+                            IconButton(
+                              tooltip: L.of(context).navSettings,
+                              icon: const Icon(Icons.settings_outlined),
+                              onPressed: () => context.push(Routes.settings),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
+                  destinations: [
+                    for (final d in items)
+                      NavigationRailDestination(
+                        icon: Icon(d.icon),
+                        selectedIcon: Icon(d.selectedIcon),
+                        label: Text(d.label),
+                      ),
+                  ],
                 ),
-                destinations: [
-                  for (final d in items)
-                    NavigationRailDestination(
-                      icon: Icon(d.icon),
-                      selectedIcon: Icon(d.selectedIcon),
-                      label: Text(d.label),
-                    ),
-                ],
+              if (!mac) const VerticalDivider(width: 1),
+              Expanded(
+                // The notes grid wants the width the shell would otherwise
+                // cap at 720 to lay out its columns, and caps itself at 1200.
+                child: location == Routes.notes
+                    ? child
+                    : MaxWidth(child: child),
               ),
-            if (!mac) const VerticalDivider(width: 1),
-            Expanded(
-              // The notes grid wants the width the shell would otherwise
-              // cap at 720 to lay out its columns, and caps itself at 1200.
-              child: location == Routes.notes ? child : MaxWidth(child: child),
-            ),
-            if (split) ...[
-              const VerticalDivider(width: 1),
-              SizedBox(
-                width: detailPaneWidth,
-                child: _DetailPane(taskId: ref.watch(selectedTaskProvider)),
-              ),
+              if (split) ...[
+                const VerticalDivider(width: 1),
+                SizedBox(
+                  width: detailPaneWidth,
+                  child: _DetailPane(taskId: ref.watch(selectedTaskProvider)),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       );
     }
@@ -171,19 +177,22 @@ class ShellScreen extends ConsumerWidget {
           ),
       ],
     );
-    return Scaffold(
-      body: child,
-      // A tab bar sits under a hairline rather than on a tonal step.
-      bottomNavigationBar: mac
-          ? DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: context.nemoColors.separator),
+    return AppShortcuts(
+      onGo: go,
+      child: Scaffold(
+        body: child,
+        // A tab bar sits under a hairline rather than on a tonal step.
+        bottomNavigationBar: mac
+            ? DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: context.nemoColors.separator),
+                  ),
                 ),
-              ),
-              child: bar,
-            )
-          : bar,
+                child: bar,
+              )
+            : bar,
+      ),
     );
   }
 }

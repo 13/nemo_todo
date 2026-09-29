@@ -179,6 +179,9 @@ class _NoteReadViewState extends State<NoteReadView> {
           onTap: () => widget.onEditAt(line.start),
           onLongPressStart: (d) =>
               widget.onLongPressLine(line.start, d.globalPosition),
+          // A mouse's way to the same menu.
+          onSecondaryTapUp: (d) =>
+              widget.onLongPressLine(line.start, d.globalPosition),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: content,

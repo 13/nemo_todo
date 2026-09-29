@@ -345,6 +345,39 @@ class LEn extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get taskMenuDone => 'Mark as done';
+
+  @override
+  String get taskMenuUndone => 'Mark as not done';
+
+  @override
+  String get taskMenuMove => 'Move to…';
+
+  @override
+  String get shortcutsTitle => 'Keyboard shortcuts';
+
+  @override
+  String get shortcutNewTask => 'New task';
+
+  @override
+  String get shortcutGoTo => 'Today, Upcoming, Lists, Notes, Search';
+
+  @override
+  String get shortcutMove => 'Previous or next task';
+
+  @override
+  String get shortcutToggle => 'Mark the task done or not done';
+
+  @override
+  String get shortcutDelete => 'Delete the task';
+
+  @override
+  String get shortcutClose => 'Close the task';
+
+  @override
+  String get shortcutHelp => 'Show these shortcuts';
+
+  @override
   String get settingsAccount => 'Account';
 
   @override

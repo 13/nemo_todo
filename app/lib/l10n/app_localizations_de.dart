@@ -345,6 +345,39 @@ class LDe extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get taskMenuDone => 'Als erledigt markieren';
+
+  @override
+  String get taskMenuUndone => 'Als nicht erledigt markieren';
+
+  @override
+  String get taskMenuMove => 'Verschieben auf…';
+
+  @override
+  String get shortcutsTitle => 'Tastenkürzel';
+
+  @override
+  String get shortcutNewTask => 'Neue Aufgabe';
+
+  @override
+  String get shortcutGoTo => 'Heute, Demnächst, Listen, Notizen, Suche';
+
+  @override
+  String get shortcutMove => 'Vorherige oder nächste Aufgabe';
+
+  @override
+  String get shortcutToggle => 'Aufgabe erledigt oder offen';
+
+  @override
+  String get shortcutDelete => 'Aufgabe löschen';
+
+  @override
+  String get shortcutClose => 'Aufgabe schließen';
+
+  @override
+  String get shortcutHelp => 'Diese Kürzel zeigen';
+
+  @override
   String get settingsAccount => 'Konto';
 
   @override

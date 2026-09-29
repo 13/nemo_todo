@@ -32,8 +32,51 @@
   <meta name="theme-color" content="#0E7C86">
   <title>nemo todo</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    The loading screen, shown from the first paint until the app draws its
+    first frame and lib/core/splash takes it down. Until then the engine,
+    the compiled app and the database all have to load, which is long
+    enough that a blank page reads as broken. Styles only: the server's
+    content security policy allows inline styles, not inline scripts.
+    Colours are the app theme's scaffold background and primary.
+  -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #F5F8F8; }
+    #splash {
+      position: fixed; inset: 0; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      background: #F5F8F8; color: #0E7C86;
+      transition: opacity 300ms ease-out;
+    }
+    #splash.done { opacity: 0; pointer-events: none; }
+    #splash .mark { position: relative; width: 96px; height: 96px; }
+    #splash .mark svg { position: absolute; inset: 16px; width: 64px; height: 64px; }
+    #splash .ring {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 3px solid rgba(14, 124, 134, 0.18); border-top-color: currentColor;
+      animation: splash-spin 900ms linear infinite;
+    }
+    @keyframes splash-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      #splash .ring { animation: none; border-color: transparent; }
+      #splash .mark svg { animation: splash-pulse 1.6s ease-in-out infinite alternate; }
+      @keyframes splash-pulse { to { opacity: 0.5; } }
+    }
+    @media (prefers-color-scheme: dark) {
+      html, body, #splash { background: #0E1616; }
+      #splash { color: #5BC0C9; }
+      #splash .ring { border-color: rgba(91, 192, 201, 0.18); border-top-color: currentColor; }
+    }
+  </style>
 </head>
 <body>
+  <div id="splash" role="progressbar" aria-label="Loading nemo todo">
+    <div class="mark">
+      <div class="ring"></div>
+      <svg viewBox="56 56 400 400" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M 56 256 A 200 200 0 1 0 456 256 A 200 200 0 1 0 56 256 Z M 127.87 265.42 L 206.87 343.42 A 31.5 31.5 0 0 0 251.10 343.45 L 381.10 215.45 A 31.5 31.5 0 0 0 381.45 170.90 A 31.5 31.5 0 0 0 336.90 170.55 L 229.03 276.76 L 172.13 220.58 A 31.5 31.5 0 0 0 127.58 220.87 A 31.5 31.5 0 0 0 127.87 265.42 Z"/></svg>
+    </div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

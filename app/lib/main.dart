@@ -8,6 +8,7 @@ import 'package:nemo/core/notifications/daily_digest_scheduler.dart';
 import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/splash/splash.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -30,7 +31,7 @@ Future<void> main() async {
   try {
     final boot = await _prepare(db, tapped).timeout(startupTimeout);
     final photoStore = await openPhotoStore();
-    runApp(
+    _run(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
@@ -52,8 +53,16 @@ Future<void> main() async {
     // The error screen reads no providers; there is deliberately no scope
     // here, because the providers it would hold are what failed to start.
     // ignore: riverpod_lint/missing_provider_scope
-    runApp(StartupErrorApp(error: error));
+    _run(StartupErrorApp(error: error));
   }
+}
+
+/// Starts [app] and, once its first frame is on screen, takes down the web
+/// page's loading screen -- not before, or the page would go blank again
+/// between the two.
+void _run(Widget app) {
+  runApp(app);
+  WidgetsBinding.instance.addPostFrameCallback((_) => removeSplash());
 }
 
 typedef _Notifications = ({

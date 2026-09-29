@@ -12,6 +12,7 @@ import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/celebrations/ui/celebration_settings_section.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart';
 import 'package:nemo/features/settings/ui/accent_picker.dart';
+import 'package:nemo/features/settings/ui/browser_notifications_tile.dart';
 import 'package:nemo/features/settings/ui/currency_tile.dart';
 import 'package:nemo/features/settings/ui/daily_list_tile.dart';
 import 'package:nemo/features/settings/ui/data_tiles.dart';
@@ -125,6 +126,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       SettingsGroup(
         children: [
+          // The web's reminders need the browser's say-so and an open tab;
+          // this says which, and asks.
+          if (ref.watch(remindersInPageProvider))
+            const BrowserNotificationsTile(),
           // Only where it does anything; a group has no empty rows.
           if (ref.watch(remindersSupportedProvider)) const DailyListTile(),
           const CurrencyTile(),

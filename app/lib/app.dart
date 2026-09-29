@@ -10,6 +10,7 @@ import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
 import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/daily_list/daily_list_providers.dart';
+import 'package:nemo/features/reminders/reminders_providers.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
@@ -68,7 +69,9 @@ class _NemoAppState extends ConsumerState<NemoApp> {
   void initState() {
     super.initState();
     _tapped.addListener(_followTap);
-    ref.read(dailyListRefresherProvider);
+    ref
+      ..read(dailyListRefresherProvider)
+      ..read(reminderResyncProvider);
     // The stored session is read after the first frame is scheduled, so a
     // cold start never waits on the platform keychain.
     WidgetsBinding.instance.addPostFrameCallback((_) async {

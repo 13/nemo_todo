@@ -172,7 +172,7 @@ class LDe extends L {
 
   @override
   String get tasksRemindUnavailable =>
-      'Erinnerungen gibt es nur in der Android-App.';
+      'Erinnerungen brauchen die Android-App oder einen Browser, der Benachrichtigungen zeigt.';
 
   @override
   String get tasksPriority => 'Priorität';
@@ -762,6 +762,33 @@ class LDe extends L {
   String dailyListMore(int count) {
     return '+$count weitere';
   }
+
+  @override
+  String get browserNotificationsTitle =>
+      'Benachrichtigungen in diesem Browser';
+
+  @override
+  String get browserNotificationsOn =>
+      'An. Erinnerungen und die Tagesliste kommen nur, solange ein nemo-Tab offen ist.';
+
+  @override
+  String get browserNotificationsAsk =>
+      'Erinnerungen und die Tagesliste kommen nur, solange ein nemo-Tab offen ist. Erlaube Benachrichtigungen, um sie zu bekommen.';
+
+  @override
+  String get browserNotificationsAllow => 'Erlauben';
+
+  @override
+  String get browserNotificationsBlocked =>
+      'Vom Browser blockiert. Erlaube Benachrichtigungen für diese Seite in den Einstellungen des Browsers, um Erinnerungen zu bekommen.';
+
+  @override
+  String get browserNotificationsUnsupported =>
+      'Dieser Browser kann keine Benachrichtigungen zeigen, daher gibt es hier keine Erinnerungen.';
+
+  @override
+  String get tasksRemindBlocked =>
+      'Benachrichtigungen sind in diesem Browser blockiert.';
 
   @override
   String get startupErrorTitle => 'nemo kann seine Datenbank nicht öffnen';

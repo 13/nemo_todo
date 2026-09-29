@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/notifications/browser_notifications.dart';
 import 'package:nemo/core/notifications/daily_digest_scheduler.dart';
 import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
@@ -173,10 +174,24 @@ final updatesSupportedProvider = Provider<bool>(
   (_) => !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
 );
 
-/// True on Android where local notifications exist.
+/// True on Android where local notifications exist, and on the web where
+/// the browser has them.
 final remindersSupportedProvider = Provider<bool>(
-  (_) => !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
+  (ref) =>
+      ref.watch(browserNotificationsProvider) != null ||
+      (!kIsWeb && defaultTargetPlatform == TargetPlatform.android),
 );
+
+/// The browser's notifications on the web, where it has them; null
+/// elsewhere. Set in `main`.
+final browserNotificationsProvider = Provider<BrowserNotifications?>(
+  (_) => null,
+);
+
+/// Whether reminders live only in this page's memory, so that the schedule
+/// has to be rebuilt from the tasks whenever the page loads or another tab
+/// changes them, and they arrive only while a tab is open. True on the web.
+final remindersInPageProvider = Provider<bool>((_) => kIsWeb);
 
 /// Whether the app refuses to show anything until an account is connected.
 ///

@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/app.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/notifications/android_reminder_scheduler.dart';
+import 'package:nemo/core/notifications/browser_notifications.dart';
 import 'package:nemo/core/notifications/daily_digest_scheduler.dart';
 import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/core/notifications/timed_notifications.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/splash/splash.dart';
 import 'package:nemo/core/theme/material_theme.dart';
@@ -48,6 +50,9 @@ Future<void> main() async {
           digestStringsProvider.overrideWithValue(
             boot.notifications.digestStrings,
           ),
+          browserNotificationsProvider.overrideWithValue(
+            boot.notifications.browser,
+          ),
           notificationRouteProvider.overrideWithValue(tapped),
           photoStoreProvider.overrideWithValue(photoStore),
           wallpaperSchemesProvider.overrideWithValue(boot.wallpaper),
@@ -77,6 +82,7 @@ typedef _Notifications = ({
   NotificationsApi? api,
   ReminderScheduler reminders,
   DigestStrings? digestStrings,
+  BrowserNotifications? browser,
 });
 
 /// Everything that has to exist before the first frame.
@@ -102,24 +108,36 @@ _prepare(AppDatabase db, ValueNotifier<String?> tapped) async {
   );
 }
 
-/// Local notifications on Android; nothing to schedule elsewhere.
+/// Local notifications on Android, the browser's on the web while a tab
+/// is open; nothing to schedule elsewhere.
 ///
 /// A tap while the app runs lands in [tapped]; so does the tap that
 /// started it, read once here.
 Future<_Notifications> _openNotifications(ValueNotifier<String?> tapped) async {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
-    return (
-      api: null,
-      reminders: const NoopReminderScheduler(),
-      digestStrings: null,
-    );
+  const none = (
+    api: null,
+    reminders: NoopReminderScheduler(),
+    digestStrings: null,
+    browser: null,
+  );
+  final NotificationsApi api;
+  BrowserNotifications? browser;
+  var missedWindow = Duration.zero;
+  if (kIsWeb) {
+    browser = openBrowserNotifications();
+    if (browser == null) return none;
+    api = TimedNotifications(browser, fired: openFiredLog());
+    missedWindow = TimedNotifications.missedWindow;
+  } else if (defaultTargetPlatform == TargetPlatform.android) {
+    api = LocalNotificationsApi();
+  } else {
+    return none;
   }
   // Strings for the notification channels come from the device locale,
   // which is fixed for the life of a channel; the app locale may differ.
   final l = await L.delegate.load(
     WidgetsBinding.instance.platformDispatcher.locale,
   );
-  final api = LocalNotificationsApi();
   await api.initialize(onTap: (payload) => tapped.value = payload);
   // Only overwrite `tapped` when the launch actually came from a
   // notification -- a live tap can arrive between `initialize` and here,
@@ -133,6 +151,7 @@ Future<_Notifications> _openNotifications(ValueNotifier<String?> tapped) async {
       channelName: l.remindersChannelName,
       channelDescription: l.remindersChannelDescription,
       body: l.remindersDueNow,
+      missedWindow: missedWindow,
     ),
     digestStrings: DigestStrings(
       channelName: l.dailyListChannelName,
@@ -144,5 +163,6 @@ Future<_Notifications> _openNotifications(ValueNotifier<String?> tapped) async {
           : l.dailyListTodayOverdue(today, overdue),
       more: l.dailyListMore,
     ),
+    browser: browser,
   );
 }

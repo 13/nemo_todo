@@ -172,7 +172,7 @@ class LIt extends L {
 
   @override
   String get tasksRemindUnavailable =>
-      'I promemoria sono disponibili solo nell\'app Android.';
+      'I promemoria richiedono l\'app Android o un browser che mostri le notifiche.';
 
   @override
   String get tasksPriority => 'Priorità';
@@ -762,6 +762,32 @@ class LIt extends L {
   String dailyListMore(int count) {
     return '+$count altre';
   }
+
+  @override
+  String get browserNotificationsTitle => 'Notifiche in questo browser';
+
+  @override
+  String get browserNotificationsOn =>
+      'Attive. Promemoria e lista del giorno arrivano solo finché una scheda di nemo è aperta.';
+
+  @override
+  String get browserNotificationsAsk =>
+      'Promemoria e lista del giorno arrivano solo finché una scheda di nemo è aperta. Consenti le notifiche per riceverli.';
+
+  @override
+  String get browserNotificationsAllow => 'Consenti';
+
+  @override
+  String get browserNotificationsBlocked =>
+      'Bloccate dal browser. Consenti le notifiche per questo sito nelle impostazioni del browser per ricevere i promemoria.';
+
+  @override
+  String get browserNotificationsUnsupported =>
+      'Questo browser non può mostrare notifiche, quindi qui non ci sono promemoria.';
+
+  @override
+  String get tasksRemindBlocked =>
+      'Le notifiche sono bloccate in questo browser.';
 
   @override
   String get startupErrorTitle => 'nemo non riesce ad aprire il suo database';

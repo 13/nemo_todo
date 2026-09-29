@@ -23,9 +23,18 @@ does the renaming, and tags only once CI has passed on the release commit.
   it holds, and when `purge` last ran, so a scheduled purge that stopped
   running does not go unnoticed. It is a command only; nothing about it is
   served over HTTP.
+- Reminders on the web. A task's reminder and the daily list show up as
+  browser notifications while a nemo tab is open; clicking one brings the
+  tab forward on the task. With every tab closed nothing arrives, and a
+  reminder missed that way is still shown when the page loads within ten
+  minutes of it, not later. Settings says whether the browser allows
+  notifications and asks for them; the browser is asked only when you
+  press Allow or switch a reminder on. They work in desktop browsers;
+  phone browsers do not let a page notify.
 
 ### Changed
 
+- Tapping a reminder on Android opens its task rather than just the app.
 - The server keeps its count of sign-up and sign-in attempts in its
   database instead of in memory, so restarting it no longer gives someone
   guessing passwords a fresh ten tries a minute.

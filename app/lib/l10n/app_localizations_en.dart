@@ -172,7 +172,7 @@ class LEn extends L {
 
   @override
   String get tasksRemindUnavailable =>
-      'Reminders are only available in the Android app.';
+      'Reminders need the Android app or a browser that shows notifications.';
 
   @override
   String get tasksPriority => 'Priority';
@@ -755,6 +755,31 @@ class LEn extends L {
   String dailyListMore(int count) {
     return '+$count more';
   }
+
+  @override
+  String get browserNotificationsTitle => 'Notifications in this browser';
+
+  @override
+  String get browserNotificationsOn =>
+      'On. Reminders and the daily list arrive only while a nemo tab is open.';
+
+  @override
+  String get browserNotificationsAsk =>
+      'Reminders and the daily list arrive only while a nemo tab is open. Allow notifications to get them.';
+
+  @override
+  String get browserNotificationsAllow => 'Allow';
+
+  @override
+  String get browserNotificationsBlocked =>
+      'Blocked by the browser. Allow notifications for this site in the browser\'s settings to get reminders.';
+
+  @override
+  String get browserNotificationsUnsupported =>
+      'This browser cannot show notifications, so there are no reminders here.';
+
+  @override
+  String get tasksRemindBlocked => 'Notifications are blocked in this browser.';
 
   @override
   String get startupErrorTitle => 'nemo cannot open its database';

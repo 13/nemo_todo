@@ -45,7 +45,14 @@ host yourself.
   list rather than over it once there is room for both. It is served by
   the server it syncs with, so it asks who you are before it shows
   anything, and signing out clears the browser rather than leaving one
-  person's tasks behind for the next.
+  person's tasks behind for the next. Reminders and the daily list arrive
+  as browser notifications, but only while a nemo tab is open in that
+  browser: there is no server push, so with every tab closed nothing
+  comes, and on loading the page only what fell due in the last ten
+  minutes is still shown. They work in desktop browsers; phone browsers
+  refuse notifications from a page, and phones have the Android app.
+  Clicking one brings the tab forward on the task; there are no buttons
+  on it. Settings says whether the browser allows them, and asks.
 
 ## Layout
 
@@ -451,8 +458,7 @@ taking your own tasks somewhere else, or back after deleting them.
 ## Android
 
 `minSdk` is 26. Reminders use inexact alarms, so Android may shift them by a
-few minutes to save battery; they survive a reboot. The web build has no
-reminders.
+few minutes to save battery; they survive a reboot.
 
 ```bash
 (cd app && flutter build apk --release --split-per-abi)

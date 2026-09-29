@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/notifications/browser_notifications.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
@@ -83,6 +84,8 @@ class TaskDueSection extends ConsumerWidget {
     final now = ref.watch(nowProvider)();
     final locale = Localizations.localeOf(context).toString();
     final remindersSupported = ref.watch(remindersSupportedProvider);
+    // On the web: the browser may have been told to block notifications.
+    final browser = ref.watch(browserNotificationsProvider);
     final dueAt = task.dueAt;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -128,24 +131,31 @@ class TaskDueSection extends ConsumerWidget {
               ),
           ],
         ),
-        SwitchListTile(
-          key: const Key('task-remind'),
-          contentPadding: EdgeInsets.zero,
-          secondary: const AppIcon(Icons.notifications_outlined),
-          title: Text(l.tasksRemind),
-          subtitle: remindersSupported ? null : Text(l.tasksRemindUnavailable),
-          value: task.remind && dueAt != null,
-          onChanged: dueAt == null || !remindersSupported
-              ? null
-              : (value) async {
-                  if (value &&
-                      !await ref
-                          .read(reminderSchedulerProvider)
-                          .ensurePermission()) {
-                    return;
-                  }
-                  await save(task.copyWith(remind: value));
-                },
+        ValueListenableBuilder<BrowserPermission>(
+          valueListenable: browser?.permission ?? _noBrowser,
+          builder: (context, permission, _) => SwitchListTile(
+            key: const Key('task-remind'),
+            contentPadding: EdgeInsets.zero,
+            secondary: const AppIcon(Icons.notifications_outlined),
+            title: Text(l.tasksRemind),
+            subtitle: !remindersSupported
+                ? Text(l.tasksRemindUnavailable)
+                : permission == BrowserPermission.denied
+                ? Text(l.tasksRemindBlocked)
+                : null,
+            value: task.remind && dueAt != null,
+            onChanged: dueAt == null || !remindersSupported
+                ? null
+                : (value) async {
+                    if (value &&
+                        !await ref
+                            .read(reminderSchedulerProvider)
+                            .ensurePermission()) {
+                      return;
+                    }
+                    await save(task.copyWith(remind: value));
+                  },
+          ),
         ),
       ],
     );
@@ -327,3 +337,7 @@ class _TaskTagsSectionState extends State<TaskTagsSection> {
     );
   }
 }
+
+/// Stands in for the browser's permission where there is no browser:
+/// nothing blocks there. Never changes, so never needs disposing.
+final _noBrowser = ValueNotifier<BrowserPermission>(BrowserPermission.granted);

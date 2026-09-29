@@ -384,7 +384,7 @@ abstract class L {
   /// No description provided for @tasksRemindUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Reminders are only available in the Android app.'**
+  /// **'Reminders need the Android app or a browser that shows notifications.'**
   String get tasksRemindUnavailable;
 
   /// No description provided for @tasksPriority.
@@ -1364,6 +1364,48 @@ abstract class L {
   /// In en, this message translates to:
   /// **'+{count} more'**
   String dailyListMore(int count);
+
+  /// No description provided for @browserNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications in this browser'**
+  String get browserNotificationsTitle;
+
+  /// No description provided for @browserNotificationsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On. Reminders and the daily list arrive only while a nemo tab is open.'**
+  String get browserNotificationsOn;
+
+  /// No description provided for @browserNotificationsAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders and the daily list arrive only while a nemo tab is open. Allow notifications to get them.'**
+  String get browserNotificationsAsk;
+
+  /// No description provided for @browserNotificationsAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get browserNotificationsAllow;
+
+  /// No description provided for @browserNotificationsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked by the browser. Allow notifications for this site in the browser\'s settings to get reminders.'**
+  String get browserNotificationsBlocked;
+
+  /// No description provided for @browserNotificationsUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser cannot show notifications, so there are no reminders here.'**
+  String get browserNotificationsUnsupported;
+
+  /// No description provided for @tasksRemindBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are blocked in this browser.'**
+  String get tasksRemindBlocked;
 
   /// No description provided for @startupErrorTitle.
   ///

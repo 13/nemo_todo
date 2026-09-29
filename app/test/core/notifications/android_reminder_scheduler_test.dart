@@ -59,4 +59,28 @@ void main() {
     await scheduler.cancel('task-1');
     expect(api.cancelled, hasLength(5));
   });
+
+  test('a tap opens the task', () async {
+    await scheduler.sync(task());
+    final id = AndroidReminderScheduler.notificationId('task-1');
+    expect(api.scheduled[id]!.payload, '/tasks/task-1');
+  });
+
+  test('a missed window keeps a just-due task scheduled', () async {
+    final web = AndroidReminderScheduler(
+      api,
+      channelName: 'Reminders',
+      channelDescription: 'desc',
+      body: 'Due now',
+      missedWindow: const Duration(minutes: 10),
+      now: () => now,
+    );
+    final id = AndroidReminderScheduler.notificationId('task-1');
+    final fiveAgo = now.subtract(const Duration(minutes: 5));
+    await web.sync(task(dueAt: fiveAgo.millisecondsSinceEpoch));
+    expect(api.scheduled[id]!.at, fiveAgo.millisecondsSinceEpoch);
+    final hourAgo = now.subtract(const Duration(hours: 1));
+    await web.sync(task(dueAt: hourAgo.millisecondsSinceEpoch));
+    expect(api.scheduled, isEmpty);
+  });
 }

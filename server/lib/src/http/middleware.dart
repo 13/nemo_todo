@@ -139,7 +139,12 @@ Middleware cors(List<String> origins) =>
       };
       if (request.method == 'OPTIONS') return Response(204, headers: headers);
       final response = await inner(request);
-      return response.change(headers: headers);
+      // Added to, not replaced: the web app's files already vary by
+      // accept-encoding.
+      final vary = response.headers['vary'];
+      return response.change(
+        headers: {...headers, if (vary != null) 'vary': '$vary, origin'},
+      );
     };
 
 /// The address to hold responsible for a request.

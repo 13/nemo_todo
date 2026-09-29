@@ -33,4 +33,20 @@ void main() {
     expect(clientIp(request('1.2.3.4'), trustedProxyHops: 5), '1.2.3.4');
     expect(clientIp(request(null), trustedProxyHops: 1), 'unknown');
   });
+
+  test('cors adds origin to vary rather than replacing it', () async {
+    final handler = cors(['http://localhost:5000'])(
+      (_) => Response.ok('', headers: {'vary': 'accept-encoding'}),
+    );
+    Future<String?> vary(String? origin) async => (await handler(
+      Request(
+        'GET',
+        Uri.parse('http://localhost/main.dart.js'),
+        headers: {'origin': ?origin},
+      ),
+    )).headers['vary'];
+
+    expect(await vary('http://localhost:5000'), 'accept-encoding, origin');
+    expect(await vary(null), 'accept-encoding');
+  });
 }

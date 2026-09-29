@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/account_action.dart';
+import 'package:nemo/core/widgets/add_action.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
@@ -23,10 +25,20 @@ class ListsScreen extends ConsumerWidget {
     final l = L.of(context);
     final lists = ref.watch(allListsProvider);
     final sharing = ref.watch(listMetaProvider).value ?? const {};
+    final add = AddAction(
+      buttonKey: const Key('new-list'),
+      label: l.listsNewList,
+      onPressed: () => showListEditSheet(context),
+      extended: true,
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text(l.listsTitle),
-        actions: const [AccountAction(), SettingsAction()],
+        actions: [
+          ?add.toolbar(context),
+          const AccountAction(),
+          const SettingsAction(),
+        ],
       ),
       body: AsyncBody(
         value: lists,
@@ -54,12 +66,7 @@ class ListsScreen extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('new-list'),
-        onPressed: () => showListEditSheet(context),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l.listsNewList),
-      ),
+      floatingActionButton: add.fab(context),
     );
   }
 }
@@ -96,15 +103,35 @@ class ListCard extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                  // macOS, like Reminders: the glyph on a disc of the colour.
+                  if (context.appStyle == AppStyle.macos)
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        listIcon(list.icon),
+                        size: 20,
+                        color:
+                            ThemeData.estimateBrightnessForColor(color) ==
+                                Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(listIcon(list.icon), color: color, size: 20),
                     ),
-                    child: Icon(listIcon(list.icon), color: color, size: 20),
-                  ),
                   const Spacer(),
                   if (shared)
                     Tooltip(

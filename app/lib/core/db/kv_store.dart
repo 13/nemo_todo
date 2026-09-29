@@ -7,6 +7,10 @@ abstract final class KvKeys {
   static const cursor = 'sync_cursor';
   static const themeMode = 'theme_mode';
   static const appStyle = 'app_style';
+
+  /// A slot of the style's accents (`AppTheme.accents`); unset for the
+  /// style's own.
+  static const accent = 'accent';
   static const serverUrl = 'server_url';
   static const username = 'username';
   static const lastSyncAt = 'last_sync_at';

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/account_action.dart';
+import 'package:nemo/core/widgets/add_action.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
@@ -39,30 +40,35 @@ class NotesScreen extends ConsumerWidget {
         if (!note.pinned) note,
     ];
 
+    final add = lists.isEmpty
+        ? null
+        : AddAction(
+            buttonKey: const Key('note-create'),
+            label: l.noteNewTitle,
+            onPressed: () async {
+              // Inbox by default, the way QuickAddBar picks a list for a
+              // new task when none is preselected.
+              final listId =
+                  lists.where((x) => x.isInbox).firstOrNull?.id ??
+                  lists.first.id;
+              final note = await ref
+                  .read(notesRepositoryProvider)
+                  .create(listId: listId, title: l.noteNewTitle);
+              if (context.mounted) {
+                unawaited(context.push(Routes.note(note.id)));
+              }
+            },
+          );
     return Scaffold(
       appBar: AppBar(
         title: Text(l.navNotes),
-        actions: const [AccountAction(), SettingsAction()],
+        actions: [
+          ?add?.toolbar(context),
+          const AccountAction(),
+          const SettingsAction(),
+        ],
       ),
-      floatingActionButton: lists.isEmpty
-          ? null
-          : FloatingActionButton(
-              key: const Key('note-create'),
-              onPressed: () async {
-                // Inbox by default, the way QuickAddBar picks a list for a
-                // new task when none is preselected.
-                final listId =
-                    lists.where((x) => x.isInbox).firstOrNull?.id ??
-                    lists.first.id;
-                final note = await ref
-                    .read(notesRepositoryProvider)
-                    .create(listId: listId, title: l.noteNewTitle);
-                if (context.mounted) {
-                  unawaited(context.push(Routes.note(note.id)));
-                }
-              },
-              child: const Icon(Icons.add),
-            ),
+      floatingActionButton: add?.fab(context),
       body: notes.isEmpty
           ? SyncRefresh.scrollable(
               child: EmptyState(

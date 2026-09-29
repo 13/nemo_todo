@@ -345,6 +345,36 @@ class LDe extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get settingsAccent => 'Akzentfarbe';
+
+  @override
+  String get accentDefault => 'Die des Stils';
+
+  @override
+  String get colorTeal => 'Petrol';
+
+  @override
+  String get colorBlue => 'Blau';
+
+  @override
+  String get colorPurple => 'Lila';
+
+  @override
+  String get colorPink => 'Pink';
+
+  @override
+  String get colorRed => 'Rot';
+
+  @override
+  String get colorOrange => 'Orange';
+
+  @override
+  String get colorGreen => 'Grün';
+
+  @override
+  String get colorGrey => 'Grau';
+
+  @override
   String get taskMenuDone => 'Als erledigt markieren';
 
   @override

@@ -6,6 +6,7 @@ import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/celebrations/ui/celebration_settings_section.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart';
+import 'package:nemo/features/settings/ui/accent_picker.dart';
 import 'package:nemo/features/settings/ui/currency_tile.dart';
 import 'package:nemo/features/settings/ui/daily_list_tile.dart';
 import 'package:nemo/features/settings/ui/data_tiles.dart';
@@ -64,6 +65,7 @@ class SettingsScreen extends ConsumerWidget {
                     ref.read(appStyleControllerProvider.notifier).set(s.first),
               ),
             ),
+            const AccentPicker(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SegmentedButton<ThemeMode>(

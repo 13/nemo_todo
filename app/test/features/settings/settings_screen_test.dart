@@ -40,6 +40,24 @@ void main() {
     expect(app.darkTheme!.extension<AppStyleTheme>()!.style, AppStyle.material);
   });
 
+  appTest('an accent choice is applied, persisted and undone', (tester) async {
+    final app = await pumpApp(tester, initialLocation: Routes.settings);
+    Color primary() => tester
+        .widget<MaterialApp>(find.byType(MaterialApp))
+        .theme!
+        .colorScheme
+        .primary;
+    final own = primary();
+    await tester.tap(find.byKey(const Key('accent-4')));
+    await tester.pumpAndSettle();
+    expect(await KvStore(app.db).get(KvKeys.accent), '4');
+    expect(primary(), isNot(own));
+    await tester.tap(find.byKey(const Key('accent-default')));
+    await tester.pumpAndSettle();
+    expect(await KvStore(app.db).get(KvKeys.accent), isNull);
+    expect(primary(), own);
+  });
+
   appTest('celebrations start on, sound off, achievements on', (tester) async {
     await pumpApp(tester, initialLocation: Routes.settings, celebrate: true);
     bool value(String key) =>

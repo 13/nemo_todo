@@ -346,6 +346,36 @@ class LIt extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get settingsAccent => 'Colore di accento';
+
+  @override
+  String get accentDefault => 'Quello dello stile';
+
+  @override
+  String get colorTeal => 'Verde acqua';
+
+  @override
+  String get colorBlue => 'Blu';
+
+  @override
+  String get colorPurple => 'Viola';
+
+  @override
+  String get colorPink => 'Rosa';
+
+  @override
+  String get colorRed => 'Rosso';
+
+  @override
+  String get colorOrange => 'Arancione';
+
+  @override
+  String get colorGreen => 'Verde';
+
+  @override
+  String get colorGrey => 'Grigio';
+
+  @override
   String get taskMenuDone => 'Segna come fatto';
 
   @override

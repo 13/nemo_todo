@@ -33,6 +33,19 @@ class AppStyleController extends _$AppStyleController {
   }
 }
 
+/// The accent chosen in Settings, or null for the style's own.
+@Riverpod(keepAlive: true)
+class AccentController extends _$AccentController {
+  @override
+  int? build() => ref.watch(bootstrapProvider).accent;
+
+  Future<void> set(int? accent) async {
+    state = accent;
+    // A null value reads back as no accent: the style's own.
+    await ref.read(kvStoreProvider).set(KvKeys.accent, accent?.toString());
+  }
+}
+
 /// Confetti, animations and haptics on completing a task.
 @Riverpod(keepAlive: true)
 class CelebrationsEnabled extends _$CelebrationsEnabled {

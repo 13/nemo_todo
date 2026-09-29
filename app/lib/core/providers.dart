@@ -20,6 +20,7 @@ class AppBootstrap {
     required this.hlcLast,
     required this.themeMode,
     this.appStyle = AppStyle.nemo,
+    this.accent,
     this.serverUrl,
     this.username,
     this.lastSyncAt,
@@ -39,6 +40,10 @@ class AppBootstrap {
 
   /// The look chosen in Settings; nemo's own until something else is.
   final AppStyle appStyle;
+
+  /// The accent chosen in Settings, a slot of `AppTheme.accents`; null for
+  /// the style's own.
+  final int? accent;
 
   final String? serverUrl;
   final String? username;
@@ -90,6 +95,7 @@ class AppBootstrap {
       hlcLast: last == null ? null : Hlc.parse(last),
       themeMode: ThemeMode.values.asNameMap()[theme] ?? ThemeMode.system,
       appStyle: AppStyle.values.asNameMap()[style] ?? AppStyle.nemo,
+      accent: int.tryParse(await kv.get(KvKeys.accent) ?? ''),
       serverUrl: await kv.get(KvKeys.serverUrl),
       username: await kv.get(KvKeys.username),
       lastSyncAt: lastSync == null ? null : int.tryParse(lastSync),

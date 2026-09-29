@@ -126,6 +126,64 @@ abstract class _$AppStyleController extends $Notifier<AppStyle> {
   }
 }
 
+/// The accent chosen in Settings, or null for the style's own.
+
+@ProviderFor(AccentController)
+final accentControllerProvider = AccentControllerProvider._();
+
+/// The accent chosen in Settings, or null for the style's own.
+final class AccentControllerProvider
+    extends $NotifierProvider<AccentController, int?> {
+  /// The accent chosen in Settings, or null for the style's own.
+  AccentControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'accentControllerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$accentControllerHash();
+
+  @$internal
+  @override
+  AccentController create() => AccentController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int?>(value),
+    );
+  }
+}
+
+String _$accentControllerHash() => r'e3477239e8a34fddfe9353e386d2f726c806e5b4';
+
+/// The accent chosen in Settings, or null for the style's own.
+
+abstract class _$AccentController extends $Notifier<int?> {
+  int? build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<int?, int?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int?, int?>,
+              int?,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Confetti, animations and haptics on completing a task.
 
 @ProviderFor(CelebrationsEnabled)

@@ -64,6 +64,7 @@ void main() {
         ).toString(),
       ),
     );
+    await scrollIntoView(tester, find.byKey(const Key('sync-now')));
     await tester.tap(find.byKey(const Key('sync-now')));
     await settleSync(tester);
 
@@ -214,6 +215,7 @@ void main() {
       },
     );
     client.failWith = const ApiError(0, 'network');
+    await scrollIntoView(tester, find.byKey(const Key('sync-now')));
     await tester.tap(find.byKey(const Key('sync-now')));
     await settleSync(tester);
     expect(find.textContaining('Offline. Changes will sync'), findsOneWidget);
@@ -248,6 +250,7 @@ void main() {
           ),
         );
 
+    await scrollIntoView(tester, find.byKey(const Key('sync-now')));
     await tester.tap(find.byKey(const Key('sync-now')));
     await settleSync(tester);
 

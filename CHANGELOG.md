@@ -16,14 +16,39 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ## Unreleased
 
+### Added
+
+- A choice of style in Settings, beside light and dark: nemo's own, which
+  stays the default and looks as it always has; macOS, with plain greys,
+  system blue, thin dividers and a floating sidebar on wide windows; and
+  Material 3, in the colours of the wallpaper on Android 12 and later.
+- An accent colour in Settings, from the list colours, for any style.
+  Text on it and in it stays readable whichever is picked.
+- A right click on a task, a list or a line of a note opens the menu a
+  long press does, and a task's menu also ticks it off and deletes it.
+- Keyboard shortcuts: N for a new task, / for search, 1 to 5 for the
+  destinations, the arrow keys or J and K through a list with the open task
+  marked, Space to tick it off, Delete, Esc, and ? for the full list, which
+  Settings also shows on a wide window.
+
 ### Changed
 
+- Outside the nemo style a list's colour is on its icon and its name is
+  in grey, so a light colour no longer makes small text hard to read.
+- Confetti uses the list colours, bright in every style.
+- nemo's orange is a shade deeper, so a medium priority flag and orange
+  lists show clearly on the light background.
 - On Android the launch splash now shows the nemo logo as the app's
   starting screen does, in the app's own colours, so opening the app no
   longer jumps from a white logo on teal to the app.
 - The web app's loading screen now uses the theme chosen in Settings
   rather than always the device's, so with the app set to dark on a light
   device, opening it no longer flashes light first.
+
+### Fixed
+
+- On Android the status and navigation bar icons were white over the
+  light theme, where they could not be seen; they are now dark there.
 
 ## 0.15.4 - 2026-09-29
 

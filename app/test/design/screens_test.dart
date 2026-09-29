@@ -3,6 +3,7 @@ library;
 
 import 'dart:io';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -103,6 +104,9 @@ void main() {
     Size size = const Size(400, 820),
     bool dark = false,
     AppStyle style = AppStyle.nemo,
+    // Opens something over the screen -- a sheet, a dialog -- before the
+    // picture is taken.
+    Future<void> Function(WidgetTester tester)? then,
   }) async {
     await pumpApp(
       tester,
@@ -114,6 +118,10 @@ void main() {
         await seed(db, inbox);
       },
     );
+    if (then != null) {
+      await then(tester);
+      await tester.pumpAndSettle();
+    }
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile(
@@ -197,6 +205,76 @@ void main() {
           location: Routes.settings,
           dark: dark,
           style: style,
+        ),
+      );
+      for (final (name, location) in [
+        ('upcoming', Routes.upcoming),
+        ('notes', Routes.notes),
+        ('search', Routes.search),
+        ('achievements', Routes.achievements),
+      ]) {
+        appTest(
+          '${style.name}$suffix $name',
+          (t) => shoot(
+            t,
+            '$name$suffix',
+            location: location,
+            dark: dark,
+            style: style,
+          ),
+        );
+      }
+      appTest(
+        '${style.name}$suffix new list sheet',
+        (t) => shoot(
+          t,
+          'list_sheet$suffix',
+          location: Routes.lists,
+          dark: dark,
+          style: style,
+          then: (t) => t.tap(find.byKey(const Key('new-list'))),
+        ),
+      );
+      appTest(
+        '${style.name}$suffix delete dialog',
+        (t) => shoot(
+          t,
+          'delete_dialog$suffix',
+          location: Routes.lists,
+          dark: dark,
+          style: style,
+          then: (t) async {
+            await t.tap(find.text('Work'), buttons: kSecondaryButton);
+            await t.pumpAndSettle();
+            await t.tap(find.text('Delete'));
+          },
+        ),
+      );
+      appTest(
+        '${style.name}$suffix date picker',
+        (t) => shoot(
+          t,
+          'date_picker$suffix',
+          location: Routes.today,
+          dark: dark,
+          style: style,
+          then: (t) => t.tap(find.byKey(const Key('quick-add-date'))),
+        ),
+      );
+      appTest(
+        '${style.name}$suffix shortcuts',
+        (t) => shoot(
+          t,
+          'shortcuts$suffix',
+          location: Routes.today,
+          size: const Size(1280, 820),
+          dark: dark,
+          style: style,
+          then: (t) async {
+            await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+            await t.sendKeyEvent(LogicalKeyboardKey.slash);
+            await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+          },
         ),
       );
       appTest(

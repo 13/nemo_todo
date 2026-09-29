@@ -29,10 +29,18 @@ Future<WallpaperSchemes?> loadWallpaperSchemes() async {
 /// colours where there are some, nemo's teal as the seed where not, and
 /// Material's own shapes, ripples and pill indicators throughout.
 abstract final class Material3Theme {
-  static ThemeData build(Brightness brightness, {ColorScheme? wallpaper}) {
-    final scheme =
-        wallpaper ??
-        ColorScheme.fromSeed(seedColor: NemoTheme.seed, brightness: brightness);
+  /// A chosen [accent] seeds the scheme in place of the wallpaper.
+  static ThemeData build(
+    Brightness brightness, {
+    ColorScheme? wallpaper,
+    Color? accent,
+  }) {
+    final scheme = accent == null && wallpaper != null
+        ? wallpaper
+        : ColorScheme.fromSeed(
+            seedColor: accent ?? NemoTheme.seed,
+            brightness: brightness,
+          );
     final base = brightness == Brightness.light
         ? NemoColors.light
         : NemoColors.dark;
@@ -60,7 +68,10 @@ abstract final class Material3Theme {
       textTheme: textTheme,
       extensions: [nemo, const AppStyleTheme(AppStyle.material)],
       splashFactory: InkSparkle.splashFactory,
-      appBarTheme: const AppBarTheme(centerTitle: false),
+      appBarTheme: AppBarTheme(
+        centerTitle: false,
+        systemOverlayStyle: systemBarsFor(scheme),
+      ),
       // The quick-add field reads as Material's search bar: a filled pill.
       inputDecorationTheme: InputDecorationTheme(
         isDense: true,

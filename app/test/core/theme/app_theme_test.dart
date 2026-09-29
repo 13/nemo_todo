@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/app_theme.dart';
+import 'package:nemo/core/theme/macos_theme.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 
 void main() {
@@ -43,6 +44,20 @@ void main() {
         expect(contrast(s.onPrimary, s.primary), greaterThan(onPrimary));
       });
 
+      test('$name: Android draws its bars legibly over the app', () {
+        final bars = theme.appBarTheme.systemOverlayStyle!;
+        final dark = brightness == Brightness.dark;
+        // Light icons on a dark window, dark ones on a light window.
+        expect(
+          bars.statusBarIconBrightness,
+          dark ? Brightness.light : Brightness.dark,
+        );
+        expect(
+          bars.systemNavigationBarIconBrightness,
+          bars.statusBarIconBrightness,
+        );
+      });
+
       test('$name: list and priority colours show as icons', () {
         expect(nemo.listPalette, hasLength(8));
         for (final c in [
@@ -56,6 +71,38 @@ void main() {
       });
     }
   }
+
+  test('every accent keeps text readable, in every style', () {
+    for (final style in AppStyle.values) {
+      for (final b in Brightness.values) {
+        for (var accent = 0; accent < 8; accent++) {
+          final theme = AppTheme.build(style, b, accent: accent);
+          final s = theme.colorScheme;
+          final why = '${style.name} ${b.name} accent $accent';
+          expect(
+            contrast(s.onPrimary, s.primary),
+            greaterThan(4.5),
+            reason: why,
+          );
+          for (final bg in [s.surface, theme.scaffoldBackgroundColor]) {
+            expect(contrast(s.primary, bg), greaterThan(4.5), reason: why);
+          }
+        }
+      }
+    }
+  });
+
+  test("an accent is the chosen colour, and none is the style's own", () {
+    final teal = AppTheme.build(AppStyle.macos, Brightness.light, accent: 0);
+    expect(
+      HSLColor.fromColor(teal.colorScheme.primary).hue,
+      closeTo(HSLColor.fromColor(AppTheme.accents(AppStyle.macos)[0]).hue, 15),
+    );
+    expect(
+      AppTheme.build(AppStyle.macos, Brightness.light).colorScheme.primary,
+      MacosTheme.blue,
+    );
+  });
 
   test('macOS neutrals are grey, not tinted towards the accent', () {
     for (final b in Brightness.values) {

@@ -142,9 +142,11 @@ abstract final class MacosTheme {
     tintedMetaText: false,
   );
 
-  static ThemeData light() => _build(_light, lightColors);
+  static ThemeData light({Color? accent}) =>
+      _build(accented(_light, accent), lightColors);
 
-  static ThemeData dark() => _build(_dark, darkColors);
+  static ThemeData dark({Color? accent}) =>
+      _build(accented(_dark, accent), darkColors);
 
   static ThemeData _build(ColorScheme scheme, NemoColors nemo) {
     final isLight = scheme.brightness == Brightness.light;
@@ -157,6 +159,10 @@ abstract final class MacosTheme {
     final hairline = BorderSide(color: nemo.separator, width: 0.5);
     WidgetStateProperty<Color?> selectedOr(Color selected, Color other) =>
         WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? selected : other,
+        );
+    Color selectedColor(Color selected, Color other) =>
+        WidgetStateColor.resolveWith(
           (s) => s.contains(WidgetState.selected) ? selected : other,
         );
     final label = textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600);
@@ -186,6 +192,7 @@ abstract final class MacosTheme {
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
+        systemOverlayStyle: systemBarsFor(scheme),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
@@ -227,6 +234,9 @@ abstract final class MacosTheme {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: raised,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
@@ -245,8 +255,8 @@ abstract final class MacosTheme {
       popupMenuTheme: PopupMenuThemeData(
         color: raised,
         surfaceTintColor: Colors.transparent,
-        elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.4),
+        elevation: 3,
+        shadowColor: Colors.black.withValues(alpha: 0.25),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
           side: hairline,
@@ -368,6 +378,69 @@ abstract final class MacosTheme {
         textStyle: textTheme.labelMedium?.copyWith(
           color: scheme.onInverseSurface,
         ),
+      ),
+      // A calendar popover rather than Android's tonal header: the raised
+      // surface, a quiet header, and blue only for what is chosen.
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: raised,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shadowColor: Colors.black.withValues(alpha: 0.25),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: hairline,
+        ),
+        headerBackgroundColor: Colors.transparent,
+        headerForegroundColor: scheme.onSurface,
+        headerHeadlineStyle: textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+        dividerColor: nemo.separator,
+        todayBorder: BorderSide(color: scheme.primary),
+        todayForegroundColor: selectedOr(scheme.onPrimary, scheme.primary),
+        dayOverlayColor: WidgetStatePropertyAll(
+          scheme.onSurface.withValues(alpha: 0.06),
+        ),
+        yearOverlayColor: WidgetStatePropertyAll(
+          scheme.onSurface.withValues(alpha: 0.06),
+        ),
+        cancelButtonStyle: buttonStyle,
+        confirmButtonStyle: buttonStyle,
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: raised,
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: hairline,
+        ),
+        hourMinuteShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        hourMinuteColor: selectedColor(
+          scheme.primary.withValues(alpha: 0.14),
+          field,
+        ),
+        hourMinuteTextColor: selectedColor(scheme.primary, scheme.onSurface),
+        dayPeriodShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: hairline,
+        ),
+        dayPeriodBorderSide: hairline,
+        dayPeriodColor: selectedColor(
+          scheme.primary.withValues(alpha: 0.14),
+          Colors.transparent,
+        ),
+        dayPeriodTextColor: selectedColor(
+          scheme.primary,
+          scheme.onSurfaceVariant,
+        ),
+        dialBackgroundColor: field,
+        dialHandColor: scheme.primary,
+        dialTextColor: selectedColor(scheme.onPrimary, scheme.onSurface),
+        entryModeIconColor: scheme.onSurfaceVariant,
+        cancelButtonStyle: buttonStyle,
+        confirmButtonStyle: buttonStyle,
       ),
       scrollbarTheme: ScrollbarThemeData(
         radius: const Radius.circular(8),

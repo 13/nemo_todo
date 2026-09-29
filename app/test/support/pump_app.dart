@@ -238,10 +238,12 @@ Future<TestApp> pumpApp(
           theme: AppTheme.build(
             ref.watch(appStyleControllerProvider),
             Brightness.light,
+            accent: ref.watch(accentControllerProvider),
           ),
           darkTheme: AppTheme.build(
             ref.watch(appStyleControllerProvider),
             Brightness.dark,
+            accent: ref.watch(accentControllerProvider),
           ),
           themeMode: ref.watch(themeModeControllerProvider),
           localizationsDelegates: L.localizationsDelegates,

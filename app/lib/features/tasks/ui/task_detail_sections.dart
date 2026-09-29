@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
@@ -169,6 +170,9 @@ class TaskRepeatSection extends StatelessWidget {
     // A rule the chips do not name -- every three days, the second
     // Tuesday -- is shown on the custom chip rather than on none of them.
     final custom = rule != null && choices.every((c) => c.$1 != rule);
+    if (context.appStyle == AppStyle.macos) {
+      return _RepeatPopUp(task: task, save: save, choices: choices);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -236,6 +240,127 @@ class TaskRepeatSection extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// The macOS style's repeat: one pop-up button naming the rule, as a Mac
+/// app offers a choice of many, rather than a wall of chips.
+class _RepeatPopUp extends StatelessWidget {
+  const _RepeatPopUp({
+    required this.task,
+    required this.save,
+    required this.choices,
+  });
+
+  final Task task;
+  final TaskSaver save;
+  final List<(Repeat?, String)> choices;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final scheme = Theme.of(context).colorScheme;
+    final dueAt = task.dueAt;
+    final rule = task.repeatRule;
+    final named = choices.where((c) => c.$1 == rule).firstOrNull;
+    final current = task.repeat != null && rule == null
+        ? task.repeat!
+        : named?.$2 ?? describeRepeat(l, locale, rule!);
+    // Past the named rules: the custom dialog.
+    final customIndex = choices.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DetailLabel(l.tasksRepeat),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: PopupMenuButton<int>(
+            key: const Key('task-repeat'),
+            enabled: dueAt != null,
+            tooltip: l.tasksRepeat,
+            position: PopupMenuPosition.under,
+            onSelected: (i) async {
+              if (i < customIndex) {
+                await save(task.copyWith(repeat: choices[i].$1?.encode()));
+                return;
+              }
+              final picked = await showCustomRepeatDialog(
+                context,
+                due: DateTime.fromMillisecondsSinceEpoch(dueAt!),
+                initial: rule,
+              );
+              if (picked != null) {
+                await save(task.copyWith(repeat: picked.encode()));
+              }
+            },
+            itemBuilder: (_) => [
+              for (final (i, (choice, label)) in choices.indexed)
+                CheckedPopupMenuItem(
+                  key: Key(_repeatKey(choice)),
+                  value: i,
+                  // By what is stored, so an unreadable rule ticks none.
+                  checked: task.repeat == choice?.encode(),
+                  child: Text(label),
+                ),
+              const PopupMenuDivider(),
+              CheckedPopupMenuItem(
+                key: const Key('repeat-custom'),
+                value: customIndex,
+                checked: named == null && rule != null,
+                child: Text(l.repeatCustom),
+              ),
+            ],
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                shape: StadiumBorder(
+                  side: BorderSide(
+                    color: scheme.outline.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.repeat_rounded,
+                      size: 18,
+                      color: dueAt == null
+                          ? scheme.onSurfaceVariant
+                          : scheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      current,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: dueAt == null ? scheme.onSurfaceVariant : null,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.unfold_more_rounded,
+                      size: 18,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (dueAt == null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l.tasksRepeatNeedsDue,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
       ],

@@ -34,6 +34,9 @@ host yourself.
 - Three looks, in light or dark: nemo's own ocean teal; macOS, with
   graphite greys, system blue and a floating sidebar on wide windows; and
   Material 3, in the wallpaper's colours on Android 12 and later.
+- With a mouse and keyboard: a right click opens the menu a long press
+  would, and single-key shortcuts (? lists them) add, find, move through,
+  tick off and delete tasks.
 - The web app is the same app: identical screens, with a navigation rail
   instead of a bottom bar on wide windows, and a task opening beside the
   list rather than over it once there is room for both. It is served by

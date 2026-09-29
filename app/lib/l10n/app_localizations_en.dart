@@ -345,6 +345,36 @@ class LEn extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get settingsAccent => 'Accent colour';
+
+  @override
+  String get accentDefault => 'The style\'s own';
+
+  @override
+  String get colorTeal => 'Teal';
+
+  @override
+  String get colorBlue => 'Blue';
+
+  @override
+  String get colorPurple => 'Purple';
+
+  @override
+  String get colorPink => 'Pink';
+
+  @override
+  String get colorRed => 'Red';
+
+  @override
+  String get colorOrange => 'Orange';
+
+  @override
+  String get colorGreen => 'Green';
+
+  @override
+  String get colorGrey => 'Grey';
+
+  @override
   String get taskMenuDone => 'Mark as done';
 
   @override

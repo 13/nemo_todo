@@ -31,6 +31,15 @@ does the renaming, and tags only once CI has passed on the release commit.
   notifications and asks for them; the browser is asked only when you
   press Allow or switch a reminder on. They work in desktop browsers;
   phone browsers do not let a page notify.
+- Share into nemo on Android. nemo is in the share menu of other apps:
+  shared text, a link or pictures open a "New task" sheet with them filled
+  in -- a page's title as the title and its link in the notes, a message's
+  first line as the title and the rest as notes, pictures as the task's
+  photos. The title reads quick add's `#tags`, `!high` and "tomorrow";
+  pick a list (the Inbox unless you choose another), change anything, and
+  save, or cancel to keep nothing. Pictures are re-encoded on the phone
+  like any other photo, so their location and camera details are dropped.
+  It works offline and without an account.
 
 ### Changed
 

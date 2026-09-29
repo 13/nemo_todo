@@ -15,6 +15,8 @@ host yourself.
   weekday; a long press on a task moves it to another day.
 - Photos on a task, taken with the camera or picked from the device, synced
   to your other devices and to everyone a list is shared with.
+- Share into nemo on Android: text, a link or pictures from any app's share
+  menu open a new task with them filled in, ready to pick a list and save.
 - Tasks that repeat -- daily, weekdays only, weekly, fortnightly, monthly,
   the last Friday of the month, yearly, or a rule of your own such as every
   three days or the second Tuesday: ticking one off puts the next one on the

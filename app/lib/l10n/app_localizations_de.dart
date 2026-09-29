@@ -1522,4 +1522,12 @@ class LDe extends L {
   @override
   String get syncPullSignedOut =>
       'Deine Sitzung ist abgelaufen. Melde dich in den Einstellungen erneut an.';
+
+  @override
+  String shareTaskAdded(String list) {
+    return 'Zu $list hinzugefügt';
+  }
+
+  @override
+  String get shareRemovePhoto => 'Dieses Bild weglassen';
 }

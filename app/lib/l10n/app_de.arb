@@ -404,5 +404,7 @@
   "todayFreshStart2": "Eins nach dem anderen.",
   "todayAllClear": "Alles erledigt. Genieß den Rest des Tages.",
   "syncPullFailed": "Synchronisieren hat nicht geklappt. Es wird gleich erneut versucht.",
-  "syncPullSignedOut": "Deine Sitzung ist abgelaufen. Melde dich in den Einstellungen erneut an."
+  "syncPullSignedOut": "Deine Sitzung ist abgelaufen. Melde dich in den Einstellungen erneut an.",
+  "shareTaskAdded": "Zu {list} hinzugefügt",
+  "shareRemovePhoto": "Dieses Bild weglassen"
 }

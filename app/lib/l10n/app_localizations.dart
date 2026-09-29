@@ -2528,6 +2528,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Your session has ended. Sign in again in Settings.'**
   String get syncPullSignedOut;
+
+  /// Snackbar after saving a task created from something shared from another app.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to {list}'**
+  String shareTaskAdded(String list);
+
+  /// Tooltip on a shared picture in the new-task sheet; the picture is not attached.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave out this picture'**
+  String get shareRemovePhoto;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

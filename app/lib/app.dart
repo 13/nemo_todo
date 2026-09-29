@@ -12,6 +12,7 @@ import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/daily_list/daily_list_providers.dart';
 import 'package:nemo/features/reminders/reminders_providers.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
+import 'package:nemo/features/share/ui/share_receiver.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -129,7 +130,10 @@ class _NemoAppState extends ConsumerState<NemoApp> {
           child: CelebrationOverlay(
             onOpenAchievements: () =>
                 unawaited(_router.push(Routes.achievements)),
-            child: child ?? const SizedBox.shrink(),
+            child: ShareReceiver(
+              navigatorKey: _router.routerDelegate.navigatorKey,
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),

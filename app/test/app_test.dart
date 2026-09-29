@@ -12,12 +12,15 @@ import 'package:nemo/features/celebrations/ui/celebration_overlay.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/settings/data/server_build.dart';
+import 'package:nemo/features/share/data/share_source.dart';
+import 'package:nemo/features/share/data/shared_content.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
 import 'package:nemo/features/tasks/ui/today_screen.dart';
 import 'package:nemo/features/tasks/ui/upcoming_screen.dart';
 import 'package:nemo/router.dart';
 
 import 'support/fake_celebrations.dart';
+import 'support/fake_share_source.dart';
 import 'support/fake_sync.dart';
 import 'support/test_db.dart';
 
@@ -169,6 +172,70 @@ void main() {
 
       expect(find.byType(UpcomingScreen), findsOneWidget);
       expect(tapped.value, isNull);
+
+      await finish(tester, container);
+    });
+  });
+
+  group('a share from another app', () {
+    Finder titleField(String text) => find.descendant(
+      of: find.byKey(const Key('share-title')),
+      matching: find.text(text),
+    );
+
+    testWidgets('that started the app opens the new task sheet', (
+      tester,
+    ) async {
+      final source = FakeShareSource(
+        launch: const SharedContent(
+          subject: 'Pasta recipe',
+          text: 'https://example.com/pasta',
+        ),
+      );
+      addTearDown(source.close);
+      final container = await pumpNemoApp(
+        tester,
+        overrides: [shareSourceProvider.overrideWithValue(source)],
+      );
+
+      expect(find.byType(TodayScreen), findsOneWidget);
+      expect(titleField('Pasta recipe'), findsOneWidget);
+      expect(find.text('https://example.com/pasta'), findsOneWidget);
+
+      await finish(tester, container);
+    });
+
+    testWidgets('while running opens it too, one share after another', (
+      tester,
+    ) async {
+      final source = FakeShareSource();
+      addTearDown(source.close);
+      final container = await pumpNemoApp(
+        tester,
+        overrides: [shareSourceProvider.overrideWithValue(source)],
+      );
+      expect(find.byKey(const Key('share-sheet')), findsNothing);
+
+      source
+        ..send(const SharedContent(text: 'First'))
+        ..send(const SharedContent(text: 'Second'));
+      await tester.pumpAndSettle();
+
+      // The second waits for the first rather than covering it.
+      expect(find.byKey(const Key('share-sheet')), findsOneWidget);
+      expect(titleField('First'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('share-save')));
+      await tester.pumpAndSettle();
+
+      expect(titleField('Second'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('share-cancel')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('share-sheet')), findsNothing);
+      final db = container.read(appDatabaseProvider);
+      final titles = [for (final t in await db.select(db.tasks).get()) t.title];
+      expect(titles, ['First']);
 
       await finish(tester, container);
     });

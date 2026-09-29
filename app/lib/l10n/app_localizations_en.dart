@@ -1506,4 +1506,12 @@ class LEn extends L {
   @override
   String get syncPullSignedOut =>
       'Your session has ended. Sign in again in Settings.';
+
+  @override
+  String shareTaskAdded(String list) {
+    return 'Added to $list';
+  }
+
+  @override
+  String get shareRemovePhoto => 'Leave out this picture';
 }

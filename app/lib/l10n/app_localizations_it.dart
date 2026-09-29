@@ -1540,4 +1540,12 @@ class LIt extends L {
   @override
   String get syncPullSignedOut =>
       'La sessione è scaduta. Accedi di nuovo nelle Impostazioni.';
+
+  @override
+  String shareTaskAdded(String list) {
+    return 'Aggiunta a $list';
+  }
+
+  @override
+  String get shareRemovePhoto => 'Escludi questa immagine';
 }

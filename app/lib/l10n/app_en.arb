@@ -871,5 +871,18 @@
   "syncPullSignedOut": "Your session has ended. Sign in again in Settings.",
   "@syncPullSignedOut": {
     "description": "Snackbar after pulling down to sync when the session ended."
+  },
+  "shareTaskAdded": "Added to {list}",
+  "@shareTaskAdded": {
+    "description": "Snackbar after saving a task created from something shared from another app.",
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRemovePhoto": "Leave out this picture",
+  "@shareRemovePhoto": {
+    "description": "Tooltip on a shared picture in the new-task sheet; the picture is not attached."
   }
 }

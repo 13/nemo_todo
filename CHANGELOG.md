@@ -76,6 +76,10 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ### Fixed
 
+- The server exits when it is told to stop. It used to close everything
+  and then stay running, so `docker stop` and every update waited ten
+  seconds before Docker killed it; a stop sent the moment it started
+  could also kill it outright rather than shut it down.
 - Buttons that a screen reader announced without a name now have one:
   the search bar and search button in the Material look, clearing a
   search, the colours and icons when editing a list, and the checkboxes

@@ -68,13 +68,11 @@ class _ServeCommand extends Command<int> {
       InternetAddress.anyIPv4,
       config.port,
     );
-    log.info(
-      'nemo server listening on port ${server.port}, '
-      'database ${config.dbPath}, web app ${config.webDir}',
-    );
     final stopped = Completer<void>();
+    var stopping = false;
     Future<void> stop(ProcessSignal signal) async {
-      if (stopped.isCompleted) return;
+      if (stopping) return;
+      stopping = true;
       log.info('received $signal, shutting down');
       sweeper.cancel();
       await server.close(force: true);
@@ -83,9 +81,23 @@ class _ServeCommand extends Command<int> {
       stopped.complete();
     }
 
-    ProcessSignal.sigterm.watch().listen(stop);
-    ProcessSignal.sigint.watch().listen(stop);
+    // Watched before the server says it is listening, so a signal sent as
+    // soon as it does is handled rather than killing it mid-start.
+    final signals = [
+      ProcessSignal.sigterm.watch().listen(stop),
+      ProcessSignal.sigint.watch().listen(stop),
+    ];
+    log.info(
+      'nemo server listening on port ${server.port}, '
+      'database ${config.dbPath}, web app ${config.webDir}',
+    );
     await stopped.future;
+    // A signal subscription keeps the process alive on its own: without
+    // cancelling them, everything above closes and the process still never
+    // exits, so `docker stop` waited out its ten seconds and killed it.
+    for (final subscription in signals) {
+      await subscription.cancel();
+    }
     return 0;
   }
 }

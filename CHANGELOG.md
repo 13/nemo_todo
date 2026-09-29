@@ -13,6 +13,19 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.15.3 - 2026-09-29
+
+### Fixed
+
+- Opening the web app again no longer downloads all of it again: the
+  server now answers a browser's check for a newer copy with "unchanged"
+  when nothing has changed. Since 0.15.1 every visit was a full download.
+
+### Changed
+
+- The web app loads faster on a first visit over HTTPS: the server now
+  sends it brotli-compressed, about a quarter smaller than before.
+
 ## 0.15.2 - 2026-09-29
 
 ### Fixed

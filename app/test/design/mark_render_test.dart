@@ -18,7 +18,7 @@ void main() {
     test('renders only with --update-goldens', () {}, skip: true);
     return;
   }
-  testWidgets('mark and tile', (tester) async {
+  testWidgets('mark and splash mark', (tester) async {
     tester.view.physicalSize = const Size(600, 300);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -33,7 +33,7 @@ void main() {
               children: [
                 NemoMark(size: 200),
                 SizedBox(width: 40),
-                NemoLogoTile(size: 200),
+                NemoSplashMark(),
               ],
             ),
           ),

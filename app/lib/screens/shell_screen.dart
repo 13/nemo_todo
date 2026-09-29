@@ -104,7 +104,7 @@ class ShellScreen extends ConsumerWidget {
               groupAlignment: -0.9,
               leading: const Padding(
                 padding: EdgeInsets.only(top: 8, bottom: 16),
-                child: NemoLogoTile(),
+                child: NemoMark(size: 40),
               ),
               trailing: Expanded(
                 child: Align(

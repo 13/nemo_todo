@@ -42,7 +42,7 @@ class StartupErrorScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const NemoLogoTile(size: 64),
+              const NemoMark(size: 64),
               const SizedBox(height: 24),
               Text(
                 l.startupErrorTitle,

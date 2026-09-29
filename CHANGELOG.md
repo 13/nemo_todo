@@ -23,6 +23,10 @@ does the renaming, and tags only once CI has passed on the release commit.
   page itself is checked for a newer one, rather than every file one
   after another. On a slow mobile connection a repeat visit went from
   about 1.6 seconds to 0.5.
+- The nemo logo inside the app is now the mark on its own, as the web
+  app's loading screen shows it, rather than the mark on a rounded tile.
+  On the web the loading screen now hands over to the app without the
+  logo jumping. The app's icon is unchanged.
 
 ## 0.15.3 - 2026-09-29
 

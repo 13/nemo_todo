@@ -137,7 +137,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             if (widget.standalone) ...[
               const Padding(
                 padding: EdgeInsets.only(top: 16, bottom: 12),
-                child: Center(child: NemoLogoTile(size: 64)),
+                child: Center(child: NemoMark(size: 64)),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),

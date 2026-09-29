@@ -87,21 +87,38 @@ void main() {
     expect(painter.shouldRepaint(painter), isFalse);
   });
 
-  testWidgets('the tile centres the mark and rounds its corners', (
+  testWidgets('the splash mark is the web loading screen, standing still', (
     tester,
   ) async {
-    await pump(tester, const NemoLogoTile(size: 80));
-    expect(tester.getSize(find.byType(NemoLogoTile)).width, 80);
-    // The mark keeps its breathing room inside the tile.
-    expect(tester.getSize(find.byType(NemoMark)).width, closeTo(60.8, 0.01));
-    final box = tester.widget<Container>(
-      find.descendant(
-        of: find.byType(NemoLogoTile),
-        matching: find.byType(Container),
-      ),
-    );
-    final decoration = box.decoration! as BoxDecoration;
-    expect(decoration.gradient, isA<LinearGradient>());
-    expect(decoration.borderRadius, BorderRadius.circular(80 * 0.28));
+    await pump(tester, const NemoSplashMark());
+    // web/index.html: a 96 px ring, 3 px wide, in the primary colour at
+    // 18%, around a 64 px disc. Both centred, so the page's loading screen
+    // fades into this without anything moving. The page's SVG is cropped
+    // to the disc; NemoMark draws the whole 512 canvas, on which the disc
+    // is 400 across, so it is drawn larger to make its disc 64.
+    final ring = find.byType(NemoSplashMark);
+    final mark = find.descendant(of: ring, matching: find.byType(NemoMark));
+    expect(tester.getSize(ring), const Size(96, 96));
+    expect(tester.getSize(mark).width, closeTo(64 * 512 / 400, 0.001));
+    expect(tester.getCenter(mark), tester.getCenter(ring));
+
+    final decoration =
+        tester
+                .widget<DecoratedBox>(
+                  find.descendant(
+                    of: ring,
+                    matching: find.byType(DecoratedBox),
+                  ),
+                )
+                .decoration
+            as BoxDecoration;
+    expect(decoration.shape, BoxShape.circle);
+    final side = (decoration.border! as Border).top;
+    expect(side.width, 3);
+    expect(side.color, AppTheme.seed.withValues(alpha: 0.18));
+
+    // Still: nothing animates on a screen that may sit there a while.
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(tester.hasRunningAnimations, isFalse);
   });
 }

@@ -135,7 +135,7 @@ class AboutTile extends ConsumerWidget {
                   Icons.warning_amber_rounded,
                   color: theme.colorScheme.error,
                 )
-              : const NemoLogoTile(),
+              : const NemoMark(size: 40),
           title: Text(l.appName),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,7 +171,7 @@ class AboutTile extends ConsumerWidget {
             context: context,
             applicationName: l.appName,
             applicationVersion: '$appLabel\n$buildLine',
-            applicationIcon: const NemoLogoTile(size: 48),
+            applicationIcon: const NemoMark(size: 48),
             applicationLegalese: l.aboutLegalese,
           ),
         ),

@@ -160,7 +160,7 @@ void main() {
       find.text('Release build 6 · Sep 14, 2026 · 33f0001'),
       findsOneWidget,
     );
-    expect(find.byType(NemoLogoTile), findsOneWidget);
+    expect(find.byType(NemoMark), findsOneWidget);
   });
 
   appTest('a build nobody stamped says it is local and claims no date', (

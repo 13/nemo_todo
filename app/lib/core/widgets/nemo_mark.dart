@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 ///
 /// One colour, and the check is a hole rather than a second colour -- so
 /// whatever is behind the mark shows through it. That is what lets the
-/// same artwork be the teal mark on a page, the white disc on the launcher
-/// tile, and the silhouette Android draws in the status bar from nothing
-/// but an alpha channel.
+/// same artwork be the teal mark in the app and on the web page's loading
+/// screen, the white disc on the launcher tile, and the silhouette Android
+/// draws in the status bar from nothing but an alpha channel.
 ///
 /// Drawn rather than loaded from an asset so it stays crisp at any size and
 /// takes its colour from the theme. The geometry matches
@@ -26,29 +26,30 @@ class NemoMark extends StatelessWidget {
   );
 }
 
-/// The mark inside nemo's rounded tile, as the launcher icon shows it.
-class NemoLogoTile extends StatelessWidget {
-  const NemoLogoTile({this.size = 40, super.key});
-
-  final double size;
+/// The mark as the web page's loading screen draws it: inside a faint
+/// ring, both centred, at the same sizes as `web/index.html` -- so when the
+/// page fades its loading screen out over the app's first frame, this is
+/// already there underneath, and nothing moves. Change both together.
+///
+/// The page's ring spins. This one stands still: it is on screen while the
+/// app works out whether anyone is signed in, and a spinner that lingers
+/// reads as a failure rather than as progress.
+class NemoSplashMark extends StatelessWidget {
+  const NemoSplashMark({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF13949F), Color(0xFF0A5C66)],
+    final primary = Theme.of(context).colorScheme.primary;
+    return SizedBox.square(
+      dimension: 96,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: primary.withValues(alpha: 0.18), width: 3),
         ),
-        borderRadius: BorderRadius.circular(size * 0.28),
-      ),
-      child: Center(
-        // The same proportion as assets/logo/nemo-icon.svg.
-        child: NemoMark(size: size * 0.76, color: scheme.onPrimary),
+        // A 64 px disc, as on the page. The page's SVG is cropped to the
+        // disc; the mark's canvas is 512 across with a disc of 400.
+        child: const Center(child: NemoMark(size: 64 * 512 / 400)),
       ),
     );
   }

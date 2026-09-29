@@ -13,6 +13,6 @@ void main() {
     expect(find.textContaining('allow it and reload'), findsOneWidget);
     // The cause is shown too: without it there is nothing to report.
     expect(find.textContaining('TimeoutException'), findsOneWidget);
-    expect(find.byType(NemoLogoTile), findsOneWidget);
+    expect(find.byType(NemoMark), findsOneWidget);
   });
 }

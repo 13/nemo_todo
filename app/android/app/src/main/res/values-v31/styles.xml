@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Android 12 draws the splash itself and ignores windowBackground, so
-         the brand colour and the mark are handed to the splash screen API.
-         Without this the system falls back to the launcher icon on the
-         window background, which put a white mark on white. -->
+         the background and the mark are handed to the splash screen API:
+         the app's own colours and the starting screen's mark, so the one
+         hands over to the other without anything moving. Without this the
+         system falls back to the launcher icon on the window background. -->
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <item name="android:windowSplashScreenBackground">@color/ic_launcher_background</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
     </style>
 </resources>

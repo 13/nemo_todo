@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The dark theme's scaffold background and primary. -->
+    <color name="splash_background">#0E1616</color>
+    <color name="splash_mark">#5BC0C9</color>
+</resources>

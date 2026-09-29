@@ -198,9 +198,13 @@ render `build/screens/mark.png` to see that they still agree:
 ```
 
 The mark also serves as the Android launcher icon (adaptive, with a
-monochrome layer for themed launchers), the splash screen on every Android
-version, the status bar icon reminders post with, the favicon and the
-installed web app's icon. The notification icon is a separate white
+monochrome layer for themed launchers), the status bar icon reminders post
+with, the favicon and the installed web app's icon. Launching, it is drawn
+on its own in a faint ring, in the app's colours: the web page's loading
+screen (`app/web/index.html`), the Android splash on every version
+(`res/drawable/splash_mark.xml`) and the app's starting screen
+(`NemoSplashMark`) are the same picture in the same place, so each hands
+over to the next without anything moving. Change them together. The notification icon is a separate white
 silhouette: Android draws small icons from their alpha channel, so the
 coloured tile would arrive as a filled square.
 

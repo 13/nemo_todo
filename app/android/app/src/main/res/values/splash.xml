@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The launch splash in the app's own colours, so it hands over to the
+         starting screen unchanged: the light theme's scaffold background
+         and primary (lib/core/theme/app_theme.dart). -->
+    <color name="splash_background">#F5F8F8</color>
+    <color name="splash_mark">#0E7C86</color>
+</resources>

@@ -14,6 +14,14 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
+## Unreleased
+
+### Changed
+
+- On Android the launch splash now shows the nemo logo as the app's
+  starting screen does, in the app's own colours, so opening the app no
+  longer jumps from a white logo on teal to the app.
+
 ## 0.15.4 - 2026-09-29
 
 ### Changed

@@ -1623,4 +1623,46 @@ class LEn extends L {
 
   @override
   String get a11yMoveDown => 'Move down';
+
+  @override
+  String get recentlyDeletedTitle => 'Recently deleted';
+
+  @override
+  String recentlyDeletedHint(int days) {
+    return 'Deleted tasks stay here for $days days, then they are gone for good.';
+  }
+
+  @override
+  String recentlyDeletedEmpty(int days) {
+    return 'Nothing deleted in the last $days days';
+  }
+
+  @override
+  String get recentlyDeletedRestore => 'Restore';
+
+  @override
+  String get recentlyDeletedEraseNow => 'Delete now';
+
+  @override
+  String recentlyDeletedEraseConfirm(String title) {
+    return 'Delete \"$title\" for good? It cannot be brought back.';
+  }
+
+  @override
+  String recentlyDeletedOn(String date) {
+    return 'Deleted $date';
+  }
+
+  @override
+  String recentlyDeletedBackTo(String list) {
+    return 'Goes back to $list';
+  }
+
+  @override
+  String recentlyDeletedRestored(String list) {
+    return 'Task restored to $list';
+  }
+
+  @override
+  String get recentlyDeletedErased => 'Deleted for good';
 }

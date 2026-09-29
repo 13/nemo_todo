@@ -428,5 +428,15 @@
   "taskOrderAdded": "Data di aggiunta",
   "taskOrderBanner": "Ordinato per: {order}",
   "a11yMoveUp": "Sposta su",
-  "a11yMoveDown": "Sposta giù"
+  "a11yMoveDown": "Sposta giù",
+  "recentlyDeletedTitle": "Eliminati di recente",
+  "recentlyDeletedHint": "Le attività eliminate restano qui per {days} giorni, poi spariscono definitivamente.",
+  "recentlyDeletedEmpty": "Niente eliminato negli ultimi {days} giorni",
+  "recentlyDeletedRestore": "Ripristina",
+  "recentlyDeletedEraseNow": "Elimina ora",
+  "recentlyDeletedEraseConfirm": "Eliminare definitivamente «{title}»? Non si potrà più recuperare.",
+  "recentlyDeletedOn": "Eliminata il {date}",
+  "recentlyDeletedBackTo": "Torna in {list}",
+  "recentlyDeletedRestored": "Attività ripristinata in {list}",
+  "recentlyDeletedErased": "Eliminata definitivamente"
 }

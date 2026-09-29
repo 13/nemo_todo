@@ -1657,4 +1657,46 @@ class LIt extends L {
 
   @override
   String get a11yMoveDown => 'Sposta giù';
+
+  @override
+  String get recentlyDeletedTitle => 'Eliminati di recente';
+
+  @override
+  String recentlyDeletedHint(int days) {
+    return 'Le attività eliminate restano qui per $days giorni, poi spariscono definitivamente.';
+  }
+
+  @override
+  String recentlyDeletedEmpty(int days) {
+    return 'Niente eliminato negli ultimi $days giorni';
+  }
+
+  @override
+  String get recentlyDeletedRestore => 'Ripristina';
+
+  @override
+  String get recentlyDeletedEraseNow => 'Elimina ora';
+
+  @override
+  String recentlyDeletedEraseConfirm(String title) {
+    return 'Eliminare definitivamente «$title»? Non si potrà più recuperare.';
+  }
+
+  @override
+  String recentlyDeletedOn(String date) {
+    return 'Eliminata il $date';
+  }
+
+  @override
+  String recentlyDeletedBackTo(String list) {
+    return 'Torna in $list';
+  }
+
+  @override
+  String recentlyDeletedRestored(String list) {
+    return 'Attività ripristinata in $list';
+  }
+
+  @override
+  String get recentlyDeletedErased => 'Eliminata definitivamente';
 }

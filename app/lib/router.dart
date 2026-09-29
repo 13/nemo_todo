@@ -9,6 +9,7 @@ import 'package:nemo/features/lists/ui/lists_screen.dart';
 import 'package:nemo/features/lists/ui/members_screen.dart';
 import 'package:nemo/features/notes/ui/note_detail_screen.dart';
 import 'package:nemo/features/notes/ui/notes_screen.dart';
+import 'package:nemo/features/recently_deleted/ui/recently_deleted_screen.dart';
 import 'package:nemo/features/settings/ui/settings_screen.dart';
 import 'package:nemo/features/tasks/ui/search_screen.dart';
 import 'package:nemo/features/tasks/ui/tag_screen.dart';
@@ -26,6 +27,7 @@ abstract final class Routes {
   static const settings = '/settings';
   static const account = '/settings/account';
   static const achievements = '/settings/achievements';
+  static const recentlyDeleted = '/settings/recently-deleted';
 
   /// Where the web app waits while it looks for a stored session, and
   /// where it sends anyone it does not find one for.
@@ -139,6 +141,11 @@ abstract final class AppRouter {
             path: 'achievements',
             pageBuilder: (_, s) =>
                 fadeThroughPage(child: const AchievementsScreen(), state: s),
+          ),
+          GoRoute(
+            path: 'recently-deleted',
+            pageBuilder: (_, s) =>
+                fadeThroughPage(child: const RecentlyDeletedScreen(), state: s),
           ),
         ],
       ),

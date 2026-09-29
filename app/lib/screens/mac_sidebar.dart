@@ -172,6 +172,7 @@ class MacSidebar extends ConsumerWidget {
               children: [
                 for (final list in lists)
                   SidebarListRow(list: list, selected: list.id == openList),
+                const SidebarRecentlyDeletedRow(),
               ],
             ),
           ),

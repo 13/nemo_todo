@@ -199,3 +199,52 @@ class SidebarListRow extends ConsumerWidget {
     );
   }
 }
+
+/// Recently deleted, at the end of My Lists, the way Notes and Reminders
+/// keep theirs: a trash can in grey rather than a list's coloured disc.
+class SidebarRecentlyDeletedRow extends StatelessWidget {
+  const SidebarRecentlyDeletedRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          key: const Key('sidebar-recently-deleted'),
+          borderRadius: BorderRadius.circular(8),
+          mouseCursor: context.clickCursor,
+          onTap: () => context.push(Routes.recentlyDeleted),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: AppIcon(
+                    Icons.delete_outline_rounded,
+                    size: 16,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    L.of(context).recentlyDeletedTitle,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

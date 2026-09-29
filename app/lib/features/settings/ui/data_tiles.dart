@@ -3,12 +3,16 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/settings/data/data_export.dart';
 import 'package:nemo/l10n/app_localizations.dart';
+import 'package:nemo/router.dart';
+import 'package:nemo_core/nemo_core.dart';
 
 /// Where an export goes and an import comes from. Replaced in tests.
 abstract interface class DataFiles {
@@ -122,6 +126,18 @@ class DataTiles extends ConsumerWidget {
               subtitle: Text(l.settingsImportHint),
               onTap: () => _import(context, ref),
             ),
+            // The macOS look keeps it under My Lists, as Notes and
+            // Reminders do; the others where Android's own apps keep a bin.
+            if (context.appStyle != AppStyle.macos)
+              ListTile(
+                key: const Key('recently-deleted'),
+                leading: const SettingsIcon(Icons.delete_outline_rounded),
+                title: Text(l.recentlyDeletedTitle),
+                subtitle: Text(
+                  l.recentlyDeletedHint(tombstoneRetention.inDays),
+                ),
+                onTap: () => context.push(Routes.recentlyDeleted),
+              ),
           ],
         ),
       ],

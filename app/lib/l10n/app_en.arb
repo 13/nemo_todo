@@ -1124,5 +1124,75 @@
   "a11yMoveDown": "Move down",
   "@a11yMoveDown": {
     "description": "Screen reader action on a task row in a hand-sorted list: swap it with the one below."
+  },
+  "recentlyDeletedTitle": "Recently deleted",
+  "@recentlyDeletedTitle": {
+    "description": "Title of the page listing tasks deleted in the last 30 days, and the row that opens it."
+  },
+  "recentlyDeletedHint": "Deleted tasks stay here for {days} days, then they are gone for good.",
+  "@recentlyDeletedHint": {
+    "description": "Line at the top of Recently deleted.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "recentlyDeletedEmpty": "Nothing deleted in the last {days} days",
+  "@recentlyDeletedEmpty": {
+    "description": "Recently deleted with nothing in it.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "recentlyDeletedRestore": "Restore",
+  "@recentlyDeletedRestore": {
+    "description": "Button on a deleted task: bring it back."
+  },
+  "recentlyDeletedEraseNow": "Delete now",
+  "@recentlyDeletedEraseNow": {
+    "description": "Button on a deleted task: delete it for good without waiting for the 30 days."
+  },
+  "recentlyDeletedEraseConfirm": "Delete \"{title}\" for good? It cannot be brought back.",
+  "@recentlyDeletedEraseConfirm": {
+    "description": "Asked before deleting a task for good.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "recentlyDeletedOn": "Deleted {date}",
+  "@recentlyDeletedOn": {
+    "description": "When a task in Recently deleted was deleted.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recentlyDeletedBackTo": "Goes back to {list}",
+  "@recentlyDeletedBackTo": {
+    "description": "Where a deleted task will go when restored: its own list, or the Inbox if its list is gone.",
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "recentlyDeletedRestored": "Task restored to {list}",
+  "@recentlyDeletedRestored": {
+    "description": "Shown after a task is brought back.",
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "recentlyDeletedErased": "Deleted for good",
+  "@recentlyDeletedErased": {
+    "description": "Shown after a task is deleted for good."
   }
 }

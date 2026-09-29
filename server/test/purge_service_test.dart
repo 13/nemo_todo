@@ -239,7 +239,27 @@ void main() {
     expect(await db.taskById('t1'), isNull);
   });
 
-  test('the retention window is adjustable', () async {
+  test('the retention window can be made longer', () async {
+    final ben = await user('ben');
+    final old = longAgo('dev', const Duration(days: 40));
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+    ]);
+    await push(ben, [
+      SyncChange.task(
+        task('t1', 'l1', old).copyWith(
+          deletedAt: old.now().toString(),
+          updatedAt: old.now().toString(),
+        ),
+      ),
+    ]);
+
+    expect((await purge().purge(retention: const Duration(days: 45))).total, 0);
+    expect((await purge().purge()).tasks, 1);
+  });
+
+  test('but never shorter than the app offers tasks back for', () async {
     final ben = await user('ben');
     final week = longAgo('dev', const Duration(days: 8));
     await push(ben, [
@@ -255,9 +275,48 @@ void main() {
       ),
     ]);
 
-    expect((await purge().purge()).total, 0);
-    final report = await purge().purge(retention: const Duration(days: 7));
-    expect(report.tasks, 1);
+    expect(PurgeService.minimumRetention, tombstoneRetention);
+    expect(
+      () => purge().purge(retention: const Duration(days: 7)),
+      throwsArgumentError,
+    );
+    expect(
+      () => purge().purge(retention: const Duration(days: 7), dryRun: true),
+      throwsArgumentError,
+    );
+    expect(
+      await db.taskById('t1'),
+      isNotNull,
+      reason: 'Recently deleted still offers it back',
+    );
+  });
+
+  test('a task deleted for good goes at the next purge', () async {
+    final ben = await user('ben');
+    final recent = longAgo('dev', const Duration(days: 1));
+    await push(ben, [
+      SyncChange.list(list('l1', dev)),
+      SyncChange.task(task('t1', 'l1', dev)),
+      SyncChange.subtask(subtask('s1', 't1', dev)),
+      SyncChange.photo(photo('p1', 't1', dev)),
+    ]);
+    // "Delete now": a fresh stamp, and a tombstone from the epoch.
+    await push(ben, [
+      SyncChange.task(
+        task('t1', 'l1', recent).copyWith(
+          title: '',
+          deletedAt: erasedStamp('dev'),
+          updatedAt: recent.now().toString(),
+        ),
+      ),
+    ]);
+    final held = await db.taskById('t1');
+    expect(held!.deletedAt, erasedStamp('dev'), reason: 'it won the merge');
+
+    final report = await purge().purge();
+
+    expect((report.tasks, report.subtasks, report.photos), (1, 1, 1));
+    expect(await db.taskById('t1'), isNull);
   });
 
   test('purging twice leaves nothing to do and no log growth', () async {

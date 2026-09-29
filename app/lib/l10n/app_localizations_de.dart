@@ -1639,4 +1639,46 @@ class LDe extends L {
 
   @override
   String get a11yMoveDown => 'Nach unten verschieben';
+
+  @override
+  String get recentlyDeletedTitle => 'Zuletzt gelöscht';
+
+  @override
+  String recentlyDeletedHint(int days) {
+    return 'Gelöschte Aufgaben bleiben $days Tage hier, danach sind sie endgültig weg.';
+  }
+
+  @override
+  String recentlyDeletedEmpty(int days) {
+    return 'In den letzten $days Tagen nichts gelöscht';
+  }
+
+  @override
+  String get recentlyDeletedRestore => 'Wiederherstellen';
+
+  @override
+  String get recentlyDeletedEraseNow => 'Jetzt löschen';
+
+  @override
+  String recentlyDeletedEraseConfirm(String title) {
+    return '„$title“ endgültig löschen? Das lässt sich nicht rückgängig machen.';
+  }
+
+  @override
+  String recentlyDeletedOn(String date) {
+    return 'Gelöscht am $date';
+  }
+
+  @override
+  String recentlyDeletedBackTo(String list) {
+    return 'Kommt zurück in $list';
+  }
+
+  @override
+  String recentlyDeletedRestored(String list) {
+    return 'Aufgabe in $list wiederhergestellt';
+  }
+
+  @override
+  String get recentlyDeletedErased => 'Endgültig gelöscht';
 }

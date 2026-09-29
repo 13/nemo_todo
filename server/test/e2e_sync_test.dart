@@ -208,6 +208,44 @@ void main() {
     expect(laptop.outbox, isEmpty);
   });
 
+  test('a task deleted on one device and restored on another is back on '
+      'both', () async {
+    final token = await server.signup('ben');
+    final phone = Device(server, 'phone', token);
+    final laptop = Device(server, 'laptop', token);
+    phone
+      ..newList('l1', 'Groceries')
+      ..newTask('t1', 'l1', 'Milk');
+    await phone.sync();
+    await laptop.sync();
+
+    // The phone deletes it, the way the app does: the stamp is the delete.
+    final stamp = phone.clock.now().toString();
+    phone.tasks['t1'] = phone.tasks['t1']!.copyWith(
+      updatedAt: stamp,
+      deletedAt: stamp,
+    );
+    phone.put(SyncChange.task(phone.tasks['t1']!));
+    await phone.sync();
+    await laptop.sync();
+    expect(laptop.tasks['t1']!.isDeleted, isTrue);
+
+    // The laptop restores it from Recently deleted: an ordinary edit.
+    laptop.tasks['t1'] = laptop.tasks['t1']!.copyWith(
+      updatedAt: laptop.clock.now().toString(),
+      deletedAt: null,
+    );
+    laptop.put(SyncChange.task(laptop.tasks['t1']!));
+    await laptop.sync();
+    await phone.sync();
+
+    expect(phone.tasks['t1']!.isDeleted, isFalse);
+    expect(phone.tasks['t1']!.title, 'Milk');
+    expect(laptop.tasks['t1']!.isDeleted, isFalse);
+    expect(phone.outbox, isEmpty);
+    expect(laptop.outbox, isEmpty);
+  });
+
   test(
     'a shared list reaches the other account and can be taken back',
     () async {

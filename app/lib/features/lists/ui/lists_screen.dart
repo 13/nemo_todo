@@ -62,7 +62,12 @@ class ListsScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  context.appStyle == AppStyle.macos ? 8 : 96,
+                ),
                 sliver: SliverGrid.builder(
                   gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 220 * scaler.scale(16) / 16,
@@ -77,6 +82,10 @@ class ListsScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              // Under the lists in the macOS look, as Notes and Reminders
+              // keep theirs; the other looks have it in Settings.
+              if (context.appStyle == AppStyle.macos)
+                const SliverToBoxAdapter(child: RecentlyDeletedLink()),
             ],
           ),
         ),
@@ -186,6 +195,36 @@ class ListCard extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The way to Recently deleted under the list cards, in the macOS look.
+class RecentlyDeletedLink extends StatelessWidget {
+  const RecentlyDeletedLink({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          key: const Key('recently-deleted'),
+          mouseCursor: context.clickCursor,
+          leading: AppIcon(
+            Icons.delete_outline_rounded,
+            color: scheme.onSurfaceVariant,
+          ),
+          title: Text(L.of(context).recentlyDeletedTitle),
+          trailing: AppIcon(
+            Icons.chevron_right_rounded,
+            color: scheme.onSurfaceVariant,
+          ),
+          onTap: () => context.push(Routes.recentlyDeleted),
         ),
       ),
     );

@@ -180,7 +180,10 @@ class _PurgeCommand extends Command<int> {
     argParser
       ..addOption(
         'days',
-        help: 'Delete rows tombstoned longer ago than this.',
+        help:
+            'Delete rows tombstoned longer ago than this many days; '
+            '${PurgeService.minimumRetention.inDays} at least, since the app '
+            'offers deleted tasks back for that long.',
         defaultsTo: '${PurgeService.defaultRetention.inDays}',
       )
       ..addFlag(
@@ -202,8 +205,10 @@ class _PurgeCommand extends Command<int> {
   @override
   Future<int> run() async {
     final days = int.tryParse(argResults?['days'] as String? ?? '');
-    if (days == null || days < 1) {
-      usageException('--days must be a day or more');
+    final minimum = PurgeService.minimumRetention.inDays;
+    if (days == null || days < minimum) {
+      // The app offers a deleted task back for this long.
+      usageException('--days must be $minimum or more');
     }
     final dryRun = argResults?['dry-run'] as bool? ?? false;
     final config = Config.fromEnv(Platform.environment);

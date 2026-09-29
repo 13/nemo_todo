@@ -2672,6 +2672,66 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Move down'**
   String get a11yMoveDown;
+
+  /// Title of the page listing tasks deleted in the last 30 days, and the row that opens it.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently deleted'**
+  String get recentlyDeletedTitle;
+
+  /// Line at the top of Recently deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted tasks stay here for {days} days, then they are gone for good.'**
+  String recentlyDeletedHint(int days);
+
+  /// Recently deleted with nothing in it.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing deleted in the last {days} days'**
+  String recentlyDeletedEmpty(int days);
+
+  /// Button on a deleted task: bring it back.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get recentlyDeletedRestore;
+
+  /// Button on a deleted task: delete it for good without waiting for the 30 days.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete now'**
+  String get recentlyDeletedEraseNow;
+
+  /// Asked before deleting a task for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{title}\" for good? It cannot be brought back.'**
+  String recentlyDeletedEraseConfirm(String title);
+
+  /// When a task in Recently deleted was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {date}'**
+  String recentlyDeletedOn(String date);
+
+  /// Where a deleted task will go when restored: its own list, or the Inbox if its list is gone.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes back to {list}'**
+  String recentlyDeletedBackTo(String list);
+
+  /// Shown after a task is brought back.
+  ///
+  /// In en, this message translates to:
+  /// **'Task restored to {list}'**
+  String recentlyDeletedRestored(String list);
+
+  /// Shown after a task is deleted for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted for good'**
+  String get recentlyDeletedErased;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

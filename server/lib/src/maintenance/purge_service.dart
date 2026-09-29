@@ -64,21 +64,32 @@ class PurgeService {
 
   /// The default window. Long enough that a device switched off for a
   /// holiday has been heard from since, short enough to be worth doing.
-  static const defaultRetention = Duration(days: 30);
+  static const Duration defaultRetention = tombstoneRetention;
+
+  /// The shortest window allowed: the app's Recently deleted offers a task
+  /// back for this long, and a restore reaching a server that has already
+  /// retired the task would bring it back without its subtasks and photos.
+  static const Duration minimumRetention = tombstoneRetention;
 
   /// Removes everything tombstoned longer ago than [retention].
   ///
   /// With [dryRun] the counts come back and nothing is written, so a
   /// scheduled job can report before it is trusted to delete.
+  ///
+  /// Throws an [ArgumentError] for a [retention] under [minimumRetention].
   Future<PurgeReport> purge({
     Duration retention = defaultRetention,
     bool dryRun = false,
   }) async {
-    // Tombstones are HLC stamps, and an HLC sorts as a string exactly as it
-    // sorts as a time, so "older than" is a string comparison against a
-    // stamp built for the cutoff instant.
+    if (retention < minimumRetention) {
+      throw ArgumentError.value(
+        retention,
+        'retention',
+        'must be at least ${minimumRetention.inDays} days',
+      );
+    }
     final staleMillis = _now().subtract(retention).millisecondsSinceEpoch;
-    final cutoff = Hlc(millis: staleMillis, counter: 0, node: '').toString();
+    final cutoff = tombstoneCutoff(_now(), retention: retention);
 
     final result = await _db.transaction(() async {
       final lists = await _oldLists(cutoff);

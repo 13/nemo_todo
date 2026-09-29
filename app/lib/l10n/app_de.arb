@@ -428,5 +428,15 @@
   "taskOrderAdded": "Hinzugefügt am",
   "taskOrderBanner": "Sortiert nach: {order}",
   "a11yMoveUp": "Nach oben verschieben",
-  "a11yMoveDown": "Nach unten verschieben"
+  "a11yMoveDown": "Nach unten verschieben",
+  "recentlyDeletedTitle": "Zuletzt gelöscht",
+  "recentlyDeletedHint": "Gelöschte Aufgaben bleiben {days} Tage hier, danach sind sie endgültig weg.",
+  "recentlyDeletedEmpty": "In den letzten {days} Tagen nichts gelöscht",
+  "recentlyDeletedRestore": "Wiederherstellen",
+  "recentlyDeletedEraseNow": "Jetzt löschen",
+  "recentlyDeletedEraseConfirm": "„{title}“ endgültig löschen? Das lässt sich nicht rückgängig machen.",
+  "recentlyDeletedOn": "Gelöscht am {date}",
+  "recentlyDeletedBackTo": "Kommt zurück in {list}",
+  "recentlyDeletedRestored": "Aufgabe in {list} wiederhergestellt",
+  "recentlyDeletedErased": "Endgültig gelöscht"
 }

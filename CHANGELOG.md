@@ -18,6 +18,13 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ### Added
 
+- Recently deleted. Tasks deleted in the last 30 days are listed, newest
+  first, in Settings -- or under My Lists in the macOS look -- to restore
+  or to delete for good at once. A restored task comes back with its
+  subtasks, notes, tags and photos, into its own list, or the Inbox if
+  that list has been deleted, and on every device it syncs with. Deleted
+  lists are not listed: undo a list's deletion as it happens, or restore
+  its tasks one by one into the Inbox.
 - Sort a list. "Sort by" in a list's menu puts its tasks in order of due
   date, priority, title or when they were added, or back in the order you
   dragged them into. The sort belongs to the list, so it is the same on
@@ -66,6 +73,9 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ### Changed
 
+- `nemo_server purge --days` no longer accepts fewer than 30 days, so a
+  task stays on the server for as long as the app offers it back from
+  Recently deleted.
 - Tapping a reminder on Android opens its task rather than just the app.
 - The server keeps its count of sign-up and sign-in attempts in its
   database instead of in memory, so restarting it no longer gives someone

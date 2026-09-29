@@ -21,6 +21,12 @@ host yourself.
   wallpaper's colours with the Material style on Android 12 and later.
 - Quick add understands `#tags`, `!high` and a trailing "tomorrow" or
   weekday; a long press on a task moves it to another day.
+- Recently deleted: a task deleted in the last 30 days can be brought
+  back, with its subtasks and photos, into its list or the Inbox if the
+  list is gone -- or deleted for good at once. It is in Settings, or
+  under My Lists in the macOS look. A deleted list itself comes back only
+  through the undo offered as it is deleted; after that its tasks are in
+  Recently deleted one by one, and its notes are not.
 - Photos on a task, taken with the camera or picked from the device, synced
   to your other devices and to everyone a list is shared with.
 - Share into nemo on Android: text, a link or pictures from any app's share
@@ -387,6 +393,13 @@ docker compose exec nemo nemo_server purge --days 30      # and go it does
 It is safe to run on a schedule. A device that was offline for the whole
 window is still told to drop the row -- the purge leaves the instruction
 behind, just not the data -- so nothing it holds comes back to life.
+
+The window is 30 days at the least, and `--days` refuses anything
+shorter: the app's Recently deleted offers a task back for 30 days, and a
+restore reaching a server that has already purged the task would bring it
+back without its subtasks and photos. A longer window is fine. A task
+someone deleted for good from Recently deleted goes at the next run,
+whatever the window.
 
 The same run also clears out tombstoned photo rows once they are past the
 window, and sweeps blob files that no row names once those are older than

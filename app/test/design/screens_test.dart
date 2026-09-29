@@ -131,14 +131,23 @@ void main() {
       await then(tester);
       await tester.pumpAndSettle();
     }
-    await expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile(
-        style == AppStyle.nemo
-            ? '../../build/screens/$name.png'
-            : '../../build/screens/${style.name}/$name.png',
-      ),
-    );
+    // Tests draw a shadow as a solid outline, so that pictures compare
+    // stably; these are for looking at, so they draw the real thing.
+    debugDisableShadows = false;
+    try {
+      await tester.pump();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile(
+          style == AppStyle.nemo
+              ? '../../build/screens/$name.png'
+              : '../../build/screens/${style.name}/$name.png',
+        ),
+      );
+    } finally {
+      // Reset before the test ends: the framework checks it has been.
+      debugDisableShadows = true;
+    }
   }
 
   appTest('today', (t) => shoot(t, 'today', location: Routes.today));
@@ -286,6 +295,41 @@ void main() {
           },
         ),
       );
+      for (final (name, location, open)
+          in <(String, String, Future<void> Function(WidgetTester)?)>[
+            ('settings_wide', Routes.settings, null),
+            (
+              'date_wide',
+              Routes.today,
+              (t) => t.tap(find.byKey(const Key('quick-add-date'))),
+            ),
+            (
+              'sheet_wide',
+              Routes.lists,
+              (t) => t.tap(find.byKey(const Key('new-list')).first),
+            ),
+            (
+              'menu_wide',
+              Routes.today,
+              (t) => t.tap(
+                find.text('Call the plumber back'),
+                buttons: kSecondaryButton,
+              ),
+            ),
+          ]) {
+        appTest(
+          '${style.name}$suffix $name',
+          (t) => shoot(
+            t,
+            '$name$suffix',
+            location: location,
+            size: const Size(1280, 820),
+            dark: dark,
+            style: style,
+            then: open,
+          ),
+        );
+      }
       appTest(
         '${style.name}$suffix wide, a list',
         (t) => shoot(

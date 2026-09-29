@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/updates/data/github_release_client.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
@@ -84,35 +85,39 @@ class UpdateTile extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l.updatesTitle),
-        ListTile(
-          leading: const AppIcon(Icons.system_update_alt_rounded),
-          title: Text(
-            version == null
-                ? l.updatesTitle
-                : l.updatesCurrentVersion(version.toString()),
-          ),
-          subtitle: Text(subtitle, style: TextStyle(color: subtitleColor)),
-          trailing: trailing,
-        ),
-        if (state is UpdateAvailable && state.release.notes.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.updatesWhatsNew,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  state.release.notes,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
+        SettingsGroup(
+          children: [
+            ListTile(
+              leading: const AppIcon(Icons.system_update_alt_rounded),
+              title: Text(
+                version == null
+                    ? l.updatesTitle
+                    : l.updatesCurrentVersion(version.toString()),
+              ),
+              subtitle: Text(subtitle, style: TextStyle(color: subtitleColor)),
+              trailing: trailing,
             ),
-          ),
+            if (state is UpdateAvailable && state.release.notes.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.updatesWhatsNew,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      state.release.notes,
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }

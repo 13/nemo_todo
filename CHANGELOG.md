@@ -14,6 +14,26 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
+## Unreleased
+
+### Changed
+
+- The macOS style now looks like a Mac app throughout, not only in its
+  colours: Apple's type sizes in Inter, thin-stroked icons, and denser
+  rows with the open task in the accent with white on it, as in Finder.
+- On a wide window its sidebar is laid out as Reminders': a search field,
+  a tile with a count for each of Today, Upcoming, Lists and Notes, and
+  every list with its count, a right-click menu and New list at the foot.
+  A list's page names it large in its own colour.
+- Settings in the macOS style groups its rows into panels as System
+  Settings does, with the sections in a sidebar on a wide window.
+- In the macOS style on a wide window, sheets drop from the top of the
+  window, a date is picked from a calendar beside the button at a single
+  click, context menus are compact, alerts are narrow, segmented controls
+  have a grey track, and pages change without sliding.
+- On a phone the macOS style follows iOS: larger type, pages sliding in
+  from the side, a chevron to go back, and green and red swipe actions.
+
 ## 0.16.0 - 2026-09-29
 
 ### Added

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -58,7 +59,7 @@ Future<MakeTodoResult?> showMakeTodoSheet(
   required String listId,
   List<TodoCandidate> candidates = const [],
   WholeNoteTodo? wholeNote,
-}) => showModalBottomSheet<MakeTodoResult>(
+}) => showAppSheet<MakeTodoResult>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
@@ -113,7 +114,7 @@ class _MakeTodoSheetState extends ConsumerState<_MakeTodoSheet> {
 
   Future<void> _pickDue() async {
     final now = ref.read(nowProvider)();
-    final picked = await showDatePicker(
+    final picked = await pickDate(
       context: context,
       initialDate: _dueAt == null
           ? now

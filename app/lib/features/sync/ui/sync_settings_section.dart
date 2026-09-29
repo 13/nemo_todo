@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/auth/data/certificate_trust.dart';
 import 'package:nemo/features/auth/ui/account_dialogs.dart';
@@ -115,17 +116,21 @@ class SyncSettingsSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(title: l.settingsAccount),
-          ListTile(
-            key: const Key('connect-tile'),
-            leading: const AppIcon(Icons.cloud_off_outlined),
-            title: Text(l.settingsConnect),
-            subtitle: Text(
-              auth.serverUrl != null
-                  ? l.settingsSignedOutRemotely
-                  : l.settingsNotConnected,
-            ),
-            trailing: const AppIcon(Icons.chevron_right_rounded),
-            onTap: () => context.push(Routes.account),
+          SettingsGroup(
+            children: [
+              ListTile(
+                key: const Key('connect-tile'),
+                leading: const AppIcon(Icons.cloud_off_outlined),
+                title: Text(l.settingsConnect),
+                subtitle: Text(
+                  auth.serverUrl != null
+                      ? l.settingsSignedOutRemotely
+                      : l.settingsNotConnected,
+                ),
+                trailing: const AppIcon(Icons.chevron_right_rounded),
+                onTap: () => context.push(Routes.account),
+              ),
+            ],
           ),
         ],
       );
@@ -153,76 +158,98 @@ class SyncSettingsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l.settingsAccount),
-        ListTile(
-          leading: const AppIcon(Icons.cloud_done_outlined),
-          title: Text(l.settingsConnectedAs(auth.username!, auth.serverUrl!)),
-          subtitle: Text(
-            sync.lastSyncAt == null
-                ? l.settingsNeverSynced
-                : l.settingsLastSync(
-                    timeLabel(locale, sync.lastSyncAt!.millisecondsSinceEpoch),
-                  ),
-          ),
+        SettingsGroup(
+          children: [
+            ListTile(
+              leading: const AppIcon(Icons.cloud_done_outlined),
+              title: Text(
+                l.settingsConnectedAs(auth.username!, auth.serverUrl!),
+              ),
+              subtitle: Text(
+                sync.lastSyncAt == null
+                    ? l.settingsNeverSynced
+                    : l.settingsLastSync(
+                        timeLabel(
+                          locale,
+                          sync.lastSyncAt!.millisecondsSinceEpoch,
+                        ),
+                      ),
+              ),
+            ),
+          ],
         ),
         SectionHeader(title: l.settingsSync),
-        ListTile(
-          key: const Key('sync-now'),
-          leading: sync.status == SyncStatus.syncing
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const AppIcon(Icons.sync_rounded),
-          title: Text(l.settingsSyncNow),
-          subtitle: Text(statusText, style: TextStyle(color: statusColor)),
-          onTap: sync.status == SyncStatus.syncing
-              ? null
-              : () => ref.read(syncEngineProvider.notifier).syncNow(),
-        ),
-        if (untrusted != null)
-          ListTile(
-            key: const Key('sync-untrusted-certificate'),
-            leading: AppIcon(Icons.gpp_maybe_outlined, color: scheme.error),
-            title: Text(l.settingsCertificateUntrusted),
-            subtitle: Text(untrusted.host),
-            trailing: TextButton(
-              key: const Key('review-certificate'),
-              onPressed: () => _review(context, ref, untrusted),
-              child: Text(l.settingsCertificateReview),
+        SettingsGroup(
+          children: [
+            ListTile(
+              key: const Key('sync-now'),
+              leading: sync.status == SyncStatus.syncing
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const AppIcon(Icons.sync_rounded),
+              title: Text(l.settingsSyncNow),
+              subtitle: Text(statusText, style: TextStyle(color: statusColor)),
+              onTap: sync.status == SyncStatus.syncing
+                  ? null
+                  : () => ref.read(syncEngineProvider.notifier).syncNow(),
             ),
-          ),
-        if (sync.discarded > 0)
-          ListTile(
-            key: const Key('sync-discarded'),
-            leading: AppIcon(Icons.warning_amber_rounded, color: scheme.error),
-            title: Text(l.settingsDiscarded(sync.discarded)),
-            trailing: TextButton(
-              onPressed: () =>
-                  ref.read(syncEngineProvider.notifier).clearDiscarded(),
-              child: Text(l.commonOk),
+            if (untrusted != null)
+              ListTile(
+                key: const Key('sync-untrusted-certificate'),
+                leading: AppIcon(Icons.gpp_maybe_outlined, color: scheme.error),
+                title: Text(l.settingsCertificateUntrusted),
+                subtitle: Text(untrusted.host),
+                trailing: TextButton(
+                  key: const Key('review-certificate'),
+                  onPressed: () => _review(context, ref, untrusted),
+                  child: Text(l.settingsCertificateReview),
+                ),
+              ),
+            if (sync.discarded > 0)
+              ListTile(
+                key: const Key('sync-discarded'),
+                leading: AppIcon(
+                  Icons.warning_amber_rounded,
+                  color: scheme.error,
+                ),
+                title: Text(l.settingsDiscarded(sync.discarded)),
+                trailing: TextButton(
+                  onPressed: () =>
+                      ref.read(syncEngineProvider.notifier).clearDiscarded(),
+                  child: Text(l.commonOk),
+                ),
+              ),
+            ListTile(
+              key: const Key('change-password'),
+              leading: const AppIcon(Icons.password_rounded),
+              title: Text(l.settingsChangePassword),
+              onTap: () => _changePassword(context, ref),
             ),
-          ),
-        ListTile(
-          key: const Key('change-password'),
-          leading: const AppIcon(Icons.password_rounded),
-          title: Text(l.settingsChangePassword),
-          onTap: () => _changePassword(context, ref),
-        ),
-        ListTile(
-          key: const Key('sign-out'),
-          leading: AppIcon(Icons.logout_rounded, color: scheme.error),
-          title: Text(l.settingsSignOut, style: TextStyle(color: scheme.error)),
-          onTap: () => _signOut(context, ref),
-        ),
-        ListTile(
-          key: const Key('delete-account'),
-          leading: AppIcon(Icons.person_remove_outlined, color: scheme.error),
-          title: Text(
-            l.settingsDeleteAccount,
-            style: TextStyle(color: scheme.error),
-          ),
-          onTap: () => _deleteAccount(context, ref),
+            ListTile(
+              key: const Key('sign-out'),
+              leading: AppIcon(Icons.logout_rounded, color: scheme.error),
+              title: Text(
+                l.settingsSignOut,
+                style: TextStyle(color: scheme.error),
+              ),
+              onTap: () => _signOut(context, ref),
+            ),
+            ListTile(
+              key: const Key('delete-account'),
+              leading: AppIcon(
+                Icons.person_remove_outlined,
+                color: scheme.error,
+              ),
+              title: Text(
+                l.settingsDeleteAccount,
+                style: TextStyle(color: scheme.error),
+              ),
+              onTap: () => _deleteAccount(context, ref),
+            ),
+          ],
         ),
       ],
     );

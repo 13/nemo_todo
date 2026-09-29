@@ -31,9 +31,10 @@ host yourself.
   over to one of them.
 - Settings changes your password, deletes your account, and exports your
   lists and tasks to a JSON file that can be imported again.
-- Three looks, in light or dark: nemo's own ocean teal; macOS, with
-  graphite greys, system blue and a floating sidebar on wide windows; and
-  Material 3, in the wallpaper's colours on Android 12 and later.
+- Three looks, in light or dark: nemo's own ocean teal; macOS, laid out
+  as a Mac app -- Apple's type sizes, thin icons, a sidebar like
+  Reminders' and Settings like System Settings -- and as iOS on a phone;
+  and Material 3, in the wallpaper's colours on Android 12 and later.
 - With a mouse and keyboard: a right click opens the menu a long press
   would, and single-key shortcuts (? lists them) add, find, move through,
   tick off and delete tasks.

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
@@ -46,16 +46,7 @@ Future<void> showTaskMenu(
     IconData icon,
     String label, {
     Color? color,
-  }) => PopupMenuItem(
-    value: value,
-    child: Row(
-      children: [
-        AppIcon(icon, size: 20, color: color),
-        const SizedBox(width: 12),
-        Text(label, style: TextStyle(color: color)),
-      ],
-    ),
-  );
+  }) => menuItem(context, value: value, icon: icon, label: label, color: color);
   final action = await showMenu<String>(
     context: context,
     position: RelativeRect.fromRect(
@@ -68,7 +59,7 @@ Future<void> showTaskMenu(
       else
         item('done', Icons.check_rounded, l.taskMenuDone),
       item('move', Icons.event_rounded, l.taskMenuMove),
-      const PopupMenuDivider(),
+      menuDivider(context),
       item(
         'delete',
         Icons.delete_outline_rounded,

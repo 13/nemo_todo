@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
@@ -218,19 +219,22 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
 
   Widget _dismissible(Task task, Widget child) {
     final scheme = Theme.of(context).colorScheme;
+    final mac = context.appStyle == AppStyle.macos;
     final l = L.of(context);
     return Dismissible(
       key: ValueKey('task-${task.id}'),
+      // Apple's swipe actions are solid system colours with white on them;
+      // Material's are tonal.
       background: _swipeBackground(
-        color: scheme.primaryContainer,
+        color: mac ? const Color(0xFF34C759) : scheme.primaryContainer,
         icon: task.done ? Icons.undo_rounded : Icons.check_rounded,
-        iconColor: scheme.onPrimaryContainer,
+        iconColor: mac ? Colors.white : scheme.onPrimaryContainer,
         alignment: Alignment.centerLeft,
       ),
       secondaryBackground: _swipeBackground(
-        color: scheme.errorContainer,
+        color: mac ? const Color(0xFFFF3B30) : scheme.errorContainer,
         icon: Icons.delete_outline_rounded,
-        iconColor: scheme.onErrorContainer,
+        iconColor: mac ? Colors.white : scheme.onErrorContainer,
         alignment: Alignment.centerRight,
       ),
       confirmDismiss: (direction) async {

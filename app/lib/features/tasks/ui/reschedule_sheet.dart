@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
@@ -33,7 +34,7 @@ Future<void> showRescheduleSheet(
 
   // null means "clear the date"; a missing answer means the sheet was
   // dismissed.
-  final picked = await showModalBottomSheet<({DateTime? day})>(
+  final picked = await showAppSheet<({DateTime? day})>(
     context: context,
     showDragHandle: true,
     builder: (sheet) => SafeArea(
@@ -64,7 +65,7 @@ Future<void> showRescheduleSheet(
             leading: const AppIcon(Icons.edit_calendar_rounded),
             title: Text(l.reschedulePick),
             onTap: () async {
-              final day = await showDatePicker(
+              final day = await pickDate(
                 context: sheet,
                 initialDate: current ?? now,
                 firstDate: DateTime(now.year - 1),

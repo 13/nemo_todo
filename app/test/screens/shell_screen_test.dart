@@ -133,7 +133,8 @@ void main() {
     expect(app.router.state.matchedLocation, Routes.lists);
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
-    expect(find.text('Appearance'), findsOneWidget);
+    // Mac Settings: the sections in a sidebar of their own.
+    expect(find.byKey(const Key('settings-sidebar')), findsOneWidget);
   });
 
   appTest('the macOS sidebar lists the lists, with counts', (tester) async {

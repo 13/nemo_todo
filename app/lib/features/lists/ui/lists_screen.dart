@@ -8,6 +8,7 @@ import 'package:nemo/core/widgets/add_action.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/lists/ui/list_edit_sheet.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
@@ -198,20 +199,17 @@ Future<void> showListMenu(
       ),
       items: [
         for (final (value, icon, label, color) in entries)
-          PopupMenuItem(
+          menuItem(
+            context,
             value: value,
-            child: Row(
-              children: [
-                AppIcon(icon, size: 20, color: color),
-                const SizedBox(width: 12),
-                Text(label, style: TextStyle(color: color)),
-              ],
-            ),
+            icon: icon,
+            label: label,
+            color: color,
           ),
       ],
     );
   } else {
-    action = await showModalBottomSheet<String>(
+    action = await showAppSheet<String>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(

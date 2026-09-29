@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -49,7 +50,7 @@ class NoteListPicker extends ConsumerWidget {
       leading: const AppIcon(Icons.folder_outlined),
       title: Text(l.noteMoveToList),
       onTap: () async {
-        final chosen = await showModalBottomSheet<String>(
+        final chosen = await showAppSheet<String>(
           context: context,
           builder: (context) => SafeArea(
             child: ListView(

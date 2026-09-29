@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/achievements/ui/achievements_providers.dart';
@@ -29,54 +30,60 @@ class CelebrationSettingsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(title: l.settingsCelebrations),
-        SwitchListTile(
-          key: const Key('celebrations-switch'),
-          secondary: const AppIcon(Icons.celebration_outlined),
-          title: Text(l.settingsCelebrationsEnabled),
-          subtitle: Text(l.settingsCelebrationsEnabledHint),
-          value: celebrate,
-          onChanged: (v) =>
-              ref.read(celebrationsEnabledProvider.notifier).set(enabled: v),
+        SettingsGroup(
+          children: [
+            SwitchListTile(
+              key: const Key('celebrations-switch'),
+              secondary: const AppIcon(Icons.celebration_outlined),
+              title: Text(l.settingsCelebrationsEnabled),
+              subtitle: Text(l.settingsCelebrationsEnabledHint),
+              value: celebrate,
+              onChanged: (v) => ref
+                  .read(celebrationsEnabledProvider.notifier)
+                  .set(enabled: v),
+            ),
+            SwitchListTile(
+              key: const Key('celebration-sound-switch'),
+              secondary: const AppIcon(Icons.volume_up_outlined),
+              title: Text(l.settingsCelebrationSound),
+              subtitle: Text(l.settingsCelebrationSoundHint),
+              value: sound,
+              // Sound belongs to celebrating; without it there is nothing to
+              // play along to.
+              onChanged: celebrate
+                  ? (v) => ref
+                        .read(celebrationSoundEnabledProvider.notifier)
+                        .set(enabled: v)
+                  : null,
+            ),
+            SwitchListTile(
+              key: const Key('achievements-switch'),
+              secondary: const AppIcon(Icons.emoji_events_outlined),
+              title: Text(l.settingsAchievements),
+              subtitle: Text(l.settingsAchievementsHint),
+              value: showAchievements,
+              onChanged: (v) => ref
+                  .read(achievementsEnabledProvider.notifier)
+                  .set(enabled: v),
+            ),
+            if (showAchievements)
+              ListTile(
+                key: const Key('achievements-tile'),
+                leading: const SizedBox(width: 24),
+                title: Text(l.achievementsView),
+                subtitle: unlocked == null
+                    ? null
+                    : Text(
+                        l.achievementsUnlockedCount(
+                          unlocked,
+                          achievementCatalog.length,
+                        ),
+                      ),
+                trailing: const AppIcon(Icons.chevron_right_rounded),
+                onTap: () => context.push(Routes.achievements),
+              ),
+          ],
         ),
-        SwitchListTile(
-          key: const Key('celebration-sound-switch'),
-          secondary: const AppIcon(Icons.volume_up_outlined),
-          title: Text(l.settingsCelebrationSound),
-          subtitle: Text(l.settingsCelebrationSoundHint),
-          value: sound,
-          // Sound belongs to celebrating; without it there is nothing to
-          // play along to.
-          onChanged: celebrate
-              ? (v) => ref
-                    .read(celebrationSoundEnabledProvider.notifier)
-                    .set(enabled: v)
-              : null,
-        ),
-        SwitchListTile(
-          key: const Key('achievements-switch'),
-          secondary: const AppIcon(Icons.emoji_events_outlined),
-          title: Text(l.settingsAchievements),
-          subtitle: Text(l.settingsAchievementsHint),
-          value: showAchievements,
-          onChanged: (v) =>
-              ref.read(achievementsEnabledProvider.notifier).set(enabled: v),
-        ),
-        if (showAchievements)
-          ListTile(
-            key: const Key('achievements-tile'),
-            leading: const SizedBox(width: 24),
-            title: Text(l.achievementsView),
-            subtitle: unlocked == null
-                ? null
-                : Text(
-                    l.achievementsUnlockedCount(
-                      unlocked,
-                      achievementCatalog.length,
-                    ),
-                  ),
-            trailing: const AppIcon(Icons.chevron_right_rounded),
-            onTap: () => context.push(Routes.achievements),
-          ),
       ],
     );
   }

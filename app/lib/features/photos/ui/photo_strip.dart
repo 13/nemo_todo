@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photo_viewer.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
@@ -58,7 +59,7 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
 
   Future<void> _pick(BuildContext context) async {
     final l = L.of(context);
-    final source = await showModalBottomSheet<ImageSource>(
+    final source = await showAppSheet<ImageSource>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(

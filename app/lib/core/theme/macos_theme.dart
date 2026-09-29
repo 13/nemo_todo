@@ -153,13 +153,22 @@ abstract final class MacosTheme {
 
   /// [desktop] -- a macOS theme -- as iOS draws it, for a phone-sized
   /// window: the same colours and shapes in iOS's larger type.
-  static ThemeData phone(ThemeData desktop) => desktop.copyWith(
-    textTheme: appleTextTheme(desktop.colorScheme, phone: true),
+  ///
+  /// Rebuilt whole rather than given new type alone: the components --
+  /// buttons, chips, the toolbar's title -- take their type when built.
+  static ThemeData phone(ThemeData desktop) => _build(
+    desktop.colorScheme,
+    desktop.extension<NemoColors>()!,
+    phone: true,
   );
 
-  static ThemeData _build(ColorScheme scheme, NemoColors nemo) {
+  static ThemeData _build(
+    ColorScheme scheme,
+    NemoColors nemo, {
+    bool phone = false,
+  }) {
     final isLight = scheme.brightness == Brightness.light;
-    final textTheme = appleTextTheme(scheme);
+    final textTheme = appleTextTheme(scheme, phone: phone);
     // Raised surfaces: white on a white window, lifted by a hairline and
     // the faintest shadow; in the dark, a step lighter than the window.
     final raised = isLight ? Colors.white : scheme.surfaceContainerHigh;
@@ -212,12 +221,17 @@ abstract final class MacosTheme {
       appBarTheme: AppBarTheme(
         centerTitle: false,
         systemOverlayStyle: systemBarsFor(scheme),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        titleTextStyle: textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
+        // Clear over the window, and once the content has scrolled under
+        // it, a soft edge along its foot, as a macOS 26 toolbar shows.
+        backgroundColor: WidgetStateColor.resolveWith(
+          (s) => s.contains(WidgetState.scrolledUnder)
+              ? scheme.surface
+              : Colors.transparent,
         ),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 1,
+        shadowColor: Colors.black.withValues(alpha: isLight ? 0.3 : 0.8),
+        titleTextStyle: textTheme.titleLarge,
       ),
       inputDecorationTheme: InputDecorationTheme(
         isDense: true,
@@ -252,7 +266,9 @@ abstract final class MacosTheme {
           side: hairline,
         ),
       ),
+      // An alert on a Mac is narrow: a question, not a page.
       dialogTheme: DialogThemeData(
+        constraints: const BoxConstraints(minWidth: 260, maxWidth: 400),
         backgroundColor: raised,
         titleTextStyle: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,

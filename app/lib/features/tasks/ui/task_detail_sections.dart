@@ -8,6 +8,7 @@ import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/tasks/ui/custom_repeat_dialog.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
@@ -49,7 +50,7 @@ class TaskDueSection extends ConsumerWidget {
     final current = task.dueAt == null
         ? now
         : DateTime.fromMillisecondsSinceEpoch(task.dueAt!);
-    final picked = await showDatePicker(
+    final picked = await pickDate(
       context: context,
       initialDate: current,
       firstDate: DateTime(now.year - 1),

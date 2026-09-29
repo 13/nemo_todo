@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// Creates or edits a list. Returns the saved list, or null when dismissed.
 Future<TaskList?> showListEditSheet(BuildContext context, {TaskList? list}) =>
-    showModalBottomSheet<TaskList>(
+    showAppSheet<TaskList>(
       context: context,
       isScrollControlled: true,
       builder: (_) => ListEditSheet(list: list),

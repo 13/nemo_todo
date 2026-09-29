@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/core/widgets/presentation.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 
@@ -25,7 +26,7 @@ class CurrencyTile extends ConsumerWidget {
       title: Text(l.settingsCurrency),
       subtitle: Text(current),
       onTap: () async {
-        final chosen = await showModalBottomSheet<String>(
+        final chosen = await showAppSheet<String>(
           context: context,
           builder: (context) => SafeArea(
             child: ListView(

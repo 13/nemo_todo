@@ -2,46 +2,88 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/theme/surface_tint.dart';
 
 /// [AppStyle.nemo]: Material 3 seeded from nemo's deep ocean teal.
 abstract final class NemoTheme {
   static const seed = Color(0xFF0E7C86);
 
-  static ThemeData light({Color? accent}) {
-    final base = ColorScheme.fromSeed(seedColor: seed).copyWith(
-      primary: seed,
-      surface: Colors.white,
-      onSurface: const Color(0xFF16211F),
-      onSurfaceVariant: const Color(0xFF45524F),
-      outlineVariant: const Color(0xFFD9E3E1),
-      surfaceContainerHighest: const Color(0xFFECF3F2),
+  static ThemeData light({
+    Color? accent,
+    SurfaceTint tint = SurfaceTint.subtle,
+  }) {
+    Color t(Color c) => tinted(c, tint, accent: accent);
+    final base = _tintedScheme(
+      ColorScheme.fromSeed(seedColor: seed).copyWith(
+        primary: seed,
+        surface: Colors.white,
+        onSurface: const Color(0xFF16211F),
+        onSurfaceVariant: const Color(0xFF45524F),
+        outlineVariant: const Color(0xFFD9E3E1),
+        surfaceContainerHighest: const Color(0xFFECF3F2),
+      ),
+      t,
     );
     final scheme = accented(base, accent);
     return _base(
       scheme,
-      _withSelection(NemoColors.light, scheme, accent),
-    ).copyWith(scaffoldBackgroundColor: const Color(0xFFF5F8F8));
+      _withSelection(_tintedColors(NemoColors.light, t), scheme, accent),
+    ).copyWith(scaffoldBackgroundColor: t(const Color(0xFFF5F8F8)));
   }
 
-  static ThemeData dark({Color? accent}) {
-    final base =
-        ColorScheme.fromSeed(
-          seedColor: seed,
-          brightness: Brightness.dark,
-        ).copyWith(
-          primary: const Color(0xFF5BC0C9),
-          onPrimary: const Color(0xFF00363B),
-          surface: const Color(0xFF151F1F),
-          onSurface: const Color(0xFFE3ECEB),
-          onSurfaceVariant: const Color(0xFFA7B8B6),
-          outlineVariant: const Color(0xFF2A3837),
-          surfaceContainerHighest: const Color(0xFF1D2A29),
-        );
+  static ThemeData dark({
+    Color? accent,
+    SurfaceTint tint = SurfaceTint.subtle,
+  }) {
+    Color t(Color c) => tinted(c, tint, accent: accent);
+    final base = _tintedScheme(
+      ColorScheme.fromSeed(
+        seedColor: seed,
+        brightness: Brightness.dark,
+      ).copyWith(
+        primary: const Color(0xFF5BC0C9),
+        onPrimary: const Color(0xFF00363B),
+        surface: const Color(0xFF151F1F),
+        onSurface: const Color(0xFFE3ECEB),
+        onSurfaceVariant: const Color(0xFFA7B8B6),
+        outlineVariant: const Color(0xFF2A3837),
+        surfaceContainerHighest: const Color(0xFF1D2A29),
+      ),
+      t,
+    );
     final scheme = accented(base, accent);
     return _base(
       scheme,
-      _withSelection(NemoColors.dark, scheme, accent),
-    ).copyWith(scaffoldBackgroundColor: const Color(0xFF0E1616));
+      _withSelection(_tintedColors(NemoColors.dark, t), scheme, accent),
+    ).copyWith(scaffoldBackgroundColor: t(const Color(0xFF0E1616)));
+  }
+
+  /// [scheme]'s grounds, and the text and hairlines on them, through [t];
+  /// its accent roles as they were.
+  static ColorScheme _tintedScheme(
+    ColorScheme scheme,
+    Color Function(Color) t,
+  ) => scheme.copyWith(
+    surface: t(scheme.surface),
+    onSurface: t(scheme.onSurface),
+    onSurfaceVariant: t(scheme.onSurfaceVariant),
+    outlineVariant: t(scheme.outlineVariant),
+    surfaceDim: t(scheme.surfaceDim),
+    surfaceBright: t(scheme.surfaceBright),
+    surfaceContainerLowest: t(scheme.surfaceContainerLowest),
+    surfaceContainerLow: t(scheme.surfaceContainerLow),
+    surfaceContainer: t(scheme.surfaceContainer),
+    surfaceContainerHigh: t(scheme.surfaceContainerHigh),
+    surfaceContainerHighest: t(scheme.surfaceContainerHighest),
+  );
+
+  /// [nemo]'s sidebar and hairlines through [t].
+  static NemoColors _tintedColors(NemoColors nemo, Color Function(Color) t) {
+    final sidebar = t(nemo.sidebar);
+    final separator = t(nemo.separator);
+    return sidebar == nemo.sidebar && separator == nemo.separator
+        ? nemo
+        : nemo.copyWith(sidebar: sidebar, separator: separator);
   }
 
   /// nemo marks a selection in its accent, so a chosen accent takes it on.

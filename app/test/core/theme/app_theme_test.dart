@@ -6,6 +6,7 @@ import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/core/theme/macos_theme.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/theme/surface_tint.dart';
 
 void main() {
   double contrast(Color a, Color b) {
@@ -227,5 +228,102 @@ void main() {
       c.lerp(c.copyWith(tintedMetaText: false), 0.7).tintedMetaText,
       false,
     );
+  });
+
+  group('surface tint', () {
+    test('nemo subtle with no accent is nemo as it was', () {
+      final light = AppTheme.build(AppStyle.nemo, Brightness.light);
+      expect(light.scaffoldBackgroundColor, const Color(0xFFF5F8F8));
+      expect(light.colorScheme.surface, Colors.white);
+      expect(light.colorScheme.onSurface, const Color(0xFF16211F));
+      expect(light.colorScheme.onSurfaceVariant, const Color(0xFF45524F));
+      expect(light.colorScheme.outlineVariant, const Color(0xFFD9E3E1));
+      expect(
+        light.colorScheme.surfaceContainerHighest,
+        const Color(0xFFECF3F2),
+      );
+      expect(light.extension<NemoColors>(), NemoColors.light);
+
+      final dark = AppTheme.build(AppStyle.nemo, Brightness.dark);
+      expect(dark.scaffoldBackgroundColor, const Color(0xFF0E1616));
+      expect(dark.colorScheme.surface, const Color(0xFF151F1F));
+      expect(dark.colorScheme.onSurface, const Color(0xFFE3ECEB));
+      expect(dark.colorScheme.onSurfaceVariant, const Color(0xFFA7B8B6));
+      expect(dark.colorScheme.outlineVariant, const Color(0xFF2A3837));
+      expect(dark.colorScheme.surfaceContainerHighest, const Color(0xFF1D2A29));
+      expect(dark.extension<NemoColors>(), NemoColors.dark);
+    });
+
+    for (final brightness in Brightness.values) {
+      for (final tint in SurfaceTint.values) {
+        for (final accent in [null, 0, 1, 2, 3, 4, 5, 6, 7]) {
+          test('nemo ${brightness.name} $tint accent $accent: text reads', () {
+            final theme = AppTheme.build(
+              AppStyle.nemo,
+              brightness,
+              accent: accent,
+              tint: tint,
+            );
+            final s = theme.colorScheme;
+            final grounds = [
+              theme.scaffoldBackgroundColor,
+              s.surface,
+              s.surfaceContainerHighest,
+              theme.extension<NemoColors>()!.sidebar,
+            ];
+            for (final bg in grounds) {
+              expect(contrast(s.onSurface, bg), greaterThanOrEqualTo(4.5));
+              expect(
+                contrast(s.onSurfaceVariant, bg),
+                greaterThanOrEqualTo(4.5),
+                reason: 'onSurfaceVariant on $bg',
+              );
+            }
+          });
+        }
+      }
+    }
+
+    test('none is grey, strong more coloured than subtle', () {
+      double sat(SurfaceTint t) => HSLColor.fromColor(
+        AppTheme.build(
+          AppStyle.nemo,
+          Brightness.light,
+          accent: 3,
+          tint: t,
+        ).scaffoldBackgroundColor,
+      ).saturation;
+      expect(sat(SurfaceTint.none), 0);
+      expect(sat(SurfaceTint.strong), greaterThan(sat(SurfaceTint.subtle)));
+    });
+
+    test('the backgrounds follow a changed accent', () {
+      Color window(int accent) => AppTheme.build(
+        AppStyle.nemo,
+        Brightness.dark,
+        accent: accent,
+        tint: SurfaceTint.strong,
+      ).scaffoldBackgroundColor;
+      final pink = HSLColor.fromColor(window(3)).hue;
+      final green = HSLColor.fromColor(window(6)).hue;
+      expect((pink - green).abs(), greaterThan(60));
+    });
+
+    for (final style in [AppStyle.macos, AppStyle.material]) {
+      for (final brightness in Brightness.values) {
+        test('${style.name} ${brightness.name} ignores the tint', () {
+          ThemeData at(SurfaceTint t) =>
+              AppTheme.build(style, brightness, accent: 2, tint: t);
+          expect(
+            at(SurfaceTint.none).colorScheme,
+            at(SurfaceTint.strong).colorScheme,
+          );
+          expect(
+            at(SurfaceTint.none).scaffoldBackgroundColor,
+            at(SurfaceTint.strong).scaffoldBackgroundColor,
+          );
+        });
+      }
+    }
   });
 }

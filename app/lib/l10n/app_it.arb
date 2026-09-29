@@ -430,7 +430,7 @@
   "a11yMoveUp": "Sposta su",
   "a11yMoveDown": "Sposta giù",
   "recentlyDeletedTitle": "Eliminati di recente",
-  "recentlyDeletedHint": "Le attività eliminate restano qui per {days} giorni, poi spariscono definitivamente.",
+  "recentlyDeletedHint": "Le liste e le attività eliminate restano qui per {days} giorni, poi spariscono definitivamente.",
   "recentlyDeletedEmpty": "Niente eliminato negli ultimi {days} giorni",
   "recentlyDeletedRestore": "Ripristina",
   "recentlyDeletedEraseNow": "Elimina ora",
@@ -438,5 +438,10 @@
   "recentlyDeletedOn": "Eliminata il {date}",
   "recentlyDeletedBackTo": "Torna in {list}",
   "recentlyDeletedRestored": "Attività ripristinata in {list}",
-  "recentlyDeletedErased": "Eliminata definitivamente"
+  "recentlyDeletedErased": "Eliminata definitivamente",
+  "recentlyDeletedListsHeader": "Liste",
+  "recentlyDeletedTasksHeader": "Attività",
+  "recentlyDeletedListTasks": "{count, plural, =0{Nessuna attività} =1{1 attività} other{{count} attività}}",
+  "recentlyDeletedListRestored": "Lista ripristinata",
+  "recentlyDeletedEraseListConfirm": "Eliminare definitivamente «{name}» e tutto ciò che contiene? Non si potrà più recuperare."
 }

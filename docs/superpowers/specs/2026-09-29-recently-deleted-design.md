@@ -5,15 +5,16 @@
 Deleting a task shows an undo for a few seconds, and after that the task
 is gone as far as anyone can see -- although every device and the server
 still hold it as a tombstone. Put those tombstones to use: a "Recently
-deleted" page lists the tasks deleted in the last 30 days, newest first,
-and brings any of them back, or deletes one for good at once.
+deleted" page lists the lists and tasks deleted in the last 30 days,
+newest first, and brings any of them back, or deletes one for good at
+once.
 
 ## Decisions
 
 | Topic | Decision |
 |---|---|
-| What is listed | Tasks tombstoned in the last 30 days, newest deletion first |
-| Including | Tasks that went down with their list |
+| What is listed | Lists and tasks tombstoned in the last 30 days, newest deletion first |
+| Including | Tasks that went down with a list not offered back (see below) |
 | Restore | A normal edit: `deleted_at` cleared, fresh HLC, synced like any change |
 | Restored into | Its own list, or the Inbox when that list is deleted or gone |
 | Comes back with it | Subtasks deleted with it; its text, tags, dates, photos and what it took were never removed |
@@ -22,7 +23,7 @@ and brings any of them back, or deletes one for good at once.
 | The window | 30 days, one constant in `nemo_core`, shared by the app's view and the server's purge |
 | Server purge | Refuses a window under 30 days, in the service and on the command line |
 | Where | Settings -> Your data in the nemo and Material looks; under My Lists in the macOS look |
-| Lists | Not listed; stated limit (see below) |
+| Lists | Listed when someone deleted them and this account owns them (see below) |
 
 ## What a deletion leaves behind
 
@@ -119,14 +120,58 @@ took.
 
 ## Deleted lists
 
-Not listed. A deleted list would be cheap to restore --
-`ListsRepository.restore` exists for the undo -- but a list tombstone
-cannot be told apart from the second Inbox that folding duplicate
-Inboxes away leaves behind (see `ListsRepository._mergeInboxes`), so a
-Lists section would offer back "Inbox" lists nobody deleted. The limit,
-stated in the README: a deleted list comes back only through its undo;
-after that, its tasks are here one by one and return to the Inbox, and
-its notes do not come back.
+The first version left lists out, on the grounds that a list tombstone
+could not be told apart from the second Inbox that folding duplicate
+Inboxes away leaves behind (`ListsRepository._mergeInboxes`). That was
+half true. Nobody can delete an Inbox -- `ListsRepository.delete` refuses
+one, and no menu offers it -- so the `is_inbox` flag would have told the
+two apart, except that folding cleared it on the tombstone. It no longer
+does: a folded Inbox keeps `is_inbox` in its grave, and every query for
+the Inbox, in this version and all before it, asks for a live one. No
+schema change.
+
+Tombstones folded by an older version have the flag cleared, but keep the
+Inbox's icon, `inbox`, which the list editor offers no other list. So
+`ListsRepository.isFoldedInbox` is `isInbox || icon == 'inbox'`. The one
+case it misses is an Inbox whose icon was changed before an older version
+folded it; that comes back as a list called Inbox -- a nuisance, not a
+loss. Folding now also moves the extra Inbox's notes across, as it
+always moved the tasks, so hiding a folded Inbox hides nothing in it.
+
+A list is offered back when:
+
+- it was deleted within the window,
+- it is not a folded Inbox, and
+- this account owns it: its role in the sharing the server last reported
+  is owner, or none has been reported (a list only this device knows).
+
+A shared list someone else owns and deleted is theirs to bring back: the
+server takes a list row from its owner only, and would reject the
+restore. Its tasks are still listed one by one, and go back to the
+Inbox, as before.
+
+The tasks that went down with an offered list -- same deletion stamp --
+are part of it, shown as a count on its row rather than listed beside it.
+Tasks deleted from the list earlier keep their own rows; while the list
+is deleted they would go back to the Inbox, and once it is restored they
+go back into it.
+
+**Restore** is `ListsRepository.restore`, which the undo already used:
+the list, and the tasks, subtasks and notes carrying its deletion stamp,
+each written again with `deleted_at` cleared and a fresh stamp, queued
+and synced as ordinary edits; reminders are rescheduled. Sharing needs
+nothing more: the server keeps a list's memberships while it is deleted
+(only the purge removes them), and relays the restored rows to everyone
+still on it, so a shared list comes back shared with the same people.
+`server/test/e2e_sync_test.dart` pins that.
+
+**Delete now** writes the list once more with its name cleared and the
+epoch deletion stamp, and erases every task and note in it the way a
+task is erased -- text cleared, epoch stamp, subtasks and photos along
+with it, a photo's bytes gone from this device when nothing else names
+them. Every one, not only those deleted with it, because the server's
+purge takes all of a purged list's rows whatever their state, so a task
+deleted from it earlier would vanish at the next purge anyway.
 
 ## Where it is reached
 
@@ -141,11 +186,16 @@ its notes do not come back.
 
 `RecentlyDeletedScreen` at `/settings/recently-deleted`:
 
-- a line saying tasks stay 30 days;
+- a line saying lists and tasks stay 30 days;
+- when there are deleted lists, a "Lists" heading over one row per list
+  -- its name, "Deleted <date>" and how many tasks come back with it --
+  then a "Tasks" heading over the tasks;
 - one row per task: its title, "Deleted <date>" and the list it goes back
   to, or "Goes back to the Inbox"; Restore and Delete now as buttons with
-  names a screen reader says;
-- restoring shows "Task restored" (or "... to the Inbox");
+  names a screen reader says, on a list's row too;
+- restoring shows "Task restored" (or "... to the Inbox"), or "List
+  restored"; deleting a list for good asks first, naming everything in
+  it;
 - empty: "Nothing deleted in the last 30 days".
 
 ## Testing
@@ -170,11 +220,22 @@ the other is live on both.
 
 **Widgets, in all three styles.** The page is reached from where the
 style puts it, lists a deleted task, restores it into its list, and
-deletes one for good after asking.
+deletes one for good after asking; it lists a deleted list with the
+count of its tasks and not those tasks, restores it with them, and
+deletes it for good after asking.
+
+**Lists.** A folded Inbox is not offered, flagged or (from an older
+version) by its icon; nor is a list another account owns, nor one past
+the window; restoring a list brings back the tasks, subtasks and notes
+deleted with it and not a task deleted before; delete now erases the
+list, its tasks and notes and their photos. Folding keeps the flag and
+moves notes. End to end, a shared list its owner deletes and restores is
+back for the other member.
 
 ## Out of scope
 
 - Deleted notes, subtasks deleted on their own, and photos removed from a
   task.
+- Restoring a shared list someone else owns and deleted.
 - Restoring many at once, or emptying the whole page.
 - A per-server setting for the window.

@@ -90,8 +90,14 @@ class ListsRepository {
 
   /// Moves everything into the first of [inboxes] and tombstones the rest.
   ///
-  /// The tasks are relisted before their old list goes, so the cascade in
-  /// [delete] finds nothing left to take down with it.
+  /// The tasks and notes are relisted before their old list goes, so the
+  /// cascade in [delete] finds nothing left to take down with it.
+  ///
+  /// The tombstone stays flagged as an Inbox. No one can delete an Inbox
+  /// (see [delete]), so a deleted list that says it is one was folded here,
+  /// not deleted by anybody -- which is how Recently deleted tells the two
+  /// apart (see [isFoldedInbox]). Every query for the Inbox asks for a live
+  /// one, in this version and every one before it.
   Future<TaskList> _mergeInboxes(List<TaskList> inboxes) async {
     final kept = inboxes.first;
     for (final extra in inboxes.skip(1)) {
@@ -100,13 +106,26 @@ class ListsRepository {
           task.copyWith(listId: kept.id, updatedAt: _clock.now().toString()),
         );
       }
+      for (final note in await _liveNotes(extra.id)) {
+        await _db.upsertNote(
+          note.copyWith(listId: kept.id, updatedAt: _clock.now().toString()),
+        );
+      }
       final stamp = _clock.now().toString();
-      await _db.upsertList(
-        extra.copyWith(isInbox: false, updatedAt: stamp, deletedAt: stamp),
-      );
+      await _db.upsertList(extra.copyWith(updatedAt: stamp, deletedAt: stamp));
     }
     return kept;
   }
+
+  /// Whether [list], deleted, is an Inbox folded into another rather than a
+  /// list somebody deleted.
+  ///
+  /// Folding keeps the flag now. Versions before cleared it, but left the
+  /// Inbox's icon, which the list editor never offers any other list; an
+  /// Inbox whose icon had been changed before an older version folded it
+  /// is the one case this misses, and it comes back as a list named Inbox.
+  static bool isFoldedInbox(TaskList list) =>
+      list.isInbox || list.icon == 'inbox';
 
   Future<TaskList> create({
     required String name,

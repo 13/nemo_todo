@@ -21,12 +21,12 @@ host yourself.
   wallpaper's colours with the Material style on Android 12 and later.
 - Quick add understands `#tags`, `!high` and a trailing "tomorrow" or
   weekday; a long press on a task moves it to another day.
-- Recently deleted: a task deleted in the last 30 days can be brought
-  back, with its subtasks and photos, into its list or the Inbox if the
-  list is gone -- or deleted for good at once. It is in Settings, or
-  under My Lists in the macOS look. A deleted list itself comes back only
-  through the undo offered as it is deleted; after that its tasks are in
-  Recently deleted one by one, and its notes are not.
+- Recently deleted: a list or task deleted in the last 30 days can be
+  brought back -- a list with the tasks and notes deleted with it, a task
+  with its subtasks and photos, into its list or the Inbox if the list is
+  gone -- or deleted for good at once. It is in Settings, or under My
+  Lists in the macOS look. A shared list is its owner's to bring back,
+  and comes back shared with the same people.
 - Photos on a task, taken with the camera or picked from the device, synced
   to your other devices and to everyone a list is shared with.
 - Share into nemo on Android: text, a link or pictures from any app's share
@@ -400,8 +400,8 @@ behind, just not the data -- so nothing it holds comes back to life.
 The window is 30 days at the least, and `--days` refuses anything
 shorter: the app's Recently deleted offers a task back for 30 days, and a
 restore reaching a server that has already purged the task would bring it
-back without its subtasks and photos. A longer window is fine. A task
-someone deleted for good from Recently deleted goes at the next run,
+back without its subtasks and photos. A longer window is fine. A list or
+task someone deleted for good from Recently deleted goes at the next run,
 whatever the window.
 
 The same run also clears out tombstoned photo rows once they are past the

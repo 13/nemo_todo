@@ -2673,7 +2673,7 @@ abstract class L {
   /// **'Move down'**
   String get a11yMoveDown;
 
-  /// Title of the page listing tasks deleted in the last 30 days, and the row that opens it.
+  /// Title of the page listing lists and tasks deleted in the last 30 days, and the row that opens it.
   ///
   /// In en, this message translates to:
   /// **'Recently deleted'**
@@ -2682,7 +2682,7 @@ abstract class L {
   /// Line at the top of Recently deleted.
   ///
   /// In en, this message translates to:
-  /// **'Deleted tasks stay here for {days} days, then they are gone for good.'**
+  /// **'Deleted lists and tasks stay here for {days} days, then they are gone for good.'**
   String recentlyDeletedHint(int days);
 
   /// Recently deleted with nothing in it.
@@ -2691,13 +2691,13 @@ abstract class L {
   /// **'Nothing deleted in the last {days} days'**
   String recentlyDeletedEmpty(int days);
 
-  /// Button on a deleted task: bring it back.
+  /// Button on a deleted list or task: bring it back.
   ///
   /// In en, this message translates to:
   /// **'Restore'**
   String get recentlyDeletedRestore;
 
-  /// Button on a deleted task: delete it for good without waiting for the 30 days.
+  /// Button on a deleted list or task: delete it for good without waiting for the 30 days.
   ///
   /// In en, this message translates to:
   /// **'Delete now'**
@@ -2732,6 +2732,36 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Deleted for good'**
   String get recentlyDeletedErased;
+
+  /// Heading over the deleted lists in Recently deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists'**
+  String get recentlyDeletedListsHeader;
+
+  /// Heading over the deleted tasks in Recently deleted, shown when there are deleted lists above them.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get recentlyDeletedTasksHeader;
+
+  /// How many tasks were deleted with a list in Recently deleted, and come back with it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No tasks} =1{1 task} other{{count} tasks}}'**
+  String recentlyDeletedListTasks(int count);
+
+  /// Shown after a deleted list is brought back with its tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'List restored'**
+  String get recentlyDeletedListRestored;
+
+  /// Asked before deleting a list, its tasks and its notes for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\" and everything in it for good? It cannot be brought back.'**
+  String recentlyDeletedEraseListConfirm(String name);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

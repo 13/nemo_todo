@@ -1663,7 +1663,7 @@ class LIt extends L {
 
   @override
   String recentlyDeletedHint(int days) {
-    return 'Le attività eliminate restano qui per $days giorni, poi spariscono definitivamente.';
+    return 'Le liste e le attività eliminate restano qui per $days giorni, poi spariscono definitivamente.';
   }
 
   @override
@@ -1699,4 +1699,30 @@ class LIt extends L {
 
   @override
   String get recentlyDeletedErased => 'Eliminata definitivamente';
+
+  @override
+  String get recentlyDeletedListsHeader => 'Liste';
+
+  @override
+  String get recentlyDeletedTasksHeader => 'Attività';
+
+  @override
+  String recentlyDeletedListTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività',
+      one: '1 attività',
+      zero: 'Nessuna attività',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recentlyDeletedListRestored => 'Lista ripristinata';
+
+  @override
+  String recentlyDeletedEraseListConfirm(String name) {
+    return 'Eliminare definitivamente «$name» e tutto ciò che contiene? Non si potrà più recuperare.';
+  }
 }

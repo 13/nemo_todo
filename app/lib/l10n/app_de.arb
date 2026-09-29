@@ -430,7 +430,7 @@
   "a11yMoveUp": "Nach oben verschieben",
   "a11yMoveDown": "Nach unten verschieben",
   "recentlyDeletedTitle": "Zuletzt gelöscht",
-  "recentlyDeletedHint": "Gelöschte Aufgaben bleiben {days} Tage hier, danach sind sie endgültig weg.",
+  "recentlyDeletedHint": "Gelöschte Listen und Aufgaben bleiben {days} Tage hier, danach sind sie endgültig weg.",
   "recentlyDeletedEmpty": "In den letzten {days} Tagen nichts gelöscht",
   "recentlyDeletedRestore": "Wiederherstellen",
   "recentlyDeletedEraseNow": "Jetzt löschen",
@@ -438,5 +438,10 @@
   "recentlyDeletedOn": "Gelöscht am {date}",
   "recentlyDeletedBackTo": "Kommt zurück in {list}",
   "recentlyDeletedRestored": "Aufgabe in {list} wiederhergestellt",
-  "recentlyDeletedErased": "Endgültig gelöscht"
+  "recentlyDeletedErased": "Endgültig gelöscht",
+  "recentlyDeletedListsHeader": "Listen",
+  "recentlyDeletedTasksHeader": "Aufgaben",
+  "recentlyDeletedListTasks": "{count, plural, =0{Keine Aufgaben} =1{1 Aufgabe} other{{count} Aufgaben}}",
+  "recentlyDeletedListRestored": "Liste wiederhergestellt",
+  "recentlyDeletedEraseListConfirm": "„{name}“ mit allem, was darin ist, endgültig löschen? Das lässt sich nicht rückgängig machen."
 }

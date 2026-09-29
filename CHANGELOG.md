@@ -18,13 +18,15 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ### Added
 
-- Recently deleted. Tasks deleted in the last 30 days are listed, newest
-  first, in Settings -- or under My Lists in the macOS look -- to restore
-  or to delete for good at once. A restored task comes back with its
-  subtasks, notes, tags and photos, into its own list, or the Inbox if
-  that list has been deleted, and on every device it syncs with. Deleted
-  lists are not listed: undo a list's deletion as it happens, or restore
-  its tasks one by one into the Inbox.
+- Recently deleted. Lists and tasks deleted in the last 30 days are
+  listed, newest first, in Settings -- or under My Lists in the macOS
+  look -- to restore or to delete for good at once. A restored task comes
+  back with its subtasks, notes, tags and photos, into its own list, or
+  the Inbox if that list has been deleted, and on every device it syncs
+  with. A restored list comes back with the tasks and notes that were
+  deleted with it; a list you shared comes back shared with the same
+  people. A shared list someone else owns is theirs to restore, and its
+  tasks can still be brought back one by one into your Inbox.
 - Sort a list. "Sort by" in a list's menu puts its tasks in order of due
   date, priority, title or when they were added, or back in the order you
   dragged them into. The sort belongs to the list, so it is the same on
@@ -100,6 +102,9 @@ does the renaming, and tags only once CI has passed on the release commit.
   a list renamed there keeps its sort. The server now keeps any field an
   older app's change leaves out, rather than letting the whole older row
   win.
+- When signing in on a second device leaves two Inboxes and nemo folds
+  them into one, the notes in the extra Inbox move across with its tasks
+  instead of disappearing with it.
 - The server exits when it is told to stop. It used to close everything
   and then stay running, so `docker stop` and every update waited ten
   seconds before Docker killed it; a stop sent the moment it started

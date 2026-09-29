@@ -246,6 +246,71 @@ void main() {
     expect(laptop.outbox, isEmpty);
   });
 
+  test('a shared list its owner deletes and restores is back for everyone '
+      'on it', () async {
+    final benToken = await server.signup('ben');
+    final annaToken = await server.signup('anna');
+    final ben = Device(server, 'ben-phone', benToken);
+    final anna = Device(server, 'anna-phone', annaToken);
+    ben
+      ..newList('l1', 'Trip')
+      ..newTask('t1', 'l1', 'Book hotel');
+    await ben.sync();
+    await server.post('/api/v1/lists/l1/members', {
+      'username': 'anna',
+      'role': 'editor',
+    }, token: benToken);
+    await anna.sync();
+
+    // Ben deletes the list the way the app does: one stamp for it all.
+    final stamp = ben.clock.now().toString();
+    ben
+      ..put(
+        SyncChange.list(
+          ben.lists['l1']!.copyWith(updatedAt: stamp, deletedAt: stamp),
+        ),
+      )
+      ..put(
+        SyncChange.task(
+          ben.tasks['t1']!.copyWith(updatedAt: stamp, deletedAt: stamp),
+        ),
+      );
+    await ben.sync();
+    await anna.sync();
+    expect(anna.lists['l1']!.isDeleted, isTrue);
+    expect(
+      anna.members['l1'],
+      isNotNull,
+      reason: 'she is still on it while it is deleted',
+    );
+
+    // And brings it back from Recently deleted: ordinary edits.
+    ben
+      ..put(
+        SyncChange.list(
+          ben.lists['l1']!.copyWith(
+            updatedAt: ben.clock.now().toString(),
+            deletedAt: null,
+          ),
+        ),
+      )
+      ..put(
+        SyncChange.task(
+          ben.tasks['t1']!.copyWith(
+            updatedAt: ben.clock.now().toString(),
+            deletedAt: null,
+          ),
+        ),
+      );
+    await ben.sync();
+    await anna.sync();
+
+    expect(ben.rejected, isEmpty);
+    expect(anna.lists['l1']!.isDeleted, isFalse);
+    expect(anna.tasks['t1']!.isDeleted, isFalse);
+    expect(anna.members['l1']!.map((m) => m.username), ['ben', 'anna']);
+  });
+
   test(
     'a shared list reaches the other account and can be taken back',
     () async {

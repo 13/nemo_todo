@@ -1629,7 +1629,7 @@ class LEn extends L {
 
   @override
   String recentlyDeletedHint(int days) {
-    return 'Deleted tasks stay here for $days days, then they are gone for good.';
+    return 'Deleted lists and tasks stay here for $days days, then they are gone for good.';
   }
 
   @override
@@ -1665,4 +1665,30 @@ class LEn extends L {
 
   @override
   String get recentlyDeletedErased => 'Deleted for good';
+
+  @override
+  String get recentlyDeletedListsHeader => 'Lists';
+
+  @override
+  String get recentlyDeletedTasksHeader => 'Tasks';
+
+  @override
+  String recentlyDeletedListTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks',
+      one: '1 task',
+      zero: 'No tasks',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recentlyDeletedListRestored => 'List restored';
+
+  @override
+  String recentlyDeletedEraseListConfirm(String name) {
+    return 'Delete \"$name\" and everything in it for good? It cannot be brought back.';
+  }
 }

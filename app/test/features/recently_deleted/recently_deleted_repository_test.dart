@@ -3,6 +3,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/notes/data/notes_repository.dart';
 import 'package:nemo/features/photos/data/photo_pipeline.dart';
 import 'package:nemo/features/photos/data/photo_store_web.dart';
 import 'package:nemo/features/photos/data/photos_repository.dart';
@@ -85,18 +86,171 @@ void main() {
     expect(shown.first.list?.id, work.id);
   });
 
-  test(
-    'a task deleted with its list is there, with no list to go to',
-    () async {
-      final t = await tasks.create(listId: work.id, title: 'In work');
+  test('a deleted list is there with its tasks, not beside them', () async {
+    final earlier = await tasks.create(listId: work.id, title: 'Before');
+    await tasks.create(listId: work.id, title: 'In work');
+    await tasks.create(listId: work.id, title: 'Also in work');
+    await tasks.delete(earlier.id);
+    await lists.delete(work.id);
+
+    final shownLists = await bin.watchLists().first;
+    expect(shownLists.single.list.id, work.id);
+    expect(shownLists.single.tasks, 2, reason: 'the ones deleted with it');
+
+    final shown = await bin.watch().first;
+    expect(
+      shown.single.task.id,
+      earlier.id,
+      reason: 'deleted on its own, before; restoring the list leaves it',
+    );
+    expect(shown.single.list, isNull, reason: 'it goes back to the Inbox');
+  });
+
+  group('lists nobody deleted, or not ours to bring back', () {
+    test('an Inbox folded into another is not listed', () async {
+      // As sync lands it: a second device's Inbox, folded away.
+      await db.upsertList(
+        TaskList(
+          id: 'z-other-inbox',
+          name: 'Inbox',
+          sortKey: SortKey.first(),
+          isInbox: true,
+          icon: 'inbox',
+          updatedAt: clock.now().toString(),
+        ),
+      );
+      await lists.mergeDuplicateInboxes();
+      expect((await db.listById('z-other-inbox'))!.isDeleted, isTrue);
+
+      expect(await bin.watchLists().first, isEmpty);
+    });
+
+    test('nor one an older version folded away', () async {
+      // Older versions cleared the flag on the Inbox they folded; its icon,
+      // which no other list can take, still gives it away.
+      final stamp = clock.now().toString();
+      await db.upsertList(
+        TaskList(
+          id: 'z-other-inbox',
+          name: 'Inbox',
+          sortKey: SortKey.first(),
+          icon: 'inbox',
+          updatedAt: stamp,
+          deletedAt: stamp,
+        ),
+      );
+
+      expect(await bin.watchLists().first, isEmpty);
+    });
+
+    test('a shared list someone else deleted is not ours to restore', () async {
+      final t = await tasks.create(listId: work.id, title: 'Theirs');
       await lists.delete(work.id);
+      await db.setListMeta({
+        work.id: const [
+          ListMember(username: 'owner', role: MemberRole.owner),
+          ListMember(username: 'me', role: MemberRole.editor),
+        ],
+      }, 'me');
 
+      expect(await bin.watchLists().first, isEmpty);
       final shown = await bin.watch().first;
+      expect(
+        shown.single.task.id,
+        t.id,
+        reason: 'its tasks can still come back, into the Inbox',
+      );
+    });
 
-      expect(shown.single.task.id, t.id);
-      expect(shown.single.list, isNull, reason: 'it goes back to the Inbox');
-    },
-  );
+    test('nor one deleted before the window', () async {
+      final past = ListsRepository(
+        db,
+        HlcClock(
+          node: 'past',
+          now: () => testNow.subtract(const Duration(days: 31)),
+        ),
+        sequentialIds('past'),
+      );
+      final old = await past.create(name: 'Long gone');
+      await past.delete(old.id);
+
+      expect(await bin.watchLists().first, isEmpty);
+    });
+  });
+
+  test('restoring a list brings back what went with it, queued', () async {
+    final notes = NotesRepository(db, clock, sequentialIds('note'));
+    final earlier = await tasks.create(listId: work.id, title: 'Before');
+    final t = await tasks.create(listId: work.id, title: 'In work');
+    final sub = await subtasks.add(t.id, 'step');
+    final note = await notes.create(listId: work.id, title: 'Plan');
+    await tasks.delete(earlier.id);
+    await lists.delete(work.id);
+    final tombstone = (await db.listById(work.id))!;
+    await db.clearOutbox();
+
+    final back = await bin.restoreList(work.id);
+
+    expect(back?.id, work.id);
+    final list = (await db.listById(work.id))!;
+    expect(list.deletedAt, isNull);
+    expect(incomingWins(tombstone, list), isTrue);
+    expect((await db.taskById(t.id))!.deletedAt, isNull);
+    expect((await db.subtaskById(sub.id))!.deletedAt, isNull);
+    expect((await db.noteById(note.id))!.deletedAt, isNull);
+    expect((await db.taskById(earlier.id))!.deletedAt, isNotNull);
+    expect(await db.outboxCount(), 4, reason: 'list, task, subtask, note');
+    expect(await bin.watchLists().first, isEmpty);
+    expect(
+      (await bin.watch().first).single.list?.id,
+      work.id,
+      reason: 'the task deleted before now goes back to the list',
+    );
+  });
+
+  test('delete now erases a list and everything in it', () async {
+    final notes = NotesRepository(db, clock, sequentialIds('note'));
+    final earlier = await tasks.create(listId: work.id, title: 'Before');
+    final t = await tasks.create(listId: work.id, title: 'Secret');
+    final sub = await subtasks.add(t.id, 'step');
+    final photo = (await photos.add(PhotoParent.task, t.id, smallJpeg()))!;
+    final note = await notes.create(
+      listId: work.id,
+      title: 'Plan',
+      body: 'the code is 1234',
+    );
+    final notePhoto = (await photos.add(
+      PhotoParent.note,
+      note.id,
+      smallJpeg(width: 24),
+    ))!;
+    await tasks.delete(earlier.id);
+    await lists.delete(work.id);
+    final tombstone = (await db.listById(work.id))!;
+
+    await bin.eraseList(work.id);
+
+    final gone = (await db.listById(work.id))!;
+    expect(gone.name, '');
+    expect(gone.deletedAt, erasedStamp(clock.node));
+    expect(incomingWins(tombstone, gone), isTrue);
+    for (final id in [earlier.id, t.id]) {
+      final task = (await db.taskById(id))!;
+      expect(task.title, '');
+      expect(task.deletedAt, erasedStamp(clock.node));
+    }
+    expect((await db.subtaskById(sub.id))!.title, '');
+    final goneNote = (await db.noteById(note.id))!;
+    expect(goneNote.title, '');
+    expect(goneNote.body, '');
+    expect(goneNote.deletedAt, erasedStamp(clock.node));
+    expect((await db.photoById(photo.id))!.deletedAt, isNotNull);
+    expect((await db.photoById(notePhoto.id))!.deletedAt, isNotNull);
+    expect(await store.get(photo.sha256), isNull);
+    expect(await store.get(notePhoto.sha256), isNull);
+    expect(await bin.watchLists().first, isEmpty);
+    expect(await bin.watch().first, isEmpty);
+  });
 
   test('restore brings the task back as a newer edit, queued', () async {
     final t = await tasks.create(listId: work.id, title: 'Back');

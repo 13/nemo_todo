@@ -70,11 +70,13 @@ void main() {
 
         expect(find.text('Call the plumber'), findsOneWidget);
         expect(find.textContaining('Goes back to Work'), findsOneWidget);
-        expect(find.text('Pay the bill'), findsOneWidget);
+        expect(find.byKey(const Key('deleted-list-list2')), findsOneWidget);
+        expect(find.text('Old'), findsOneWidget);
+        expect(find.textContaining('1 task'), findsOneWidget);
         expect(
-          find.textContaining('Goes back to Inbox'),
-          findsOneWidget,
-          reason: 'its list is deleted too',
+          find.text('Pay the bill'),
+          findsNothing,
+          reason: 'it went down with its list, and comes back with it',
         );
 
         await tester.tap(find.byKey(const Key('restore-task1')));
@@ -87,7 +89,22 @@ void main() {
         expect(back.listId, 'list1');
       });
 
-      appTest('restores into the Inbox, and deletes for good after asking', (
+      appTest('brings a list back with its tasks', (tester) async {
+        final app = await _pump(tester, style);
+        await _open(tester, style);
+
+        await tester.tap(find.byKey(const Key('restore-list-list2')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('List restored'), findsOneWidget);
+        expect(find.byKey(const Key('deleted-list-list2')), findsNothing);
+        expect((await app.db.listById('list2'))!.deletedAt, isNull);
+        final task = (await app.db.taskById('task2'))!;
+        expect(task.deletedAt, isNull);
+        expect(task.listId, 'list2');
+      });
+
+      appTest('deletes a task and a list for good after asking', (
         tester,
       ) async {
         final app = await _pump(tester, style);
@@ -103,10 +120,13 @@ void main() {
         expect(gone.isDeleted, isTrue);
         expect(gone.title, isEmpty);
 
-        await tester.tap(find.byKey(const Key('restore-task2')));
+        await tester.tap(find.byKey(const Key('erase-list-list2')));
         await tester.pumpAndSettle();
-        expect(find.text('Task restored to Inbox'), findsOneWidget);
-        expect((await app.db.taskById('task2'))!.listId, app.inbox.id);
+        expect(find.textContaining('everything in it'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('confirm-erase')));
+        await tester.pumpAndSettle();
+        expect((await app.db.listById('list2'))!.name, isEmpty);
+        expect((await app.db.taskById('task2'))!.title, isEmpty);
         expect(
           find.text('Nothing deleted in the last 30 days'),
           findsOneWidget,

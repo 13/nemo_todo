@@ -19,3 +19,9 @@ final recentlyDeletedRepositoryProvider = Provider<RecentlyDeletedRepository>(
 final recentlyDeletedProvider = StreamProvider<List<DeletedTask>>(
   (ref) => ref.watch(recentlyDeletedRepositoryProvider).watch(),
 );
+
+/// Lists deleted in the last 30 days that this account can bring back, the
+/// most recently deleted first.
+final recentlyDeletedListsProvider = StreamProvider<List<DeletedList>>(
+  (ref) => ref.watch(recentlyDeletedRepositoryProvider).watchLists(),
+);

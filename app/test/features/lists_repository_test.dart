@@ -3,6 +3,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
+import 'package:nemo/features/notes/data/notes_repository.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -104,6 +105,40 @@ void main() {
 
     // And it is settled: asking again changes nothing.
     expect((await repo.ensureInbox()).id, kept.id);
+
+    // A folded Inbox stays marked as one in its grave, so Recently deleted
+    // can tell it from a list somebody deleted.
+    for (final id in [mine.id, 'd-from-web', 'e-from-tablet']) {
+      final folded = (await db.listById(id))!;
+      expect(folded.isDeleted, isTrue);
+      expect(folded.isInbox, isTrue, reason: '$id is still an Inbox');
+    }
+  });
+
+  test('a folded Inbox hands its notes over too', () async {
+    final mine = await repo.ensureInbox();
+    await db.upsertList(
+      TaskList(
+        id: 'a-from-phone',
+        name: 'Inbox',
+        sortKey: SortKey.first(),
+        isInbox: true,
+        icon: 'inbox',
+        updatedAt: testClock('a').now().toString(),
+      ),
+    );
+    final note = await NotesRepository(
+      db,
+      testClock('n'),
+      sequentialIds('n'),
+    ).create(listId: mine.id, title: 'Shopping');
+
+    final kept = await repo.ensureInbox();
+
+    expect(kept.id, 'a-from-phone');
+    final moved = (await db.noteById(note.id))!;
+    expect(moved.listId, kept.id);
+    expect(moved.deletedAt, isNull);
   });
 
   test(

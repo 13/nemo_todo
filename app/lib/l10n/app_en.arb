@@ -1127,9 +1127,9 @@
   },
   "recentlyDeletedTitle": "Recently deleted",
   "@recentlyDeletedTitle": {
-    "description": "Title of the page listing tasks deleted in the last 30 days, and the row that opens it."
+    "description": "Title of the page listing lists and tasks deleted in the last 30 days, and the row that opens it."
   },
-  "recentlyDeletedHint": "Deleted tasks stay here for {days} days, then they are gone for good.",
+  "recentlyDeletedHint": "Deleted lists and tasks stay here for {days} days, then they are gone for good.",
   "@recentlyDeletedHint": {
     "description": "Line at the top of Recently deleted.",
     "placeholders": {
@@ -1149,11 +1149,11 @@
   },
   "recentlyDeletedRestore": "Restore",
   "@recentlyDeletedRestore": {
-    "description": "Button on a deleted task: bring it back."
+    "description": "Button on a deleted list or task: bring it back."
   },
   "recentlyDeletedEraseNow": "Delete now",
   "@recentlyDeletedEraseNow": {
-    "description": "Button on a deleted task: delete it for good without waiting for the 30 days."
+    "description": "Button on a deleted list or task: delete it for good without waiting for the 30 days."
   },
   "recentlyDeletedEraseConfirm": "Delete \"{title}\" for good? It cannot be brought back.",
   "@recentlyDeletedEraseConfirm": {
@@ -1194,5 +1194,35 @@
   "recentlyDeletedErased": "Deleted for good",
   "@recentlyDeletedErased": {
     "description": "Shown after a task is deleted for good."
+  },
+  "recentlyDeletedListsHeader": "Lists",
+  "@recentlyDeletedListsHeader": {
+    "description": "Heading over the deleted lists in Recently deleted."
+  },
+  "recentlyDeletedTasksHeader": "Tasks",
+  "@recentlyDeletedTasksHeader": {
+    "description": "Heading over the deleted tasks in Recently deleted, shown when there are deleted lists above them."
+  },
+  "recentlyDeletedListTasks": "{count, plural, =0{No tasks} =1{1 task} other{{count} tasks}}",
+  "@recentlyDeletedListTasks": {
+    "description": "How many tasks were deleted with a list in Recently deleted, and come back with it.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recentlyDeletedListRestored": "List restored",
+  "@recentlyDeletedListRestored": {
+    "description": "Shown after a deleted list is brought back with its tasks."
+  },
+  "recentlyDeletedEraseListConfirm": "Delete \"{name}\" and everything in it for good? It cannot be brought back.",
+  "@recentlyDeletedEraseListConfirm": {
+    "description": "Asked before deleting a list, its tasks and its notes for good.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

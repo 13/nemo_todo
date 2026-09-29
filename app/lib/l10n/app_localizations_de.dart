@@ -1645,7 +1645,7 @@ class LDe extends L {
 
   @override
   String recentlyDeletedHint(int days) {
-    return 'Gelöschte Aufgaben bleiben $days Tage hier, danach sind sie endgültig weg.';
+    return 'Gelöschte Listen und Aufgaben bleiben $days Tage hier, danach sind sie endgültig weg.';
   }
 
   @override
@@ -1681,4 +1681,30 @@ class LDe extends L {
 
   @override
   String get recentlyDeletedErased => 'Endgültig gelöscht';
+
+  @override
+  String get recentlyDeletedListsHeader => 'Listen';
+
+  @override
+  String get recentlyDeletedTasksHeader => 'Aufgaben';
+
+  @override
+  String recentlyDeletedListTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben',
+      one: '1 Aufgabe',
+      zero: 'Keine Aufgaben',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recentlyDeletedListRestored => 'Liste wiederhergestellt';
+
+  @override
+  String recentlyDeletedEraseListConfirm(String name) {
+    return '„$name“ mit allem, was darin ist, endgültig löschen? Das lässt sich nicht rückgängig machen.';
+  }
 }

@@ -32,6 +32,13 @@ void main() {
       (await drawn(tester, AppStyle.macos, Icons.today))?.fontFamily,
       'PhosphorFill',
     );
+    // The list's "Sort by" and the chevron of a row that opens a page.
+    for (final icon in [Icons.sort_rounded, Icons.chevron_right_rounded]) {
+      expect(
+        (await drawn(tester, AppStyle.macos, icon))?.fontFamily,
+        'PhosphorRegular',
+      );
+    }
     // One with no counterpart stays Material's rather than vanishing.
     expect(await drawn(tester, AppStyle.macos, Icons.ac_unit), Icons.ac_unit);
   });

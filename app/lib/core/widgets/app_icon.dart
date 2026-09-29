@@ -42,7 +42,8 @@ extension StyleIcons on BuildContext {
 /// Apple fills its own: the selected destination, a flag, a pin, a trophy.
 ///
 /// Constants throughout, so a web build keeps only the glyphs named here;
-/// the fonts are subset to them already (see pubspec.yaml).
+/// the fonts are subset to them already. Mapping another means running
+/// tool/subset_phosphor.sh; app_icon_font_test.dart fails until then.
 IconData? _phosphor(IconData? icon) => switch (icon) {
   Icons.delete_outline_rounded => const IconData(
     0xe4a6,
@@ -237,6 +238,10 @@ IconData? _phosphor(IconData? icon) => switch (icon) {
     0xe874,
     fontFamily: 'PhosphorRegular',
   ), // squareSplitVertical
+  Icons.sort_rounded => const IconData(
+    0xe098,
+    fontFamily: 'PhosphorRegular',
+  ), // arrowsDownUp
   Icons.shopping_cart_outlined => const IconData(
     0xe41e,
     fontFamily: 'PhosphorRegular',

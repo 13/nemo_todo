@@ -106,7 +106,8 @@ flutter:
         - asset: assets/fonts/RobotoWeb-Bold.ttf
           weight: 700
     # The macOS style's icons: Phosphor (MIT, assets/fonts/Phosphor-LICENSE.txt),
-    # subset to the glyphs lib/core/widgets/app_icon.dart names. Bundled
+    # subset to the glyphs lib/core/widgets/app_icon.dart names by
+    # tool/subset_phosphor.sh (run it again after mapping another). Bundled
     # rather than taken from phosphor_flutter, whose icon class extends
     # IconData, which Flutter no longer allows.
     - family: PhosphorRegular

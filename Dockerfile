@@ -38,7 +38,8 @@ RUN tool/fetch_web_assets.sh \
  && flutter build web --release --no-web-resources-cdn \
       --dart-define=NEMO_COMMIT="${NEMO_COMMIT}" \
       --dart-define=NEMO_BUILD_DATE="${NEMO_BUILD_DATE}" \
-      --dart-define=NEMO_CHANNEL="${NEMO_CHANNEL}"
+      --dart-define=NEMO_CHANNEL="${NEMO_CHANNEL}" \
+ && ../tool/compress_web.sh build/web
 
 # ---- Stage 2: build the server --------------------------------------------
 # `dart build cli` rather than `dart compile exe`: the sqlite3 package ships

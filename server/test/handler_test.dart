@@ -292,6 +292,74 @@ void main() {
     expect(denied.headers['access-control-allow-origin'], isNull);
   });
 
+  test('sends the web app gzipped where it can, and never unasked', () async {
+    final dir = await Directory.systemTemp.createTemp('nemo-web');
+    addTearDown(() => dir.delete(recursive: true));
+    await File('${dir.path}/index.html').writeAsString('<html>app</html>');
+    const js = 'void main() {}';
+    await File('${dir.path}/main.dart.js').writeAsString(js);
+    await File('${dir.path}/main.dart.js.gz')
+        .writeAsBytes(gzip.encode(utf8.encode(js)));
+    await File('${dir.path}/favicon.png').writeAsBytes([1, 2, 3]);
+    server = await TestServer.start(webDir: dir.path);
+
+    final client = HttpClient()..autoUncompress = false;
+    addTearDown(client.close);
+    Future<HttpClientResponse> fetch(
+      String path, {
+      String? encoding,
+      DateTime? since,
+    }) async {
+      final request = await client.getUrl(server.uri(path));
+      request.headers.removeAll('accept-encoding');
+      if (encoding != null) request.headers.set('accept-encoding', encoding);
+      if (since != null) request.headers.ifModifiedSince = since;
+      return await request.close();
+    }
+
+    final zipped = await fetch('/main.dart.js', encoding: 'gzip, br');
+    expect(zipped.statusCode, 200);
+    expect(zipped.headers.value('content-encoding'), 'gzip');
+    expect(zipped.headers.contentType?.mimeType, 'text/javascript');
+    expect(zipped.headers.value('vary'), contains('accept-encoding'));
+    expect(zipped.headers.value('cache-control'), 'no-cache');
+    final bytes = await zipped.fold(<int>[], (a, b) => a..addAll(b));
+    expect(utf8.decode(gzip.decode(bytes)), js);
+
+    for (final encoding in [null, 'br', 'gzip;q=0']) {
+      final plain = await fetch('/main.dart.js', encoding: encoding);
+      expect(plain.headers.value('content-encoding'), isNull);
+      expect(plain.headers.value('vary'), contains('accept-encoding'));
+      expect(await plain.transform(utf8.decoder).join(), js);
+    }
+
+    // Asking again is cheap: an unchanged file is a 304 either way.
+    final later = DateTime.now().add(const Duration(minutes: 1));
+    expect((await fetch('/main.dart.js', since: later)).statusCode, 304);
+    expect(
+      (await fetch('/main.dart.js', encoding: 'gzip', since: later)).statusCode,
+      304,
+    );
+
+    // Files built without a compressed copy are sent as they are, and are
+    // revalidated like everything else.
+    final png = await fetch('/favicon.png', encoding: 'gzip');
+    expect(png.headers.value('content-encoding'), isNull);
+    expect(png.headers.value('cache-control'), 'no-cache');
+    await png.drain<void>();
+  });
+
+  test('acceptsGzip reads accept-encoding', () {
+    expect(acceptsGzip(null), isFalse);
+    expect(acceptsGzip(''), isFalse);
+    expect(acceptsGzip('gzip'), isTrue);
+    expect(acceptsGzip('br, gzip, deflate'), isTrue);
+    expect(acceptsGzip('gzip;q=0.5'), isTrue);
+    expect(acceptsGzip('gzip; q=0'), isFalse);
+    expect(acceptsGzip('*'), isTrue);
+    expect(acceptsGzip('br, deflate'), isFalse);
+  });
+
   test('without a built web app the root answers 404', () async {
     server = await TestServer.start();
     expect((await server.get('/')).statusCode, 404);

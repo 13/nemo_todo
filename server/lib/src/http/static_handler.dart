@@ -51,7 +51,8 @@ Handler webAppHandler(String webDir) {
     // shelf_static answers If-Modified-Since itself, but compares a date
     // that still carries microseconds, so on Linux every file looks newer
     // than the second-resolution date the browser sent back and is sent
-    // again in full. The comparison is made here instead.
+    // again in full. The comparison is made here instead, until
+    // https://github.com/dart-lang/shelf/issues/532 is fixed.
     final served = compressed ?? _fileFor(webDir, path, index);
     if (served != null && _unchanged(request, served)) {
       return Response.notModified(headers: headers);

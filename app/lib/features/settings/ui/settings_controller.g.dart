@@ -184,6 +184,65 @@ abstract class _$AccentController extends $Notifier<int?> {
   }
 }
 
+/// How much of the accent the nemo style's backgrounds take on.
+
+@ProviderFor(SurfaceTintController)
+final surfaceTintControllerProvider = SurfaceTintControllerProvider._();
+
+/// How much of the accent the nemo style's backgrounds take on.
+final class SurfaceTintControllerProvider
+    extends $NotifierProvider<SurfaceTintController, SurfaceTint> {
+  /// How much of the accent the nemo style's backgrounds take on.
+  SurfaceTintControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'surfaceTintControllerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$surfaceTintControllerHash();
+
+  @$internal
+  @override
+  SurfaceTintController create() => SurfaceTintController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SurfaceTint value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SurfaceTint>(value),
+    );
+  }
+}
+
+String _$surfaceTintControllerHash() =>
+    r'd016e2d25d63f5512dc99d667ac002cacf98fa2f';
+
+/// How much of the accent the nemo style's backgrounds take on.
+
+abstract class _$SurfaceTintController extends $Notifier<SurfaceTint> {
+  SurfaceTint build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<SurfaceTint, SurfaceTint>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<SurfaceTint, SurfaceTint>,
+              SurfaceTint,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Confetti, animations and haptics on completing a task.
 
 @ProviderFor(CelebrationsEnabled)

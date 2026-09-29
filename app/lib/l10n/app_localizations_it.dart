@@ -355,6 +355,18 @@ class LIt extends L {
   String get accentDefault => 'Quello dello stile';
 
   @override
+  String get settingsSurfaceTint => 'Tinta dello sfondo';
+
+  @override
+  String get surfaceTintNone => 'Nessuna';
+
+  @override
+  String get surfaceTintSubtle => 'Leggera';
+
+  @override
+  String get surfaceTintStrong => 'Intensa';
+
+  @override
   String get colorTeal => 'Verde acqua';
 
   @override

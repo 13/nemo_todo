@@ -31,6 +31,8 @@ void main() {
       find.text('Not connected. Your data stays on this device.'),
       findsOneWidget,
     );
+    await tester.ensureVisible(find.byKey(const Key('connect-tile')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('connect-tile')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('account-server')), findsOneWidget);

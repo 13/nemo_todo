@@ -10,6 +10,7 @@ import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/material_theme.dart';
+import 'package:nemo/core/theme/surface_tint.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo_core/nemo_core.dart';
 import 'package:uuid/uuid.dart';
@@ -22,6 +23,7 @@ class AppBootstrap {
     required this.themeMode,
     this.appStyle = AppStyle.nemo,
     this.accent,
+    this.surfaceTint = SurfaceTint.subtle,
     this.serverUrl,
     this.username,
     this.lastSyncAt,
@@ -45,6 +47,9 @@ class AppBootstrap {
   /// The accent chosen in Settings, a slot of `AppTheme.accents`; null for
   /// the style's own.
   final int? accent;
+
+  /// How much of the accent the nemo style's backgrounds take on.
+  final SurfaceTint surfaceTint;
 
   final String? serverUrl;
   final String? username;
@@ -97,6 +102,9 @@ class AppBootstrap {
       themeMode: ThemeMode.values.asNameMap()[theme] ?? ThemeMode.system,
       appStyle: AppStyle.values.asNameMap()[style] ?? AppStyle.nemo,
       accent: int.tryParse(await kv.get(KvKeys.accent) ?? ''),
+      surfaceTint:
+          SurfaceTint.values.asNameMap()[await kv.get(KvKeys.surfaceTint)] ??
+          SurfaceTint.subtle,
       serverUrl: await kv.get(KvKeys.serverUrl),
       username: await kv.get(KvKeys.username),
       lastSyncAt: lastSync == null ? null : int.tryParse(lastSync),

@@ -705,6 +705,30 @@ abstract class L {
   /// **'The style\'s own'**
   String get accentDefault;
 
+  /// No description provided for @settingsSurfaceTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Background tint'**
+  String get settingsSurfaceTint;
+
+  /// No description provided for @surfaceTintNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get surfaceTintNone;
+
+  /// No description provided for @surfaceTintSubtle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtle'**
+  String get surfaceTintSubtle;
+
+  /// No description provided for @surfaceTintStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get surfaceTintStrong;
+
   /// No description provided for @colorTeal.
   ///
   /// In en, this message translates to:

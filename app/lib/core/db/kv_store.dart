@@ -11,6 +11,10 @@ abstract final class KvKeys {
   /// A slot of the style's accents (`AppTheme.accents`); unset for the
   /// style's own.
   static const accent = 'accent';
+
+  /// How much of the accent the nemo style's backgrounds take on: a
+  /// `SurfaceTint` name; unset for subtle.
+  static const surfaceTint = 'surface_tint';
   static const serverUrl = 'server_url';
   static const username = 'username';
   static const lastSyncAt = 'last_sync_at';

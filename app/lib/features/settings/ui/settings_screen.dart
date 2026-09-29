@@ -17,6 +17,7 @@ import 'package:nemo/features/settings/ui/currency_tile.dart';
 import 'package:nemo/features/settings/ui/daily_list_tile.dart';
 import 'package:nemo/features/settings/ui/data_tiles.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
+import 'package:nemo/features/settings/ui/surface_tint_picker.dart';
 import 'package:nemo/features/sync/ui/sync_settings_section.dart';
 import 'package:nemo/features/updates/ui/update_tile.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -90,6 +91,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
       const AccentPicker(),
+      const SurfaceTintPicker(),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: SegmentedButton<ThemeMode>(

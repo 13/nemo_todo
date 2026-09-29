@@ -241,11 +241,13 @@ Future<TestApp> pumpApp(
             ref.watch(appStyleControllerProvider),
             Brightness.light,
             accent: ref.watch(accentControllerProvider),
+            tint: ref.watch(surfaceTintControllerProvider),
           ),
           darkTheme: AppTheme.build(
             ref.watch(appStyleControllerProvider),
             Brightness.dark,
             accent: ref.watch(accentControllerProvider),
+            tint: ref.watch(surfaceTintControllerProvider),
           ),
           themeMode: ref.watch(themeModeControllerProvider),
           scrollBehavior:

@@ -120,6 +120,7 @@ class _NemoAppState extends ConsumerState<NemoApp> {
     final style = ref.watch(appStyleControllerProvider);
     final wallpaper = ref.watch(wallpaperSchemesProvider);
     final accent = ref.watch(accentControllerProvider);
+    final tint = ref.watch(surfaceTintControllerProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => L.of(context).appName,
       theme: AppTheme.build(
@@ -127,12 +128,14 @@ class _NemoAppState extends ConsumerState<NemoApp> {
         Brightness.light,
         wallpaper: wallpaper,
         accent: accent,
+        tint: tint,
       ),
       darkTheme: AppTheme.build(
         style,
         Brightness.dark,
         wallpaper: wallpaper,
         accent: accent,
+        tint: tint,
       ),
       themeMode: ref.watch(themeModeControllerProvider),
       scrollBehavior: style == AppStyle.macos

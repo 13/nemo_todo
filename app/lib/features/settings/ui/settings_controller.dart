@@ -3,6 +3,7 @@ import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/splash/splash.dart';
 import 'package:nemo/core/theme/app_style.dart';
+import 'package:nemo/core/theme/surface_tint.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'settings_controller.g.dart';
@@ -43,6 +44,18 @@ class AccentController extends _$AccentController {
     state = accent;
     // A null value reads back as no accent: the style's own.
     await ref.read(kvStoreProvider).set(KvKeys.accent, accent?.toString());
+  }
+}
+
+/// How much of the accent the nemo style's backgrounds take on.
+@Riverpod(keepAlive: true)
+class SurfaceTintController extends _$SurfaceTintController {
+  @override
+  SurfaceTint build() => ref.watch(bootstrapProvider).surfaceTint;
+
+  Future<void> set(SurfaceTint tint) async {
+    state = tint;
+    await ref.read(kvStoreProvider).set(KvKeys.surfaceTint, tint.name);
   }
 }
 

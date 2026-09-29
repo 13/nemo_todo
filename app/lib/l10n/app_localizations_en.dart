@@ -354,6 +354,18 @@ class LEn extends L {
   String get accentDefault => 'The style\'s own';
 
   @override
+  String get settingsSurfaceTint => 'Background tint';
+
+  @override
+  String get surfaceTintNone => 'None';
+
+  @override
+  String get surfaceTintSubtle => 'Subtle';
+
+  @override
+  String get surfaceTintStrong => 'Strong';
+
+  @override
   String get colorTeal => 'Teal';
 
   @override

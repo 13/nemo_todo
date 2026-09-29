@@ -354,6 +354,18 @@ class LDe extends L {
   String get accentDefault => 'Die des Stils';
 
   @override
+  String get settingsSurfaceTint => 'Hintergrundtönung';
+
+  @override
+  String get surfaceTintNone => 'Keine';
+
+  @override
+  String get surfaceTintSubtle => 'Dezent';
+
+  @override
+  String get surfaceTintStrong => 'Kräftig';
+
+  @override
   String get colorTeal => 'Petrol';
 
   @override

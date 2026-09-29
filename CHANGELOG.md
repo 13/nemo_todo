@@ -47,6 +47,14 @@ does the renaming, and tags only once CI has passed on the release commit.
   mark done, move to another day, delete, show a tag -- is in the row's
   actions menu.
 - Folding sections, like Completed, say whether they are open.
+- A Today widget for the Android home screen. It lists the open tasks due
+  today and the overdue ones, with their count; tapping a task opens it,
+  tapping the header opens Today, "+" opens the app ready for a new task,
+  and a task's circle ticks it off right there -- saved and repeated
+  exactly as if ticked in the app, and synced with the app's next sync.
+  It resizes, moves on to the new day at midnight and after a restart
+  without the app, and wears the app's look in light and dark, in the
+  wallpaper's colours with the Material style on Android 12 and later.
 
 ### Changed
 

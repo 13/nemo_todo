@@ -126,6 +126,10 @@ class AppDatabase extends _$AppDatabase {
     },
     beforeOpen: (details) async {
       await customStatement('pragma foreign_keys = on');
+      // The Today widget ticks tasks off through a connection of its own
+      // (`today_widget_tick.dart`) while the app may hold one too; a write
+      // meeting the other's lock waits for it rather than failing.
+      await customStatement('pragma busy_timeout = 5000');
     },
   );
 }

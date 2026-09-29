@@ -11,6 +11,11 @@ host yourself.
 - Lists with colours and icons, due dates with reminders and an optional
   daily list of what's due, subtasks, notes, tags and four priorities, plus
   Today, Upcoming, search and per-tag views.
+- A resizable Today widget for the Android home screen: what's due today
+  and overdue with its count, a circle to tick each off without opening the
+  app, a tap to open a task or Today, and "+" for a new task. It changes at
+  midnight on its own and follows the app's look, light or dark, in the
+  wallpaper's colours with the Material style on Android 12 and later.
 - Quick add understands `#tags`, `!high` and a trailing "tomorrow" or
   weekday; a long press on a task moves it to another day.
 - Photos on a task, taken with the camera or picked from the device, synced

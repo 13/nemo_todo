@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and later: the launcher's own corner radius, and the
+     wallpaper's colours for the Material style (the dark ones are in
+     values-night-v31). Resolved by the launcher when it draws, so the
+     widget follows a new wallpaper without the app. -->
+<resources>
+    <dimen name="today_widget_radius">@android:dimen/system_app_widget_background_radius</dimen>
+
+    <color name="today_widget_dynamic_background">@android:color/system_neutral1_50</color>
+    <color name="today_widget_dynamic_text">@android:color/system_neutral1_900</color>
+    <color name="today_widget_dynamic_secondary">@android:color/system_neutral2_700</color>
+    <color name="today_widget_dynamic_accent">@android:color/system_accent1_600</color>
+</resources>

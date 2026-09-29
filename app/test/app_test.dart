@@ -15,8 +15,10 @@ import 'package:nemo/features/settings/data/server_build.dart';
 import 'package:nemo/features/share/data/share_source.dart';
 import 'package:nemo/features/share/data/shared_content.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/today_screen.dart';
 import 'package:nemo/features/tasks/ui/upcoming_screen.dart';
+import 'package:nemo/features/today_widget/today_widget_links.dart';
 import 'package:nemo/router.dart';
 
 import 'support/fake_celebrations.dart';
@@ -140,6 +142,28 @@ void main() {
 
       expect(find.byType(UpcomingScreen), findsOneWidget);
       expect(tapped.value, isNull);
+
+      await finish(tester, container);
+    });
+
+    testWidgets("the widget's + opens Today and asks for a new task", (
+      tester,
+    ) async {
+      final tapped = ValueNotifier<String?>(null);
+      addTearDown(tapped.dispose);
+      final container = await pumpNemoApp(
+        tester,
+        overrides: [notificationRouteProvider.overrideWithValue(tapped)],
+      );
+      tapped.value = Routes.upcoming;
+      await tester.pumpAndSettle();
+      final requests = container.read(quickAddFocusRequestsProvider).value;
+
+      tapped.value = widgetAddRoute;
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TodayScreen), findsOneWidget);
+      expect(container.read(quickAddFocusRequestsProvider).value, requests + 1);
 
       await finish(tester, container);
     });

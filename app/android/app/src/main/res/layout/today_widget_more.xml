@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "+3 more" under the rows that fit; opens Today. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/today_more"
+    android:layout_width="match_parent"
+    android:layout_height="36dp"
+    android:gravity="center_vertical"
+    android:paddingStart="44dp"
+    android:singleLine="true"
+    android:textSize="13sp" />

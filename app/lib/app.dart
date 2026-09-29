@@ -14,6 +14,8 @@ import 'package:nemo/features/reminders/reminders_providers.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/share/ui/share_receiver.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
+import 'package:nemo/features/tasks/ui/selected_task.dart';
+import 'package:nemo/features/today_widget/today_widget_providers.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/l10n/locale_resolution.dart';
@@ -50,7 +52,21 @@ class _NemoAppState extends ConsumerState<NemoApp> {
     // Only app routes; a payload from anything else is ignored.
     if (route == null || !route.startsWith('/')) return;
     _tapped.value = null;
-    _router.go(route);
+    final uri = Uri.parse(route);
+    if (!uri.queryParameters.containsKey('new')) {
+      _router.go(route);
+      return;
+    }
+    // The widget's "+": the screen, then its way of adding a task -- asked
+    // once the screen is built, so its add button is there to hear it.
+    _router.go(uri.path);
+    unawaited(
+      WidgetsBinding.instance.endOfFrame
+          .then((_) => WidgetsBinding.instance.endOfFrame)
+          .then((_) {
+            if (mounted) ref.read(quickAddFocusRequestsProvider).value++;
+          }),
+    );
   }
 
   late final GoRouter _router = AppRouter.router(
@@ -72,7 +88,8 @@ class _NemoAppState extends ConsumerState<NemoApp> {
     _tapped.addListener(_followTap);
     ref
       ..read(dailyListRefresherProvider)
-      ..read(reminderResyncProvider);
+      ..read(reminderResyncProvider)
+      ..read(todayWidgetSyncProvider);
     // The stored session is read after the first frame is scheduled, so a
     // cold start never waits on the platform keychain.
     WidgetsBinding.instance.addPostFrameCallback((_) async {

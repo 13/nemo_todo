@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/app.dart';
 import 'package:nemo/core/db/app_database.dart';
-import 'package:nemo/core/notifications/android_reminder_scheduler.dart';
 import 'package:nemo/core/notifications/browser_notifications.dart';
 import 'package:nemo/core/notifications/daily_digest_scheduler.dart';
+import 'package:nemo/core/notifications/notification_texts.dart';
 import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/notifications/timed_notifications.dart';
@@ -14,6 +14,8 @@ import 'package:nemo/core/splash/splash.dart';
 import 'package:nemo/core/theme/material_theme.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
+import 'package:nemo/features/today_widget/today_widget_providers.dart';
+import 'package:nemo/features/today_widget/today_widget_setup.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/screens/startup_error_screen.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -38,6 +40,7 @@ Future<void> main() async {
     rememberTheme(boot.bootstrap.themeMode.name);
     rememberStyle(boot.bootstrap.appStyle.name);
     final photoStore = await openPhotoStore();
+    final widget = await openTodayWidget(tapped);
     _run(
       ProviderScope(
         overrides: [
@@ -56,6 +59,10 @@ Future<void> main() async {
           notificationRouteProvider.overrideWithValue(tapped),
           photoStoreProvider.overrideWithValue(photoStore),
           wallpaperSchemesProvider.overrideWithValue(boot.wallpaper),
+          if (widget != null) ...[
+            todayWidgetBridgeProvider.overrideWithValue(widget.bridge),
+            todayWidgetTicksProvider.overrideWithValue(widget.ticks),
+          ],
         ],
         child: const NemoApp(),
       ),
@@ -146,23 +153,8 @@ Future<_Notifications> _openNotifications(ValueNotifier<String?> tapped) async {
   if (launched != null) tapped.value = launched;
   return (
     api: api,
-    reminders: AndroidReminderScheduler(
-      api,
-      channelName: l.remindersChannelName,
-      channelDescription: l.remindersChannelDescription,
-      body: l.remindersDueNow,
-      missedWindow: missedWindow,
-    ),
-    digestStrings: DigestStrings(
-      channelName: l.dailyListChannelName,
-      channelDescription: l.dailyListChannelDescription,
-      title: (today, overdue) => overdue == 0
-          ? l.dailyListToday(today)
-          : today == 0
-          ? l.dailyListOverdue(overdue)
-          : l.dailyListTodayOverdue(today, overdue),
-      more: l.dailyListMore,
-    ),
+    reminders: remindersFor(api, l, missedWindow: missedWindow),
+    digestStrings: digestStringsFor(l),
     browser: browser,
   );
 }

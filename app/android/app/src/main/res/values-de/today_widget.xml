@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="today_widget_label">Heute</string>
+    <string name="today_widget_description">Heute fällige und überfällige Aufgaben, direkt auf dem Startbildschirm abzuhaken.</string>
+    <string name="today_widget_title">Heute</string>
+    <string name="today_widget_empty">Heute ist nichts fällig</string>
+    <string name="today_widget_add">Neue Aufgabe</string>
+    <string name="today_widget_tick">%1$s als erledigt markieren</string>
+    <plurals name="today_widget_more">
+        <item quantity="one">+%d weitere</item>
+        <item quantity="other">+%d weitere</item>
+    </plurals>
+</resources>

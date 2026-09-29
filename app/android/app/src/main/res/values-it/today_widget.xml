@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="today_widget_label">Oggi</string>
+    <string name="today_widget_description">Le attività in scadenza oggi e quelle scadute, da spuntare direttamente dalla schermata Home.</string>
+    <string name="today_widget_title">Oggi</string>
+    <string name="today_widget_empty">Niente in scadenza oggi</string>
+    <string name="today_widget_add">Nuova attività</string>
+    <string name="today_widget_tick">Segna %1$s come fatto</string>
+    <plurals name="today_widget_more">
+        <item quantity="one">+%d altra</item>
+        <item quantity="many">+%d altre</item>
+        <item quantity="other">+%d altre</item>
+    </plurals>
+</resources>

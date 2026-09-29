@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="today_widget_radius">16dp</dimen>
+
+    <!-- Only read on Android 12 and later (values-v31); these stand in for
+         them elsewhere, as nemo's own light colours. -->
+    <color name="today_widget_dynamic_background">#FFF5F8F8</color>
+    <color name="today_widget_dynamic_text">#FF10201F</color>
+    <color name="today_widget_dynamic_secondary">#FF4F6362</color>
+    <color name="today_widget_dynamic_accent">#FF0E7C86</color>
+
+    <string name="today_widget_label">Today</string>
+    <string name="today_widget_description">Tasks due today and overdue ones, ticked off right from the home screen.</string>
+    <string name="today_widget_title">Today</string>
+    <string name="today_widget_empty">Nothing due today</string>
+    <string name="today_widget_add">New task</string>
+    <string name="today_widget_tick">Mark %1$s as done</string>
+    <plurals name="today_widget_more">
+        <item quantity="one">+%d more</item>
+        <item quantity="other">+%d more</item>
+    </plurals>
+</resources>

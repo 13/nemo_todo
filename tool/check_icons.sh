@@ -58,3 +58,15 @@ done
   exit 1
 }
 echo "all ${#expected[@]} icons present and none is a stock Flutter image"
+
+# Every web build warns that the CupertinoIcons font is missing. That is
+# Flutter's own iOS widgets referring to it, which nemo never shows; but a
+# CupertinoIcons glyph in the app itself would render as an empty box,
+# since the font ships only with the cupertino_icons package.
+if ! grep -q '^  cupertino_icons:' app/pubspec.yaml &&
+  grep -rln 'CupertinoIcons\.' app/lib > /dev/null; then
+  echo "app/lib uses CupertinoIcons, whose font needs the cupertino_icons" \
+       "package in app/pubspec.yaml:" >&2
+  grep -rln 'CupertinoIcons\.' app/lib | sed 's/^/  /' >&2
+  exit 1
+fi

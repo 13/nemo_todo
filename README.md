@@ -260,6 +260,14 @@ The first account you create is also the last one the server accepts while
 open internet. Put your own TLS reverse proxy in
 front of it; nothing in the container terminates TLS.
 
+HTTPS also makes the web app load faster. The server sends it
+pre-compressed, and browsers only ask for brotli, about a quarter smaller
+than gzip, over HTTPS: reached over plain HTTP, even on a LAN, a first
+visit downloads about 3.6 MB instead of 2.8 MB. The proxy should pass the
+server's `content-encoding` and `vary` headers through untouched; Caddy
+and Traefik do by default, and their compression leaves an already
+compressed response alone.
+
 | Variable | Meaning |
 |---|---|
 | `NEMO_PORT` | Listen port, default 8080 |

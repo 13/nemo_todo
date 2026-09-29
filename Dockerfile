@@ -9,7 +9,7 @@ FROM debian:bookworm-slim AS web-build
 ENV TAR_OPTIONS=--no-same-owner
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      git curl ca-certificates unzip xz-utils zip \
+      git curl ca-certificates unzip xz-utils zip brotli \
  && rm -rf /var/lib/apt/lists/*
 ARG FLUTTER_VERSION=3.47.2
 RUN git clone --depth 1 -b "${FLUTTER_VERSION}" \

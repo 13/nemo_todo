@@ -111,8 +111,10 @@ jobs:
         run: dart run ../tool/check_coverage.dart 80
         working-directory: app
 
-  build:
-    name: Build web, APK and image
+  # The APKs and the server image are built side by side: neither needs
+  # the other, and one after the other they made CI ten minutes longer.
+  apk:
+    name: Build APK
     runs-on: ubuntu-24.04
     needs: test
     steps:
@@ -130,9 +132,6 @@ jobs:
 
       - run: tool/pub_get.sh
 
-      - name: Fetch web database assets
-        run: tool/fetch_web_assets.sh
-
       # When and from what this was built, for the app's About and /healthz.
       # Stamped once per job so every artefact in it names the same moment.
       - name: Stamp the build
@@ -142,10 +141,6 @@ jobs:
             echo "NEMO_BUILD_DATE=$date"
             echo "NEMO_DEFINES=--dart-define=NEMO_COMMIT=$GITHUB_SHA --dart-define=NEMO_BUILD_DATE=$date --dart-define=NEMO_CHANNEL=main"
           } >> "$GITHUB_ENV"
-
-      - name: Build web
-        run: flutter build web --release --no-web-resources-cdn $NEMO_DEFINES
-        working-directory: app
 
       # Signed with the release keystore when the secrets are present, and
       # with the debug key otherwise, which is fine for a CI artefact but
@@ -193,6 +188,18 @@ jobs:
           name: nemo-apk
           path: app/build/app/outputs/release/*.apk
           if-no-files-found: error
+
+  # The image builds the web app itself (see the Dockerfile), so this job
+  # needs no Flutter; a separate web build here only built it twice.
+  image:
+    name: Build image and web app
+    runs-on: ubuntu-24.04
+    needs: test
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Stamp the build
+        run: echo "NEMO_BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       # Not pushed: this only proves the Dockerfile still builds. It goes
       # through buildx for the cache, which the release workflow reads, so

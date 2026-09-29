@@ -406,6 +406,89 @@ void main() {
     },
   );
 
+  test('serves each build under its own path, cached for good', () async {
+    final dir = await Directory.systemTemp.createTemp('nemo-web');
+    addTearDown(() => dir.delete(recursive: true));
+    const page =
+        '<html><head><base href="/"> '
+        '<link rel="manifest" href="manifest.json"></head>app</html>';
+    final index = File('${dir.path}/index.html')..writeAsStringSync(page);
+    await File('${dir.path}/main.dart.js').writeAsString('js');
+    await File('${dir.path}/main.dart.js.gz')
+        .writeAsBytes(gzip.encode(utf8.encode('js')));
+    await File('${dir.path}/manifest.json').writeAsString('{}');
+    server = await TestServer.start(webDir: dir.path);
+
+    final client = HttpClient()..autoUncompress = false;
+    addTearDown(client.close);
+    Future<(HttpClientResponse, String)> fetch(
+      String path, {
+      String? encoding,
+      DateTime? since,
+    }) async {
+      final request = await client.getUrl(server.uri(path));
+      request.headers.removeAll('accept-encoding');
+      if (encoding != null) request.headers.set('accept-encoding', encoding);
+      if (since != null) request.headers.ifModifiedSince = since;
+      final response = await request.close();
+      return (response, await response.transform(latin1.decoder).join());
+    }
+
+    String buildOf(String body) =>
+        RegExp('<base href="/v/([0-9a-f]{12})/">').firstMatch(body)![1]!;
+
+    // The page points everything it loads at this build's own path, but
+    // leaves the manifest where it was: an installed app is known by it.
+    final (root, body) = await fetch('/');
+    expect(root.headers.value('cache-control'), 'no-cache');
+    final build = buildOf(body);
+    expect(body, contains('<link rel="manifest" href="/manifest.json">'));
+    final (deep, deepBody) = await fetch('/lists/abc');
+    expect(deep.statusCode, 200);
+    expect(buildOf(deepBody), build);
+    final (_, indexBody) = await fetch('/index.html');
+    expect(buildOf(indexBody), build);
+
+    // Nothing under a build's path ever changes, so it is never asked
+    // about again; compressed or not, and the app routes under it too.
+    const forGood = 'public, max-age=31536000, immutable';
+    final (js, jsBody) = await fetch('/v/$build/main.dart.js');
+    expect(js.statusCode, 200);
+    expect(jsBody, 'js');
+    expect(js.headers.value('cache-control'), forGood);
+    final (zipped, _) = await fetch('/v/$build/main.dart.js', encoding: 'gzip');
+    expect(zipped.headers.value('content-encoding'), 'gzip');
+    expect(zipped.headers.value('cache-control'), forGood);
+    final (start, startBody) = await fetch('/v/$build/');
+    expect(start.statusCode, 200);
+    expect(buildOf(startBody), build);
+    expect(start.headers.value('cache-control'), 'no-cache');
+    expect((await fetch('/v/$build/missing.js')).$1.statusCode, 404);
+
+    // A tab still open on an older build gets what there is, but asks.
+    final (old, oldBody) = await fetch('/v/0123456789ab/main.dart.js');
+    expect(old.statusCode, 200);
+    expect(oldBody, 'js');
+    expect(old.headers.value('cache-control'), 'no-cache');
+    // And so does a page from before builds had paths.
+    final (plain, _) = await fetch('/main.dart.js');
+    expect(plain.headers.value('cache-control'), 'no-cache');
+
+    // An unchanged page is still a 304.
+    final (again, _) = await fetch(
+      '/',
+      since: HttpDate.parse(root.headers.value('last-modified')!),
+    );
+    expect(again.statusCode, 304);
+
+    // A new build is a new path.
+    index
+      ..writeAsStringSync('$page ')
+      ..setLastModifiedSync(DateTime.now().add(const Duration(minutes: 1)));
+    final (_, rebuilt) = await fetch('/');
+    expect(buildOf(rebuilt), isNot(build));
+  });
+
   test('acceptsEncoding reads accept-encoding', () {
     expect(acceptsEncoding(null, 'gzip'), isFalse);
     expect(acceptsEncoding('', 'gzip'), isFalse);

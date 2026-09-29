@@ -14,6 +14,16 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
+## Unreleased
+
+### Changed
+
+- Opening the web app again is faster, most on a slow connection: each
+  version of the app is now kept by the browser for good, so only the
+  page itself is checked for a newer one, rather than every file one
+  after another. On a slow mobile connection a repeat visit went from
+  about 1.6 seconds to 0.5.
+
 ## 0.15.3 - 2026-09-29
 
 ### Fixed

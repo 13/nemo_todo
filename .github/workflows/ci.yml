@@ -223,8 +223,8 @@ jobs:
       # held to a budget in bytes: 0.15.2 shipped repeat visits that
       # downloaded the whole app again, and every check above passed. Bytes
       # are held to a budget; timings are printed but vary too much on a
-      # shared runner to hold to anything. Budgets sit just above today's
-      # 2.8 MB and 10 KB; raise them deliberately.
+      # shared runner to hold to anything. Today a first visit sends 2.8 MB
+      # and a repeat almost nothing; raise the budgets deliberately.
       - name: Check web app load size
         run: |
           docker run -d --name nemo -p 8080:8080 nemo:${{ github.sha }}

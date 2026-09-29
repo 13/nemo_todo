@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:crypto/crypto.dart';
 
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
@@ -7,11 +10,22 @@ import 'package:shelf_static/shelf_static.dart';
 /// Serves the built Flutter web app. Paths without a file extension fall
 /// back to `index.html` so deep links into the app work.
 ///
-/// Every file is sent `no-cache`: none of Flutter's file names carry a
-/// hash, so a browser that reused a cached `main.dart.js` or canvaskit
+/// None of Flutter's file names carry a hash, so on their own they could
+/// only be sent `no-cache`: a browser reusing a cached `main.dart.js`
 /// without asking would pair it with a newer `flutter_bootstrap.js` after a
-/// deploy. Asking costs a 304 per file; a mismatched engine costs a blank
-/// page.
+/// deploy. But asking costs a round trip per file, and the files load one
+/// after another -- page, bootstrap, app and engine, fonts, database -- so
+/// a repeat visit spent more time waiting on 304s than starting the app.
+///
+/// So each build gets a path of its own. The page is served with its
+/// `<base href>` pointing at `v/<build>/`, which every file it loads is
+/// relative to, and anything under the current build's path is cached
+/// for good: a new build is a new path. Only the page itself is asked
+/// about again. The app routes by the URL's fragment, so the base path
+/// changes nothing it sees. The manifest keeps its one address, because
+/// an installed app is known by it. Paths of an older build, which a tab
+/// left open may still ask for, and paths without a build are served
+/// `no-cache`.
 ///
 /// A file with a `.br` or `.gz` sibling (written at build time by
 /// `tool/compress_web.sh`) is sent compressed to a browser that accepts
@@ -26,12 +40,25 @@ Handler webAppHandler(String webDir) {
       headers: const {'content-type': 'text/plain'},
     );
   }
-  final files = createStaticHandler(webDir, defaultDocument: 'index.html');
+  final files = createStaticHandler(webDir);
   final index = File('$webDir/index.html');
+  final build = _BuildId(webDir, index);
   const noCache = {'cache-control': 'no-cache'};
+  const forGood = {'cache-control': 'public, max-age=31536000, immutable'};
 
   return (request) async {
-    final path = request.url.path;
+    var path = request.url.path;
+    var caching = noCache;
+    if (_underBuild.firstMatch(path) case final m?) {
+      path = m[2]!;
+      if (m[1] == build.current) caching = forGood;
+    }
+
+    final page = _fileFor(webDir, path, index);
+    if (page?.path == index.path) {
+      return _page(request, index, build.current, noCache);
+    }
+
     // The compressed copies built for this file, most preferred first.
     final copies = [
       if (path.isNotEmpty)
@@ -42,9 +69,8 @@ Handler webAppHandler(String webDir) {
     final chosen = copies
         .where((c) => acceptsEncoding(accept, c.coding))
         .firstOrNull;
-    final compressed = chosen?.file;
     final headers = {
-      ...noCache,
+      ...caching,
       if (copies.isNotEmpty) 'vary': 'accept-encoding',
     };
 
@@ -53,47 +79,108 @@ Handler webAppHandler(String webDir) {
     // than the second-resolution date the browser sent back and is sent
     // again in full. The comparison is made here instead, until
     // https://github.com/dart-lang/shelf/issues/532 is fixed.
-    final served = compressed ?? _fileFor(webDir, path, index);
+    final served = chosen?.file ?? page;
     if (served != null && _unchanged(request, served)) {
       return Response.notModified(headers: headers);
     }
 
-    if (compressed != null) {
-      final suffix = compressed.path.substring(compressed.path.length - 3);
-      final response = await files(
-        Request(
-          request.method,
-          request.requestedUri.replace(
-            path: '${request.requestedUri.path}$suffix',
-          ),
-          headers: request.headers,
-          handlerPath: request.handlerPath,
-          url: request.url.replace(path: '$path$suffix'),
-          context: request.context,
-        ),
-      );
-      return response.change(
-        headers: {
-          ...headers,
-          if (response.statusCode != 304) ...{
-            'content-encoding': chosen!.coding,
-            'content-type': lookupMimeType(path) ?? 'application/octet-stream',
-          },
-        },
-      );
-    }
-    final response = await files(request);
-    if (response.statusCode != 404) return response.change(headers: headers);
-    if (served != index || !index.existsSync()) return response;
-    return Response.ok(
-      index.openRead(),
+    final suffix = switch (chosen) {
+      final c? => c.file.path.substring(c.file.path.length - 3),
+      null => '',
+    };
+    final response = await files(_at(request, '$path$suffix'));
+    return response.change(
       headers: {
-        'content-type': 'text/html; charset=utf-8',
-        'last-modified': HttpDate.format(index.statSync().modified),
-        ...noCache,
+        ...headers,
+        if (chosen != null && response.statusCode == 200) ...{
+          'content-encoding': chosen.coding,
+          'content-type': lookupMimeType(path) ?? 'application/octet-stream',
+        },
       },
     );
   };
+}
+
+/// A path under a build's own prefix: `v/<build>/<file>`.
+final _underBuild = RegExp(r'^v/([0-9a-f]{12})/(.*)$');
+
+/// The page, with everything it loads pointed at [build]'s own path, and
+/// the manifest left where it is.
+Response _page(
+  Request request,
+  File index,
+  String build,
+  Map<String, String> headers,
+) {
+  if (!index.existsSync()) return Response.notFound('not found');
+  if (_unchanged(request, index)) {
+    return Response.notModified(headers: headers);
+  }
+  var base = '/';
+  final html = index
+      .readAsStringSync()
+      .replaceFirstMapped(RegExp('<base href="([^"]*)">'), (m) {
+        base = m[1]!;
+        return '<base href="${base}v/$build/">';
+      })
+      .replaceFirstMapped(
+        RegExp('<link rel="manifest" href="(?![a-z]+:|/)([^"]*)">'),
+        (m) => '<link rel="manifest" href="$base${m[1]}">',
+      );
+  return Response.ok(
+    request.method == 'HEAD' ? null : html,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'last-modified': HttpDate.format(index.statSync().modified),
+      ...headers,
+    },
+  );
+}
+
+/// [request], asking for [path] instead.
+Request _at(Request request, String path) => Request(
+  request.method,
+  request.requestedUri.replace(path: '${request.handlerPath}$path'),
+  headers: request.headers,
+  handlerPath: request.handlerPath,
+  url: request.url.replace(path: path),
+  context: request.context,
+);
+
+/// One file's path, size and date, as a line of what names a build.
+String _describe(File file, String webDir) {
+  final stat = file.statSync();
+  return '${file.path.substring(webDir.length)}\t${stat.size}\t'
+      '${stat.modified.microsecondsSinceEpoch}';
+}
+
+/// Names the build in a web directory, from every file's path, size and
+/// date. Worked out again whenever `index.html` changes, which every
+/// `flutter build web` rewrites, so replacing a build under a running
+/// server gives it a new path rather than new files under an old one.
+class _BuildId {
+  _BuildId(this.webDir, this.index);
+
+  final String webDir;
+  final File index;
+  DateTime? _seen;
+  String _id = '';
+
+  String get current {
+    final modified = index.existsSync() ? index.statSync().modified : null;
+    if (modified != _seen) {
+      _seen = modified;
+      final entries = [
+        for (final f in Directory(webDir).listSync(recursive: true))
+          if (f is File) _describe(f, webDir),
+      ]..sort();
+      _id = sha256
+          .convert(utf8.encode(entries.join('\n')))
+          .toString()
+          .substring(0, 12);
+    }
+    return _id;
+  }
 }
 
 /// The compressed copies the server looks for, most preferred first.

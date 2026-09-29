@@ -14,7 +14,7 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
-## Unreleased
+## 0.15.4 - 2026-09-29
 
 ### Changed
 

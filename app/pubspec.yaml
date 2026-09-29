@@ -80,3 +80,16 @@ flutter:
           weight: 700
         - asset: assets/fonts/Manrope-ExtraBold.ttf
           weight: 800
+    # The macOS style's type: Inter, subset to the Latin the app's languages
+    # use (see assets/fonts/Inter-OFL.txt). SF Pro may only ship in apps on
+    # Apple's own platforms.
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700

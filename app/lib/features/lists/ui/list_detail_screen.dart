@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
@@ -14,6 +15,7 @@ import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
+import 'package:nemo/screens/shell_screen.dart';
 
 /// One list's tasks in manual order with quick add at the bottom.
 class ListDetailScreen extends ConsumerWidget {
@@ -31,24 +33,41 @@ class ListDetailScreen extends ConsumerWidget {
     if (list == null) {
       return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
     }
+    // With the macOS sidebar beside it, the list is one of its rows: there
+    // is nothing to go back to.
+    final besideSidebar =
+        context.appStyle == AppStyle.macos &&
+        MediaQuery.sizeOf(context).width >= ShellScreen.railBreakpoint;
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go(Routes.lists),
-        ),
-        title: Row(
-          children: [
-            Icon(listIcon(list.icon), color: nemo.listColor(list.color)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                list.isInbox ? l.listsInbox : list.name,
-                overflow: TextOverflow.ellipsis,
+        automaticallyImplyLeading: !besideSidebar,
+        leading: besideSidebar
+            ? null
+            : BackButton(
+                onPressed: () =>
+                    context.canPop() ? context.pop() : context.go(Routes.lists),
               ),
-            ),
-          ],
-        ),
+        // macOS names the list in its own colour, large, as Reminders
+        // does; elsewhere its icon goes beside the name.
+        title: context.appStyle == AppStyle.macos
+            ? Text(
+                list.isInbox ? l.listsInbox : list.name,
+                key: const Key('list-title'),
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: nemo.listColor(list.color)),
+              )
+            : Row(
+                children: [
+                  Icon(listIcon(list.icon), color: nemo.listColor(list.color)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      list.isInbox ? l.listsInbox : list.name,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
         actions: [
           if (sharing?.isShared ?? false)
             IconButton(

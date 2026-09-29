@@ -346,6 +346,9 @@ class LIt extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get sidebarMyLists => 'Le mie liste';
+
+  @override
   String get settingsAccent => 'Colore di accento';
 
   @override

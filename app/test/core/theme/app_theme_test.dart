@@ -27,7 +27,10 @@ void main() {
       test('$name: text reads on its surfaces', () {
         expect(s.brightness, brightness);
         expect(theme.extension<AppStyleTheme>()!.style, style);
-        expect(theme.textTheme.bodyLarge?.fontFamily, 'Manrope');
+        expect(
+          theme.textTheme.bodyLarge?.fontFamily,
+          style == AppStyle.macos ? 'Inter' : 'Manrope',
+        );
         for (final bg in [s.surface, window]) {
           expect(contrast(s.onSurface, bg), greaterThan(7));
           expect(contrast(s.onSurfaceVariant, bg), greaterThan(4.5));

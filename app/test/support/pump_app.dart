@@ -9,6 +9,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/app_theme.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/features/auth/ui/auth_guard.dart';
@@ -23,6 +24,7 @@ import 'package:nemo/features/settings/data/server_build.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
+import 'package:nemo/screens/style_adaptation.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import 'fake_celebrations.dart';
@@ -246,13 +248,19 @@ Future<TestApp> pumpApp(
             accent: ref.watch(accentControllerProvider),
           ),
           themeMode: ref.watch(themeModeControllerProvider),
+          scrollBehavior:
+              ref.watch(appStyleControllerProvider) == AppStyle.macos
+              ? const AppleScrollBehavior()
+              : null,
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           routerConfig: router,
-          builder: (context, child) => CelebrationOverlay(
-            onOpenAchievements: () =>
-                unawaited(router.push(Routes.achievements)),
-            child: child ?? const SizedBox.shrink(),
+          builder: (context, child) => StyleAdaptation(
+            child: CelebrationOverlay(
+              onOpenAchievements: () =>
+                  unawaited(router.push(Routes.achievements)),
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),

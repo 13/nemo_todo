@@ -687,6 +687,12 @@ abstract class L {
   /// **'Material'**
   String get styleMaterial;
 
+  /// No description provided for @sidebarMyLists.
+  ///
+  /// In en, this message translates to:
+  /// **'My Lists'**
+  String get sidebarMyLists;
+
   /// No description provided for @settingsAccent.
   ///
   /// In en, this message translates to:

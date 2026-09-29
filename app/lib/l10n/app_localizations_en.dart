@@ -345,6 +345,9 @@ class LEn extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get sidebarMyLists => 'My Lists';
+
+  @override
   String get settingsAccent => 'Accent colour';
 
   @override

@@ -121,7 +121,7 @@ void main() {
   });
 
   appTest('the macOS style navigates from a sidebar', (tester) async {
-    await pumpApp(
+    final app = await pumpApp(
       tester,
       size: const Size(1000, 800),
       seed: (db, _) => KvStore(db).set(KvKeys.appStyle, AppStyle.macos.name),
@@ -130,10 +130,45 @@ void main() {
     expect(find.byType(NavigationRail), findsNothing);
     await tester.tap(find.text('Lists'));
     await tester.pumpAndSettle();
-    expect(find.text('Inbox'), findsOneWidget);
+    expect(app.router.state.matchedLocation, Routes.lists);
     await tester.tap(find.byIcon(Icons.settings_outlined));
     await tester.pumpAndSettle();
     expect(find.text('Appearance'), findsOneWidget);
+  });
+
+  appTest('the macOS sidebar lists the lists, with counts', (tester) async {
+    final app = await pumpApp(
+      tester,
+      size: const Size(1000, 800),
+      seed: (db, inbox) async {
+        await KvStore(db).set(KvKeys.appStyle, AppStyle.macos.name);
+        await TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        ).create(
+          listId: inbox.id,
+          title: 'Ring the plumber',
+          dueAt: composeDue(testNow, hour: 15),
+        );
+      },
+    );
+    // Today's tile counts the open task due today.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('sidebar-tile-0')),
+        matching: find.text('1'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(Key('sidebar-list-${app.inbox.id}')));
+    await tester.pumpAndSettle();
+    expect(app.router.state.matchedLocation, Routes.list(app.inbox.id));
+    expect(find.byKey(const Key('list-title')), findsOneWidget);
+    // Beside the sidebar there is nothing to go back to.
+    expect(find.byType(BackButton), findsNothing);
   });
 
   appTest('outside nemo, a list keeps its colour to its icon', (tester) async {

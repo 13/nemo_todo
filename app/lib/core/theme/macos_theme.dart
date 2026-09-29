@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
@@ -148,13 +150,20 @@ abstract final class MacosTheme {
   static ThemeData dark({Color? accent}) =>
       _build(accented(_dark, accent), darkColors);
 
+  /// [desktop] -- a macOS theme -- as iOS draws it, for a phone-sized
+  /// window: the same colours and shapes in iOS's larger type.
+  static ThemeData phone(ThemeData desktop) => desktop.copyWith(
+    textTheme: appleTextTheme(desktop.colorScheme, phone: true),
+  );
+
   static ThemeData _build(ColorScheme scheme, NemoColors nemo) {
     final isLight = scheme.brightness == Brightness.light;
-    final textTheme = manropeTextTheme(scheme);
+    final textTheme = appleTextTheme(scheme);
     // Raised surfaces: white on a white window, lifted by a hairline and
     // the faintest shadow; in the dark, a step lighter than the window.
     final raised = isLight ? Colors.white : scheme.surfaceContainerHigh;
     final field = isLight ? const Color(0x0D000000) : const Color(0x14FFFFFF);
+    final track = isLight ? const Color(0x14000000) : const Color(0x1FFFFFFF);
     const capsule = StadiumBorder();
     final hairline = BorderSide(color: nemo.separator, width: 0.5);
     WidgetStateProperty<Color?> selectedOr(Color selected, Color other) =>
@@ -166,7 +175,10 @@ abstract final class MacosTheme {
           (s) => s.contains(WidgetState.selected) ? selected : other,
         );
     final label = textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600);
+    // Controls keep the arrow, as on a Mac.
+    const arrow = WidgetStatePropertyAll<MouseCursor>(SystemMouseCursors.basic);
     final buttonStyle = ButtonStyle(
+      mouseCursor: arrow,
       shape: const WidgetStatePropertyAll(capsule),
       textStyle: WidgetStatePropertyAll(label),
       elevation: const WidgetStatePropertyAll(0),
@@ -176,6 +188,7 @@ abstract final class MacosTheme {
       useMaterial3: true,
       colorScheme: scheme,
       textTheme: textTheme,
+      fontFamily: 'Inter',
       extensions: [nemo, const AppStyleTheme(AppStyle.macos)],
       scaffoldBackgroundColor: scheme.surface,
       canvasColor: scheme.surface,
@@ -189,6 +202,11 @@ abstract final class MacosTheme {
         color: nemo.separator,
         thickness: 0.5,
         space: 1,
+      ),
+      // Apple's back is a chevron, not Material's arrow.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (_) =>
+            const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
@@ -208,9 +226,10 @@ abstract final class MacosTheme {
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,
         ),
+        // A bezel: the faintest edge around the fill.
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+          borderSide: hairline,
         ),
         // The focus ring: the accent, soft, just outside the field.
         focusedBorder: OutlineInputBorder(
@@ -253,6 +272,7 @@ abstract final class MacosTheme {
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
+        mouseCursor: arrow,
         color: raised,
         surfaceTintColor: Colors.transparent,
         elevation: 3,
@@ -329,7 +349,11 @@ abstract final class MacosTheme {
         selectedColor: scheme.primary.withValues(alpha: 0.14),
         labelStyle: textTheme.labelLarge,
       ),
+      iconButtonTheme: const IconButtonThemeData(
+        style: ButtonStyle(mouseCursor: arrow),
+      ),
       listTileTheme: ListTileThemeData(
+        mouseCursor: arrow,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
@@ -337,22 +361,25 @@ abstract final class MacosTheme {
         selectedColor: scheme.onSurface,
         iconColor: scheme.onSurfaceVariant,
       ),
+      // A Mac's segmented control: a grey track, the chosen segment raised
+      // out of it in white, and no accent -- choosing is not an action.
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
+          mouseCursor: arrow,
           shape: const WidgetStatePropertyAll(capsule),
-          side: WidgetStatePropertyAll(
-            BorderSide(color: scheme.outline.withValues(alpha: 0.35)),
-          ),
+          side: WidgetStatePropertyAll(BorderSide(color: track, width: 2)),
           backgroundColor: selectedOr(
-            scheme.primary.withValues(alpha: 0.14),
-            Colors.transparent,
+            isLight ? Colors.white : const Color(0xFF636366),
+            track,
           ),
-          foregroundColor: selectedOr(scheme.primary, scheme.onSurface),
+          foregroundColor: WidgetStatePropertyAll(scheme.onSurface),
           textStyle: WidgetStatePropertyAll(label),
+          visualDensity: VisualDensity.compact,
         ),
       ),
       // A macOS switch: a white knob on the accent when on, on grey when off.
       switchTheme: SwitchThemeData(
+        mouseCursor: arrow,
         thumbColor: const WidgetStatePropertyAll(Colors.white),
         trackColor: selectedOr(
           scheme.primary,
@@ -362,6 +389,7 @@ abstract final class MacosTheme {
         thumbIcon: const WidgetStatePropertyAll(null),
       ),
       checkboxTheme: CheckboxThemeData(
+        mouseCursor: arrow,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         side: BorderSide(color: scheme.outline, width: 1.2),
       ),
@@ -451,4 +479,69 @@ abstract final class MacosTheme {
       ),
     );
   }
+}
+
+/// Apple's type scales in Inter, coloured for [scheme]: the Mac's for a
+/// window, iOS's larger one for a phone ([phone]).
+///
+/// Material's roles, filled with Apple's sizes: 13 pt body and 11 pt
+/// captions on a Mac, 17 and 13 on a phone. Tracking follows Inter's own
+/// formula, tighter as the type grows, where Material spaces every size
+/// out -- half a point on body text -- which reads as Android at once.
+TextTheme appleTextTheme(ColorScheme scheme, {bool phone = false}) {
+  // On Material's own base, so a theme changing style animates between
+  // styles that agree on everything but these fields.
+  final base = Typography.material2021(colorScheme: scheme)
+      .englishLike
+      .bodyMedium!;
+  TextStyle style(double size, FontWeight weight, {double height = 1.25}) =>
+      base.copyWith(
+        fontFamily: 'Inter',
+        fontSize: size,
+        fontWeight: weight,
+        height: height,
+        // Inter's dynamic metrics: tracking = a + b * e^(c * size), in em.
+        letterSpacing: size * (-0.0223 + 0.185 * math.exp(-0.1745 * size)),
+        color: scheme.onSurface,
+        leadingDistribution: TextLeadingDistribution.even,
+      );
+  const regular = FontWeight.w400;
+  const medium = FontWeight.w500;
+  const semibold = FontWeight.w600;
+  const bold = FontWeight.w700;
+  return phone
+      ? TextTheme(
+          displayLarge: style(40, bold, height: 1.1),
+          displayMedium: style(34, bold, height: 1.1),
+          displaySmall: style(30, bold, height: 1.15),
+          headlineLarge: style(34, bold, height: 1.15),
+          headlineMedium: style(28, bold, height: 1.2),
+          headlineSmall: style(22, bold),
+          titleLarge: style(30, bold, height: 1.15),
+          titleMedium: style(17, semibold),
+          titleSmall: style(15, semibold),
+          bodyLarge: style(17, regular, height: 1.3),
+          bodyMedium: style(15, regular, height: 1.3),
+          bodySmall: style(13, regular),
+          labelLarge: style(15, medium),
+          labelMedium: style(13, regular),
+          labelSmall: style(11, medium),
+        )
+      : TextTheme(
+          displayLarge: style(34, bold, height: 1.1),
+          displayMedium: style(30, bold, height: 1.1),
+          displaySmall: style(26, bold, height: 1.15),
+          headlineLarge: style(26, bold, height: 1.15),
+          headlineMedium: style(22, bold, height: 1.2),
+          headlineSmall: style(17, bold),
+          titleLarge: style(24, bold, height: 1.15),
+          titleMedium: style(15, semibold),
+          titleSmall: style(13, semibold),
+          bodyLarge: style(14, regular, height: 1.3),
+          bodyMedium: style(13, regular, height: 1.3),
+          bodySmall: style(11, regular),
+          labelLarge: style(13, medium),
+          labelMedium: style(11, medium),
+          labelSmall: style(10, medium),
+        );
 }

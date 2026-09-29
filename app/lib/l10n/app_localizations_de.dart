@@ -345,6 +345,9 @@ class LDe extends L {
   String get styleMaterial => 'Material';
 
   @override
+  String get sidebarMyLists => 'Meine Listen';
+
+  @override
   String get settingsAccent => 'Akzentfarbe';
 
   @override

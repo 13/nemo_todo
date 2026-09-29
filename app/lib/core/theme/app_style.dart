@@ -34,4 +34,18 @@ class AppStyleTheme extends ThemeExtension<AppStyleTheme> {
 extension AppStyleContext on BuildContext {
   AppStyle get appStyle =>
       Theme.of(this).extension<AppStyleTheme>()?.style ?? AppStyle.nemo;
+
+  /// The pointer over something to click: an arrow on a Mac, where only
+  /// links show a hand; null keeps a widget's own (the hand elsewhere).
+  MouseCursor? get clickCursor =>
+      appStyle == AppStyle.macos ? SystemMouseCursors.basic : null;
+}
+
+/// Scrolling as Apple's platforms do it: past the end with a bounce.
+class AppleScrollBehavior extends MaterialScrollBehavior {
+  const AppleScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: RangeMaintainingScrollPhysics());
 }

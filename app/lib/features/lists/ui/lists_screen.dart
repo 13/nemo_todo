@@ -89,6 +89,7 @@ class ListCard extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         key: Key('list-card-${list.id}'),
+        mouseCursor: context.clickCursor,
         onTap: () => context.push(Routes.list(list.id)),
         onLongPress: list.isInbox
             ? null

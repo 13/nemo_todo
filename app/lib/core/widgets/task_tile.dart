@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/due_chip.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
@@ -17,6 +18,7 @@ import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_menu.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/router.dart';
+import 'package:nemo/screens/style_adaptation.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// One task in a list: round check, title, and a row of small facts.
@@ -36,8 +38,151 @@ class TaskTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The task open beside the list, which the arrow keys move.
+    final selected = ref.watch(selectedTaskProvider) == task.id;
+    ref.listen(selectedTaskProvider, (_, next) {
+      if (next == task.id) _keepInView(context);
+    });
+    final mac = context.appStyle == AppStyle.macos;
+    if (!mac) {
+      return _TileBody(
+        task: task,
+        showList: showList,
+        onLongPress: onLongPress,
+        highlight: selected ? context.nemoColors.selection : null,
+        radius: 12,
+        selectedKey: selected,
+      );
+    }
+    // macOS: the selection is the accent with white on it while the list
+    // has the keyboard, and grey once typing has moved elsewhere, as in
+    // Finder and Mail; rows between are parted by inset hairlines.
+    final body = !selected
+        ? _TileBody(
+            task: task,
+            showList: showList,
+            onLongPress: onLongPress,
+            radius: 8,
+          )
+        : ListenableBuilder(
+            listenable: FocusManager.instance,
+            builder: (context, _) {
+              final typing =
+                  FocusManager.instance.primaryFocus?.context
+                      ?.findAncestorStateOfType<EditableTextState>() !=
+                  null;
+              final theme = Theme.of(context);
+              return Theme(
+                data: typing ? theme : _onAccent(theme),
+                child: _TileBody(
+                  task: task,
+                  showList: showList,
+                  onLongPress: onLongPress,
+                  highlight: typing
+                      ? context.nemoColors.selection
+                      : theme.colorScheme.primary,
+                  radius: 8,
+                  selectedKey: true,
+                ),
+              );
+            },
+          );
+    return Stack(
+      children: [
+        body,
+        if (!selected)
+          Positioned(
+            left: StyleAdaptation.isPhone(context) ? 46 : 38,
+            right: 0,
+            bottom: 0,
+            child: Divider(height: 0.5, color: context.nemoColors.separator),
+          ),
+      ],
+    );
+  }
+
+  /// [theme] for a row drawn on the accent: everything in it in the colour
+  /// that reads there, the check inverted.
+  static ThemeData _onAccent(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final on = scheme.onPrimary;
+    final soft = on.withValues(alpha: 0.8);
+    final nemo = theme.extension<NemoColors>()!;
+    return theme.copyWith(
+      colorScheme: scheme.copyWith(
+        primary: on,
+        onPrimary: scheme.primary,
+        onSurface: on,
+        onSurfaceVariant: soft,
+        outline: soft,
+      ),
+      extensions: [
+        nemo.copyWith(
+          priorityLow: on,
+          priorityMedium: on,
+          priorityHigh: on,
+          overdue: on,
+          listPalette: [for (final _ in nemo.listPalette) on],
+        ),
+        ?theme.extension<AppStyleTheme>(),
+      ],
+    );
+  }
+
+  /// Scrolls just far enough to show this tile, and not at all if it is
+  /// already in view: the arrow keys can select a task below the fold.
+  static void _keepInView(BuildContext context) {
+    final box = context.findRenderObject();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (box == null || position == null) return;
+    final viewport = RenderAbstractViewport.maybeOf(box);
+    if (viewport == null) return;
+    final atTop = viewport.getOffsetToReveal(box, 0).offset;
+    final atBottom = viewport.getOffsetToReveal(box, 1).offset;
+    final target = position.pixels > atTop
+        ? atTop
+        : position.pixels < atBottom
+        ? atBottom
+        : null;
+    if (target == null) return;
+    unawaited(
+      position.animateTo(
+        target.clamp(position.minScrollExtent, position.maxScrollExtent),
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+}
+
+/// What a [TaskTile] draws, reading its colours from the theme it is
+/// built in, so a row on the accent can hand it a theme of its own.
+class _TileBody extends ConsumerWidget {
+  const _TileBody({
+    required this.task,
+    required this.showList,
+    required this.radius,
+    this.onLongPress,
+    this.highlight,
+    this.selectedKey = false,
+  });
+
+  final Task task;
+  final bool showList;
+  final VoidCallback? onLongPress;
+  final Color? highlight;
+  final double radius;
+  final bool selectedKey;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final nemo = context.nemoColors;
+    final mac = context.appStyle == AppStyle.macos;
+    final phone = StyleAdaptation.isPhone(context);
+    // Apple's rows are denser than Material's, a Mac's densest of all.
+    final checkSize = !mac ? 24.0 : (phone ? 22.0 : 18.0);
+    final rowPadding = !mac ? 6.0 : (phone ? 4.0 : 2.0);
     final now = ref.watch(nowProvider)();
     final progress = ref.watch(subtaskProgressProvider).value?[task.id];
     final list = showList
@@ -78,33 +223,32 @@ class TaskTile extends ConsumerWidget {
           child: MetaChip(icon: Icons.tag_rounded, label: tag),
         ),
     ];
-    // The task open beside the list, which the arrow keys move.
-    final selected = ref.watch(selectedTaskProvider) == task.id;
-    ref.listen(selectedTaskProvider, (_, next) {
-      if (next == task.id) _keepInView(context);
-    });
     final titleStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
       decoration: task.done ? TextDecoration.lineThrough : null,
       color: task.done ? scheme.onSurfaceVariant : scheme.onSurface,
-      fontWeight: FontWeight.w500,
+      fontWeight: mac ? FontWeight.w400 : FontWeight.w500,
     );
+    // The title sits level with the check's centre.
+    final titleTop = checkSize / 3 + checkSize / 2 - 10;
     return Material(
-      key: selected ? Key('selected-task-${task.id}') : null,
-      color: selected ? nemo.selection : Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
+      key: selectedKey ? Key('selected-task-${task.id}') : null,
+      color: highlight ?? Colors.transparent,
+      borderRadius: BorderRadius.circular(radius),
       child: InkWell(
         onTap: () => openTask(context, ref, task.id),
         onLongPress: onLongPress,
         onSecondaryTapUp: (d) =>
             showTaskMenu(context, ref, task, d.globalPosition),
-        borderRadius: BorderRadius.circular(12),
+        mouseCursor: context.clickCursor,
+        borderRadius: BorderRadius.circular(radius),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: rowPadding),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DoneCheck(
                 done: task.done,
+                size: checkSize,
                 color: nemo.priority(task.priority),
                 onChanged: (done) => completeTask(ref, task, done: done),
                 celebrate: ref.watch(celebrationsEnabledProvider),
@@ -115,7 +259,7 @@ class TaskTile extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 9),
+                      padding: EdgeInsets.only(top: mac ? titleTop : 9),
                       child: Text(task.title, style: titleStyle),
                     ),
                     if (meta.isNotEmpty)
@@ -162,41 +306,16 @@ class TaskTile extends ConsumerWidget {
                 ),
               if (task.priority > 0)
                 Padding(
-                  padding: const EdgeInsets.only(top: 10, right: 4),
+                  padding: EdgeInsets.only(top: mac ? titleTop : 10, right: 4),
                   child: Icon(
                     Icons.flag_rounded,
-                    size: 18,
+                    size: mac ? 16 : 18,
                     color: nemo.priority(task.priority),
                   ),
                 ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// Scrolls just far enough to show this tile, and not at all if it is
-  /// already in view: the arrow keys can select a task below the fold.
-  static void _keepInView(BuildContext context) {
-    final box = context.findRenderObject();
-    final position = Scrollable.maybeOf(context)?.position;
-    if (box == null || position == null) return;
-    final viewport = RenderAbstractViewport.maybeOf(box);
-    if (viewport == null) return;
-    final atTop = viewport.getOffsetToReveal(box, 0).offset;
-    final atBottom = viewport.getOffsetToReveal(box, 1).offset;
-    final target = position.pixels > atTop
-        ? atTop
-        : position.pixels < atBottom
-        ? atBottom
-        : null;
-    if (target == null) return;
-    unawaited(
-      position.animateTo(
-        target.clamp(position.minScrollExtent, position.maxScrollExtent),
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
       ),
     );
   }
@@ -212,8 +331,12 @@ class DoneCheck extends StatefulWidget {
     required this.onChanged,
     this.color,
     this.celebrate = false,
+    this.size = 24,
     super.key,
   });
+
+  /// Across the ring; the tap target is a third again on each side.
+  final double size;
 
   final bool done;
   final Color? color;
@@ -273,9 +396,9 @@ class _DoneCheckState extends State<DoneCheck>
       button: true,
       child: InkResponse(
         onTap: _toggle,
-        radius: 22,
+        radius: widget.size * 11 / 12,
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(widget.size / 3),
           child: Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,
@@ -285,15 +408,15 @@ class _DoneCheckState extends State<DoneCheck>
                 builder: (context, _) {
                   final t = _bounce.value;
                   if (t == 0 || t == 1) {
-                    return const SizedBox(width: 24, height: 24);
+                    return SizedBox.square(dimension: widget.size);
                   }
                   return Transform.scale(
                     scale: 1 + t,
                     child: Opacity(
                       opacity: 1 - t,
                       child: Container(
-                        width: 24,
-                        height: 24,
+                        width: widget.size,
+                        height: widget.size,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: scheme.primary, width: 2),
@@ -308,8 +431,8 @@ class _DoneCheckState extends State<DoneCheck>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  width: 24,
-                  height: 24,
+                  width: widget.size,
+                  height: widget.size,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: done ? scheme.primary : Colors.transparent,
@@ -321,7 +444,7 @@ class _DoneCheckState extends State<DoneCheck>
                   child: done
                       ? Icon(
                           Icons.check_rounded,
-                          size: 16,
+                          size: widget.size * 2 / 3,
                           color: scheme.onPrimary,
                         )
                       : null,

@@ -43,6 +43,12 @@ void main() {
       'assets/fonts/Manrope-SemiBold.ttf',
       'assets/fonts/Manrope-Bold.ttf',
     ]);
+    await _loadFont('Inter', [
+      'assets/fonts/Inter-Regular.ttf',
+      'assets/fonts/Inter-Medium.ttf',
+      'assets/fonts/Inter-SemiBold.ttf',
+      'assets/fonts/Inter-Bold.ttf',
+    ]);
     final icons = File(
       '${Platform.environment['HOME']}/flutter/bin/cache/artifacts/'
       'material_fonts/MaterialIcons-Regular.otf',
@@ -275,6 +281,29 @@ void main() {
             await t.sendKeyEvent(LogicalKeyboardKey.slash);
             await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
           },
+        ),
+      );
+      appTest(
+        '${style.name}$suffix wide, a list',
+        (t) => shoot(
+          t,
+          'wide_list$suffix',
+          location: Routes.list('list1'),
+          size: const Size(1280, 820),
+          dark: dark,
+          style: style,
+        ),
+      );
+      appTest(
+        '${style.name}$suffix wide, a task open',
+        (t) => shoot(
+          t,
+          'wide_selected$suffix',
+          location: Routes.today,
+          size: const Size(1280, 820),
+          dark: dark,
+          style: style,
+          then: (t) => t.tap(find.text('Send the quarterly report')),
         ),
       );
       appTest(

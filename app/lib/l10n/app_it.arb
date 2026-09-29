@@ -406,5 +406,18 @@
   "syncPullFailed": "La sincronizzazione non è riuscita. Riproverà a breve.",
   "syncPullSignedOut": "La sessione è scaduta. Accedi di nuovo nelle Impostazioni.",
   "shareTaskAdded": "Aggiunta a {list}",
-  "shareRemovePhoto": "Escludi questa immagine"
+  "shareRemovePhoto": "Escludi questa immagine",
+  "a11yDoneCheck": "Fatto: {title}",
+  "a11yDue": "Scade {when}",
+  "a11yOverdue": "In ritardo, scadeva {when}",
+  "a11yPriority": "Priorità {level}",
+  "a11yInList": "In {list}",
+  "a11ySubtasks": "{done} di {total} sottoattività fatte",
+  "a11yTags": "Tag: {tags}",
+  "a11yPhotos": "{count, plural, =1{1 foto} other{{count} foto}}",
+  "a11yShowTag": "Mostra #{tag}",
+  "a11yExpand": "Mostra",
+  "a11yCollapse": "Nascondi",
+  "searchClear": "Cancella la ricerca",
+  "listIconName": "{icon, select, list{Lista} inbox{In arrivo} work{Lavoro} home{Casa} cart{Spesa} star{Stella} heart{Cuore} flight{Viaggio} school{Scuola} fitness{Fitness} book{Libro} idea{Idea} other{Icona}}"
 }

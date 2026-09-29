@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -16,11 +17,15 @@ import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
+import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_menu.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
+import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/screens/style_adaptation.dart';
+import 'package:nemo/utils/dates.dart';
+import 'package:nemo/utils/format.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 /// One task in a list: round check, title, and a row of small facts.
@@ -80,9 +85,12 @@ class TaskTile extends ConsumerWidget {
                   task: task,
                   showList: showList,
                   onLongPress: onLongPress,
+                  // Deepened where white would not read on the accent.
                   highlight: typing
                       ? context.nemoColors.selection
-                      : theme.colorScheme.primary,
+                      : legibleOn(theme.colorScheme.primary, [
+                          theme.colorScheme.onPrimary,
+                        ]),
                   radius: 8,
                   selectedKey: true,
                 ),
@@ -232,93 +240,226 @@ class _TileBody extends ConsumerWidget {
     );
     // The title sits level with the check's centre.
     final titleTop = checkSize / 3 + checkSize / 2 - 10;
-    return Material(
-      key: selectedKey ? Key('selected-task-${task.id}') : null,
-      color: highlight ?? Colors.transparent,
-      borderRadius: BorderRadius.circular(radius),
-      child: InkWell(
-        onTap: () => openTask(context, ref, task.id),
-        onLongPress: onLongPress,
-        onSecondaryTapUp: (d) =>
-            showTaskMenu(context, ref, task, d.globalPosition),
-        mouseCursor: context.clickCursor,
+    // The check is drawn a third of itself inside its tap target, but a
+    // finger needs 48 px wherever there is no pointer: the target grows
+    // into the row's own padding, so the ring stays where it was drawn.
+    // Only a Mac's desktop list keeps its denser target.
+    final checkExtent = max<double>(
+      checkSize * 5 / 3,
+      mac && !phone ? 0 : kMinInteractiveDimension,
+    );
+    final ringX = 8 + checkSize * 5 / 6;
+    final ringY = rowPadding + checkSize * 5 / 6;
+    final checkLeft = max<double>(0, ringX - checkExtent / 2);
+    final checkGap = max<double>(
+      0,
+      8 + checkSize * 5 / 3 + 4 - checkLeft - checkExtent,
+    );
+    final checkTop = max<double>(0, ringY - checkExtent / 2);
+    // Where the target cannot reach up far enough, as in a Mac phone's
+    // tight rows, the ring moves down a little and the text with it.
+    final drop = checkTop + checkExtent / 2 - ringY;
+    final l = L.of(context);
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selectedKey,
+      label: _describe(l, Localizations.localeOf(context).toString(), now, (
+        list: list,
+        progress: progress,
+        photos: photos,
+      )),
+      // What a swipe, a long press, a right click or a tag's own tap does,
+      // for someone whose screen reader has taken those gestures over.
+      customSemanticsActions: {
+        CustomSemanticsAction(
+          label: task.done ? l.taskMenuUndone : l.taskMenuDone,
+        ): () =>
+            unawaited(completeTask(ref, task, done: !task.done)),
+        CustomSemanticsAction(label: l.taskMenuMove): () =>
+            unawaited(showRescheduleSheet(context, ref, task)),
+        CustomSemanticsAction(label: l.commonDelete): () =>
+            unawaited(deleteTaskWithUndo(context, ref, task)),
+        for (final tag in task.tags)
+          CustomSemanticsAction(label: l.a11yShowTag(tag)): () =>
+              unawaited(context.push(Routes.tag(tag))),
+      },
+      child: Material(
+        key: selectedKey ? Key('selected-task-${task.id}') : null,
+        color: highlight ?? Colors.transparent,
         borderRadius: BorderRadius.circular(radius),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: rowPadding),
-          child: Row(
+        child: InkWell(
+          onTap: () => openTask(context, ref, task.id),
+          onLongPress: onLongPress,
+          onSecondaryTapUp: (d) =>
+              showTaskMenu(context, ref, task, d.globalPosition),
+          mouseCursor: context.clickCursor,
+          borderRadius: BorderRadius.circular(radius),
+          child: Padding(
+            padding: EdgeInsets.only(left: checkLeft, right: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: checkTop),
+                  child: DoneCheck(
+                    done: task.done,
+                    size: checkSize,
+                    target: checkExtent,
+                    label: l.a11yDoneCheck(task.title),
+                    color: nemo.priority(task.priority),
+                    onChanged: (done) => completeTask(ref, task, done: done),
+                    celebrate: ref.watch(celebrationsEnabledProvider),
+                  ),
+                ),
+                SizedBox(width: checkGap),
+                // Said once, in the row's own description above.
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: rowPadding + drop,
+                        bottom: rowPadding,
+                      ),
+                      child: _facts(
+                        context,
+                        mac: mac,
+                        titleTop: titleTop,
+                        titleStyle: titleStyle,
+                        meta: meta,
+                        firstPhoto: firstPhoto,
+                        photos: photos,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The row as a screen reader says it: the title, then when it is due,
+  /// how much it matters, where it is and what hangs off it.
+  String _describe(
+    L l,
+    String locale,
+    DateTime now,
+    ({TaskList? list, ({int done, int total})? progress, int photos}) extra,
+  ) {
+    final dueAt = task.dueAt;
+    final (:list, :progress, :photos) = extra;
+    String? due;
+    if (dueAt != null) {
+      final day = dueLabel(
+        l,
+        locale,
+        dueAt: dueAt,
+        hasTime: task.dueHasTime,
+        now: now,
+        // A reader says the dot between day and time out loud.
+      ).replaceAll(' · ', ', ');
+      due =
+          !task.done &&
+              isOverdue(dueAt: dueAt, hasTime: task.dueHasTime, now: now)
+          ? l.a11yOverdue(day)
+          : l.a11yDue(day);
+    }
+    return [
+      task.title,
+      ?due,
+      if (task.priority > 0)
+        l.a11yPriority(switch (task.priority) {
+          1 => l.priorityLow,
+          2 => l.priorityMedium,
+          _ => l.priorityHigh,
+        }),
+      if (list != null) l.a11yInList(list.isInbox ? l.listsInbox : list.name),
+      if (progress != null && progress.total > 0)
+        l.a11ySubtasks(progress.done, progress.total),
+      if (task.tags.isNotEmpty) l.a11yTags(task.tags.join(', ')),
+      if (photos > 0) l.a11yPhotos(photos),
+    ].join('. ');
+  }
+
+  /// The title with its small facts beneath, and the picture and flag
+  /// beside them.
+  Widget _facts(
+    BuildContext context, {
+    required bool mac,
+    required double titleTop,
+    required TextStyle? titleStyle,
+    required List<Widget> meta,
+    required Photo? firstPhoto,
+    required int photos,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final nemo = context.nemoColors;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DoneCheck(
-                done: task.done,
-                size: checkSize,
-                color: nemo.priority(task.priority),
-                onChanged: (done) => completeTask(ref, task, done: done),
-                celebrate: ref.watch(celebrationsEnabledProvider),
+              Padding(
+                padding: EdgeInsets.only(top: mac ? titleTop : 9),
+                child: Text(task.title, style: titleStyle),
               ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: mac ? titleTop : 9),
-                      child: Text(task.title, style: titleStyle),
-                    ),
-                    if (meta.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2, bottom: 4),
-                        child: Wrap(spacing: 10, runSpacing: 2, children: meta),
-                      ),
-                  ],
-                ),
-              ),
-              if (firstPhoto != null)
+              if (meta.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 8, right: 4),
-                  child: Stack(
-                    key: Key('tile-photo-${task.id}'),
-                    children: [
-                      PhotoThumbnail(sha256: firstPhoto.sha256, size: 40),
-                      if (photos > 1)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: scheme.surface.withValues(alpha: 0.85),
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(6),
-                                bottomRight: Radius.circular(10),
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 1,
-                              ),
-                              child: Text(
-                                '+${photos - 1}',
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              if (task.priority > 0)
-                Padding(
-                  padding: EdgeInsets.only(top: mac ? titleTop : 10, right: 4),
-                  child: AppIcon(
-                    Icons.flag_rounded,
-                    size: mac ? 16 : 18,
-                    color: nemo.priority(task.priority),
-                  ),
+                  padding: const EdgeInsets.only(top: 2, bottom: 4),
+                  child: Wrap(spacing: 10, runSpacing: 2, children: meta),
                 ),
             ],
           ),
         ),
-      ),
+        if (firstPhoto != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, right: 4),
+            child: Stack(
+              key: Key('tile-photo-${task.id}'),
+              children: [
+                PhotoThumbnail(sha256: firstPhoto.sha256, size: 40),
+                if (photos > 1)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: scheme.surface.withValues(alpha: 0.85),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          bottomRight: Radius.circular(10),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        child: Text(
+                          '+${photos - 1}',
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (task.priority > 0)
+          Padding(
+            padding: EdgeInsets.only(top: mac ? titleTop : 10, right: 4),
+            child: AppIcon(
+              Icons.flag_rounded,
+              size: mac ? 16 : 18,
+              color: nemo.priority(task.priority),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -334,11 +475,21 @@ class DoneCheck extends StatefulWidget {
     this.color,
     this.celebrate = false,
     this.size = 24,
+    this.target = kMinInteractiveDimension,
+    this.label,
     super.key,
   });
 
-  /// Across the ring; the tap target is a third again on each side.
+  /// Across the ring.
   final double size;
+
+  /// Across the tap target around the ring: a finger's 48 px unless a
+  /// dense desktop row asks for less, and never less than a third of the
+  /// ring again on each side.
+  final double target;
+
+  /// What a screen reader calls it; its ticked state is said apart.
+  final String? label;
 
   final bool done;
   final Color? color;
@@ -399,14 +550,19 @@ class _DoneCheckState extends State<DoneCheck>
     final scheme = Theme.of(context).colorScheme;
     final ring = widget.color ?? scheme.outline;
     final done = widget.done;
+    // A checkbox to a screen reader, a node apart from the row it is in.
     return Semantics(
+      container: true,
       checked: done,
-      button: true,
+      enabled: true,
+      label: widget.label,
       child: InkResponse(
         onTap: _toggle,
         radius: widget.size * 11 / 12,
         child: Padding(
-          padding: EdgeInsets.all(widget.size / 3),
+          padding: EdgeInsets.all(
+            max(widget.size / 3, (widget.target - widget.size) / 2),
+          ),
           child: Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,

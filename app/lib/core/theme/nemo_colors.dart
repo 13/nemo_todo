@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 /// Brand colours outside the Material colour roles.
@@ -133,4 +135,28 @@ class NemoColors extends ThemeExtension<NemoColors> {
 
 extension NemoColorsContext on BuildContext {
   NemoColors get nemoColors => Theme.of(this).extension<NemoColors>()!;
+}
+
+/// How much brighter the lighter of [a] and [b] is than the darker, as
+/// WCAG measures it: 1 for the same colour, 21 for black on white.
+double contrastRatio(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  return (max(la, lb) + 0.05) / (min(la, lb) + 0.05);
+}
+
+/// [color], or where it is too faint for small text on every one of
+/// [grounds] (WCAG's 4.5:1), the same hue taken just far enough towards
+/// black on a light ground, or towards white on a dark one, that it is.
+Color legibleOn(Color color, List<Color> grounds) {
+  bool reads(Color c) => grounds.every((g) => contrastRatio(c, g) >= 4.5);
+  if (reads(color)) return color;
+  final light = grounds.first.computeLuminance() > 0.5;
+  final hsl = HSLColor.fromColor(color);
+  for (var step = 1; step <= 50; step++) {
+    final lightness = hsl.lightness + (light ? -step : step) / 50;
+    final c = hsl.withLightness(lightness.clamp(0, 1)).toColor();
+    if (reads(c)) return c;
+  }
+  return light ? Colors.black : Colors.white;
 }

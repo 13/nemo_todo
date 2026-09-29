@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nemo/core/widgets/app_icon.dart';
+import 'package:nemo/l10n/app_localizations.dart';
 
 /// Small caps-style label above a group of tiles, optionally collapsible.
 class SectionHeader extends StatelessWidget {
@@ -52,7 +53,28 @@ class SectionHeader extends StatelessWidget {
         ],
       ),
     );
+    final folded = collapsed;
     if (onToggle == null) return row;
-    return InkWell(onTap: onToggle, child: row);
+    final l = L.of(context);
+    // Says whether the section is open and what a tap will do to it.
+    return Semantics(
+      button: true,
+      expanded: folded == null ? null : !folded,
+      onTapHint: folded == null
+          ? null
+          : folded
+          ? l.a11yExpand
+          : l.a11yCollapse,
+      // A finger's height, the room below the title.
+      child: InkWell(
+        onTap: onToggle,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: kMinInteractiveDimension,
+          ),
+          child: row,
+        ),
+      ),
+    );
   }
 }

@@ -1548,4 +1548,84 @@ class LIt extends L {
 
   @override
   String get shareRemovePhoto => 'Escludi questa immagine';
+
+  @override
+  String a11yDoneCheck(String title) {
+    return 'Fatto: $title';
+  }
+
+  @override
+  String a11yDue(String when) {
+    return 'Scade $when';
+  }
+
+  @override
+  String a11yOverdue(String when) {
+    return 'In ritardo, scadeva $when';
+  }
+
+  @override
+  String a11yPriority(String level) {
+    return 'Priorità $level';
+  }
+
+  @override
+  String a11yInList(String list) {
+    return 'In $list';
+  }
+
+  @override
+  String a11ySubtasks(int done, int total) {
+    return '$done di $total sottoattività fatte';
+  }
+
+  @override
+  String a11yTags(String tags) {
+    return 'Tag: $tags';
+  }
+
+  @override
+  String a11yPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count foto',
+      one: '1 foto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yShowTag(String tag) {
+    return 'Mostra #$tag';
+  }
+
+  @override
+  String get a11yExpand => 'Mostra';
+
+  @override
+  String get a11yCollapse => 'Nascondi';
+
+  @override
+  String get searchClear => 'Cancella la ricerca';
+
+  @override
+  String listIconName(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'list': 'Lista',
+      'inbox': 'In arrivo',
+      'work': 'Lavoro',
+      'home': 'Casa',
+      'cart': 'Spesa',
+      'star': 'Stella',
+      'heart': 'Cuore',
+      'flight': 'Viaggio',
+      'school': 'Scuola',
+      'fitness': 'Fitness',
+      'book': 'Libro',
+      'idea': 'Idea',
+      'other': 'Icona',
+    });
+    return '$_temp0';
+  }
 }

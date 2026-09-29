@@ -2540,6 +2540,84 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Leave out this picture'**
   String get shareRemovePhoto;
+
+  /// Screen reader label of a task's round checkbox; its ticked state is announced separately.
+  ///
+  /// In en, this message translates to:
+  /// **'Done: {title}'**
+  String a11yDoneCheck(String title);
+
+  /// Screen reader: part of a task row's description, e.g. 'Due Tomorrow'.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {when}'**
+  String a11yDue(String when);
+
+  /// Screen reader: part of a task row's description for a task past its due date.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue, due {when}'**
+  String a11yOverdue(String when);
+
+  /// Screen reader: a task row's priority, level being Low, Medium or High.
+  ///
+  /// In en, this message translates to:
+  /// **'{level} priority'**
+  String a11yPriority(String level);
+
+  /// Screen reader: the list a task row belongs to.
+  ///
+  /// In en, this message translates to:
+  /// **'In {list}'**
+  String a11yInList(String list);
+
+  /// Screen reader: a task row's subtask progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} subtasks done'**
+  String a11ySubtasks(int done, int total);
+
+  /// Screen reader: a task row's tags, comma separated.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags: {tags}'**
+  String a11yTags(String tags);
+
+  /// Screen reader: how many pictures a task row has.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo} other{{count} photos}}'**
+  String a11yPhotos(int count);
+
+  /// Screen reader action on a task row: open the tasks with this tag.
+  ///
+  /// In en, this message translates to:
+  /// **'Show #{tag}'**
+  String a11yShowTag(String tag);
+
+  /// Screen reader hint on a folded section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get a11yExpand;
+
+  /// Screen reader hint on an unfolded section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get a11yCollapse;
+
+  /// Tooltip of the button that empties the search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get searchClear;
+
+  /// Screen reader name of an icon a list can carry.
+  ///
+  /// In en, this message translates to:
+  /// **'{icon, select, list{List} inbox{Inbox} work{Work} home{Home} cart{Shopping} star{Star} heart{Heart} flight{Travel} school{School} fitness{Fitness} book{Book} idea{Idea} other{Icon}}'**
+  String listIconName(String icon);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

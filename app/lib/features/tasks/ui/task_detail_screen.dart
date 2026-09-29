@@ -167,14 +167,14 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: DoneCheck(
-                    done: task.done,
-                    color: nemo.priority(task.priority),
-                    onChanged: (done) => completeTask(ref, task, done: done),
-                    celebrate: ref.watch(celebrationsEnabledProvider),
-                  ),
+                // Its tap target is a finger's 48 px, which puts the ring
+                // level with the title without a drop of its own.
+                DoneCheck(
+                  label: l.a11yDoneCheck(task.title),
+                  done: task.done,
+                  color: nemo.priority(task.priority),
+                  onChanged: (done) => completeTask(ref, task, done: done),
+                  celebrate: ref.watch(celebrationsEnabledProvider),
                 ),
                 Expanded(
                   child: TextField(

@@ -1514,4 +1514,84 @@ class LEn extends L {
 
   @override
   String get shareRemovePhoto => 'Leave out this picture';
+
+  @override
+  String a11yDoneCheck(String title) {
+    return 'Done: $title';
+  }
+
+  @override
+  String a11yDue(String when) {
+    return 'Due $when';
+  }
+
+  @override
+  String a11yOverdue(String when) {
+    return 'Overdue, due $when';
+  }
+
+  @override
+  String a11yPriority(String level) {
+    return '$level priority';
+  }
+
+  @override
+  String a11yInList(String list) {
+    return 'In $list';
+  }
+
+  @override
+  String a11ySubtasks(int done, int total) {
+    return '$done of $total subtasks done';
+  }
+
+  @override
+  String a11yTags(String tags) {
+    return 'Tags: $tags';
+  }
+
+  @override
+  String a11yPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos',
+      one: '1 photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yShowTag(String tag) {
+    return 'Show #$tag';
+  }
+
+  @override
+  String get a11yExpand => 'Show';
+
+  @override
+  String get a11yCollapse => 'Hide';
+
+  @override
+  String get searchClear => 'Clear search';
+
+  @override
+  String listIconName(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'list': 'List',
+      'inbox': 'Inbox',
+      'work': 'Work',
+      'home': 'Home',
+      'cart': 'Shopping',
+      'star': 'Star',
+      'heart': 'Heart',
+      'flight': 'Travel',
+      'school': 'School',
+      'fitness': 'Fitness',
+      'book': 'Book',
+      'idea': 'Idea',
+      'other': 'Icon',
+    });
+    return '$_temp0';
+  }
 }

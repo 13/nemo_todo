@@ -343,13 +343,40 @@
   "dailyListChannelName": "Daily list",
   "dailyListChannelDescription": "Once a day: what's due today and overdue",
   "dailyListToday": "{count, plural, =1{1 task today} other{{count} tasks today}}",
-  "@dailyListToday": {"placeholders": {"count": {"type": "int"}}},
+  "@dailyListToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dailyListOverdue": "{count, plural, =1{1 overdue task} other{{count} overdue tasks}}",
-  "@dailyListOverdue": {"placeholders": {"count": {"type": "int"}}},
+  "@dailyListOverdue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dailyListTodayOverdue": "{today} today · {overdue} overdue",
-  "@dailyListTodayOverdue": {"placeholders": {"today": {"type": "int"}, "overdue": {"type": "int"}}},
+  "@dailyListTodayOverdue": {
+    "placeholders": {
+      "today": {
+        "type": "int"
+      },
+      "overdue": {
+        "type": "int"
+      }
+    }
+  },
   "dailyListMore": "+{count} more",
-  "@dailyListMore": {"placeholders": {"count": {"type": "int"}}},
+  "@dailyListMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "browserNotificationsTitle": "Notifications in this browser",
   "browserNotificationsOn": "On. Reminders and the daily list arrive only while a nemo tab is open.",
   "browserNotificationsAsk": "Reminders and the daily list arrive only while a nemo tab is open. Allow notifications to get them.",
@@ -574,26 +601,52 @@
   "achievementsTitle": "Achievements",
   "achievementsUnlockedCount": "{unlocked} of {total} unlocked",
   "@achievementsUnlockedCount": {
-    "placeholders": {"unlocked": {"type": "int"}, "total": {"type": "int"}}
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "achievementsProgress": "{value} / {target}",
   "@achievementsProgress": {
-    "placeholders": {"value": {"type": "int"}, "target": {"type": "int"}}
+    "placeholders": {
+      "value": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
   },
   "achievementsUnlocked": "Unlocked",
   "achievementsStreak": "{count, plural, =1{1-day streak} other{{count}-day streak}}",
   "@achievementsStreak": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "achievementsLoadError": "Achievements could not be loaded.",
   "achievementUnlockedBanner": "Achievement unlocked",
   "achievementsUnlockedMany": "{count, plural, other{{count} achievements unlocked}}",
   "@achievementsUnlockedMany": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "settingsExportedWithoutPhotos": "{count, plural, =1{Tasks exported. 1 photo is not on this device and was left out.} other{Tasks exported. {count} photos are not on this device and were left out.}}",
   "@settingsExportedWithoutPhotos": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notesEmpty": "No notes yet. A note keeps what a task cannot: the recipe, the address, the paragraph.",
   "notesPinned": "Pinned",
@@ -679,12 +732,20 @@
   "noteTodoCreated": "{count, plural, =1{Task created} other{{count} tasks created}}",
   "@noteTodoCreated": {
     "description": "Snackbar after make-todo created tasks.",
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "noteTodoCreatedNoLink": "{count, plural, =1{Task created. The note changed meanwhile, so no link was added.} other{{count} tasks created. The note changed meanwhile, so no links were added.}}",
   "@noteTodoCreatedNoLink": {
     "description": "Snackbar after make-todo created tasks while the note was changed elsewhere, so the links were left out.",
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "noteTodoFailed": "Couldn't create the task",
   "@noteTodoFailed": {
@@ -737,17 +798,29 @@
   "motivationStreakDay0": "Day {days} in a row.",
   "@motivationStreakDay0": {
     "description": "Message after ticking off a task: first completion today, continuing a streak of two days or more.",
-    "placeholders": {"days": {"type": "int"}}
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "motivationStreakDay1": "{days} days running. Keep it gentle.",
   "@motivationStreakDay1": {
     "description": "Message after ticking off a task: first completion today, continuing a streak of two days or more.",
-    "placeholders": {"days": {"type": "int"}}
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "motivationStreakDay2": "Another day, another step. {days} in a row.",
   "@motivationStreakDay2": {
     "description": "Message after ticking off a task: first completion today, continuing a streak of two days or more.",
-    "placeholders": {"days": {"type": "int"}}
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "motivationFirstOfDay0": "Good start.",
   "@motivationFirstOfDay0": {
@@ -780,12 +853,26 @@
   "motivationProgress0": "{done} of {total} done today.",
   "@motivationProgress0": {
     "description": "Message after ticking off a task: a count of today's progress.",
-    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "motivationProgress1": "{done} down, {left} to go.",
   "@motivationProgress1": {
     "description": "Message after ticking off a task: a count of today's progress.",
-    "placeholders": {"done": {"type": "int"}, "left": {"type": "int"}}
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
   },
   "motivationGeneric0": "Nice, one less thing.",
   "@motivationGeneric0": {
@@ -838,7 +925,14 @@
   "todayProgressCount": "{done} of {total} done",
   "@todayProgressCount": {
     "description": "Today header's count of tasks completed out of total.",
-    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "todayWelcomeBack0": "Welcome back. One small thing is a good start.",
   "@todayWelcomeBack0": {
@@ -884,5 +978,110 @@
   "shareRemovePhoto": "Leave out this picture",
   "@shareRemovePhoto": {
     "description": "Tooltip on a shared picture in the new-task sheet; the picture is not attached."
+  },
+  "a11yDoneCheck": "Done: {title}",
+  "@a11yDoneCheck": {
+    "description": "Screen reader label of a task's round checkbox; its ticked state is announced separately.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yDue": "Due {when}",
+  "@a11yDue": {
+    "description": "Screen reader: part of a task row's description, e.g. 'Due Tomorrow'.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yOverdue": "Overdue, due {when}",
+  "@a11yOverdue": {
+    "description": "Screen reader: part of a task row's description for a task past its due date.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yPriority": "{level} priority",
+  "@a11yPriority": {
+    "description": "Screen reader: a task row's priority, level being Low, Medium or High.",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yInList": "In {list}",
+  "@a11yInList": {
+    "description": "Screen reader: the list a task row belongs to.",
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySubtasks": "{done} of {total} subtasks done",
+  "@a11ySubtasks": {
+    "description": "Screen reader: a task row's subtask progress.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yTags": "Tags: {tags}",
+  "@a11yTags": {
+    "description": "Screen reader: a task row's tags, comma separated.",
+    "placeholders": {
+      "tags": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yPhotos": "{count, plural, =1{1 photo} other{{count} photos}}",
+  "@a11yPhotos": {
+    "description": "Screen reader: how many pictures a task row has.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yShowTag": "Show #{tag}",
+  "@a11yShowTag": {
+    "description": "Screen reader action on a task row: open the tasks with this tag.",
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yExpand": "Show",
+  "@a11yExpand": {
+    "description": "Screen reader hint on a folded section header."
+  },
+  "a11yCollapse": "Hide",
+  "@a11yCollapse": {
+    "description": "Screen reader hint on an unfolded section header."
+  },
+  "searchClear": "Clear search",
+  "@searchClear": {
+    "description": "Tooltip of the button that empties the search field."
+  },
+  "listIconName": "{icon, select, list{List} inbox{Inbox} work{Work} home{Home} cart{Shopping} star{Star} heart{Heart} flight{Travel} school{School} fitness{Fitness} book{Book} idea{Idea} other{Icon}}",
+  "@listIconName": {
+    "description": "Screen reader name of an icon a list can carry.",
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -406,5 +406,18 @@
   "syncPullFailed": "Synchronisieren hat nicht geklappt. Es wird gleich erneut versucht.",
   "syncPullSignedOut": "Deine Sitzung ist abgelaufen. Melde dich in den Einstellungen erneut an.",
   "shareTaskAdded": "Zu {list} hinzugefügt",
-  "shareRemovePhoto": "Dieses Bild weglassen"
+  "shareRemovePhoto": "Dieses Bild weglassen",
+  "a11yDoneCheck": "Erledigt: {title}",
+  "a11yDue": "Fällig {when}",
+  "a11yOverdue": "Überfällig, fällig {when}",
+  "a11yPriority": "Priorität {level}",
+  "a11yInList": "In {list}",
+  "a11ySubtasks": "{done} von {total} Teilaufgaben erledigt",
+  "a11yTags": "Tags: {tags}",
+  "a11yPhotos": "{count, plural, =1{1 Foto} other{{count} Fotos}}",
+  "a11yShowTag": "#{tag} anzeigen",
+  "a11yExpand": "Einblenden",
+  "a11yCollapse": "Ausblenden",
+  "searchClear": "Suche leeren",
+  "listIconName": "{icon, select, list{Liste} inbox{Eingang} work{Arbeit} home{Zuhause} cart{Einkaufen} star{Stern} heart{Herz} flight{Reise} school{Schule} fitness{Fitness} book{Buch} idea{Idee} other{Symbol}}"
 }

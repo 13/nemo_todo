@@ -11,7 +11,8 @@ someone using the app rather than which file moved.
 
 Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
-would ship without them, and nothing would say so.
+would ship without them, and nothing would say so. `tool/release.sh <version>`
+does the renaming, and tags only once CI has passed on the release commit.
 
 ## 0.15.3 - 2026-09-29
 

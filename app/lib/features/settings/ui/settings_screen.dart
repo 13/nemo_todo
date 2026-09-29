@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/celebrations/ui/celebration_settings_section.dart';
@@ -34,6 +35,33 @@ class SettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 32),
           children: [
             SectionHeader(title: l.settingsAppearance),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SegmentedButton<AppStyle>(
+                key: const Key('app-style'),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: AppStyle.nemo,
+                    label: Text(l.styleNemo),
+                    icon: const Icon(Icons.water_drop_outlined),
+                  ),
+                  ButtonSegment(
+                    value: AppStyle.macos,
+                    label: Text(l.styleMacos),
+                    icon: const Icon(Icons.laptop_mac_outlined),
+                  ),
+                  ButtonSegment(
+                    value: AppStyle.material,
+                    label: Text(l.styleMaterial),
+                    icon: const Icon(Icons.android_rounded),
+                  ),
+                ],
+                selected: {ref.watch(appStyleControllerProvider)},
+                onSelectionChanged: (s) =>
+                    ref.read(appStyleControllerProvider.notifier).set(s.first),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SegmentedButton<ThemeMode>(

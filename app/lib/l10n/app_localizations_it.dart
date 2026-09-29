@@ -334,6 +334,18 @@ class LIt extends L {
   String get themeDark => 'Scuro';
 
   @override
+  String get settingsStyle => 'Stile';
+
+  @override
+  String get styleNemo => 'nemo';
+
+  @override
+  String get styleMacos => 'macOS';
+
+  @override
+  String get styleMaterial => 'Material';
+
+  @override
   String get settingsAccount => 'Account';
 
   @override

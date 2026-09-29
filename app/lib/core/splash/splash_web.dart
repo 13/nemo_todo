@@ -19,7 +19,13 @@ void removeSplash() {
 /// Leaves the app's theme -- `light`, `dark` or `system` -- where the
 /// server can read it when it next serves the page, so the loading screen
 /// paints in the app's theme rather than the device's.
-void rememberTheme(String mode) {
-  web.document.cookie =
-      'nemo-theme=$mode; path=/; max-age=31536000; samesite=lax';
+void rememberTheme(String mode) => _remember('nemo-theme', mode);
+
+/// Leaves the app's style -- `nemo`, `macos` or `material` -- beside its
+/// theme, for the same reason: the loading screen paints in the style's
+/// colours rather than flashing nemo's teal before a different app.
+void rememberStyle(String style) => _remember('nemo-style', style);
+
+void _remember(String name, String value) {
+  web.document.cookie = '$name=$value; path=/; max-age=31536000; samesite=lax';
 }

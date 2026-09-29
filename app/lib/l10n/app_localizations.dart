@@ -663,6 +663,30 @@ abstract class L {
   /// **'Dark'**
   String get themeDark;
 
+  /// No description provided for @settingsStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get settingsStyle;
+
+  /// No description provided for @styleNemo.
+  ///
+  /// In en, this message translates to:
+  /// **'nemo'**
+  String get styleNemo;
+
+  /// No description provided for @styleMacos.
+  ///
+  /// In en, this message translates to:
+  /// **'macOS'**
+  String get styleMacos;
+
+  /// No description provided for @styleMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Material'**
+  String get styleMaterial;
+
   /// No description provided for @settingsAccount.
   ///
   /// In en, this message translates to:

@@ -94,10 +94,12 @@ class _NemoAppState extends ConsumerState<NemoApp> {
     if (_guarded) {
       ref.listen(authControllerProvider, (_, _) => _session.value++);
     }
+    final style = ref.watch(appStyleControllerProvider);
+    final wallpaper = ref.watch(wallpaperSchemesProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => L.of(context).appName,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.build(style, Brightness.light, wallpaper: wallpaper),
+      darkTheme: AppTheme.build(style, Brightness.dark, wallpaper: wallpaper),
       themeMode: ref.watch(themeModeControllerProvider),
       localizationsDelegates: L.localizationsDelegates,
       supportedLocales: L.supportedLocales,

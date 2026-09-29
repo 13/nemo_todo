@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/tasks/data/subtasks_repository.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
@@ -101,6 +102,7 @@ void main() {
     required String location,
     Size size = const Size(400, 820),
     bool dark = false,
+    AppStyle style = AppStyle.nemo,
   }) async {
     await pumpApp(
       tester,
@@ -108,12 +110,17 @@ void main() {
       size: size,
       seed: (db, inbox) async {
         if (dark) await KvStore(db).set(KvKeys.themeMode, 'dark');
+        await KvStore(db).set(KvKeys.appStyle, style.name);
         await seed(db, inbox);
       },
     );
     await expectLater(
       find.byType(MaterialApp),
-      matchesGoldenFile('../../build/screens/$name.png'),
+      matchesGoldenFile(
+        style == AppStyle.nemo
+            ? '../../build/screens/$name.png'
+            : '../../build/screens/${style.name}/$name.png',
+      ),
     );
   }
 
@@ -147,6 +154,64 @@ void main() {
     (t) =>
         shoot(t, 'wide', location: Routes.today, size: const Size(1280, 820)),
   );
+
+  // The other styles, under build/screens/<style>/.
+  for (final style in [AppStyle.macos, AppStyle.material]) {
+    for (final dark in [false, true]) {
+      final suffix = dark ? '_dark' : '';
+      appTest(
+        '${style.name}$suffix today',
+        (t) => shoot(
+          t,
+          'today$suffix',
+          location: Routes.today,
+          dark: dark,
+          style: style,
+        ),
+      );
+      appTest(
+        '${style.name}$suffix lists',
+        (t) => shoot(
+          t,
+          'lists$suffix',
+          location: Routes.lists,
+          dark: dark,
+          style: style,
+        ),
+      );
+      appTest(
+        '${style.name}$suffix task detail',
+        (t) => shoot(
+          t,
+          'task_detail$suffix',
+          location: Routes.task('task2'),
+          dark: dark,
+          style: style,
+        ),
+      );
+      appTest(
+        '${style.name}$suffix settings',
+        (t) => shoot(
+          t,
+          'settings$suffix',
+          location: Routes.settings,
+          dark: dark,
+          style: style,
+        ),
+      );
+      appTest(
+        '${style.name}$suffix wide',
+        (t) => shoot(
+          t,
+          'wide$suffix',
+          location: Routes.today,
+          size: const Size(1280, 820),
+          dark: dark,
+          style: style,
+        ),
+      );
+    }
+  }
 }
 
 Future<void> _loadFont(String family, List<String> paths) async {

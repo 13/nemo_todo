@@ -333,6 +333,18 @@ class LEn extends L {
   String get themeDark => 'Dark';
 
   @override
+  String get settingsStyle => 'Style';
+
+  @override
+  String get styleNemo => 'nemo';
+
+  @override
+  String get styleMacos => 'macOS';
+
+  @override
+  String get styleMaterial => 'Material';
+
+  @override
   String get settingsAccount => 'Account';
 
   @override

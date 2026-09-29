@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/features/achievements/ui/achievements_screen.dart';
 import 'package:nemo/router.dart';
 
@@ -14,6 +15,29 @@ void main() {
     expect(await KvStore(app.db).get(KvKeys.themeMode), 'dark');
     final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(materialApp.themeMode, ThemeMode.dark);
+  });
+
+  appTest('style choice is applied and persisted', (tester) async {
+    final app = await pumpApp(tester, initialLocation: Routes.settings);
+    AppStyle style() => tester
+        .widget<MaterialApp>(find.byType(MaterialApp))
+        .theme!
+        .extension<AppStyleTheme>()!
+        .style;
+    expect(style(), AppStyle.nemo);
+    await tester.tap(find.text('macOS'));
+    await tester.pumpAndSettle();
+    expect(await KvStore(app.db).get(KvKeys.appStyle), 'macos');
+    expect(style(), AppStyle.macos);
+  });
+
+  appTest('a stored style is the one the app starts in', (tester) async {
+    await pumpApp(
+      tester,
+      seed: (db, _) => KvStore(db).set(KvKeys.appStyle, 'material'),
+    );
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(app.darkTheme!.extension<AppStyleTheme>()!.style, AppStyle.material);
   });
 
   appTest('celebrations start on, sound off, achievements on', (tester) async {

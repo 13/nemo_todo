@@ -512,6 +512,21 @@ void main() {
       expect(body, contains('\n<html>\n'), reason: '$cookie');
       expect(body, isNot(contains('data-theme')), reason: '$cookie');
     }
+
+    // The style rides alongside, so the loading screen is in its colours;
+    // nemo's own is the page's default and needs no mark.
+    expect(
+      await page('nemo-theme=dark; nemo-style=macos'),
+      contains('<html data-theme="dark" data-style="macos">'),
+    );
+    expect(
+      await page('nemo-style=material'),
+      contains('<html data-style="material">'),
+    );
+    for (final cookie in ['nemo-style=nemo', 'nemo-style="><x']) {
+      final body = await page(cookie);
+      expect(body, contains('\n<html>\n'), reason: cookie);
+    }
   });
 
   test('acceptsEncoding reads accept-encoding', () {

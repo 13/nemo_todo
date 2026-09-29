@@ -7,6 +7,8 @@ import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/daily_digest_scheduler.dart';
 import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/core/theme/app_style.dart';
+import 'package:nemo/core/theme/material_theme.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo_core/nemo_core.dart';
 import 'package:uuid/uuid.dart';
@@ -17,6 +19,7 @@ class AppBootstrap {
     required this.nodeId,
     required this.hlcLast,
     required this.themeMode,
+    this.appStyle = AppStyle.nemo,
     this.serverUrl,
     this.username,
     this.lastSyncAt,
@@ -33,6 +36,10 @@ class AppBootstrap {
   final String nodeId;
   final Hlc? hlcLast;
   final ThemeMode themeMode;
+
+  /// The look chosen in Settings; nemo's own until something else is.
+  final AppStyle appStyle;
+
   final String? serverUrl;
   final String? username;
 
@@ -76,11 +83,13 @@ class AppBootstrap {
     }
     final last = await kv.get(KvKeys.hlcLast);
     final theme = await kv.get(KvKeys.themeMode);
+    final style = await kv.get(KvKeys.appStyle);
     final lastSync = await kv.get(KvKeys.lastSyncAt);
     return AppBootstrap(
       nodeId: nodeId,
       hlcLast: last == null ? null : Hlc.parse(last),
       themeMode: ThemeMode.values.asNameMap()[theme] ?? ThemeMode.system,
+      appStyle: AppStyle.values.asNameMap()[style] ?? AppStyle.nemo,
       serverUrl: await kv.get(KvKeys.serverUrl),
       username: await kv.get(KvKeys.username),
       lastSyncAt: lastSync == null ? null : int.tryParse(lastSync),
@@ -169,6 +178,10 @@ final remindersSupportedProvider = Provider<bool>(
 /// something you add later. The web app is not -- it is opened at the
 /// address of a server, by someone who has an account on it -- so there it
 /// asks who you are before it shows a single task.
+/// The wallpaper's colours, where Android offered them at startup; `main`
+/// overrides this with what `loadWallpaperSchemes` found.
+final wallpaperSchemesProvider = Provider<WallpaperSchemes?>((_) => null);
+
 final authRequiredProvider = Provider<bool>((_) => kIsWeb);
 
 /// Whether this build was handed to the user by the server it syncs with.

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/splash/splash.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'settings_controller.g.dart';
@@ -16,6 +17,19 @@ class ThemeModeController extends _$ThemeModeController {
     state = mode;
     rememberTheme(mode.name);
     await ref.read(kvStoreProvider).set(KvKeys.themeMode, mode.name);
+  }
+}
+
+/// Which [AppStyle] the app is drawn in, persisted in the key-value store.
+@Riverpod(keepAlive: true)
+class AppStyleController extends _$AppStyleController {
+  @override
+  AppStyle build() => ref.watch(bootstrapProvider).appStyle;
+
+  Future<void> set(AppStyle style) async {
+    state = style;
+    rememberStyle(style.name);
+    await ref.read(kvStoreProvider).set(KvKeys.appStyle, style.name);
   }
 }
 

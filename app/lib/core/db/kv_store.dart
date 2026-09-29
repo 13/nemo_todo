@@ -6,6 +6,7 @@ abstract final class KvKeys {
   static const hlcLast = 'hlc_last';
   static const cursor = 'sync_cursor';
   static const themeMode = 'theme_mode';
+  static const appStyle = 'app_style';
   static const serverUrl = 'server_url';
   static const username = 'username';
   static const lastSyncAt = 'last_sync_at';

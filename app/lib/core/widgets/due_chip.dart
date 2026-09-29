@@ -42,26 +42,37 @@ class DueChip extends StatelessWidget {
         now: now,
       ),
       color: color,
+      // Every colour here is one text can be read in, and overdue is the
+      // one fact on a tile worth seeing before reading anything else.
+      tintLabel: true,
     );
   }
 }
 
 /// Icon + short text used in task tiles' meta rows.
+///
+/// [color] always colours the icon; it colours the text too where the
+/// style says so (`NemoColors.tintedMetaText`) or [tintLabel] asks, since
+/// a list's colour is often too light to read small text in.
 class MetaChip extends StatelessWidget {
   const MetaChip({
     required this.icon,
     required this.label,
     this.color,
+    this.tintLabel = false,
     super.key,
   });
 
   final IconData icon;
   final String label;
   final Color? color;
+  final bool tintLabel;
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
+    final c = color ?? secondary;
+    final text = tintLabel || context.nemoColors.tintedMetaText ? c : secondary;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -69,7 +80,7 @@ class MetaChip extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: c),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: text),
         ),
       ],
     );

@@ -235,8 +235,14 @@ Future<TestApp> pumpApp(
       container: container,
       child: Consumer(
         builder: (context, ref, _) => MaterialApp.router(
-          theme: AppTheme.light(),
-          darkTheme: AppTheme.dark(),
+          theme: AppTheme.build(
+            ref.watch(appStyleControllerProvider),
+            Brightness.light,
+          ),
+          darkTheme: AppTheme.build(
+            ref.watch(appStyleControllerProvider),
+            Brightness.dark,
+          ),
           themeMode: ref.watch(themeModeControllerProvider),
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,

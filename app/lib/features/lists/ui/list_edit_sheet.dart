@@ -104,7 +104,19 @@ class _ListEditSheetState extends ConsumerState<ListEditSheet> {
                       ),
                     ),
                     child: _color == i
-                        ? const Icon(Icons.check, size: 18, color: Colors.white)
+                        ? Icon(
+                            Icons.check,
+                            size: 18,
+                            // White on a deep colour, black on a light one:
+                            // dark themes' palettes are pastels.
+                            color:
+                                ThemeData.estimateBrightnessForColor(
+                                      nemo.listColor(i),
+                                    ) ==
+                                    Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
+                          )
                         : null,
                   ),
                 ),

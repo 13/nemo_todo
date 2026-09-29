@@ -9,6 +9,7 @@ import 'package:nemo/core/notifications/notifications_api.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/splash/splash.dart';
+import 'package:nemo/core/theme/material_theme.dart';
 import 'package:nemo/features/lists/data/lists_repository.dart';
 import 'package:nemo/features/photos/data/photo_store.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -33,6 +34,7 @@ Future<void> main() async {
     // Set before this was remembered, or in another tab: the page's next
     // loading screen should match whatever the app now uses.
     rememberTheme(boot.bootstrap.themeMode.name);
+    rememberStyle(boot.bootstrap.appStyle.name);
     final photoStore = await openPhotoStore();
     _run(
       ProviderScope(
@@ -48,6 +50,7 @@ Future<void> main() async {
           ),
           notificationRouteProvider.overrideWithValue(tapped),
           photoStoreProvider.overrideWithValue(photoStore),
+          wallpaperSchemesProvider.overrideWithValue(boot.wallpaper),
         ],
         child: const NemoApp(),
       ),
@@ -77,10 +80,14 @@ typedef _Notifications = ({
 });
 
 /// Everything that has to exist before the first frame.
-Future<({AppBootstrap bootstrap, _Notifications notifications})> _prepare(
-  AppDatabase db,
-  ValueNotifier<String?> tapped,
-) async {
+Future<
+  ({
+    AppBootstrap bootstrap,
+    _Notifications notifications,
+    WallpaperSchemes? wallpaper,
+  })
+>
+_prepare(AppDatabase db, ValueNotifier<String?> tapped) async {
   final boot = await AppBootstrap.load(db);
   // The Inbox exists before the first frame, so every screen can rely on it.
   await ListsRepository(
@@ -88,7 +95,11 @@ Future<({AppBootstrap bootstrap, _Notifications notifications})> _prepare(
     HlcClock(node: boot.nodeId, last: boot.hlcLast),
     const Uuid().v4,
   ).ensureInbox();
-  return (bootstrap: boot, notifications: await _openNotifications(tapped));
+  return (
+    bootstrap: boot,
+    notifications: await _openNotifications(tapped),
+    wallpaper: await loadWallpaperSchemes(),
+  );
 }
 
 /// Local notifications on Android; nothing to schedule elsewhere.

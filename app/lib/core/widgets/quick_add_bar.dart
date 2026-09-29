@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
@@ -117,10 +118,15 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
     final lists = ref.watch(allListsProvider).value ?? const [];
     final list = lists.where((x) => x.id == _listId).firstOrNull;
 
+    // macOS draws a bar like this flat, under a hairline, not on a shadow.
+    final flat = context.appStyle == AppStyle.macos;
     return Material(
       color: scheme.surface,
-      elevation: 3,
+      elevation: flat ? 0 : 3,
       shadowColor: Colors.black.withValues(alpha: 0.2),
+      shape: flat
+          ? Border(top: BorderSide(color: nemo.separator, width: 0.5))
+          : null,
       child: SafeArea(
         top: false,
         child: Padding(

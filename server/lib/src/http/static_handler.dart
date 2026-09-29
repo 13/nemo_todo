@@ -105,10 +105,11 @@ Handler webAppHandler(String webDir) {
 final _underBuild = RegExp(r'^v/([0-9a-f]{12})/(.*)$');
 
 /// The page, with everything it loads pointed at [build]'s own path, the
-/// manifest left where it is, and the app's theme on `<html>` when the app
-/// has left it in the `nemo-theme` cookie: the loading screen paints before
-/// the app runs, and would otherwise follow the device's theme where the
-/// app is set to the other one.
+/// manifest left where it is, and the app's theme and style on `<html>`
+/// when the app has left them in the `nemo-theme` and `nemo-style` cookies:
+/// the loading screen paints before the app runs, and would otherwise
+/// follow the device's theme where the app is set to the other one, and
+/// paint nemo's teal before an app drawn in another style.
 Response _page(
   Request request,
   File index,
@@ -131,8 +132,13 @@ Response _page(
         (m) => '<link rel="manifest" href="$base${m[1]}">',
       );
   final theme = _cookie(request, 'nemo-theme');
-  if (theme == 'light' || theme == 'dark') {
-    html = html.replaceFirst('<html>', '<html data-theme="$theme">');
+  final style = _cookie(request, 'nemo-style');
+  final marks = [
+    if (theme == 'light' || theme == 'dark') 'data-theme="$theme"',
+    if (style == 'macos' || style == 'material') 'data-style="$style"',
+  ];
+  if (marks.isNotEmpty) {
+    html = html.replaceFirst('<html>', '<html ${marks.join(' ')}>');
   }
   return Response.ok(
     request.method == 'HEAD' ? null : html,

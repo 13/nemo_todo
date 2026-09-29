@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nemo/core/db/kv_store.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
+import 'package:nemo/core/theme/app_style.dart';
+import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/due_chip.dart';
 import 'package:nemo/features/notes/ui/notes_screen.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/features/tasks/ui/today_screen.dart';
@@ -114,6 +118,70 @@ void main() {
     await tester.tap(find.text('Today'));
     await tester.pumpAndSettle();
     expect(tester.getSize(find.byType(TodayScreen)).width, 720);
+  });
+
+  appTest('the macOS style navigates from a sidebar', (tester) async {
+    await pumpApp(
+      tester,
+      size: const Size(1000, 800),
+      seed: (db, _) => KvStore(db).set(KvKeys.appStyle, AppStyle.macos.name),
+    );
+    expect(find.byKey(const Key('mac-sidebar')), findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
+    await tester.tap(find.text('Lists'));
+    await tester.pumpAndSettle();
+    expect(find.text('Inbox'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('Appearance'), findsOneWidget);
+  });
+
+  appTest('outside nemo, a list keeps its colour to its icon', (tester) async {
+    await pumpApp(
+      tester,
+      seed: (db, inbox) async {
+        await KvStore(db).set(KvKeys.appStyle, AppStyle.macos.name);
+        await TasksRepository(
+          db,
+          testClock('s'),
+          sequentialIds('t'),
+          reminders: const NoopReminderScheduler(),
+          now: () => testNow,
+        ).create(
+          listId: inbox.id,
+          title: 'Ring the plumber',
+          dueAt: dayStartMsFrom(testNow, -1),
+        );
+      },
+    );
+    final context = tester.element(find.text('Ring the plumber'));
+    final scheme = Theme.of(context).colorScheme;
+    Color? textColor(String label) =>
+        tester.widget<Text>(find.text(label)).style?.color;
+    // The due date stays in its colour: overdue is worth reading first.
+    expect(textColor('Yesterday'), context.nemoColors.overdue);
+    // The list's name is secondary text; only its icon is in its colour.
+    final listChip = find.ancestor(
+      of: find.text('Inbox'),
+      matching: find.byType(MetaChip),
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(of: listChip, matching: find.byType(Text)),
+          )
+          .style
+          ?.color,
+      scheme.onSurfaceVariant,
+    );
+    expect(
+      tester
+          .widget<Icon>(
+            find.descendant(of: listChip, matching: find.byType(Icon)),
+          )
+          .color,
+      context.nemoColors.listColor(0),
+    );
   });
 
   test('indexFor maps locations', () {

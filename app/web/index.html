@@ -54,6 +54,31 @@
     :root[data-theme="dark"] {
       --bg: #0E1616; --mark: #5BC0C9; --ring: rgba(91, 192, 201, 0.18);
     }
+    /* The other styles, where the app has left data-style (nemo's own is
+       the default above): lib/core/theme/macos_theme.dart and
+       material_theme.dart, each light and then dark the same way. */
+    :root[data-style="macos"] {
+      --bg: #FFFFFF; --mark: #0071E3; --ring: rgba(0, 113, 227, 0.18);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root[data-style="macos"]:not([data-theme="light"]) {
+        --bg: #1E1E1E; --mark: #0A84FF; --ring: rgba(10, 132, 255, 0.18);
+      }
+    }
+    :root[data-style="macos"][data-theme="dark"] {
+      --bg: #1E1E1E; --mark: #0A84FF; --ring: rgba(10, 132, 255, 0.18);
+    }
+    :root[data-style="material"] {
+      --bg: #F5FAFB; --mark: #006972; --ring: rgba(0, 105, 114, 0.18);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root[data-style="material"]:not([data-theme="light"]) {
+        --bg: #0E1415; --mark: #81D3DE; --ring: rgba(129, 211, 222, 0.18);
+      }
+    }
+    :root[data-style="material"][data-theme="dark"] {
+      --bg: #0E1415; --mark: #81D3DE; --ring: rgba(129, 211, 222, 0.18);
+    }
     html, body { margin: 0; height: 100%; background: var(--bg); }
     #splash {
       position: fixed; inset: 0; z-index: 1;

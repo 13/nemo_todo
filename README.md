@@ -31,6 +31,9 @@ host yourself.
   over to one of them.
 - Settings changes your password, deletes your account, and exports your
   lists and tasks to a JSON file that can be imported again.
+- Three looks, in light or dark: nemo's own ocean teal; macOS, with
+  graphite greys, system blue and a floating sidebar on wide windows; and
+  Material 3, in the wallpaper's colours on Android 12 and later.
 - The web app is the same app: identical screens, with a navigation rail
   instead of a bottom bar on wide windows, and a task opening beside the
   list rather than over it once there is room for both. It is served by

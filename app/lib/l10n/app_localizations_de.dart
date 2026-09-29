@@ -333,6 +333,18 @@ class LDe extends L {
   String get themeDark => 'Dunkel';
 
   @override
+  String get settingsStyle => 'Stil';
+
+  @override
+  String get styleNemo => 'nemo';
+
+  @override
+  String get styleMacos => 'macOS';
+
+  @override
+  String get styleMaterial => 'Material';
+
+  @override
   String get settingsAccount => 'Konto';
 
   @override

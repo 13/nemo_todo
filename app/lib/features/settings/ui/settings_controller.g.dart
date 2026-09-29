@@ -67,6 +67,65 @@ abstract class _$ThemeModeController extends $Notifier<ThemeMode> {
   }
 }
 
+/// Which [AppStyle] the app is drawn in, persisted in the key-value store.
+
+@ProviderFor(AppStyleController)
+final appStyleControllerProvider = AppStyleControllerProvider._();
+
+/// Which [AppStyle] the app is drawn in, persisted in the key-value store.
+final class AppStyleControllerProvider
+    extends $NotifierProvider<AppStyleController, AppStyle> {
+  /// Which [AppStyle] the app is drawn in, persisted in the key-value store.
+  AppStyleControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appStyleControllerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appStyleControllerHash();
+
+  @$internal
+  @override
+  AppStyleController create() => AppStyleController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppStyle value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppStyle>(value),
+    );
+  }
+}
+
+String _$appStyleControllerHash() =>
+    r'47a140758333c6622d0d96c5f293d40cb821be47';
+
+/// Which [AppStyle] the app is drawn in, persisted in the key-value store.
+
+abstract class _$AppStyleController extends $Notifier<AppStyle> {
+  AppStyle build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AppStyle, AppStyle>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AppStyle, AppStyle>,
+              AppStyle,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Confetti, animations and haptics on completing a task.
 
 @ProviderFor(CelebrationsEnabled)

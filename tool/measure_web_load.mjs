@@ -147,8 +147,19 @@ async function main() {
     for (const line of over) console.error(line);
     if (over.length) process.exitCode = 1;
   } finally {
-    chrome.kill();
-    rmSync(profile, { recursive: true, force: true });
+    // Chrome goes on writing to its profile for a moment after it is told
+    // to stop, so wait for it to exit before removing it; and a profile
+    // that will not go is litter in a temp directory, not a failed run.
+    const exited = new Promise((resolve) => chrome.once('exit', resolve));
+    if (chrome.exitCode === null && chrome.signalCode === null) {
+      chrome.kill();
+      await exited;
+    }
+    try {
+      rmSync(profile, { recursive: true, force: true, maxRetries: 5 });
+    } catch (e) {
+      console.error(`could not remove ${profile}: ${e.message}`);
+    }
   }
 }
 

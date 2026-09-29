@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/account_action.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/max_width.dart';
@@ -139,7 +140,7 @@ class ShellScreen extends ConsumerWidget {
                             const AccountAction(inRail: true),
                             IconButton(
                               tooltip: L.of(context).navSettings,
-                              icon: const Icon(Icons.settings_outlined),
+                              icon: const AppIcon(Icons.settings_outlined),
                               onPressed: () => context.push(Routes.settings),
                             ),
                           ],
@@ -150,8 +151,8 @@ class ShellScreen extends ConsumerWidget {
                   destinations: [
                     for (final d in items)
                       NavigationRailDestination(
-                        icon: Icon(d.icon),
-                        selectedIcon: Icon(d.selectedIcon),
+                        icon: AppIcon(d.icon),
+                        selectedIcon: AppIcon(d.selectedIcon),
                         label: Text(d.label),
                       ),
                   ],
@@ -183,8 +184,8 @@ class ShellScreen extends ConsumerWidget {
       destinations: [
         for (final d in items)
           NavigationDestination(
-            icon: Icon(d.icon),
-            selectedIcon: Icon(d.selectedIcon),
+            icon: AppIcon(d.icon),
+            selectedIcon: AppIcon(d.selectedIcon),
             label: d.label,
           ),
       ],
@@ -296,7 +297,7 @@ class _Sidebar extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      AppIcon(
                         Icons.search_rounded,
                         size: 16,
                         color: selected == 4
@@ -371,7 +372,7 @@ class _Sidebar extends ConsumerWidget {
                     child: TextButton.icon(
                       key: const Key('sidebar-new-list'),
                       onPressed: () => showListEditSheet(context),
-                      icon: const Icon(
+                      icon: const AppIcon(
                         Icons.add_circle_outline_rounded,
                         size: 18,
                       ),
@@ -388,7 +389,7 @@ class _Sidebar extends ConsumerWidget {
                 const AccountAction(inRail: true),
                 IconButton(
                   tooltip: l.navSettings,
-                  icon: const Icon(Icons.settings_outlined),
+                  icon: const AppIcon(Icons.settings_outlined),
                   onPressed: () => context.push(Routes.settings),
                 ),
               ],
@@ -457,7 +458,7 @@ class _SidebarTile extends StatelessWidget {
                         color: selected ? Colors.white : color,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: AppIcon(
                         icon,
                         size: 14,
                         color: selected ? color : Colors.white,
@@ -537,7 +538,7 @@ class _SidebarListRow extends ConsumerWidget {
                       color: color,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: AppIcon(
                       listIcon(list.icon),
                       size: 13,
                       color:

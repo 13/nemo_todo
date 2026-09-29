@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
@@ -49,7 +50,7 @@ Future<void> showTaskMenu(
     value: value,
     child: Row(
       children: [
-        Icon(icon, size: 20, color: color),
+        AppIcon(icon, size: 20, color: color),
         const SizedBox(width: 12),
         Text(label, style: TextStyle(color: color)),
       ],

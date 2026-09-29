@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
@@ -54,13 +55,13 @@ Future<void> showRescheduleSheet(
           ])
             ListTile(
               key: Key('reschedule-$key'),
-              leading: Icon(icon),
+              leading: AppIcon(icon),
               title: Text(label),
               onTap: () => Navigator.pop(sheet, (day: inDays(days))),
             ),
           ListTile(
             key: const Key('reschedule-pick'),
-            leading: const Icon(Icons.edit_calendar_rounded),
+            leading: const AppIcon(Icons.edit_calendar_rounded),
             title: Text(l.reschedulePick),
             onTap: () async {
               final day = await showDatePicker(
@@ -77,7 +78,7 @@ Future<void> showRescheduleSheet(
           if (task.dueAt != null)
             ListTile(
               key: const Key('reschedule-clear'),
-              leading: const Icon(Icons.event_busy_rounded),
+              leading: const AppIcon(Icons.event_busy_rounded),
               title: Text(l.tasksClearDue),
               onTap: () => Navigator.pop(sheet, (day: null)),
             ),

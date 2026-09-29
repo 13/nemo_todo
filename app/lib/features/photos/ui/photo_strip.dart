@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photo_viewer.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
@@ -65,13 +66,13 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
           children: [
             ListTile(
               key: const Key('photo-source-camera'),
-              leading: const Icon(Icons.photo_camera_outlined),
+              leading: const AppIcon(Icons.photo_camera_outlined),
               title: Text(l.photosTakePhoto),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
               key: const Key('photo-source-gallery'),
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const AppIcon(Icons.photo_library_outlined),
               title: Text(l.photosChoose),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -159,7 +160,7 @@ class _PhotoStripState extends ConsumerState<PhotoStrip> {
                   ),
                   child: Tooltip(
                     message: l.photosAdd,
-                    child: const Icon(Icons.add_a_photo_outlined),
+                    child: const AppIcon(Icons.add_a_photo_outlined),
                   ),
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 
 /// A short message after a completion: small, calm, out of the way.
 ///
@@ -48,7 +49,7 @@ class MotivationPill extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    AppIcon(
                       Icons.check_circle_rounded,
                       size: 18,
                       color: scheme.inversePrimary,

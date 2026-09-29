@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/screens/shell_screen.dart';
@@ -15,7 +16,7 @@ class SettingsAction extends StatelessWidget {
     }
     return IconButton(
       tooltip: L.of(context).navSettings,
-      icon: const Icon(Icons.settings_outlined),
+      icon: const AppIcon(Icons.settings_outlined),
       onPressed: () => context.push(Routes.settings),
     );
   }

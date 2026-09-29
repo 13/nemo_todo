@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/theme/app_style.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/celebrations/ui/celebration_settings_section.dart';
@@ -47,17 +48,17 @@ class SettingsScreen extends ConsumerWidget {
                   ButtonSegment(
                     value: AppStyle.nemo,
                     label: Text(l.styleNemo),
-                    icon: const Icon(Icons.water_drop_outlined),
+                    icon: const AppIcon(Icons.water_drop_outlined),
                   ),
                   ButtonSegment(
                     value: AppStyle.macos,
                     label: Text(l.styleMacos),
-                    icon: const Icon(Icons.laptop_mac_outlined),
+                    icon: const AppIcon(Icons.laptop_mac_outlined),
                   ),
                   ButtonSegment(
                     value: AppStyle.material,
                     label: Text(l.styleMaterial),
-                    icon: const Icon(Icons.android_rounded),
+                    icon: const AppIcon(Icons.android_rounded),
                   ),
                 ],
                 selected: {ref.watch(appStyleControllerProvider)},
@@ -75,17 +76,17 @@ class SettingsScreen extends ConsumerWidget {
                   ButtonSegment(
                     value: ThemeMode.system,
                     label: Text(l.themeSystem),
-                    icon: const Icon(Icons.brightness_auto_outlined),
+                    icon: const AppIcon(Icons.brightness_auto_outlined),
                   ),
                   ButtonSegment(
                     value: ThemeMode.light,
                     label: Text(l.themeLight),
-                    icon: const Icon(Icons.light_mode_outlined),
+                    icon: const AppIcon(Icons.light_mode_outlined),
                   ),
                   ButtonSegment(
                     value: ThemeMode.dark,
                     label: Text(l.themeDark),
-                    icon: const Icon(Icons.dark_mode_outlined),
+                    icon: const AppIcon(Icons.dark_mode_outlined),
                   ),
                 ],
                 selected: {mode},
@@ -104,7 +105,7 @@ class SettingsScreen extends ConsumerWidget {
             if (MediaQuery.sizeOf(context).width >= ShellScreen.railBreakpoint)
               ListTile(
                 key: const Key('shortcuts-tile'),
-                leading: const Icon(Icons.keyboard_outlined),
+                leading: const AppIcon(Icons.keyboard_outlined),
                 title: Text(l.shortcutsTitle),
                 trailing: const Text('?'),
                 onTap: () => showShortcutsHelp(context),

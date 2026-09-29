@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
@@ -155,7 +156,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                       onSubmitted: (_) => _submit(),
                       decoration: InputDecoration(
                         hintText: l.tasksAddHintSmart,
-                        prefixIcon: const Icon(Icons.add_rounded),
+                        prefixIcon: const AppIcon(Icons.add_rounded),
                       ),
                     ),
                   ),
@@ -164,7 +165,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                     key: const Key('quick-add-submit'),
                     tooltip: l.commonAdd,
                     onPressed: _submit,
-                    icon: const Icon(Icons.arrow_upward_rounded),
+                    icon: const AppIcon(Icons.arrow_upward_rounded),
                   ),
                 ],
               ),
@@ -176,7 +177,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                   children: [
                     ActionChip(
                       key: const Key('quick-add-date'),
-                      avatar: const Icon(Icons.schedule_rounded, size: 18),
+                      avatar: const AppIcon(Icons.schedule_rounded, size: 18),
                       label: Text(
                         _dueAt == null
                             ? l.tasksNoDue
@@ -205,7 +206,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                             value: value,
                             child: Row(
                               children: [
-                                Icon(
+                                AppIcon(
                                   Icons.flag_rounded,
                                   size: 18,
                                   color: nemo.priority(value) ?? scheme.outline,
@@ -218,7 +219,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                       ],
                       child: Chip(
                         key: const Key('quick-add-priority'),
-                        avatar: Icon(
+                        avatar: AppIcon(
                           Icons.flag_rounded,
                           size: 18,
                           color: nemo.priority(_priority) ?? scheme.outline,
@@ -242,7 +243,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                               value: x.id,
                               child: Row(
                                 children: [
-                                  Icon(
+                                  AppIcon(
                                     listIcon(x.icon),
                                     size: 18,
                                     color: nemo.listColor(x.color),
@@ -255,7 +256,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                         ],
                         child: Chip(
                           key: const Key('quick-add-list'),
-                          avatar: Icon(
+                          avatar: AppIcon(
                             listIcon(list?.icon ?? 'inbox'),
                             size: 18,
                             color: list == null

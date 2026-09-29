@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/work_input.dart';
@@ -197,7 +198,7 @@ class _TaskWorkSectionState extends ConsumerState<TaskWorkSection> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
-                Icon(
+                AppIcon(
                   expanded
                       ? Icons.expand_less_rounded
                       : Icons.expand_more_rounded,

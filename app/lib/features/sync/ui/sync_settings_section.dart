@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/auth/data/certificate_trust.dart';
 import 'package:nemo/features/auth/ui/account_dialogs.dart';
@@ -116,14 +117,14 @@ class SyncSettingsSection extends ConsumerWidget {
           SectionHeader(title: l.settingsAccount),
           ListTile(
             key: const Key('connect-tile'),
-            leading: const Icon(Icons.cloud_off_outlined),
+            leading: const AppIcon(Icons.cloud_off_outlined),
             title: Text(l.settingsConnect),
             subtitle: Text(
               auth.serverUrl != null
                   ? l.settingsSignedOutRemotely
                   : l.settingsNotConnected,
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const AppIcon(Icons.chevron_right_rounded),
             onTap: () => context.push(Routes.account),
           ),
         ],
@@ -153,7 +154,7 @@ class SyncSettingsSection extends ConsumerWidget {
       children: [
         SectionHeader(title: l.settingsAccount),
         ListTile(
-          leading: const Icon(Icons.cloud_done_outlined),
+          leading: const AppIcon(Icons.cloud_done_outlined),
           title: Text(l.settingsConnectedAs(auth.username!, auth.serverUrl!)),
           subtitle: Text(
             sync.lastSyncAt == null
@@ -172,7 +173,7 @@ class SyncSettingsSection extends ConsumerWidget {
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.sync_rounded),
+              : const AppIcon(Icons.sync_rounded),
           title: Text(l.settingsSyncNow),
           subtitle: Text(statusText, style: TextStyle(color: statusColor)),
           onTap: sync.status == SyncStatus.syncing
@@ -182,7 +183,7 @@ class SyncSettingsSection extends ConsumerWidget {
         if (untrusted != null)
           ListTile(
             key: const Key('sync-untrusted-certificate'),
-            leading: Icon(Icons.gpp_maybe_outlined, color: scheme.error),
+            leading: AppIcon(Icons.gpp_maybe_outlined, color: scheme.error),
             title: Text(l.settingsCertificateUntrusted),
             subtitle: Text(untrusted.host),
             trailing: TextButton(
@@ -194,7 +195,7 @@ class SyncSettingsSection extends ConsumerWidget {
         if (sync.discarded > 0)
           ListTile(
             key: const Key('sync-discarded'),
-            leading: Icon(Icons.warning_amber_rounded, color: scheme.error),
+            leading: AppIcon(Icons.warning_amber_rounded, color: scheme.error),
             title: Text(l.settingsDiscarded(sync.discarded)),
             trailing: TextButton(
               onPressed: () =>
@@ -204,19 +205,19 @@ class SyncSettingsSection extends ConsumerWidget {
           ),
         ListTile(
           key: const Key('change-password'),
-          leading: const Icon(Icons.password_rounded),
+          leading: const AppIcon(Icons.password_rounded),
           title: Text(l.settingsChangePassword),
           onTap: () => _changePassword(context, ref),
         ),
         ListTile(
           key: const Key('sign-out'),
-          leading: Icon(Icons.logout_rounded, color: scheme.error),
+          leading: AppIcon(Icons.logout_rounded, color: scheme.error),
           title: Text(l.settingsSignOut, style: TextStyle(color: scheme.error)),
           onTap: () => _signOut(context, ref),
         ),
         ListTile(
           key: const Key('delete-account'),
-          leading: Icon(Icons.person_remove_outlined, color: scheme.error),
+          leading: AppIcon(Icons.person_remove_outlined, color: scheme.error),
           title: Text(
             l.settingsDeleteAccount,
             style: TextStyle(color: scheme.error),

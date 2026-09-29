@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/db/sync_writes.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/notes/data/notes_repository.dart';
 import 'package:nemo/features/notes/ui/make_todo_chip.dart';
@@ -681,7 +682,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
             IconButton(
               key: const Key('note-view-toggle'),
               tooltip: readView ? l.noteEditToggle : l.noteReadToggle,
-              icon: Icon(
+              icon: AppIcon(
                 readView ? Icons.edit_outlined : Icons.visibility_outlined,
               ),
               onPressed: () => unawaited(_setReadView(!readView)),
@@ -834,7 +835,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                         NoteListPicker(note: note),
                         ListTile(
                           key: const Key('note-make-todo'),
-                          leading: const Icon(Icons.add_task),
+                          leading: const AppIcon(Icons.add_task),
                           title: Text(l.noteMakeTodoFromNote),
                           onTap: () => unawaited(_makeTodoFromNote()),
                         ),

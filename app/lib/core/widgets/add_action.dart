@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nemo/core/theme/app_style.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 
 /// A screen's one way to add something, where its style puts it: a
 /// floating button in Material's styles, a plain + in the toolbar in the
@@ -27,7 +28,7 @@ class AddAction {
       : IconButton(
           key: buttonKey,
           tooltip: label,
-          icon: const Icon(Icons.add_rounded),
+          icon: const AppIcon(Icons.add_rounded),
           onPressed: onPressed,
         );
 
@@ -37,14 +38,14 @@ class AddAction {
         ? FloatingActionButton.extended(
             key: buttonKey,
             onPressed: onPressed,
-            icon: const Icon(Icons.add_rounded),
+            icon: const AppIcon(Icons.add_rounded),
             label: Text(label),
           )
         : FloatingActionButton(
             key: buttonKey,
             tooltip: label,
             onPressed: onPressed,
-            child: const Icon(Icons.add),
+            child: const AppIcon(Icons.add),
           );
   }
 }

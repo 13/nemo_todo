@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/due_chip.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
@@ -307,7 +308,7 @@ class _TileBody extends ConsumerWidget {
               if (task.priority > 0)
                 Padding(
                   padding: EdgeInsets.only(top: mac ? titleTop : 10, right: 4),
-                  child: Icon(
+                  child: AppIcon(
                     Icons.flag_rounded,
                     size: mac ? 16 : 18,
                     color: nemo.priority(task.priority),
@@ -442,7 +443,7 @@ class _DoneCheckState extends State<DoneCheck>
                     ),
                   ),
                   child: done
-                      ? Icon(
+                      ? AppIcon(
                           Icons.check_rounded,
                           size: widget.size * 2 / 3,
                           color: scheme.onPrimary,

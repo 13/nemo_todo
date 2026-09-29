@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
@@ -152,7 +153,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           IconButton(
             key: const Key('task-delete'),
             tooltip: l.commonDelete,
-            icon: const Icon(Icons.delete_outline_rounded),
+            icon: const AppIcon(Icons.delete_outline_rounded),
             onPressed: () => _delete(task),
           ),
         ],
@@ -204,7 +205,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 hintText: l.tasksNotesHint,
-                prefixIcon: const Icon(Icons.notes_rounded),
+                prefixIcon: const AppIcon(Icons.notes_rounded),
               ),
             ),
             const SizedBox(height: 20),

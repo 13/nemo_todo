@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/achievements/ui/achievements_providers.dart';
@@ -44,7 +45,7 @@ class AchievementsScreen extends ConsumerWidget {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
+                                    AppIcon(
                                       Icons.local_fire_department_rounded,
                                       size: 20,
                                       color: scheme.tertiary,
@@ -125,7 +126,7 @@ class AchievementCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
+              AppIcon(
                 a.icon,
                 size: 36,
                 color: on

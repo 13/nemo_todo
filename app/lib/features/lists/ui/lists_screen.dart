@@ -5,6 +5,7 @@ import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/widgets/account_action.dart';
 import 'package:nemo/core/widgets/add_action.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
@@ -113,7 +114,7 @@ class ListCard extends ConsumerWidget {
                         color: color,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: AppIcon(
                         listIcon(list.icon),
                         size: 20,
                         color:
@@ -131,13 +132,17 @@ class ListCard extends ConsumerWidget {
                         color: color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(listIcon(list.icon), color: color, size: 20),
+                      child: AppIcon(
+                        listIcon(list.icon),
+                        color: color,
+                        size: 20,
+                      ),
                     ),
                   const Spacer(),
                   if (shared)
                     Tooltip(
                       message: l.listsShared,
-                      child: Icon(
+                      child: AppIcon(
                         Icons.people_outline_rounded,
                         size: 18,
                         color: scheme.onSurfaceVariant,
@@ -197,7 +202,7 @@ Future<void> showListMenu(
             value: value,
             child: Row(
               children: [
-                Icon(icon, size: 20, color: color),
+                AppIcon(icon, size: 20, color: color),
                 const SizedBox(width: 12),
                 Text(label, style: TextStyle(color: color)),
               ],
@@ -214,7 +219,7 @@ Future<void> showListMenu(
           children: [
             for (final (value, icon, label, color) in entries)
               ListTile(
-                leading: Icon(icon, color: color),
+                leading: AppIcon(icon, color: color),
                 title: Text(label, style: TextStyle(color: color)),
                 onTap: () => Navigator.pop(context, value),
               ),

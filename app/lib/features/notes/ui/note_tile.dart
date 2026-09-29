@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_preview.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -39,7 +40,7 @@ class NoteTile extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: note.pinned ? const Icon(Icons.push_pin, size: 18) : null,
+      trailing: note.pinned ? const AppIcon(Icons.push_pin, size: 18) : null,
       onTap: () => context.push(Routes.note(note.id)),
     );
   }

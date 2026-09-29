@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/core/widgets/task_tile.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
@@ -288,6 +289,6 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
     ),
     alignment: alignment,
     padding: const EdgeInsets.symmetric(horizontal: 20),
-    child: Icon(icon, color: iconColor),
+    child: AppIcon(icon, color: iconColor),
   );
 }

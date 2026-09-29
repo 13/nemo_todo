@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
@@ -172,7 +173,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                                 IconButton(
                                   key: Key('member-own-${member.username}'),
                                   tooltip: l.membersMakeOwner,
-                                  icon: const Icon(
+                                  icon: const AppIcon(
                                     Icons.workspace_premium_outlined,
                                   ),
                                   onPressed: () => _makeOwner(member.username),
@@ -180,7 +181,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                                 IconButton(
                                   key: Key('member-remove-${member.username}'),
                                   tooltip: l.commonDelete,
-                                  icon: const Icon(
+                                  icon: const AppIcon(
                                     Icons.person_remove_outlined,
                                   ),
                                   onPressed: () => _remove(member.username),
@@ -208,7 +209,9 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                             autocorrect: false,
                             decoration: InputDecoration(
                               hintText: l.membersAddHint,
-                              prefixIcon: const Icon(Icons.person_add_outlined),
+                              prefixIcon: const AppIcon(
+                                Icons.person_add_outlined,
+                              ),
                             ),
                           ),
                         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/updates/data/github_release_client.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
@@ -74,7 +75,7 @@ class UpdateTile extends ConsumerWidget {
       _ => IconButton(
         key: const Key('check-for-updates'),
         tooltip: l.updatesCheckNow,
-        icon: const Icon(Icons.refresh_rounded),
+        icon: const AppIcon(Icons.refresh_rounded),
         onPressed: () => notifier.check(manual: true),
       ),
     };
@@ -84,7 +85,7 @@ class UpdateTile extends ConsumerWidget {
       children: [
         SectionHeader(title: l.updatesTitle),
         ListTile(
-          leading: const Icon(Icons.system_update_alt_rounded),
+          leading: const AppIcon(Icons.system_update_alt_rounded),
           title: Text(
             version == null
                 ? l.updatesTitle

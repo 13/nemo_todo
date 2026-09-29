@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
@@ -58,7 +59,10 @@ class ListDetailScreen extends ConsumerWidget {
               )
             : Row(
                 children: [
-                  Icon(listIcon(list.icon), color: nemo.listColor(list.color)),
+                  AppIcon(
+                    listIcon(list.icon),
+                    color: nemo.listColor(list.color),
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -72,7 +76,7 @@ class ListDetailScreen extends ConsumerWidget {
           if (sharing?.isShared ?? false)
             IconButton(
               tooltip: l.listsMembers,
-              icon: const Icon(Icons.people_outline_rounded),
+              icon: const AppIcon(Icons.people_outline_rounded),
               onPressed: () => context.push(Routes.members(listId)),
             ),
           PopupMenuButton<String>(

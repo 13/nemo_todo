@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/notes/ui/markdown/note_format_toolbar.dart'
     show isWebLink;
 import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
@@ -54,7 +55,7 @@ class TaskLinkChip extends ConsumerWidget {
         key: Key('task-link-chip-$taskId'),
         visualDensity: VisualDensity.compact,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        avatar: Icon(icon, size: 16, color: color),
+        avatar: AppIcon(icon, size: 16, color: color),
         label: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 200),
           child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),

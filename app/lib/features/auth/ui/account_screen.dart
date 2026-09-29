@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/features/auth/data/certificate_trust.dart';
@@ -162,7 +163,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               decoration: InputDecoration(
                 labelText: l.accountServer,
                 hintText: l.accountServerHint,
-                prefixIcon: const Icon(Icons.dns_outlined),
+                prefixIcon: const AppIcon(Icons.dns_outlined),
               ),
             ),
             const SizedBox(height: 12),
@@ -172,7 +173,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               autocorrect: false,
               decoration: InputDecoration(
                 labelText: l.accountUsername,
-                prefixIcon: const Icon(Icons.person_outline),
+                prefixIcon: const AppIcon(Icons.person_outline),
               ),
             ),
             const SizedBox(height: 12),
@@ -182,7 +183,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               obscureText: true,
               decoration: InputDecoration(
                 labelText: l.accountPassword,
-                prefixIcon: const Icon(Icons.lock_outline),
+                prefixIcon: const AppIcon(Icons.lock_outline),
               ),
               onSubmitted: (_) => _busy ? null : _submit(signUp: false),
             ),

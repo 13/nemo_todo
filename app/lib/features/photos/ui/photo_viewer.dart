@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/photos/ui/photo_thumbnail.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -73,7 +74,7 @@ class _PhotoViewerState extends ConsumerState<_PhotoViewer> {
           IconButton(
             key: const Key('photo-viewer-delete'),
             tooltip: l.commonDelete,
-            icon: const Icon(Icons.delete_outline_rounded),
+            icon: const AppIcon(Icons.delete_outline_rounded),
             onPressed: photos.isEmpty
                 ? null
                 : () => ref

@@ -131,7 +131,7 @@ void main() {
     await tester.tap(find.text('Lists'));
     await tester.pumpAndSettle();
     expect(app.router.state.matchedLocation, Routes.lists);
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.text('Appearance'), findsOneWidget);
   });

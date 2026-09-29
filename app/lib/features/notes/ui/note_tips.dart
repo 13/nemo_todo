@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nemo/core/db/kv_store.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 
 /// Whether a one-time hint has already been shown on this device, and
@@ -60,7 +61,7 @@ class ReadViewHint extends StatelessWidget {
           ),
           IconButton(
             key: const Key('note-read-hint-close'),
-            icon: const Icon(Icons.close),
+            icon: const AppIcon(Icons.close),
             tooltip: l.commonClose,
             visualDensity: VisualDensity.compact,
             onPressed: onClose,

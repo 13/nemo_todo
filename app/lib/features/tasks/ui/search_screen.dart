@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/widgets/account_action.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/section_header.dart';
@@ -49,11 +50,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onChanged: (value) => setState(() => _query = value.trim()),
           decoration: InputDecoration(
             hintText: l.searchHint,
-            prefixIcon: const Icon(Icons.search_rounded),
+            prefixIcon: const AppIcon(Icons.search_rounded),
             suffixIcon: _query.isEmpty
                 ? null
                 : IconButton(
-                    icon: const Icon(Icons.clear_rounded),
+                    icon: const AppIcon(Icons.clear_rounded),
                     onPressed: () {
                       _controller.clear();
                       setState(() => _query = '');

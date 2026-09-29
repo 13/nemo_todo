@@ -49,6 +49,9 @@ void main() {
       'assets/fonts/Inter-SemiBold.ttf',
       'assets/fonts/Inter-Bold.ttf',
     ]);
+    // The macOS style's icons.
+    await _loadFont('PhosphorRegular', ['assets/fonts/PhosphorRegular.ttf']);
+    await _loadFont('PhosphorFill', ['assets/fonts/PhosphorFill.ttf']);
     final icons = File(
       '${Platform.environment['HOME']}/flutter/bin/cache/artifacts/'
       'material_fonts/MaterialIcons-Regular.otf',

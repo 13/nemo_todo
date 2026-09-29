@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 
@@ -90,7 +91,7 @@ class MakeTodoChip extends StatelessWidget {
   Widget _chip(IconData icon, String label, VoidCallback onPressed) =>
       ActionChip(
         key: const Key('note-make-todo-chip'),
-        avatar: Icon(icon),
+        avatar: AppIcon(icon),
         label: Text(label),
         elevation: 2,
         onPressed: onPressed,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/theme/app_theme.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 
@@ -107,10 +108,10 @@ class _Swatch extends StatelessWidget {
               ),
             ),
             child: selected
-                ? Icon(Icons.check_rounded, size: 18, color: mark)
+                ? AppIcon(Icons.check_rounded, size: 18, color: mark)
                 : icon == null
                 ? null
-                : Icon(icon, size: 16, color: mark),
+                : AppIcon(icon, size: 16, color: mark),
           ),
         ),
       ),

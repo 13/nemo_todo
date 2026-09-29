@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nemo/core/providers.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/tasks/ui/custom_repeat_dialog.dart';
@@ -95,7 +96,7 @@ class TaskDueSection extends ConsumerWidget {
           children: [
             ActionChip(
               key: const Key('task-date'),
-              avatar: const Icon(Icons.calendar_today_rounded, size: 18),
+              avatar: const AppIcon(Icons.calendar_today_rounded, size: 18),
               label: Text(
                 dueAt == null
                     ? l.tasksNoDue
@@ -112,7 +113,7 @@ class TaskDueSection extends ConsumerWidget {
             if (dueAt != null)
               ActionChip(
                 key: const Key('task-time'),
-                avatar: const Icon(Icons.access_time_rounded, size: 18),
+                avatar: const AppIcon(Icons.access_time_rounded, size: 18),
                 label: Text(
                   task.dueHasTime ? timeLabel(locale, dueAt) : l.tasksNoTime,
                 ),
@@ -121,7 +122,7 @@ class TaskDueSection extends ConsumerWidget {
             if (dueAt != null)
               ActionChip(
                 key: const Key('task-clear-date'),
-                avatar: const Icon(Icons.close_rounded, size: 18),
+                avatar: const AppIcon(Icons.close_rounded, size: 18),
                 label: Text(l.tasksClearDue),
                 onPressed: () => save(
                   task.copyWith(dueAt: null, dueHasTime: false, remind: false),
@@ -132,7 +133,7 @@ class TaskDueSection extends ConsumerWidget {
         SwitchListTile(
           key: const Key('task-remind'),
           contentPadding: EdgeInsets.zero,
-          secondary: const Icon(Icons.notifications_outlined),
+          secondary: const AppIcon(Icons.notifications_outlined),
           title: Text(l.tasksRemind),
           subtitle: remindersSupported ? null : Text(l.tasksRemindUnavailable),
           value: task.remind && dueAt != null,
@@ -190,7 +191,7 @@ class TaskRepeatSection extends StatelessWidget {
                 showCheckmark: false,
                 avatar: choice == null
                     ? null
-                    : const Icon(Icons.repeat_rounded, size: 18),
+                    : const AppIcon(Icons.repeat_rounded, size: 18),
                 label: Text(label),
                 // A rule with no date to count from would never come back,
                 // so the row waits for one.
@@ -202,7 +203,7 @@ class TaskRepeatSection extends StatelessWidget {
               key: const Key('repeat-custom'),
               selected: custom,
               showCheckmark: false,
-              avatar: const Icon(Icons.tune_rounded, size: 18),
+              avatar: const AppIcon(Icons.tune_rounded, size: 18),
               label: Text(
                 custom ? describeRepeat(l, locale, rule) : l.repeatCustom,
               ),
@@ -227,7 +228,7 @@ class TaskRepeatSection extends StatelessWidget {
                 key: const Key('repeat-unreadable'),
                 selected: true,
                 showCheckmark: false,
-                avatar: const Icon(Icons.repeat_rounded, size: 18),
+                avatar: const AppIcon(Icons.repeat_rounded, size: 18),
                 label: Text(task.repeat!),
               ),
           ],
@@ -328,7 +329,7 @@ class _RepeatPopUp extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    AppIcon(
                       Icons.repeat_rounded,
                       size: 18,
                       color: dueAt == null
@@ -343,7 +344,7 @@ class _RepeatPopUp extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(
+                    AppIcon(
                       Icons.unfold_more_rounded,
                       size: 18,
                       color: scheme.onSurfaceVariant,
@@ -405,7 +406,7 @@ class TaskPrioritySection extends StatelessWidget {
                 showCheckmark: false,
                 avatar: value == 0
                     ? null
-                    : Icon(
+                    : AppIcon(
                         Icons.flag_rounded,
                         size: 18,
                         color: nemo.priority(value),
@@ -443,7 +444,7 @@ class TaskListSection extends ConsumerWidget {
           key: Key('task-list-${lists.length}-${task.listId}'),
           initialSelection: task.listId,
           expandedInsets: EdgeInsets.zero,
-          leadingIcon: Icon(
+          leadingIcon: AppIcon(
             listIcon(
               lists.where((x) => x.id == task.listId).firstOrNull?.icon ??
                   'list',
@@ -454,7 +455,7 @@ class TaskListSection extends ConsumerWidget {
               DropdownMenuEntry(
                 value: x.id,
                 label: x.isInbox ? l.listsInbox : x.name,
-                leadingIcon: Icon(
+                leadingIcon: AppIcon(
                   listIcon(x.icon),
                   color: nemo.listColor(x.color),
                 ),
@@ -614,12 +615,12 @@ class _SubtasksSectionState extends ConsumerState<SubtasksSection> {
                   children: [
                     IconButton(
                       tooltip: l.commonDelete,
-                      icon: const Icon(Icons.close_rounded, size: 20),
+                      icon: const AppIcon(Icons.close_rounded, size: 20),
                       onPressed: () => repo.delete(subtasks[i].id),
                     ),
                     ReorderableDragStartListener(
                       index: i,
-                      child: const Icon(Icons.drag_handle_rounded),
+                      child: const AppIcon(Icons.drag_handle_rounded),
                     ),
                   ],
                 ),
@@ -631,7 +632,7 @@ class _SubtasksSectionState extends ConsumerState<SubtasksSection> {
           controller: _subtask,
           decoration: InputDecoration(
             hintText: l.tasksSubtaskHint,
-            prefixIcon: const Icon(Icons.add_rounded),
+            prefixIcon: const AppIcon(Icons.add_rounded),
           ),
           onSubmitted: (value) async {
             if (value.trim().isEmpty) return;

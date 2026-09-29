@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_preview.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -55,7 +56,7 @@ class NoteCard extends StatelessWidget {
                             ),
                     ),
                     if (note.pinned)
-                      Icon(
+                      AppIcon(
                         Icons.push_pin,
                         key: Key('note-card-pin-${note.id}'),
                         size: 16,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/updates/ui/update_controller.dart';
 import 'package:nemo/features/updates/ui/update_state.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -25,7 +26,7 @@ class UpdateBanner extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
         child: Row(
           children: [
-            Icon(
+            AppIcon(
               Icons.system_update_alt_rounded,
               size: 20,
               color: scheme.onPrimaryContainer,
@@ -44,7 +45,7 @@ class UpdateBanner extends ConsumerWidget {
             IconButton(
               key: const Key('update-banner-dismiss'),
               tooltip: l.updatesLater,
-              icon: const Icon(Icons.close_rounded, size: 20),
+              icon: const AppIcon(Icons.close_rounded, size: 20),
               onPressed: ref.read(updateControllerProvider.notifier).dismiss,
             ),
           ],

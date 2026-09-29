@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 
@@ -37,7 +38,7 @@ class AchievementBanner extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 10, 4, 10),
             child: Row(
               children: [
-                Icon(
+                AppIcon(
                   single?.icon ?? Icons.emoji_events_rounded,
                   size: 32,
                   color: scheme.inversePrimary,
@@ -67,7 +68,7 @@ class AchievementBanner extends StatelessWidget {
                 IconButton(
                   tooltip: l.commonClose,
                   onPressed: onClose,
-                  icon: Icon(
+                  icon: AppIcon(
                     Icons.close_rounded,
                     color: scheme.onInverseSurface,
                   ),

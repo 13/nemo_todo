@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/auth/ui/auth_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -34,12 +35,12 @@ class AccountAction extends ConsumerWidget {
         Routes.settings,
       ),
       AuthState(sessionLost: true) => (
-        Icon(Icons.cloud_off_rounded, color: scheme.error),
+        AppIcon(Icons.cloud_off_rounded, color: scheme.error),
         l.settingsSignedOutRemotely,
         Routes.account,
       ),
       _ => (
-        const Icon(Icons.account_circle_outlined),
+        const AppIcon(Icons.account_circle_outlined),
         l.accountSignInAction,
         Routes.account,
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo/utils/format.dart';
@@ -76,7 +77,7 @@ class MetaChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: c),
+        AppIcon(icon, size: 14, color: c),
         const SizedBox(width: 3),
         Text(
           label,

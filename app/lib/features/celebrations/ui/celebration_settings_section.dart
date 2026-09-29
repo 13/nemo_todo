@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/section_header.dart';
 import 'package:nemo/features/achievements/domain/achievement.dart';
 import 'package:nemo/features/achievements/ui/achievements_providers.dart';
@@ -30,7 +31,7 @@ class CelebrationSettingsSection extends ConsumerWidget {
         SectionHeader(title: l.settingsCelebrations),
         SwitchListTile(
           key: const Key('celebrations-switch'),
-          secondary: const Icon(Icons.celebration_outlined),
+          secondary: const AppIcon(Icons.celebration_outlined),
           title: Text(l.settingsCelebrationsEnabled),
           subtitle: Text(l.settingsCelebrationsEnabledHint),
           value: celebrate,
@@ -39,7 +40,7 @@ class CelebrationSettingsSection extends ConsumerWidget {
         ),
         SwitchListTile(
           key: const Key('celebration-sound-switch'),
-          secondary: const Icon(Icons.volume_up_outlined),
+          secondary: const AppIcon(Icons.volume_up_outlined),
           title: Text(l.settingsCelebrationSound),
           subtitle: Text(l.settingsCelebrationSoundHint),
           value: sound,
@@ -53,7 +54,7 @@ class CelebrationSettingsSection extends ConsumerWidget {
         ),
         SwitchListTile(
           key: const Key('achievements-switch'),
-          secondary: const Icon(Icons.emoji_events_outlined),
+          secondary: const AppIcon(Icons.emoji_events_outlined),
           title: Text(l.settingsAchievements),
           subtitle: Text(l.settingsAchievementsHint),
           value: showAchievements,
@@ -73,7 +74,7 @@ class CelebrationSettingsSection extends ConsumerWidget {
                       achievementCatalog.length,
                     ),
                   ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const AppIcon(Icons.chevron_right_rounded),
             onTap: () => context.push(Routes.achievements),
           ),
       ],

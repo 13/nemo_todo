@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/list_icons.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -104,7 +105,7 @@ class _ListEditSheetState extends ConsumerState<ListEditSheet> {
                       ),
                     ),
                     child: _color == i
-                        ? Icon(
+                        ? AppIcon(
                             Icons.check,
                             size: 18,
                             // White on a deep colour, black on a light one:
@@ -133,7 +134,7 @@ class _ListEditSheetState extends ConsumerState<ListEditSheet> {
                 if (entry.key != 'inbox' || widget.list?.isInbox == true)
                   ChoiceChip(
                     key: Key('list-icon-${entry.key}'),
-                    label: Icon(entry.value, size: 20),
+                    label: AppIcon(entry.value, size: 20),
                     selected: _icon == entry.key,
                     showCheckmark: false,
                     onSelected: (_) => setState(() => _icon = entry.key),

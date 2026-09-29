@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 
 /// Small caps-style label above a group of tiles, optionally collapsible.
 class SectionHeader extends StatelessWidget {
@@ -43,7 +44,7 @@ class SectionHeader extends StatelessWidget {
             ),
           ),
           if (collapsed != null)
-            Icon(
+            AppIcon(
               collapsed! ? Icons.expand_more : Icons.expand_less,
               size: 20,
               color: scheme.onSurfaceVariant,

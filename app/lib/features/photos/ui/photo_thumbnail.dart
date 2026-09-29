@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/photos/ui/photos_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 
@@ -43,7 +44,7 @@ class PhotoThumbnail extends ConsumerWidget {
             if (bytes == null)
               ColoredBox(
                 color: scheme.surfaceContainerHighest,
-                child: Icon(
+                child: AppIcon(
                   Icons.image_outlined,
                   size: size / 2.5,
                   color: scheme.onSurfaceVariant,
@@ -57,7 +58,7 @@ class PhotoThumbnail extends ConsumerWidget {
                 bottom: 2,
                 child: Semantics(
                   label: l.photosNotUploaded,
-                  child: Icon(
+                  child: AppIcon(
                     Icons.cloud_off_rounded,
                     size: size / 4,
                     color: scheme.onSurfaceVariant,

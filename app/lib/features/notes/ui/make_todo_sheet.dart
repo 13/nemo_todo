@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
@@ -206,14 +207,14 @@ class _MakeTodoSheetState extends ConsumerState<_MakeTodoSheet> {
                   ListTile(
                     key: Key('todo-line-$i'),
                     dense: true,
-                    leading: const Icon(Icons.task_alt, size: 18),
+                    leading: const AppIcon(Icons.task_alt, size: 18),
                     title: Text(c.title),
                   ),
               if (_several && _shape == _Shape.withSubtasks)
                 for (final c in widget.candidates.skip(1))
                   ListTile(
                     dense: true,
-                    leading: const Icon(
+                    leading: const AppIcon(
                       Icons.subdirectory_arrow_right,
                       size: 18,
                     ),
@@ -248,7 +249,7 @@ class _MakeTodoSheetState extends ConsumerState<_MakeTodoSheet> {
                 children: [
                   InputChip(
                     key: const Key('todo-due'),
-                    avatar: const Icon(Icons.event_outlined, size: 18),
+                    avatar: const AppIcon(Icons.event_outlined, size: 18),
                     label: Text(
                       _dueAt == null
                           ? l.tasksNoDue

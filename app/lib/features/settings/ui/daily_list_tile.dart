@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 
@@ -20,7 +21,7 @@ class DailyListTile extends ConsumerWidget {
       children: [
         SwitchListTile(
           key: const Key('daily-list-switch'),
-          secondary: const Icon(Icons.wb_sunny_outlined),
+          secondary: const AppIcon(Icons.wb_sunny_outlined),
           title: Text(l.dailyListTitle),
           subtitle: Text(l.dailyListHint),
           value: enabled,

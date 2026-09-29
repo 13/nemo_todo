@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -19,7 +20,7 @@ class NotePinAction extends ConsumerWidget {
     return IconButton(
       key: const Key('note-pin'),
       tooltip: note.pinned ? l.noteUnpin : l.notePin,
-      icon: Icon(note.pinned ? Icons.push_pin : Icons.push_pin_outlined),
+      icon: AppIcon(note.pinned ? Icons.push_pin : Icons.push_pin_outlined),
       onPressed: () => ref
           .read(notesRepositoryProvider)
           .setPinned(note.id, pinned: !note.pinned),
@@ -45,7 +46,7 @@ class NoteListPicker extends ConsumerWidget {
     final lists = ref.watch(allListsProvider).value ?? const <TaskList>[];
     return ListTile(
       key: const Key('note-move'),
-      leading: const Icon(Icons.folder_outlined),
+      leading: const AppIcon(Icons.folder_outlined),
       title: Text(l.noteMoveToList),
       onTap: () async {
         final chosen = await showModalBottomSheet<String>(
@@ -84,7 +85,7 @@ class NoteDeleteAction extends ConsumerWidget {
     final l = L.of(context);
     return ListTile(
       key: const Key('note-delete'),
-      leading: const Icon(Icons.delete_outline),
+      leading: const AppIcon(Icons.delete_outline),
       title: Text(l.noteDelete),
       onTap: () => _delete(context, ref),
     );

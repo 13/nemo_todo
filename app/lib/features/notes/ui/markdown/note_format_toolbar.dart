@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/features/notes/ui/markdown/markdown_commands.dart';
 import 'package:nemo/features/notes/ui/markdown/note_to_task.dart';
 import 'package:nemo/features/settings/ui/about_tile.dart' show openUrlProvider;
@@ -156,7 +157,7 @@ class NoteFormatToolbar extends ConsumerWidget {
       VoidCallback? onPressed,
     ) => IconButton(
       key: Key(key),
-      icon: Icon(icon),
+      icon: AppIcon(icon),
       tooltip: tooltip,
       onPressed: onPressed,
     );

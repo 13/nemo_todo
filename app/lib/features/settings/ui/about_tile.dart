@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:nemo/core/build_info.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/features/settings/data/server_build.dart';
 import 'package:nemo/features/sync/ui/sync_engine.dart';
@@ -131,7 +132,7 @@ class AboutTile extends ConsumerWidget {
         ListTile(
           key: const Key('about-tile'),
           leading: stale
-              ? Icon(
+              ? AppIcon(
                   Icons.warning_amber_rounded,
                   color: theme.colorScheme.error,
                 )
@@ -183,13 +184,13 @@ class AboutTile extends ConsumerWidget {
               TextButton.icon(
                 key: const Key('about-copy'),
                 onPressed: copy,
-                icon: const Icon(Icons.copy_rounded, size: 18),
+                icon: const AppIcon(Icons.copy_rounded, size: 18),
                 label: Text(l.aboutCopyDetails),
               ),
               TextButton.icon(
                 key: const Key('about-source'),
                 onPressed: () => ref.read(openUrlProvider)(sourceUrl),
-                icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                icon: const AppIcon(Icons.open_in_new_rounded, size: 18),
                 label: Text(l.aboutSourceCode),
               ),
             ],

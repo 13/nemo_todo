@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 
 /// Centred icon and message for views without content.
 class EmptyState extends StatelessWidget {
@@ -23,7 +24,7 @@ class EmptyState extends StatelessWidget {
                 color: scheme.primaryContainer.withValues(alpha: 0.5),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 36, color: scheme.primary),
+              child: AppIcon(icon, size: 36, color: scheme.primary),
             ),
             const SizedBox(height: 16),
             Text(

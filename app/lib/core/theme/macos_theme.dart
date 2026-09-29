@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/core/theme/nemo_colors.dart';
 import 'package:nemo/core/theme/nemo_theme.dart';
+import 'package:nemo/core/widgets/app_icon.dart';
 
 /// [AppStyle.macos]: modelled on macOS 26 -- graphite neutrals with no
 /// tint, system blue as the one accent, hairlines rather than outlines,
@@ -206,7 +207,7 @@ abstract final class MacosTheme {
       // Apple's back is a chevron, not Material's arrow.
       actionIconTheme: ActionIconThemeData(
         backButtonIconBuilder: (_) =>
-            const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            const AppIcon(Icons.arrow_back_ios_new_rounded, size: 20),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,

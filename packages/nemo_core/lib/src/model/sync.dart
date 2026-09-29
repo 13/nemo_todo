@@ -19,10 +19,27 @@ enum MemberRole { owner, editor }
 /// `list`, `task`, `subtask`, `photo` and `note` carry a full row; `revoke`
 /// tells the receiver to delete its local copy of a row it may no longer
 /// see.
+///
+/// A list or task change decoded from JSON also says which of the row's
+/// keys the JSON left out ([SyncChangeList.omitted],
+/// [SyncChangeTask.omitted]). This version always sends every key, null or
+/// not, so a key that is missing comes from an app older than the field:
+/// it did not clear the value, it never knew about it, and the server
+/// keeps what it holds (see `keepOmitted`). The set is never sent.
 @Freezed(unionKey: 'type')
 sealed class SyncChange with _$SyncChange {
-  const factory SyncChange.list(TaskList row) = SyncChangeList;
-  const factory SyncChange.task(Task row) = SyncChangeTask;
+  const factory SyncChange.list(
+    TaskList row, {
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    @Default(<String>{})
+    Set<String> omitted,
+  }) = SyncChangeList;
+  const factory SyncChange.task(
+    Task row, {
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    @Default(<String>{})
+    Set<String> omitted,
+  }) = SyncChangeTask;
   const factory SyncChange.subtask(Subtask row) = SyncChangeSubtask;
   const factory SyncChange.photo(Photo row) = SyncChangePhoto;
   const factory SyncChange.note(Note row) = SyncChangeNote;
@@ -34,7 +51,7 @@ sealed class SyncChange with _$SyncChange {
   const SyncChange._();
 
   factory SyncChange.fromJson(Map<String, dynamic> json) =>
-      _$SyncChangeFromJson(json);
+      _withOmitted(_$SyncChangeFromJson(json), json);
 
   SyncEntity get entity => switch (this) {
     SyncChangeList() => SyncEntity.list,
@@ -52,6 +69,19 @@ sealed class SyncChange with _$SyncChange {
     SyncChangePhoto(:final row) => row.id,
     SyncChangeNote(:final row) => row.id,
     SyncChangeRevoke(:final id) => id,
+  };
+}
+
+/// [change] marked with the keys of its row that [json] left out.
+SyncChange _withOmitted(SyncChange change, Map<String, dynamic> json) {
+  final sent = (json['row'] as Map<String, dynamic>?)?.keys.toSet();
+  if (sent == null) return change;
+  Set<String> left(Map<String, dynamic> known) =>
+      known.keys.toSet().difference(sent);
+  return switch (change) {
+    SyncChangeList(:final row) => change.copyWith(omitted: left(row.toJson())),
+    SyncChangeTask(:final row) => change.copyWith(omitted: left(row.toJson())),
+    _ => change,
   };
 }
 

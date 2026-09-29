@@ -174,11 +174,11 @@ return revoke(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TaskList row)?  list,TResult Function( Task row)?  task,TResult Function( Subtask row)?  subtask,TResult Function( Photo row)?  photo,TResult Function( Note row)?  note,TResult Function( SyncEntity target,  String id)?  revoke,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TaskList row, @JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted)?  list,TResult Function( Task row, @JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted)?  task,TResult Function( Subtask row)?  subtask,TResult Function( Photo row)?  photo,TResult Function( Note row)?  note,TResult Function( SyncEntity target,  String id)?  revoke,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SyncChangeList() when list != null:
-return list(_that.row);case SyncChangeTask() when task != null:
-return task(_that.row);case SyncChangeSubtask() when subtask != null:
+return list(_that.row,_that.omitted);case SyncChangeTask() when task != null:
+return task(_that.row,_that.omitted);case SyncChangeSubtask() when subtask != null:
 return subtask(_that.row);case SyncChangePhoto() when photo != null:
 return photo(_that.row);case SyncChangeNote() when note != null:
 return note(_that.row);case SyncChangeRevoke() when revoke != null:
@@ -200,11 +200,11 @@ return revoke(_that.target,_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TaskList row)  list,required TResult Function( Task row)  task,required TResult Function( Subtask row)  subtask,required TResult Function( Photo row)  photo,required TResult Function( Note row)  note,required TResult Function( SyncEntity target,  String id)  revoke,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TaskList row, @JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted)  list,required TResult Function( Task row, @JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted)  task,required TResult Function( Subtask row)  subtask,required TResult Function( Photo row)  photo,required TResult Function( Note row)  note,required TResult Function( SyncEntity target,  String id)  revoke,}) {final _that = this;
 switch (_that) {
 case SyncChangeList():
-return list(_that.row);case SyncChangeTask():
-return task(_that.row);case SyncChangeSubtask():
+return list(_that.row,_that.omitted);case SyncChangeTask():
+return task(_that.row,_that.omitted);case SyncChangeSubtask():
 return subtask(_that.row);case SyncChangePhoto():
 return photo(_that.row);case SyncChangeNote():
 return note(_that.row);case SyncChangeRevoke():
@@ -222,11 +222,11 @@ return revoke(_that.target,_that.id);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TaskList row)?  list,TResult? Function( Task row)?  task,TResult? Function( Subtask row)?  subtask,TResult? Function( Photo row)?  photo,TResult? Function( Note row)?  note,TResult? Function( SyncEntity target,  String id)?  revoke,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TaskList row, @JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted)?  list,TResult? Function( Task row, @JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted)?  task,TResult? Function( Subtask row)?  subtask,TResult? Function( Photo row)?  photo,TResult? Function( Note row)?  note,TResult? Function( SyncEntity target,  String id)?  revoke,}) {final _that = this;
 switch (_that) {
 case SyncChangeList() when list != null:
-return list(_that.row);case SyncChangeTask() when task != null:
-return task(_that.row);case SyncChangeSubtask() when subtask != null:
+return list(_that.row,_that.omitted);case SyncChangeTask() when task != null:
+return task(_that.row,_that.omitted);case SyncChangeSubtask() when subtask != null:
 return subtask(_that.row);case SyncChangePhoto() when photo != null:
 return photo(_that.row);case SyncChangeNote() when note != null:
 return note(_that.row);case SyncChangeRevoke() when revoke != null:
@@ -242,10 +242,17 @@ return revoke(_that.target,_that.id);case _:
 @JsonSerializable()
 
 class SyncChangeList extends SyncChange {
-  const SyncChangeList(this.row, { String? $type}): $type = $type ?? 'list',super._();
+  const SyncChangeList(this.row, {@JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted = const <String>{},  String? $type}): _omitted = omitted,$type = $type ?? 'list',super._();
   factory SyncChangeList.fromJson(Map<String, dynamic> json) => _$SyncChangeListFromJson(json);
 
  final  TaskList row;
+ final  Set<String> _omitted;
+@JsonKey(includeFromJson: false, includeToJson: false) Set<String> get omitted {
+  if (_omitted is EqualUnmodifiableSetView) return _omitted;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_omitted);
+}
+
 
 @JsonKey(name: 'type')
 final String $type;
@@ -264,18 +271,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncChangeList&&(identical(other.row, row) || other.row == row));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncChangeList&&(identical(other.row, row) || other.row == row)&&const DeepCollectionEquality().equals(other.omitted, _omitted));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,row);
+    return Object.hash(runtimeType,row,const DeepCollectionEquality().hash(_omitted));
 }
 
 @override
 String toString() {
-    return 'SyncChange.list(row: $row)';
+    return 'SyncChange.list(row: $row, omitted: $omitted)';
 }
 
 
@@ -286,7 +293,7 @@ abstract mixin class $SyncChangeListCopyWith<$Res> implements $SyncChangeCopyWit
   factory $SyncChangeListCopyWith(SyncChangeList value, $Res Function(SyncChangeList) _then) = _$SyncChangeListCopyWithImpl;
 @useResult
 $Res call({
- TaskList row
+ TaskList row,@JsonKey(includeFromJson: false, includeToJson: false) Set<String> omitted
 });
 
 
@@ -303,10 +310,11 @@ class _$SyncChangeListCopyWithImpl<$Res>
 
 /// Create a copy of SyncChange
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? row = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? row = null,Object? omitted = null,}) {
   return _then(SyncChangeList(
 null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
-as TaskList,
+as TaskList,omitted: null == omitted ? _self._omitted : omitted // ignore: cast_nullable_to_non_nullable
+as Set<String>,
   ));
 }
 
@@ -326,10 +334,17 @@ $TaskListCopyWith<$Res> get row {
 @JsonSerializable()
 
 class SyncChangeTask extends SyncChange {
-  const SyncChangeTask(this.row, { String? $type}): $type = $type ?? 'task',super._();
+  const SyncChangeTask(this.row, {@JsonKey(includeFromJson: false, includeToJson: false)  Set<String> omitted = const <String>{},  String? $type}): _omitted = omitted,$type = $type ?? 'task',super._();
   factory SyncChangeTask.fromJson(Map<String, dynamic> json) => _$SyncChangeTaskFromJson(json);
 
  final  Task row;
+ final  Set<String> _omitted;
+@JsonKey(includeFromJson: false, includeToJson: false) Set<String> get omitted {
+  if (_omitted is EqualUnmodifiableSetView) return _omitted;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_omitted);
+}
+
 
 @JsonKey(name: 'type')
 final String $type;
@@ -348,18 +363,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncChangeTask&&(identical(other.row, row) || other.row == row));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncChangeTask&&(identical(other.row, row) || other.row == row)&&const DeepCollectionEquality().equals(other.omitted, _omitted));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,row);
+    return Object.hash(runtimeType,row,const DeepCollectionEquality().hash(_omitted));
 }
 
 @override
 String toString() {
-    return 'SyncChange.task(row: $row)';
+    return 'SyncChange.task(row: $row, omitted: $omitted)';
 }
 
 
@@ -370,7 +385,7 @@ abstract mixin class $SyncChangeTaskCopyWith<$Res> implements $SyncChangeCopyWit
   factory $SyncChangeTaskCopyWith(SyncChangeTask value, $Res Function(SyncChangeTask) _then) = _$SyncChangeTaskCopyWithImpl;
 @useResult
 $Res call({
- Task row
+ Task row,@JsonKey(includeFromJson: false, includeToJson: false) Set<String> omitted
 });
 
 
@@ -387,10 +402,11 @@ class _$SyncChangeTaskCopyWithImpl<$Res>
 
 /// Create a copy of SyncChange
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? row = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? row = null,Object? omitted = null,}) {
   return _then(SyncChangeTask(
 null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
-as Task,
+as Task,omitted: null == omitted ? _self._omitted : omitted // ignore: cast_nullable_to_non_nullable
+as Set<String>,
   ));
 }
 

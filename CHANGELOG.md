@@ -94,6 +94,12 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ### Fixed
 
+- An older version of the app no longer wipes what it does not know
+  about. A task edited on a phone that has not been updated keeps how it
+  was solved, how long it took and what it cost, and when it was added;
+  a list renamed there keeps its sort. The server now keeps any field an
+  older app's change leaves out, rather than letting the whole older row
+  win.
 - The server exits when it is told to stop. It used to close everything
   and then stay running, so `docker stop` and every update waited ten
   seconds before Docker killed it; a stop sent the moment it started

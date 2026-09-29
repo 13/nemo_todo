@@ -150,10 +150,13 @@ Currency is a setting in its own section for tasks, between the data tiles
 and the update check, rather than a synced one, since this app has no
 synced settings channel and a display symbol does not justify inventing
 one; it defaults from the device's own locale. Unlike notes, there is no
-capability flag here: an app from before this reads a task with them back
-just fine, but if it edits that task afterwards its push carries none of
-the three, and last-write-wins overwrites them with nothing. An old
-*server* does the same to a new app: nothing filters task rows by
+capability flag here, and none is needed for an older app: it reads a
+task with them back just fine, and when it edits that task, its push
+simply has no such keys. The app always sends every key a row has -- a
+cleared field as an explicit null -- so the server reads a missing key as
+"this app does not know the field" and keeps the value it holds, both in
+what it stores and in what it relays to other devices. An old *server*,
+though, still loses them for a new app: nothing filters task rows by
 capability, so a server that has not been upgraded yet accepts a push
 carrying a solution, a time or a cost, and simply has nowhere to put them
 -- discarding exactly what the app just recorded.
@@ -161,9 +164,9 @@ carrying a solution, a time or a cost, and simply has nowhere to put them
 How a list is sorted is a field of the list, so it syncs like the list's
 name, and only the list's owner can change it -- the server takes list
 rows from no one else. When a task was added is a field of the task. An
-app from before either behaves as it does with a task's work fields: it
-reads them back fine, but a list it renames goes back to manual order,
-and a task it edits forgets when it was added.
+app from before either is handled as for a task's work fields: a list it
+renames keeps its sort, and a task it edits keeps when it was added,
+because the server keeps what a push leaves out.
 
 `docs/superpowers/specs/2026-09-07-nemo-design.md` has the details.
 

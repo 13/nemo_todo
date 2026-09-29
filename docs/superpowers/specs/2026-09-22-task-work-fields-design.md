@@ -16,7 +16,7 @@ else.
 | Time | Whole minutes; typed as `90`, `1h 30` or `1:30` |
 | Money | Integer minor units; typed as a locale-formatted decimal |
 | Currency | One ISO code in Settings, device-local like every other setting |
-| Old clients | Accepted loss: an app from before this drops the three on push |
+| Old clients | Protected since 2026-09-29: the server keeps a field a push leaves out |
 | Where | A section on the task page, collapsed while all three are empty |
 | When | Any time, not only once the task is done |
 
@@ -52,6 +52,15 @@ visible and recoverable: the text was typed once and can be typed again.
 The alternatives — a fourth capability flag, or a server that merges
 absent fields — both cost more than what they protect here, and the
 second one cannot tell "I do not know this field" from "I cleared it".
+
+**Since 2026-09-29 the server does merge absent fields**, and it can tell
+the two apart after all: every version serialises a row with every key it
+knows, null included, so a cleared time arrives as
+`"time_spent_minutes": null`, while an app from before the field sends no
+such key. `SyncChange.fromJson` records the keys a list or task row left
+out, and `keepOmitted` fills those from the stored row before
+last-write-wins stores and relays it. What an old *server* does to a new
+app, below, is unchanged.
 
 ## Model
 

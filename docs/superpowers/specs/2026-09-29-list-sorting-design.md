@@ -20,7 +20,7 @@ with the hand-made order still the default and still there to go back to.
 | Showing it | A line above the tasks names the sort, and tapping it changes it |
 | Completed | Still a section of its own, last, in the same order as the open ones |
 | Other views | Today, Upcoming, tag and search keep the orders they have |
-| Old clients | Accepted loss, as with a task's work fields |
+| Old clients | The server keeps a field an older app's push leaves out |
 
 ## Synced or device-local
 
@@ -44,10 +44,12 @@ The cost of that column:
   -- the menu leaves it out -- rather than being offered one the server
   would reject and the app would then report as a discarded change;
 - an older app that edits the list (renames it, recolours it) pushes a
-  row without the field, which reads back as Manual and wins. The same
-  trade-off the task work fields accepted, for the same reasons: a
-  household upgrades together, and the loss is one visible menu choice
-  that is quick to make again.
+  row without the field. Left to whole-row last-write-wins that would
+  read back as Manual and win; instead the server keeps the stored value
+  of any key a list or task row leaves out (`keepOmitted` in `nemo_core`).
+  This version always sends the key -- Manual as `"task_order": "manual"`
+  -- so a missing key can only mean an app that does not know it. The
+  same goes for a task's `created_at`.
 
 "Date added" needs a date the task does not carry. Ids are random UUIDs,
 the sort key is the hand-made order, and the last-write stamp moves with
@@ -62,7 +64,8 @@ fallback at read time needs no push.
 Both columns reset the app's sync cursor on upgrade, for the reason the
 work-fields migration gives: a device on the build before this decoded
 every list and task it pulled through a `fromJson` that dropped the new
-keys, and would overwrite them with its empty copy on its next edit.
+keys, and holds rows without them that it would otherwise never pull
+again.
 
 ## Orders
 

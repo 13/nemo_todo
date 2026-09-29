@@ -845,4 +845,121 @@ void main() {
     expect(lists.single.order, TaskOrder.priority);
     expect(tasks.single.createdAt, 1234);
   });
+
+  group('an app from before a field', () {
+    /// [row] as an older app pushes it: the JSON without [missing].
+    Future<SyncResponse> pushOld(
+      String userId,
+      String type,
+      Map<String, dynamic> row,
+      List<String> missing,
+    ) async {
+      final json = {...row}..removeWhere((k, _) => missing.contains(k));
+      final request = SyncRequest.fromJson({
+        'cursor': 0,
+        'changes': [
+          {'type': type, 'row': json},
+        ],
+      });
+      return (await sync.sync(userId, request)).response;
+    }
+
+    T pulled<T>(SyncResponse r) => [
+      for (final c in r.changes)
+        switch (c) {
+          SyncChangeList(:final row) => row,
+          SyncChangeTask(:final row) => row,
+          _ => null,
+        },
+    ].whereType<T>().single;
+
+    test('renaming a list keeps its sort', () async {
+      final ben = await user('ben');
+      await push(ben, [
+        SyncChange.list(list('l1', dev).copyWith(taskOrder: 'priority')),
+      ]);
+      final old = laterClock('old');
+      final renamed = list('l1', old, name: 'Renamed').toJson();
+
+      await pushOld(ben, 'list', renamed, ['task_order']);
+
+      // What every device pulls is the merged row.
+      final row = pulled<TaskList>(await push(ben, []));
+      expect(row.name, 'Renamed');
+      expect(row.updatedAt, renamed['updated_at']);
+      expect(row.order, TaskOrder.priority);
+      expect((await db.listById('l1'))!.taskOrder, 'priority');
+    });
+
+    test('editing a task keeps its work fields and date added', () async {
+      final ben = await user('ben');
+      await push(ben, [
+        SyncChange.list(list('l1', dev)),
+        SyncChange.task(
+          task('t1', 'l1', dev).copyWith(
+            createdAt: 1234,
+            solution: 'New washer',
+            timeSpentMinutes: 30,
+            costMinor: 450,
+          ),
+        ),
+      ]);
+      final old = laterClock('old');
+      final edited = task(
+        't1',
+        'l1',
+        old,
+        title: 'Fixed the tap',
+      ).copyWith(done: true).toJson();
+
+      await pushOld(ben, 'task', edited, [
+        'created_at',
+        'solution',
+        'time_spent_minutes',
+        'cost_minor',
+      ]);
+
+      final row = pulled<Task>(await push(ben, []));
+      expect(row.title, 'Fixed the tap');
+      expect(row.done, isTrue);
+      expect(row.createdAt, 1234);
+      expect(row.solution, 'New washer');
+      expect(row.timeSpentMinutes, 30);
+      expect(row.costMinor, 450);
+    });
+
+    test('a new app clearing a field with null still clears it', () async {
+      final ben = await user('ben');
+      await push(ben, [
+        SyncChange.list(list('l1', dev)),
+        SyncChange.task(task('t1', 'l1', dev).copyWith(timeSpentMinutes: 30)),
+      ]);
+      final cleared = task('t1', 'l1', laterClock('new')).toJson();
+      expect(cleared, containsPair('time_spent_minutes', null));
+
+      await pushOld(ben, 'task', cleared, []);
+
+      expect((await db.taskById('t1'))!.timeSpentMinutes, isNull);
+    });
+
+    test('a list it creates takes the defaults', () async {
+      final ben = await user('ben');
+      await pushOld(ben, 'list', list('l1', dev).toJson(), ['task_order']);
+      expect((await db.listById('l1'))!.order, TaskOrder.manual);
+    });
+
+    test('a push that loses changes nothing', () async {
+      final ben = await user('ben');
+      final later = laterClock('new');
+      await push(ben, [
+        SyncChange.list(list('l1', later).copyWith(taskOrder: 'title')),
+      ]);
+      await pushOld(ben, 'list', list('l1', dev, name: 'Old').toJson(), [
+        'task_order',
+      ]);
+      final held = (await db.listById('l1'))!;
+      expect(held.name, 'List');
+      expect(held.order, TaskOrder.title);
+    });
+  });
 }

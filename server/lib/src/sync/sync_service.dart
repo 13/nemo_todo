@@ -100,10 +100,13 @@ class SyncService {
     Set<String> touched,
   ) async {
     switch (change) {
-      case SyncChangeList(:final row):
-        final skew = _checkHlc(row.updatedAt);
+      case SyncChangeList(row: final pushed, :final omitted):
+        final skew = _checkHlc(pushed.updatedAt);
         if (skew != null) return skew;
-        final existing = await _db.listById(row.id);
+        final existing = await _db.listById(pushed.id);
+        // A field the push left out comes from an app older than it, which
+        // did not clear it: the row that wins, and is relayed, keeps ours.
+        final row = keepOmitted(pushed, existing, omitted);
         if (existing == null) {
           await _db
               .into(_db.lists)
@@ -142,11 +145,13 @@ class SyncService {
         touched.add(row.id);
         return null;
 
-      case SyncChangeTask(:final row):
-        if (!roles.containsKey(row.listId)) return 'forbidden';
-        final skew = _checkHlc(row.updatedAt);
+      case SyncChangeTask(row: final pushed, :final omitted):
+        if (!roles.containsKey(pushed.listId)) return 'forbidden';
+        final skew = _checkHlc(pushed.updatedAt);
         if (skew != null) return skew;
-        final existing = await _db.taskById(row.id);
+        final existing = await _db.taskById(pushed.id);
+        // As for a list: what an older app does not know it cannot erase.
+        final row = keepOmitted(pushed, existing, omitted);
         final oldListId = existing?.listId;
         final moved = oldListId != null && oldListId != row.listId;
         if (moved && !roles.containsKey(oldListId)) return 'forbidden';

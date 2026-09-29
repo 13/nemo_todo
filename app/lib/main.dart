@@ -52,7 +52,6 @@ Future<void> main() async {
   } on Object catch (error) {
     // The error screen reads no providers; there is deliberately no scope
     // here, because the providers it would hold are what failed to start.
-    // ignore: riverpod_lint/missing_provider_scope
     _run(StartupErrorApp(error: error));
   }
 }
@@ -61,6 +60,9 @@ Future<void> main() async {
 /// page's loading screen -- not before, or the page would go blank again
 /// between the two.
 void _run(Widget app) {
+  // The app brings its own ProviderScope; the startup error screen has
+  // none on purpose (see [main]), which the lint cannot see from here.
+  // ignore: riverpod_lint/missing_provider_scope
   runApp(app);
   WidgetsBinding.instance.addPostFrameCallback((_) => removeSplash());
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:logging/logging.dart';
 import 'package:nemo_core/nemo_core.dart';
+import 'package:nemo_server/src/auth/rate_limiter.dart';
 import 'package:nemo_server/src/blobs/blob_store.dart';
 import 'package:nemo_server/src/db/server_database.dart';
 import 'package:nemo_server/src/sync/sync_log_writer.dart';
@@ -167,6 +168,10 @@ class PurgeService {
             excludingPhotoIds: result.photoIds,
           )).length
         : await _sweepBlobs(staleMillis);
+
+    // Sign-in attempts past their window. The server sweeps these as it
+    // goes, but one that stopped before its next sweep leaves some behind.
+    if (!dryRun) await RateLimiter.deleteExpiredHits(_db, _now());
 
     return PurgeReport(
       lists: result.lists,

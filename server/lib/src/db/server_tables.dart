@@ -67,3 +67,24 @@ class Blobs extends Table {
   @override
   Set<Column<Object>> get primaryKey => {sha256};
 }
+
+/// One row per sign-up or sign-in attempt the rate limiter let through,
+/// kept in the database rather than in memory so restarting the server
+/// does not hand a guesser a fresh allowance.
+///
+/// A row carries when it stops counting rather than when it happened, so
+/// housekeeping can sweep the stale ones without knowing the window.
+@TableIndex(
+  name: 'rate_limit_hits_client_key',
+  columns: {#clientKey, #expiresAt},
+)
+@DataClassName('RateLimitHit')
+class RateLimitHits extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// Who is being limited: the caller's address.
+  TextColumn get clientKey => text()();
+
+  /// Epoch milliseconds.
+  IntColumn get expiresAt => integer()();
+}

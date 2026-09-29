@@ -3906,6 +3906,261 @@ class BlobsCompanion extends UpdateCompanion<BlobRow> {
   }
 }
 
+class $RateLimitHitsTable extends RateLimitHits
+    with TableInfo<$RateLimitHitsTable, RateLimitHit> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RateLimitHitsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _clientKeyMeta = const VerificationMeta(
+    'clientKey',
+  );
+  @override
+  late final GeneratedColumn<String> clientKey = GeneratedColumn<String>(
+    'client_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<int> expiresAt = GeneratedColumn<int>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, clientKey, expiresAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'rate_limit_hits';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RateLimitHit> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('client_key')) {
+      context.handle(
+        _clientKeyMeta,
+        clientKey.isAcceptableOrUnknown(data['client_key']!, _clientKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_clientKeyMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RateLimitHit map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RateLimitHit(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      clientKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_key'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expires_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RateLimitHitsTable createAlias(String alias) {
+    return $RateLimitHitsTable(attachedDatabase, alias);
+  }
+}
+
+class RateLimitHit extends DataClass implements Insertable<RateLimitHit> {
+  final int id;
+
+  /// Who is being limited: the caller's address.
+  final String clientKey;
+
+  /// Epoch milliseconds.
+  final int expiresAt;
+  const RateLimitHit({
+    required this.id,
+    required this.clientKey,
+    required this.expiresAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['client_key'] = Variable<String>(clientKey);
+    map['expires_at'] = Variable<int>(expiresAt);
+    return map;
+  }
+
+  RateLimitHitsCompanion toCompanion(bool nullToAbsent) {
+    return RateLimitHitsCompanion(
+      id: Value(id),
+      clientKey: Value(clientKey),
+      expiresAt: Value(expiresAt),
+    );
+  }
+
+  factory RateLimitHit.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RateLimitHit(
+      id: serializer.fromJson<int>(json['id']),
+      clientKey: serializer.fromJson<String>(json['clientKey']),
+      expiresAt: serializer.fromJson<int>(json['expiresAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'clientKey': serializer.toJson<String>(clientKey),
+      'expiresAt': serializer.toJson<int>(expiresAt),
+    };
+  }
+
+  RateLimitHit copyWith({int? id, String? clientKey, int? expiresAt}) =>
+      RateLimitHit(
+        id: id ?? this.id,
+        clientKey: clientKey ?? this.clientKey,
+        expiresAt: expiresAt ?? this.expiresAt,
+      );
+  RateLimitHit copyWithCompanion(RateLimitHitsCompanion data) {
+    return RateLimitHit(
+      id: data.id.present ? data.id.value : this.id,
+      clientKey: data.clientKey.present ? data.clientKey.value : this.clientKey,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RateLimitHit(')
+          ..write('id: $id, ')
+          ..write('clientKey: $clientKey, ')
+          ..write('expiresAt: $expiresAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, clientKey, expiresAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RateLimitHit &&
+          other.id == this.id &&
+          other.clientKey == this.clientKey &&
+          other.expiresAt == this.expiresAt);
+}
+
+class RateLimitHitsCompanion extends UpdateCompanion<RateLimitHit> {
+  final Value<int> id;
+  final Value<String> clientKey;
+  final Value<int> expiresAt;
+  const RateLimitHitsCompanion({
+    this.id = const Value.absent(),
+    this.clientKey = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+  });
+  RateLimitHitsCompanion.insert({
+    this.id = const Value.absent(),
+    required String clientKey,
+    required int expiresAt,
+  }) : clientKey = Value(clientKey),
+       expiresAt = Value(expiresAt);
+  static Insertable<RateLimitHit> custom({
+    Expression<int>? id,
+    Expression<String>? clientKey,
+    Expression<int>? expiresAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (clientKey != null) 'client_key': clientKey,
+      if (expiresAt != null) 'expires_at': expiresAt,
+    });
+  }
+
+  RateLimitHitsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? clientKey,
+    Value<int>? expiresAt,
+  }) {
+    return RateLimitHitsCompanion(
+      id: id ?? this.id,
+      clientKey: clientKey ?? this.clientKey,
+      expiresAt: expiresAt ?? this.expiresAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (clientKey.present) {
+      map['client_key'] = Variable<String>(clientKey.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<int>(expiresAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RateLimitHitsCompanion(')
+          ..write('id: $id, ')
+          ..write('clientKey: $clientKey, ')
+          ..write('expiresAt: $expiresAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$ServerDatabase extends GeneratedDatabase {
   _$ServerDatabase(QueryExecutor e) : super(e);
   $ServerDatabaseManager get managers => $ServerDatabaseManager(this);
@@ -3919,6 +4174,7 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
   late final $ListMembersTable listMembers = $ListMembersTable(this);
   late final $SyncLogTable syncLog = $SyncLogTable(this);
   late final $BlobsTable blobs = $BlobsTable(this);
+  late final $RateLimitHitsTable rateLimitHits = $RateLimitHitsTable(this);
   late final Index tasksListId = Index(
     'tasks_list_id',
     'CREATE INDEX tasks_list_id ON tasks (list_id)',
@@ -3951,6 +4207,10 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     'sync_log_row',
     'CREATE INDEX sync_log_row ON sync_log (row_id, entity, op)',
   );
+  late final Index rateLimitHitsClientKey = Index(
+    'rate_limit_hits_client_key',
+    'CREATE INDEX rate_limit_hits_client_key ON rate_limit_hits (client_key, expires_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3966,6 +4226,7 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     listMembers,
     syncLog,
     blobs,
+    rateLimitHits,
     tasksListId,
     subtasksTaskId,
     photosParent,
@@ -3974,6 +4235,7 @@ abstract class _$ServerDatabase extends GeneratedDatabase {
     syncLogListId,
     syncLogForUserId,
     syncLogRow,
+    rateLimitHitsClientKey,
   ];
 }
 
@@ -6445,6 +6707,173 @@ typedef $$BlobsTableProcessedTableManager =
       BlobRow,
       PrefetchHooks Function()
     >;
+typedef $$RateLimitHitsTableCreateCompanionBuilder =
+    RateLimitHitsCompanion Function({
+      Value<int> id,
+      required String clientKey,
+      required int expiresAt,
+    });
+typedef $$RateLimitHitsTableUpdateCompanionBuilder =
+    RateLimitHitsCompanion Function({
+      Value<int> id,
+      Value<String> clientKey,
+      Value<int> expiresAt,
+    });
+
+class $$RateLimitHitsTableFilterComposer
+    extends Composer<_$ServerDatabase, $RateLimitHitsTable> {
+  $$RateLimitHitsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get clientKey => $composableBuilder(
+    column: $table.clientKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RateLimitHitsTableOrderingComposer
+    extends Composer<_$ServerDatabase, $RateLimitHitsTable> {
+  $$RateLimitHitsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get clientKey => $composableBuilder(
+    column: $table.clientKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RateLimitHitsTableAnnotationComposer
+    extends Composer<_$ServerDatabase, $RateLimitHitsTable> {
+  $$RateLimitHitsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get clientKey =>
+      $composableBuilder(column: $table.clientKey, builder: (column) => column);
+
+  GeneratedColumn<int> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+}
+
+class $$RateLimitHitsTableTableManager
+    extends
+        RootTableManager<
+          _$ServerDatabase,
+          $RateLimitHitsTable,
+          RateLimitHit,
+          $$RateLimitHitsTableFilterComposer,
+          $$RateLimitHitsTableOrderingComposer,
+          $$RateLimitHitsTableAnnotationComposer,
+          $$RateLimitHitsTableCreateCompanionBuilder,
+          $$RateLimitHitsTableUpdateCompanionBuilder,
+          (
+            RateLimitHit,
+            BaseReferences<_$ServerDatabase, $RateLimitHitsTable, RateLimitHit>,
+          ),
+          RateLimitHit,
+          PrefetchHooks Function()
+        > {
+  $$RateLimitHitsTableTableManager(
+    _$ServerDatabase db,
+    $RateLimitHitsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RateLimitHitsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RateLimitHitsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RateLimitHitsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> clientKey = const Value.absent(),
+                Value<int> expiresAt = const Value.absent(),
+              }) => RateLimitHitsCompanion(
+                id: id,
+                clientKey: clientKey,
+                expiresAt: expiresAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String clientKey,
+                required int expiresAt,
+              }) => RateLimitHitsCompanion.insert(
+                id: id,
+                clientKey: clientKey,
+                expiresAt: expiresAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RateLimitHitsTable, RateLimitHit>(table),
+                  BaseReferences<
+                    _$ServerDatabase,
+                    $RateLimitHitsTable,
+                    RateLimitHit
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RateLimitHitsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$ServerDatabase,
+      $RateLimitHitsTable,
+      RateLimitHit,
+      $$RateLimitHitsTableFilterComposer,
+      $$RateLimitHitsTableOrderingComposer,
+      $$RateLimitHitsTableAnnotationComposer,
+      $$RateLimitHitsTableCreateCompanionBuilder,
+      $$RateLimitHitsTableUpdateCompanionBuilder,
+      (
+        RateLimitHit,
+        BaseReferences<_$ServerDatabase, $RateLimitHitsTable, RateLimitHit>,
+      ),
+      RateLimitHit,
+      PrefetchHooks Function()
+    >;
 
 class $ServerDatabaseManager {
   final _$ServerDatabase _db;
@@ -6469,4 +6898,6 @@ class $ServerDatabaseManager {
       $$SyncLogTableTableManager(_db, _db.syncLog);
   $$BlobsTableTableManager get blobs =>
       $$BlobsTableTableManager(_db, _db.blobs);
+  $$RateLimitHitsTableTableManager get rateLimitHits =>
+      $$RateLimitHitsTableTableManager(_db, _db.rateLimitHits);
 }

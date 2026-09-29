@@ -26,6 +26,7 @@ void main() {
         'sessions',
         'list_members',
         'sync_log',
+        'rate_limit_hits',
       ]),
     );
   });
@@ -86,6 +87,16 @@ void main() {
         ],
       ),
       contains('sync_log_row'),
+    );
+
+    // Every sign-up and sign-in counts the caller's recent attempts.
+    expect(
+      await plan(
+        'select count(*) from rate_limit_hits '
+        'where client_key = ? and expires_at > ?',
+        [const Variable('1.2.3.4'), const Variable(0)],
+      ),
+      contains('rate_limit_hits_client_key'),
     );
   });
 

@@ -73,7 +73,7 @@ void main() {
   );
 
   test('auth endpoints are rate limited per client', () async {
-    server = await TestServer.start(limiter: RateLimiter(max: 2));
+    server = await TestServer.start(rateLimit: 2);
     await server.signup('ben');
     final second = await server.post('/api/v1/auth/login', {
       'username': 'ben',
@@ -89,7 +89,7 @@ void main() {
   });
 
   test('a forwarding header cannot buy extra login attempts', () async {
-    server = await TestServer.start(limiter: RateLimiter(max: 2));
+    server = await TestServer.start(rateLimit: 2);
     await server.signup('ben');
     Future<http.Response> login(String forwarded) => http.post(
       server.uri('/api/v1/auth/login'),

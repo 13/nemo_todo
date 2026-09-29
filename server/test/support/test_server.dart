@@ -20,7 +20,7 @@ class TestServer {
     String? webDir,
     List<String> corsOrigins = const [],
     DateTime Function()? now,
-    RateLimiter? limiter,
+    int? rateLimit,
     String version = 'dev',
     String? commit,
     String? builtAt,
@@ -52,7 +52,7 @@ class TestServer {
       auth: auth,
       hub: hub,
       now: now,
-      limiter: limiter,
+      limiter: rateLimit == null ? null : RateLimiter(db, max: rateLimit),
     );
     final server = await shelf_io.serve(
       handler,

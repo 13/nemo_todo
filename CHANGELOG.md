@@ -14,6 +14,14 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
+## Unreleased
+
+### Changed
+
+- The server keeps its count of sign-up and sign-in attempts in its
+  database instead of in memory, so restarting it no longer gives someone
+  guessing passwords a fresh ten tries a minute.
+
 ## 0.18.0 - 2026-09-29
 
 ### Changed

@@ -177,7 +177,7 @@ String clientIp(Request request, {int trustedProxyHops = 0}) {
 
 Middleware rateLimit(RateLimiter limiter, {int trustedProxyHops = 0}) =>
     (inner) => (request) async {
-      if (!limiter.allow(
+      if (!await limiter.allow(
         clientIp(request, trustedProxyHops: trustedProxyHops),
       )) {
         return errorResponse(429, 'too_many_requests');

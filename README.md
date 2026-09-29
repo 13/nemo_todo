@@ -366,6 +366,10 @@ them: a photo mid-upload has no row yet and must not be swept as an orphan
 for that reason alone. Re-uploading a photo's bytes while its row is still
 held resets that file's age.
 
+It also clears out the record of sign-in attempts whose minute has passed.
+The server does that itself as it goes, so this only catches what one that
+stopped part-way left behind.
+
 ### Backups
 
 The database is one SQLite file in the `nemo_data` volume, and copying it
@@ -400,9 +404,9 @@ taking your own tasks somewhere else, or back after deleting them.
   are swept at startup and every six hours, so a device that never comes
   back does not leave a row behind for ever.
 - Passwords are hashed with bcrypt. Sign-up and sign-in are rate limited
-  per address. The counts live in the server's memory, so a restart starts
-  them over; that is fine for one server, and worth knowing if it restarts
-  often.
+  per address, ten attempts a minute. The counts are kept in the database,
+  so restarting the server -- or crashing it -- does not start anyone's
+  over.
 - Changing a password needs the current one and signs out every other
   session. Deleting an account needs the password too; it removes the
   account's sessions and the lists nobody else is on, and hands each shared

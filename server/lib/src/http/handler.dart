@@ -51,7 +51,7 @@ Handler createHandler({
         now: now,
       );
   final eventHub = hub ?? EventHub();
-  final rateLimiter = limiter ?? RateLimiter(now: now);
+  final rateLimiter = limiter ?? RateLimiter(db, now: now);
 
   Future<Response> credentials(
     Request request,

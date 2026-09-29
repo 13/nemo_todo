@@ -202,6 +202,21 @@ void main() {
     expect(await db.subtaskById('s1'), isNull);
   });
 
+  test('sweeps sign-in attempts whose window has passed', () async {
+    await RateLimiter(db, now: () => now).allow('1.1.1.1');
+    now = now.add(const Duration(hours: 1));
+    // A limiter started since, as after a restart: it has not swept yet.
+    final limiter = RateLimiter(db, now: () => now);
+    await limiter.allow('2.2.2.2');
+
+    await purge().purge(dryRun: true);
+    expect(await limiter.trackedKeys(), 2, reason: 'a dry run changes nothing');
+
+    await purge().purge();
+    expect(await limiter.trackedKeys(), 1, reason: 'the live one stays');
+    expect(await limiter.allow('2.2.2.2'), isTrue);
+  });
+
   test('a dry run counts without deleting', () async {
     final ben = await user('ben');
     final old = longAgo('dev', const Duration(days: 40));

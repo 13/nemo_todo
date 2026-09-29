@@ -22,6 +22,7 @@ part 'server_database.g.dart';
     ListMembers,
     SyncLog,
     Blobs,
+    RateLimitHits,
   ],
 )
 class ServerDatabase extends _$ServerDatabase {
@@ -54,7 +55,7 @@ class ServerDatabase extends _$ServerDatabase {
       customStatement('vacuum into ?', [path]);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -131,6 +132,14 @@ class ServerDatabase extends _$ServerDatabase {
         await m.addColumn(tasks, tasks.solution);
         await m.addColumn(tasks, tasks.timeSpentMinutes);
         await m.addColumn(tasks, tasks.costMinor);
+      }
+      // Version 7 keeps the sign-in rate limiter's counts, which used to
+      // live in memory and start over at every restart. A brand-new table
+      // with nothing to carry over: the counts it would have held were
+      // already lost when the old server stopped.
+      if (from < 7) {
+        await m.createTable(rateLimitHits);
+        await m.create(rateLimitHitsClientKey);
       }
     },
   );

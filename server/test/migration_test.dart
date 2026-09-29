@@ -24,11 +24,11 @@ void main() {
   });
 
   test('migrates a database from every earlier version', () async {
-    for (final from in [1, 2, 3, 4, 5]) {
+    for (final from in [1, 2, 3, 4, 5, 6]) {
       final verifier = SchemaVerifier(GeneratedHelper());
       final connection = await verifier.startAt(from);
       final db = ServerDatabase(connection);
-      await verifier.migrateAndValidate(db, 6);
+      await verifier.migrateAndValidate(db, 7);
       await db.close();
     }
   });
@@ -37,7 +37,7 @@ void main() {
     final verifier = SchemaVerifier(GeneratedHelper());
     final connection = await verifier.startAt(1);
     final db = ServerDatabase(connection);
-    await verifier.migrateAndValidate(db, 6);
+    await verifier.migrateAndValidate(db, 7);
     final indexes =
         (await db
                 .customSelect(
@@ -53,6 +53,7 @@ void main() {
         'sync_log_row',
         'photos_parent',
         'notes_list_id',
+        'rate_limit_hits_client_key',
       ]),
     );
     await db.close();
@@ -67,7 +68,7 @@ void main() {
       ['p1', 't1', 'a' * 64, 10, 2, 1, 'V', '0000000000001-0000-n'],
     );
     final db = ServerDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 6);
+    await verifier.migrateAndValidate(db, 7);
 
     final row = await db.photoById('p1');
 
@@ -85,7 +86,7 @@ void main() {
       ['t1', 'l1', 'Fix the tap', '[]', 'V', '0000000000001-0000-n'],
     );
     final db = ServerDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 6);
+    await verifier.migrateAndValidate(db, 7);
 
     final row = await db.taskById('t1');
 

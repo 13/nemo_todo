@@ -13,6 +13,20 @@ Changes not released yet collect under `## Unreleased`, which is renamed to
 the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so.
 
+## 0.15.1 - 2026-09-29
+
+### Changed
+
+- The web app shows a loading screen with the nemo logo from the moment
+  the page opens, instead of a blank white page until the app is ready.
+
+### Fixed
+
+- The web app loads faster: the server now sends it compressed, which
+  cuts a first visit from about 11 MB to about 4 MB, and a browser checks
+  for a newer copy of every file after an update instead of possibly
+  reusing an old one.
+
 ## 0.15.0 - 2026-09-28
 
 ### Added

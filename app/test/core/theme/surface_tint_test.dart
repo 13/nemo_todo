@@ -55,6 +55,22 @@ void main() {
     expect(hsl(t).hue, closeTo(hsl(pink).hue, 10));
   });
 
+  test('an accent with little colour of its own lends little', () {
+    const grey = Color(0xFF5F6B7A);
+    for (final t in [SurfaceTint.subtle, SurfaceTint.strong]) {
+      expect(
+        hsl(tinted(container, t, accent: grey)).saturation,
+        lessThan(hsl(container).saturation),
+        reason: '$t',
+      );
+    }
+    // A colourful accent lends in full.
+    expect(
+      hsl(tinted(container, SurfaceTint.subtle, accent: pink)).saturation,
+      closeTo(hsl(container).saturation, 0.02),
+    );
+  });
+
   test('white and black stay as they are', () {
     for (final c in [Colors.white, Colors.black]) {
       for (final t in SurfaceTint.values) {

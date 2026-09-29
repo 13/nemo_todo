@@ -235,8 +235,7 @@ void main() {
     // asserts where the two disagree on inherit.
     for (final brightness in Brightness.values) {
       final themes = [
-        for (final style in AppStyle.values)
-          AppTheme.build(style, brightness),
+        for (final style in AppStyle.values) AppTheme.build(style, brightness),
       ];
       for (final a in themes) {
         for (final b in themes) {
@@ -295,6 +294,11 @@ void main() {
                 reason: 'onSurfaceVariant on $bg',
               );
             }
+            // A snackbar's text on its ground.
+            expect(
+              contrast(s.onInverseSurface, s.inverseSurface),
+              greaterThanOrEqualTo(4.5),
+            );
           });
         }
       }
@@ -311,6 +315,20 @@ void main() {
       ).saturation;
       expect(sat(SurfaceTint.none), 0);
       expect(sat(SurfaceTint.strong), greaterThan(sat(SurfaceTint.subtle)));
+    });
+
+    test('none greys outlines and snackbars as well', () {
+      for (final brightness in Brightness.values) {
+        final s = AppTheme.build(
+          AppStyle.nemo,
+          brightness,
+          accent: 3,
+          tint: SurfaceTint.none,
+        ).colorScheme;
+        for (final c in [s.outline, s.inverseSurface, s.onInverseSurface]) {
+          expect(HSLColor.fromColor(c).saturation, 0, reason: '$c');
+        }
+      }
     });
 
     test('the backgrounds follow a changed accent', () {

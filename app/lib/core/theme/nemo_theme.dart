@@ -67,7 +67,11 @@ abstract final class NemoTheme {
     surface: t(scheme.surface),
     onSurface: t(scheme.onSurface),
     onSurfaceVariant: t(scheme.onSurfaceVariant),
+    outline: t(scheme.outline),
     outlineVariant: t(scheme.outlineVariant),
+    // A snackbar's ground and text.
+    inverseSurface: t(scheme.inverseSurface),
+    onInverseSurface: t(scheme.onInverseSurface),
     surfaceDim: t(scheme.surfaceDim),
     surfaceBright: t(scheme.surfaceBright),
     surfaceContainerLowest: t(scheme.surfaceContainerLowest),

@@ -19,6 +19,7 @@ steps: None, Subtle, Strong.
 | How colours are made | Each surface keeps today's lightness; hue and saturation change |
 | Where it is kept | On the device, in the key-value store, like style and accent; not synced |
 | Web splash | Unchanged: it knows mode and style, not tint |
+| Android launch splash | Unchanged: see Out of scope |
 | Contrast | `onSurface` and `onSurfaceVariant` stay at 4.5:1 or better on every surface |
 
 ## Why lightness is kept
@@ -57,6 +58,11 @@ Color tinted(Color color, SurfaceTint tint, {Color? accent});
 - Saturation factor: `none` 0, `subtle` 1, `strong` 2.5, the result
   clamped to 1.
 - Hue: the accent's HSL hue where `accent` is given, else `color`'s own.
+- An accent lends in proportion to its own colour: the factor is scaled
+  by the accent's saturation over 0.4, capped at 1. Every list colour
+  but grey is above 0.4 and lends in full; grey (about 0.12) lends about
+  a third, so picking grey keeps the backgrounds near grey instead of
+  giving them a blue-grey cast.
 - HSL lightness is not luminance, so saturation moves contrast a little.
   The contrast test below is the guard: if any accent fails at `strong`,
   the factor comes down until all pass, rather than special-casing hues.
@@ -75,6 +81,9 @@ or sits on one goes through `tinted`:
 - the scaffold background (`F5F8F8` / `0E1616`);
 - the scheme's `surface`, `onSurface`, `onSurfaceVariant`,
   `outlineVariant` and `surfaceContainerHighest`, as overridden today;
+- `outline` (segmented and outlined button borders) and the inverse pair
+  `inverseSurface` / `onInverseSurface` (snackbars), which would
+  otherwise stay faintly teal around a differently tinted window;
 - the scheme's remaining surface roles from `ColorScheme.fromSeed`
   (`surfaceContainerLowest` … `surfaceContainerHigh`, `surfaceDim`,
   `surfaceBright`), which today stay teal whatever the accent;
@@ -138,3 +147,9 @@ New strings in `app_en.arb`, `app_de.arb` and `app_it.arb`:
 - Tint in the macOS and Material styles.
 - Pure black (OLED) dark, contrast levels, background presets.
 - Carrying the tint into the web splash or the Android home-screen widget.
+- The Android launch splash. Android draws it from a fixed theme resource
+  before any app code runs, so it cannot read a setting; it already shows
+  nemo's teal whatever style or accent is chosen. Following the setting
+  would take Android 13's `SplashScreen.setSplashScreenTheme` with a
+  prebuilt theme for every accent, level and brightness (54), which is
+  not worth a colour seen for a moment.

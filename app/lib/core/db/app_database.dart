@@ -28,7 +28,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -121,6 +121,17 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(tasks, tasks.solution);
         await m.addColumn(tasks, tasks.timeSpentMinutes);
         await m.addColumn(tasks, tasks.costMinor);
+        await (delete(kv)..where((t) => t.key.equals(KvKeys.cursor))).go();
+      }
+      // Version 6 carries how a list is sorted and when a task was added.
+      // No backfill: every list so far was in manual order, and a task with
+      // no creation time sorts by its last write. The cursor starts over
+      // for the reason version 5's does: the build before this decoded
+      // every list and task it pulled without these keys, and would erase
+      // them everywhere the next time it wrote that row.
+      if (from < 6) {
+        await m.addColumn(lists, lists.taskOrder);
+        await m.addColumn(tasks, tasks.createdAt);
         await (delete(kv)..where((t) => t.key.equals(KvKeys.cursor))).go();
       }
     },

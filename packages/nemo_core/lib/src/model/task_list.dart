@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nemo_core/src/model/sync_row.dart';
+import 'package:nemo_core/src/task_order.dart';
 
 part 'task_list.freezed.dart';
 part 'task_list.g.dart';
@@ -17,6 +18,11 @@ abstract class TaskList with _$TaskList implements SyncRow {
     @Default('list') String icon,
     String? ownerId,
     @Default(false) bool isInbox,
+
+    /// How the list's tasks are sorted: a [TaskOrder]'s wire value. Text
+    /// rather than the enum, so an order a newer version knows travels
+    /// through this one and the server intact instead of being dropped.
+    @Default('manual') String taskOrder,
     String? deletedAt,
   }) = _TaskList;
 
@@ -26,4 +32,8 @@ abstract class TaskList with _$TaskList implements SyncRow {
       _$TaskListFromJson(json);
 
   bool get isDeleted => deletedAt != null;
+
+  /// The order this list's tasks are shown in; manual for one this version
+  /// does not know.
+  TaskOrder get order => TaskOrder.parse(taskOrder);
 }

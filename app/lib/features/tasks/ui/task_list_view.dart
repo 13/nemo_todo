@@ -202,7 +202,16 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
         tasks[i],
         ReorderableDelayedDragStartListener(
           index: i,
-          child: TaskTile(task: tasks[i], showList: widget.showList),
+          child: TaskTile(
+            task: tasks[i],
+            showList: widget.showList,
+            // The drag, for someone whose screen reader has taken the
+            // long press over. `_reorder` takes the index after removal.
+            onMoveUp: i == 0 ? null : () => _reorder(tasks, i, i - 1),
+            onMoveDown: i == tasks.length - 1
+                ? null
+                : () => _reorder(tasks, i, i + 1),
+          ),
         ),
       ),
     ),

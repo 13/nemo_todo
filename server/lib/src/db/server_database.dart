@@ -75,7 +75,7 @@ class ServerDatabase extends _$ServerDatabase {
   static const _lastHousekeeping = 'last_housekeeping';
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -164,6 +164,14 @@ class ServerDatabase extends _$ServerDatabase {
       // Version 8 remembers when housekeeping last ran, for `status`. An
       // upgraded server simply has no record of it yet, which is the truth.
       if (from < 8) await m.createTable(serverMeta);
+      // Version 9 carries how a list is sorted and when a task was added.
+      // Neither needs a backfill: every list so far was in manual order,
+      // and a task with no creation time is sorted by its last write. The
+      // server never reads either; it stores and forwards them.
+      if (from < 9) {
+        await m.addColumn(lists, lists.taskOrder);
+        await m.addColumn(tasks, tasks.createdAt);
+      }
     },
   );
 }

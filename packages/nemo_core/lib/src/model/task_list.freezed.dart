@@ -16,7 +16,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TaskList {
 
- String get id; String get name; String get sortKey; String get updatedAt; int get color; String get icon; String? get ownerId; bool get isInbox; String? get deletedAt;
+ String get id; String get name; String get sortKey; String get updatedAt; int get color; String get icon; String? get ownerId; bool get isInbox;/// How the list's tasks are sorted: a [TaskOrder]'s wire value. Text
+/// rather than the enum, so an order a newer version knows travels
+/// through this one and the server intact instead of being dropped.
+ String get taskOrder; String? get deletedAt;
 /// Create a copy of TaskList
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +33,20 @@ $TaskListCopyWith<TaskList> get copyWith => _$TaskListCopyWithImpl<TaskList>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as TaskList;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskList&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.ownerId, _this.ownerId) || other.ownerId == _this.ownerId)&&(identical(other.isInbox, _this.isInbox) || other.isInbox == _this.isInbox)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskList&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.sortKey, _this.sortKey) || other.sortKey == _this.sortKey)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.ownerId, _this.ownerId) || other.ownerId == _this.ownerId)&&(identical(other.isInbox, _this.isInbox) || other.isInbox == _this.isInbox)&&(identical(other.taskOrder, _this.taskOrder) || other.taskOrder == _this.taskOrder)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as TaskList;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.sortKey,_this.updatedAt,_this.color,_this.icon,_this.ownerId,_this.isInbox,_this.deletedAt);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.sortKey,_this.updatedAt,_this.color,_this.icon,_this.ownerId,_this.isInbox,_this.taskOrder,_this.deletedAt);
 }
 
 @override
 String toString() {
   final _this = this as TaskList;
-  return 'TaskList(id: ${_this.id}, name: ${_this.name}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, color: ${_this.color}, icon: ${_this.icon}, ownerId: ${_this.ownerId}, isInbox: ${_this.isInbox}, deletedAt: ${_this.deletedAt})';
+  return 'TaskList(id: ${_this.id}, name: ${_this.name}, sortKey: ${_this.sortKey}, updatedAt: ${_this.updatedAt}, color: ${_this.color}, icon: ${_this.icon}, ownerId: ${_this.ownerId}, isInbox: ${_this.isInbox}, taskOrder: ${_this.taskOrder}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -54,7 +57,7 @@ abstract mixin class $TaskListCopyWith<$Res>  {
   factory $TaskListCopyWith(TaskList value, $Res Function(TaskList) _then) = _$TaskListCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String sortKey, String updatedAt, int color, String icon, String? ownerId, bool isInbox, String? deletedAt
+ String id, String name, String sortKey, String updatedAt, int color, String icon, String? ownerId, bool isInbox, String taskOrder, String? deletedAt
 });
 
 
@@ -71,7 +74,7 @@ class _$TaskListCopyWithImpl<$Res>
 
 /// Create a copy of TaskList
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? sortKey = null,Object? updatedAt = null,Object? color = null,Object? icon = null,Object? ownerId = freezed,Object? isInbox = null,Object? deletedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? sortKey = null,Object? updatedAt = null,Object? color = null,Object? icon = null,Object? ownerId = freezed,Object? isInbox = null,Object? taskOrder = null,Object? deletedAt = freezed,}) {
   return _then(TaskList(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -81,7 +84,8 @@ as String,color: null == color ? _self.color : color // ignore: cast_nullable_to
 as int,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,ownerId: freezed == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String?,isInbox: null == isInbox ? _self.isInbox : isInbox // ignore: cast_nullable_to_non_nullable
-as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as bool,taskOrder: null == taskOrder ? _self.taskOrder : taskOrder // ignore: cast_nullable_to_non_nullable
+as String,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -167,10 +171,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String sortKey,  String updatedAt,  int color,  String icon,  String? ownerId,  bool isInbox,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String sortKey,  String updatedAt,  int color,  String icon,  String? ownerId,  bool isInbox,  String taskOrder,  String? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TaskList() when $default != null:
-return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_that.icon,_that.ownerId,_that.isInbox,_that.deletedAt);case _:
+return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_that.icon,_that.ownerId,_that.isInbox,_that.taskOrder,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -188,10 +192,10 @@ return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String sortKey,  String updatedAt,  int color,  String icon,  String? ownerId,  bool isInbox,  String? deletedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String sortKey,  String updatedAt,  int color,  String icon,  String? ownerId,  bool isInbox,  String taskOrder,  String? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _TaskList():
-return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_that.icon,_that.ownerId,_that.isInbox,_that.deletedAt);case _:
+return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_that.icon,_that.ownerId,_that.isInbox,_that.taskOrder,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +212,10 @@ return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String sortKey,  String updatedAt,  int color,  String icon,  String? ownerId,  bool isInbox,  String? deletedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String sortKey,  String updatedAt,  int color,  String icon,  String? ownerId,  bool isInbox,  String taskOrder,  String? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _TaskList() when $default != null:
-return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_that.icon,_that.ownerId,_that.isInbox,_that.deletedAt);case _:
+return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_that.icon,_that.ownerId,_that.isInbox,_that.taskOrder,_that.deletedAt);case _:
   return null;
 
 }
@@ -223,7 +227,7 @@ return $default(_that.id,_that.name,_that.sortKey,_that.updatedAt,_that.color,_t
 @JsonSerializable()
 
 class _TaskList extends TaskList {
-  const _TaskList({required this.id, required this.name, required this.sortKey, required this.updatedAt, this.color = 0, this.icon = 'list', this.ownerId, this.isInbox = false, this.deletedAt}): super._();
+  const _TaskList({required this.id, required this.name, required this.sortKey, required this.updatedAt, this.color = 0, this.icon = 'list', this.ownerId, this.isInbox = false, this.taskOrder = 'manual', this.deletedAt}): super._();
   factory _TaskList.fromJson(Map<String, dynamic> json) => _$TaskListFromJson(json);
 
 @override final  String id;
@@ -234,6 +238,10 @@ class _TaskList extends TaskList {
 @override@JsonKey() final  String icon;
 @override final  String? ownerId;
 @override@JsonKey() final  bool isInbox;
+/// How the list's tasks are sorted: a [TaskOrder]'s wire value. Text
+/// rather than the enum, so an order a newer version knows travels
+/// through this one and the server intact instead of being dropped.
+@override@JsonKey() final  String taskOrder;
 @override final  String? deletedAt;
 
 /// Create a copy of TaskList
@@ -249,18 +257,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskList&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.color, color) || other.color == color)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.isInbox, isInbox) || other.isInbox == isInbox)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskList&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.sortKey, sortKey) || other.sortKey == sortKey)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.color, color) || other.color == color)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.isInbox, isInbox) || other.isInbox == isInbox)&&(identical(other.taskOrder, taskOrder) || other.taskOrder == taskOrder)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,sortKey,updatedAt,color,icon,ownerId,isInbox,deletedAt);
+    return Object.hash(runtimeType,id,name,sortKey,updatedAt,color,icon,ownerId,isInbox,taskOrder,deletedAt);
 }
 
 @override
 String toString() {
-    return 'TaskList(id: $id, name: $name, sortKey: $sortKey, updatedAt: $updatedAt, color: $color, icon: $icon, ownerId: $ownerId, isInbox: $isInbox, deletedAt: $deletedAt)';
+    return 'TaskList(id: $id, name: $name, sortKey: $sortKey, updatedAt: $updatedAt, color: $color, icon: $icon, ownerId: $ownerId, isInbox: $isInbox, taskOrder: $taskOrder, deletedAt: $deletedAt)';
 }
 
 
@@ -271,7 +279,7 @@ abstract mixin class _$TaskListCopyWith<$Res> implements $TaskListCopyWith<$Res>
   factory _$TaskListCopyWith(_TaskList value, $Res Function(_TaskList) _then) = __$TaskListCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String sortKey, String updatedAt, int color, String icon, String? ownerId, bool isInbox, String? deletedAt
+ String id, String name, String sortKey, String updatedAt, int color, String icon, String? ownerId, bool isInbox, String taskOrder, String? deletedAt
 });
 
 
@@ -288,7 +296,7 @@ class __$TaskListCopyWithImpl<$Res>
 
 /// Create a copy of TaskList
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? sortKey = null,Object? updatedAt = null,Object? color = null,Object? icon = null,Object? ownerId = freezed,Object? isInbox = null,Object? deletedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? sortKey = null,Object? updatedAt = null,Object? color = null,Object? icon = null,Object? ownerId = freezed,Object? isInbox = null,Object? taskOrder = null,Object? deletedAt = freezed,}) {
   return _then(_TaskList(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -298,7 +306,8 @@ as String,color: null == color ? _self.color : color // ignore: cast_nullable_to
 as int,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,ownerId: freezed == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String?,isInbox: null == isInbox ? _self.isInbox : isInbox // ignore: cast_nullable_to_non_nullable
-as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as bool,taskOrder: null == taskOrder ? _self.taskOrder : taskOrder // ignore: cast_nullable_to_non_nullable
+as String,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

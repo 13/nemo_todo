@@ -443,4 +443,23 @@ void main() {
     ];
     expect(titles, ['Sooner', 'Later']);
   });
+
+  test('a task records when it was added, and so does its next one', () async {
+    final weekly = await tasks.create(
+      listId: inbox,
+      title: 'Water the plants',
+      dueAt: composeDue(testNow, hour: 9),
+      repeat: Repeats.weekly,
+    );
+    expect(weekly.createdAt, testNow.millisecondsSinceEpoch);
+
+    // An old row from before the field: its successor is new all the same.
+    await db.upsertTask(weekly.copyWith(createdAt: null));
+    await tasks.setDone(weekly.id, done: true);
+
+    final next = (await tasks.watchByList(inbox).first).firstWhere(
+      (t) => !t.done,
+    );
+    expect(next.createdAt, testNow.millisecondsSinceEpoch);
+  });
 }

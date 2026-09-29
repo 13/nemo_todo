@@ -226,4 +226,18 @@ void main() {
     expect(saved!.name, 'Job');
     expect(saved.updatedAt.compareTo(work.updatedAt), greaterThan(0));
   });
+
+  test('setTaskOrder stamps the list and queues it for sync', () async {
+    final work = await repo.create(name: 'Work');
+    final before = (await db.listById(work.id))!.updatedAt;
+    await db.clearOutbox();
+
+    await repo.setTaskOrder(work.id, TaskOrder.dueDate);
+
+    final saved = (await db.listById(work.id))!;
+    expect(saved.order, TaskOrder.dueDate);
+    expect(saved.taskOrder, 'due');
+    expect(saved.updatedAt.compareTo(before), greaterThan(0));
+    expect(await db.outboxCount(), 1);
+  });
 }

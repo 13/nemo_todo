@@ -1594,4 +1594,33 @@ class LEn extends L {
     });
     return '$_temp0';
   }
+
+  @override
+  String get listsSortBy => 'Sort by';
+
+  @override
+  String get taskOrderManual => 'Manual';
+
+  @override
+  String get taskOrderDueDate => 'Due date';
+
+  @override
+  String get taskOrderPriority => 'Priority';
+
+  @override
+  String get taskOrderTitle => 'Title';
+
+  @override
+  String get taskOrderAdded => 'Date added';
+
+  @override
+  String taskOrderBanner(String order) {
+    return 'Sorted by: $order';
+  }
+
+  @override
+  String get a11yMoveUp => 'Move up';
+
+  @override
+  String get a11yMoveDown => 'Move down';
 }

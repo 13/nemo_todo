@@ -13,3 +13,4 @@ export 'src/model/task.dart';
 export 'src/model/task_list.dart';
 export 'src/repeat.dart';
 export 'src/sort_key.dart';
+export 'src/task_order.dart';

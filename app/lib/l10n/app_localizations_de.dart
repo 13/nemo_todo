@@ -1610,4 +1610,33 @@ class LDe extends L {
     });
     return '$_temp0';
   }
+
+  @override
+  String get listsSortBy => 'Sortieren nach';
+
+  @override
+  String get taskOrderManual => 'Manuell';
+
+  @override
+  String get taskOrderDueDate => 'Fälligkeit';
+
+  @override
+  String get taskOrderPriority => 'Priorität';
+
+  @override
+  String get taskOrderTitle => 'Titel';
+
+  @override
+  String get taskOrderAdded => 'Hinzugefügt am';
+
+  @override
+  String taskOrderBanner(String order) {
+    return 'Sortiert nach: $order';
+  }
+
+  @override
+  String get a11yMoveUp => 'Nach oben verschieben';
+
+  @override
+  String get a11yMoveDown => 'Nach unten verschieben';
 }

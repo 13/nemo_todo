@@ -1083,5 +1083,46 @@
         "type": "String"
       }
     }
+  },
+  "listsSortBy": "Sort by",
+  "@listsSortBy": {
+    "description": "List menu entry that opens the choice of how the list's tasks are sorted."
+  },
+  "taskOrderManual": "Manual",
+  "@taskOrderManual": {
+    "description": "Sort choice: the order tasks were dragged into by hand."
+  },
+  "taskOrderDueDate": "Due date",
+  "@taskOrderDueDate": {
+    "description": "Sort choice: earliest due first."
+  },
+  "taskOrderPriority": "Priority",
+  "@taskOrderPriority": {
+    "description": "Sort choice: highest priority first."
+  },
+  "taskOrderTitle": "Title",
+  "@taskOrderTitle": {
+    "description": "Sort choice: alphabetical by title."
+  },
+  "taskOrderAdded": "Date added",
+  "@taskOrderAdded": {
+    "description": "Sort choice: newest task first."
+  },
+  "taskOrderBanner": "Sorted by: {order}",
+  "@taskOrderBanner": {
+    "description": "Line above a list's tasks while they are not in manual order; tapping it changes the order.",
+    "placeholders": {
+      "order": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yMoveUp": "Move up",
+  "@a11yMoveUp": {
+    "description": "Screen reader action on a task row in a hand-sorted list: swap it with the one above."
+  },
+  "a11yMoveDown": "Move down",
+  "@a11yMoveDown": {
+    "description": "Screen reader action on a task row in a hand-sorted list: swap it with the one below."
   }
 }

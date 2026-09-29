@@ -153,6 +153,7 @@ class TasksRepository {
       // A rule with nothing to count from would never come back.
       repeat: dueAt == null ? null : repeat?.encode(),
       sortKey: await nextSortKey(listId),
+      createdAt: _now().millisecondsSinceEpoch,
       updatedAt: _clock.now().toString(),
     );
     await _write(task);
@@ -199,6 +200,8 @@ class TasksRepository {
       costMinor: null,
       dueAt: rule.nextDueAt(dueAt: dueAt, after: _now()),
       sortKey: await nextSortKey(task.listId),
+      // Added now, not when the first occurrence was.
+      createdAt: _now().millisecondsSinceEpoch,
       updatedAt: _clock.now().toString(),
     );
     await _write(next);

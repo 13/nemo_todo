@@ -28,11 +28,11 @@ void main() {
   });
 
   test('migrates a database from every earlier version', () async {
-    for (final from in [1, 2, 3, 4]) {
+    for (final from in [1, 2, 3, 4, 5]) {
       final verifier = SchemaVerifier(GeneratedHelper());
       final connection = await verifier.startAt(from);
       final db = AppDatabase(connection);
-      await verifier.migrateAndValidate(db, 5);
+      await verifier.migrateAndValidate(db, 6);
       await db.close();
     }
   });
@@ -41,7 +41,7 @@ void main() {
     final verifier = SchemaVerifier(GeneratedHelper());
     final connection = await verifier.startAt(1);
     final db = AppDatabase(connection);
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
     final indexes =
         (await db
                 .customSelect(
@@ -67,7 +67,7 @@ void main() {
         'ben',
       ]);
     final db = AppDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
 
     final kv = KvStore(db);
     expect(
@@ -94,7 +94,7 @@ void main() {
         'ben',
       ]);
     final db = AppDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
 
     final kv = KvStore(db);
     expect(
@@ -121,7 +121,7 @@ void main() {
         'ben',
       ]);
     final db = AppDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
 
     final kv = KvStore(db);
     expect(
@@ -145,7 +145,7 @@ void main() {
       ['p1', 't1', 'a' * 64, 10, 2, 1, 'V', '0000000000001-0000-n'],
     );
     final db = AppDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
 
     final row = await db.photoById('p1');
 
@@ -163,13 +163,46 @@ void main() {
       ['t1', 'l1', 'Fix the tap', '[]', 'V', '0000000000001-0000-n'],
     );
     final db = AppDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
 
     final row = await db.taskById('t1');
 
     expect(row!.solution, '');
     expect(row.timeSpentMinutes, isNull);
     expect(row.costMinor, isNull);
+    await db.close();
+  });
+
+  test('upgrading to list sorting starts the change log over', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(5);
+    schema.rawDatabase
+      ..execute('insert into kv (key, value) values (?, ?)', [
+        KvKeys.cursor,
+        '42',
+      ])
+      ..execute(
+        'insert into lists (id, name, sort_key, updated_at) '
+        'values (?, ?, ?, ?)',
+        ['l1', 'Shop', 'V', '0000000000001-0000-n'],
+      )
+      ..execute(
+        'insert into tasks (id, list_id, title, tags, sort_key, updated_at) '
+        'values (?, ?, ?, ?, ?, ?)',
+        ['t1', 'l1', 'Milk', '[]', 'V', '0000000000001-0000-n'],
+      );
+    final db = AppDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 6);
+
+    expect(
+      await KvStore(db).get(KvKeys.cursor),
+      isNull,
+      reason:
+          'the build before this dropped task_order and created_at from '
+          'every row it pulled, and would erase them on its next write',
+    );
+    expect((await db.listById('l1'))!.order, TaskOrder.manual);
+    expect((await db.taskById('t1'))!.createdAt, isNull);
     await db.close();
   });
 }

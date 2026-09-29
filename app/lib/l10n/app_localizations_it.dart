@@ -1628,4 +1628,33 @@ class LIt extends L {
     });
     return '$_temp0';
   }
+
+  @override
+  String get listsSortBy => 'Ordina per';
+
+  @override
+  String get taskOrderManual => 'Manuale';
+
+  @override
+  String get taskOrderDueDate => 'Scadenza';
+
+  @override
+  String get taskOrderPriority => 'Priorità';
+
+  @override
+  String get taskOrderTitle => 'Titolo';
+
+  @override
+  String get taskOrderAdded => 'Data di aggiunta';
+
+  @override
+  String taskOrderBanner(String order) {
+    return 'Ordinato per: $order';
+  }
+
+  @override
+  String get a11yMoveUp => 'Sposta su';
+
+  @override
+  String get a11yMoveDown => 'Sposta giù';
 }

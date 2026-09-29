@@ -18,6 +18,14 @@ does the renaming, and tags only once CI has passed on the release commit.
 
 ### Added
 
+- Sort a list. "Sort by" in a list's menu puts its tasks in order of due
+  date, priority, title or when they were added, or back in the order you
+  dragged them into. The sort belongs to the list, so it is the same on
+  every device and for everyone the list is shared with; only the list's
+  owner can change it. While a list is sorted, a line above its tasks says
+  how and changes it with a tap, and dragging to reorder is off. Completed
+  tasks stay last. In a list sorted by hand, a screen reader can now move a
+  task up or down.
 - `nemo_server status` shows whoever hosts the server how big the database
   is, how many accounts, lists, tasks, photo files and signed-in sessions
   it holds, and when `purge` last ran, so a scheduled purge that stopped

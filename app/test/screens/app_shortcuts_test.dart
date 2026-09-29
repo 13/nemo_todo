@@ -66,7 +66,7 @@ void main() {
     await tester.tap(find.text('Work'), buttons: kSecondaryButton);
     await tester.pumpAndSettle();
     // A menu at the pointer, not the sheet a long press brings up.
-    expect(find.byType(PopupMenuItem<String>), findsNWidgets(3));
+    expect(find.byType(PopupMenuItem<String>), findsNWidgets(4));
     expect(find.byType(BottomSheet), findsNothing);
   });
 

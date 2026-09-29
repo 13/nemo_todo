@@ -13,14 +13,16 @@ import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/lists/ui/list_edit_sheet.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/lists/ui/lists_screen.dart';
+import 'package:nemo/features/lists/ui/task_order_picker.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/screens/shell_screen.dart';
+import 'package:nemo_core/nemo_core.dart';
 
-/// One list's tasks in manual order with quick add at the bottom.
+/// One list's tasks in the list's own order with quick add at the bottom.
 class ListDetailScreen extends ConsumerWidget {
   const ListDetailScreen({required this.listId, super.key});
 
@@ -56,6 +58,8 @@ class ListDetailScreen extends ConsumerWidget {
               await showListEditSheet(context, list: list);
             case 'members':
               await context.push(Routes.members(listId));
+            case 'sort':
+              await chooseTaskOrder(context, ref, list);
             case 'delete':
               if (await confirmDeleteList(context, ref, list) &&
                   context.mounted) {
@@ -66,6 +70,8 @@ class ListDetailScreen extends ConsumerWidget {
         itemBuilder: (_) => [
           PopupMenuItem(value: 'edit', child: Text(l.commonEdit)),
           PopupMenuItem(value: 'members', child: Text(l.listsMembers)),
+          if (sharing?.isOwner ?? true)
+            PopupMenuItem(value: 'sort', child: Text(l.listsSortBy)),
           if (!list.isInbox)
             PopupMenuItem(value: 'delete', child: Text(l.commonDelete)),
         ],
@@ -125,15 +131,22 @@ class ListDetailScreen extends ConsumerWidget {
               ),
             );
           }
+          final order = list.order;
+          final sorted = sortTasks(items, order);
+          // Only a hand-made order can be changed by hand: in any other,
+          // a dragged task would just fall back where the sort puts it.
           return TaskListView(
-            reorderable: true,
+            reorderable: order == TaskOrder.manual,
+            header: order == TaskOrder.manual
+                ? null
+                : TaskOrderBanner(list: list),
             sections: [
               TaskSection(
                 title: l.tasksOpen,
-                tasks: items.where((t) => !t.done).toList(),
+                tasks: sorted.where((t) => !t.done).toList(),
               ),
             ],
-            completed: items.where((t) => t.done).toList(),
+            completed: sorted.where((t) => t.done).toList(),
           );
         },
       ),

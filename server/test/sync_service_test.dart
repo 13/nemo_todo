@@ -825,4 +825,24 @@ void main() {
           'there must be revoked from l1',
     );
   });
+
+  test("a list's order and a task's date added travel to the server", () async {
+    final ben = await user('ben');
+    await push(ben, [
+      SyncChange.list(list('l1', dev).copyWith(taskOrder: 'priority')),
+      SyncChange.task(task('t1', 'l1', dev).copyWith(createdAt: 1234)),
+    ]);
+
+    final pulled = await push(ben, []);
+    final lists = [
+      for (final c in pulled.changes)
+        if (c case SyncChangeList(:final row)) row,
+    ];
+    final tasks = [
+      for (final c in pulled.changes)
+        if (c case SyncChangeTask(:final row)) row,
+    ];
+    expect(lists.single.order, TaskOrder.priority);
+    expect(tasks.single.createdAt, 1234);
+  });
 }

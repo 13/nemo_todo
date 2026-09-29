@@ -34,6 +34,8 @@ class TaskTile extends ConsumerWidget {
     required this.task,
     this.showList = false,
     this.onLongPress,
+    this.onMoveUp,
+    this.onMoveDown,
     super.key,
   });
 
@@ -42,6 +44,11 @@ class TaskTile extends ConsumerWidget {
 
   /// Offered where a long press is not already the start of a drag.
   final VoidCallback? onLongPress;
+
+  /// A drag's two directions, for a screen reader: offered only where the
+  /// row can be dragged, and only where there is a row to swap with.
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -56,6 +63,8 @@ class TaskTile extends ConsumerWidget {
         task: task,
         showList: showList,
         onLongPress: onLongPress,
+        onMoveUp: onMoveUp,
+        onMoveDown: onMoveDown,
         highlight: selected ? context.nemoColors.selection : null,
         radius: 12,
         selectedKey: selected,
@@ -69,6 +78,8 @@ class TaskTile extends ConsumerWidget {
             task: task,
             showList: showList,
             onLongPress: onLongPress,
+            onMoveUp: onMoveUp,
+            onMoveDown: onMoveDown,
             radius: 8,
           )
         : ListenableBuilder(
@@ -85,6 +96,8 @@ class TaskTile extends ConsumerWidget {
                   task: task,
                   showList: showList,
                   onLongPress: onLongPress,
+                  onMoveUp: onMoveUp,
+                  onMoveDown: onMoveDown,
                   // Deepened where white would not read on the accent.
                   highlight: typing
                       ? context.nemoColors.selection
@@ -173,6 +186,8 @@ class _TileBody extends ConsumerWidget {
     required this.showList,
     required this.radius,
     this.onLongPress,
+    this.onMoveUp,
+    this.onMoveDown,
     this.highlight,
     this.selectedKey = false,
   });
@@ -180,6 +195,8 @@ class _TileBody extends ConsumerWidget {
   final Task task;
   final bool showList;
   final VoidCallback? onLongPress;
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
   final Color? highlight;
   final double radius;
   final bool selectedKey;
@@ -283,6 +300,8 @@ class _TileBody extends ConsumerWidget {
         for (final tag in task.tags)
           CustomSemanticsAction(label: l.a11yShowTag(tag)): () =>
               unawaited(context.push(Routes.tag(tag))),
+        CustomSemanticsAction(label: l.a11yMoveUp): ?onMoveUp,
+        CustomSemanticsAction(label: l.a11yMoveDown): ?onMoveDown,
       },
       child: Material(
         key: selectedKey ? Key('selected-task-${task.id}') : null,

@@ -15,6 +15,7 @@ class Lists extends Table {
   TextColumn get sortKey => text()();
   TextColumn get ownerId => text().nullable()();
   BoolColumn get isInbox => boolean().withDefault(const Constant(false))();
+  TextColumn get taskOrder => text().withDefault(const Constant('manual'))();
   TextColumn get updatedAt => text()();
   TextColumn get deletedAt => text().nullable()();
 
@@ -40,6 +41,7 @@ class Tasks extends Table {
   IntColumn get priority => integer().withDefault(const Constant(0))();
   TextColumn get tags => text().map(const StringListConverter())();
   TextColumn get repeat => text().nullable()();
+  IntColumn get createdAt => integer().nullable()();
   TextColumn get sortKey => text()();
   TextColumn get updatedAt => text()();
   TextColumn get deletedAt => text().nullable()();

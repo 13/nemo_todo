@@ -13,6 +13,7 @@ import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/lists/ui/list_edit_sheet.dart';
 import 'package:nemo/features/lists/ui/lists_providers.dart';
+import 'package:nemo/features/lists/ui/task_order_picker.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/task_search.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
@@ -191,7 +192,7 @@ class ListCard extends ConsumerWidget {
   }
 }
 
-/// Edit / members / delete actions for a list: as a sheet from a long
+/// Edit / members / sort / delete actions for a list: as a sheet from a long
 /// press, or as a menu [at] the pointer from a right click.
 Future<void> showListMenu(
   BuildContext context,
@@ -204,6 +205,8 @@ Future<void> showListMenu(
   final entries = [
     ('edit', Icons.edit_outlined, l.commonEdit, null),
     ('members', Icons.people_outline_rounded, l.listsMembers, null),
+    if (canSortList(ref, list))
+      ('sort', Icons.sort_rounded, l.listsSortBy, null),
     ('delete', Icons.delete_outline_rounded, l.commonDelete, error),
   ];
   final String? action;
@@ -251,6 +254,8 @@ Future<void> showListMenu(
       await showListEditSheet(context, list: list);
     case 'members':
       await context.push(Routes.members(list.id));
+    case 'sort':
+      await chooseTaskOrder(context, ref, list);
     case 'delete':
       await confirmDeleteList(context, ref, list);
   }

@@ -41,6 +41,11 @@ abstract class Task with _$Task implements SyncRow {
     /// as text so a rule from a newer version travels through this one and
     /// through the server intact instead of being dropped.
     String? repeat,
+
+    /// When the task was made, UTC milliseconds. Null on a task from before
+    /// this was recorded; sorting by date added falls back to the time in
+    /// its [updatedAt] stamp.
+    int? createdAt,
     String? deletedAt,
   }) = _Task;
 

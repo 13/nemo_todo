@@ -134,6 +134,13 @@ class ListsRepository {
   Future<void> save(TaskList list) =>
       _db.upsertList(list.copyWith(updatedAt: _clock.now().toString()));
 
+  /// Sorts the list's tasks by [order], for every device and member.
+  Future<void> setTaskOrder(String id, TaskOrder order) async {
+    final list = await _db.listById(id);
+    if (list == null || list.order == order) return;
+    await save(list.copyWith(taskOrder: order.wire));
+  }
+
   /// Tombstones the list and everything in it.
   ///
   /// The tasks used to be left alive and merely hidden behind the deleted

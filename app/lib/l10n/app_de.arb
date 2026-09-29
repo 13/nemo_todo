@@ -419,5 +419,14 @@
   "a11yExpand": "Einblenden",
   "a11yCollapse": "Ausblenden",
   "searchClear": "Suche leeren",
-  "listIconName": "{icon, select, list{Liste} inbox{Eingang} work{Arbeit} home{Zuhause} cart{Einkaufen} star{Stern} heart{Herz} flight{Reise} school{Schule} fitness{Fitness} book{Buch} idea{Idee} other{Symbol}}"
+  "listIconName": "{icon, select, list{Liste} inbox{Eingang} work{Arbeit} home{Zuhause} cart{Einkaufen} star{Stern} heart{Herz} flight{Reise} school{Schule} fitness{Fitness} book{Buch} idea{Idee} other{Symbol}}",
+  "listsSortBy": "Sortieren nach",
+  "taskOrderManual": "Manuell",
+  "taskOrderDueDate": "Fälligkeit",
+  "taskOrderPriority": "Priorität",
+  "taskOrderTitle": "Titel",
+  "taskOrderAdded": "Hinzugefügt am",
+  "taskOrderBanner": "Sortiert nach: {order}",
+  "a11yMoveUp": "Nach oben verschieben",
+  "a11yMoveDown": "Nach unten verschieben"
 }

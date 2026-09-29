@@ -11,6 +11,9 @@ host yourself.
 - Lists with colours and icons, due dates with reminders and an optional
   daily list of what's due, subtasks, notes, tags and four priorities, plus
   Today, Upcoming, search and per-tag views.
+- A list is in the order you drag its tasks into, or sorted by due date,
+  priority, title or date added; the sort belongs to the list, so everyone
+  a list is shared with sees it the same way.
 - A resizable Today widget for the Android home screen: what's due today
   and overdue with its count, a circle to tick each off without opening the
   app, a tap to open a task or Today, and "+" for a new task. It changes at
@@ -148,6 +151,13 @@ the three, and last-write-wins overwrites them with nothing. An old
 capability, so a server that has not been upgraded yet accepts a push
 carrying a solution, a time or a cost, and simply has nowhere to put them
 -- discarding exactly what the app just recorded.
+
+How a list is sorted is a field of the list, so it syncs like the list's
+name, and only the list's owner can change it -- the server takes list
+rows from no one else. When a task was added is a field of the task. An
+app from before either behaves as it does with a task's work fields: it
+reads them back fine, but a list it renames goes back to manual order,
+and a task it edits forgets when it was added.
 
 `docs/superpowers/specs/2026-09-07-nemo-design.md` has the details.
 

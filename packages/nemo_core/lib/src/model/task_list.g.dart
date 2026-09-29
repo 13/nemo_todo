@@ -15,6 +15,7 @@ _TaskList _$TaskListFromJson(Map<String, dynamic> json) => _TaskList(
   icon: json['icon'] as String? ?? 'list',
   ownerId: json['owner_id'] as String?,
   isInbox: json['is_inbox'] as bool? ?? false,
+  taskOrder: json['task_order'] as String? ?? 'manual',
   deletedAt: json['deleted_at'] as String?,
 );
 
@@ -27,5 +28,6 @@ Map<String, dynamic> _$TaskListToJson(_TaskList instance) => <String, dynamic>{
   'icon': instance.icon,
   'owner_id': instance.ownerId,
   'is_inbox': instance.isInbox,
+  'task_order': instance.taskOrder,
   'deleted_at': instance.deletedAt,
 };

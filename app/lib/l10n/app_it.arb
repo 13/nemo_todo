@@ -419,5 +419,14 @@
   "a11yExpand": "Mostra",
   "a11yCollapse": "Nascondi",
   "searchClear": "Cancella la ricerca",
-  "listIconName": "{icon, select, list{Lista} inbox{In arrivo} work{Lavoro} home{Casa} cart{Spesa} star{Stella} heart{Cuore} flight{Viaggio} school{Scuola} fitness{Fitness} book{Libro} idea{Idea} other{Icona}}"
+  "listIconName": "{icon, select, list{Lista} inbox{In arrivo} work{Lavoro} home{Casa} cart{Spesa} star{Stella} heart{Cuore} flight{Viaggio} school{Scuola} fitness{Fitness} book{Libro} idea{Idea} other{Icona}}",
+  "listsSortBy": "Ordina per",
+  "taskOrderManual": "Manuale",
+  "taskOrderDueDate": "Scadenza",
+  "taskOrderPriority": "Priorità",
+  "taskOrderTitle": "Titolo",
+  "taskOrderAdded": "Data di aggiunta",
+  "taskOrderBanner": "Ordinato per: {order}",
+  "a11yMoveUp": "Sposta su",
+  "a11yMoveDown": "Sposta giù"
 }

@@ -2618,6 +2618,60 @@ abstract class L {
   /// In en, this message translates to:
   /// **'{icon, select, list{List} inbox{Inbox} work{Work} home{Home} cart{Shopping} star{Star} heart{Heart} flight{Travel} school{School} fitness{Fitness} book{Book} idea{Idea} other{Icon}}'**
   String listIconName(String icon);
+
+  /// List menu entry that opens the choice of how the list's tasks are sorted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get listsSortBy;
+
+  /// Sort choice: the order tasks were dragged into by hand.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get taskOrderManual;
+
+  /// Sort choice: earliest due first.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get taskOrderDueDate;
+
+  /// Sort choice: highest priority first.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get taskOrderPriority;
+
+  /// Sort choice: alphabetical by title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get taskOrderTitle;
+
+  /// Sort choice: newest task first.
+  ///
+  /// In en, this message translates to:
+  /// **'Date added'**
+  String get taskOrderAdded;
+
+  /// Line above a list's tasks while they are not in manual order; tapping it changes the order.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorted by: {order}'**
+  String taskOrderBanner(String order);
+
+  /// Screen reader action on a task row in a hand-sorted list: swap it with the one above.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get a11yMoveUp;
+
+  /// Screen reader action on a task row in a hand-sorted list: swap it with the one below.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get a11yMoveDown;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

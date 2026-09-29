@@ -26,6 +26,7 @@ _Task _$TaskFromJson(Map<String, dynamic> json) => _Task(
   timeSpentMinutes: (json['time_spent_minutes'] as num?)?.toInt(),
   costMinor: (json['cost_minor'] as num?)?.toInt(),
   repeat: json['repeat'] as String?,
+  createdAt: (json['created_at'] as num?)?.toInt(),
   deletedAt: json['deleted_at'] as String?,
 );
 
@@ -47,5 +48,6 @@ Map<String, dynamic> _$TaskToJson(_Task instance) => <String, dynamic>{
   'time_spent_minutes': instance.timeSpentMinutes,
   'cost_minor': instance.costMinor,
   'repeat': instance.repeat,
+  'created_at': instance.createdAt,
   'deleted_at': instance.deletedAt,
 };

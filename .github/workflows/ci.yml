@@ -14,11 +14,14 @@ env:
   # Pinned so a Flutter release cannot break the build with no change on
   # our side. Bump deliberately, together with the Dockerfile.
   FLUTTER_VERSION: '3.47.2'
+  # Runners are pinned to ubuntu-24.04 for the same reason: ubuntu-latest
+  # moves to Ubuntu 26 from 2026-10-19, and a release should not be the
+  # first run on a new image. Move deliberately, all jobs together.
 
 jobs:
   test:
     name: Analyze & test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -110,7 +113,7 @@ jobs:
 
   build:
     name: Build web, APK and image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: test
     steps:
       - uses: actions/checkout@v7

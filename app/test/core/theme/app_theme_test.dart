@@ -230,6 +230,22 @@ void main() {
     );
   });
 
+  test('every style animates into every other', () {
+    // Changing style lerps one theme into the next, and TextStyle.lerp
+    // asserts where the two disagree on inherit.
+    for (final brightness in Brightness.values) {
+      final themes = [
+        for (final style in AppStyle.values)
+          AppTheme.build(style, brightness),
+      ];
+      for (final a in themes) {
+        for (final b in themes) {
+          expect(() => ThemeData.lerp(a, b, 0.5), returnsNormally);
+        }
+      }
+    }
+  });
+
   group('surface tint', () {
     test('nemo subtle with no accent is nemo as it was', () {
       final light = AppTheme.build(AppStyle.nemo, Brightness.light);

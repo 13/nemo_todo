@@ -78,9 +78,21 @@ abstract final class Material3Theme {
       shape: WidgetStateProperty.resolveWith(pressable),
       animationDuration: const Duration(milliseconds: 150),
     );
+    // Material's own type, put together as Theme.of would -- the English
+    // geometry under the platform's font and colours -- but whole rather
+    // than inheriting, like every other style's, so that changing style
+    // can animate from one to the other.
+    final typography = Typography.material2021(
+      platform: defaultTargetPlatform,
+      colorScheme: scheme,
+    );
+    final textTheme = typography.englishLike.merge(
+      brightness == Brightness.light ? typography.black : typography.white,
+    );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      textTheme: textTheme,
       fontFamily: fontFamily,
       extensions: [nemo, const AppStyleTheme(AppStyle.material)],
       splashFactory: InkSparkle.splashFactory,

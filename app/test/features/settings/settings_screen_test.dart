@@ -146,6 +146,9 @@ void main() {
     await tester.tap(find.text('macOS'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('surface-tint')), findsNothing);
+    await tester.tap(find.text('Material'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('surface-tint')), findsNothing);
     await tester.tap(find.text('nemo'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('surface-tint')), findsOneWidget);

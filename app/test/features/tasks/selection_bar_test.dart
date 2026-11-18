@@ -495,6 +495,10 @@ void main() {
     app.container.read(taskSelectionProvider.notifier).start();
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(row).dy, moreOrLessEquals(before, epsilon: 1));
+    // The bar is in view at the top, scrolled or not.
+    final done = find.byKey(const Key('selection-done'));
+    expect(done.hitTestable(), findsOneWidget);
+    expect(tester.getRect(done).top, greaterThanOrEqualTo(0));
   });
 
   appTest('search offers Select only once there is something to find', (

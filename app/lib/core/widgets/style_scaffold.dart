@@ -124,10 +124,11 @@ class StyleScaffold extends ConsumerWidget {
         : <Widget>[
             if (onTop)
               SelectionBar(
-                // Floating like the search bar it stands in for, so the
-                // page does not move however far it is scrolled; scrolling
-                // back up brings it into view.
+                // Pinned, so the count and actions stay in view once the
+                // page is scrolled. A pinned bar paints over the content
+                // rather than taking room from it, so nothing moves.
                 topBar: (cancel, count, actions) => SliverAppBar(
+                  pinned: true,
                   floating: true,
                   snap: true,
                   toolbarHeight: 72,

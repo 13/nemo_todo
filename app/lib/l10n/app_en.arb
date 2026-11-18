@@ -175,6 +175,18 @@
   "shortcutToggle": "Mark the task done or not done",
   "shortcutDelete": "Delete the task",
   "shortcutClose": "Close the task",
+  "shortcutToggleSelected": "Mark the selected tasks done or not done",
+  "@shortcutToggleSelected": {
+    "description": "The keyboard shortcuts help: what Space does while several tasks are selected."
+  },
+  "shortcutDeleteSelected": "Delete the selected tasks",
+  "@shortcutDeleteSelected": {
+    "description": "The keyboard shortcuts help: what Delete does while several tasks are selected."
+  },
+  "shortcutEndSelection": "Stop selecting",
+  "@shortcutEndSelection": {
+    "description": "The keyboard shortcuts help: what Esc does while several tasks are selected."
+  },
   "shortcutHelp": "Show these shortcuts",
   "settingsAccount": "Account",
   "settingsNotConnected": "Not connected. Your data stays on this device.",

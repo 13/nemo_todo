@@ -6,6 +6,8 @@ import 'package:nemo/core/widgets/async_body.dart';
 import 'package:nemo/core/widgets/empty_state.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
+import 'package:nemo/features/tasks/ui/selection_bar.dart';
+import 'package:nemo/features/tasks/ui/selection_scaffold.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -21,14 +23,14 @@ class TagScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
     final tasks = ref.watch(tasksByTagProvider(tag));
-    return Scaffold(
+    return TaskSelectionScaffold(
       appBar: AppBar(
         leading: BackButton(
           onPressed: () =>
               context.canPop() ? context.pop() : context.go(Routes.search),
         ),
         title: Text('#$tag'),
-        actions: const [AccountAction(), SettingsAction()],
+        actions: const [SelectTasksButton(), AccountAction(), SettingsAction()],
       ),
       body: AsyncBody(
         value: tasks,

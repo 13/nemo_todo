@@ -11,6 +11,8 @@ import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/features/notes/ui/note_tile.dart';
 import 'package:nemo/features/notes/ui/notes_providers.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
+import 'package:nemo/features/tasks/ui/selection_bar.dart';
+import 'package:nemo/features/tasks/ui/selection_scaffold.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -44,7 +46,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // loading the section is simply absent, the way NotesScreen already
     // treats `allNotesProvider` before its first emission.
     final notes = ref.watch(noteSearchProvider(_query)).value ?? const <Note>[];
-    return Scaffold(
+    return TaskSelectionScaffold(
       appBar: AppBar(
         // The Material style searches from each screen's bar and keeps this
         // page for the keyboard's / and a tag's way back: a page of its own.
@@ -74,7 +76,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
           ),
         ),
-        actions: const [AccountAction(), SettingsAction()],
+        actions: const [SelectTasksButton(), AccountAction(), SettingsAction()],
       ),
       body: _query.isEmpty
           ? EmptyState(icon: Icons.search_rounded, message: l.searchEmpty)

@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
+import 'package:nemo/features/tasks/ui/bulk_actions.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_menu.dart';
+import 'package:nemo/features/tasks/ui/task_selection.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -66,6 +68,44 @@ class _AppShortcutsState extends ConsumerState<AppShortcuts> {
     if (task != null) action(task);
   }
 
+  /// Whether several tasks are being picked, which Space, Delete and Escape
+  /// then act on instead of the open task.
+  bool get _picking => ref.read(taskSelectionProvider) != null;
+
+  /// The picked tasks the screen lists, in its order, as the selection bar
+  /// acts on them.
+  List<Task> get _picked {
+    final picked = ref.read(taskSelectionProvider) ?? const <String>{};
+    return [
+      for (final task in ref.read(visibleTasksProvider).value)
+        if (picked.contains(task.id)) task,
+    ];
+  }
+
+  void _toggle() {
+    if (_picking) {
+      unawaited(completeTasks(context, ref, _picked));
+    } else {
+      _withSelected((t) => unawaited(completeTask(ref, t, done: !t.done)));
+    }
+  }
+
+  void _delete() {
+    if (_picking) {
+      unawaited(deleteTasksWithUndo(context, ref, _picked));
+    } else {
+      _withSelected((t) => unawaited(deleteTaskWithUndo(context, ref, t)));
+    }
+  }
+
+  void _escape() {
+    if (_picking) {
+      ref.read(taskSelectionProvider.notifier).end();
+    } else {
+      ref.read(selectedTaskProvider.notifier).select(null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bindings = <ShortcutActivator, KeyEventResult Function()>{
@@ -103,24 +143,12 @@ class _AppShortcutsState extends ConsumerState<AppShortcuts> {
       const SingleActivator(LogicalKeyboardKey.keyK): _unlessTyping(
         () => _step(-1),
       ),
-      const SingleActivator(LogicalKeyboardKey.space): _unlessTyping(
-        () => _withSelected(
-          (t) => unawaited(completeTask(ref, t, done: !t.done)),
-        ),
-      ),
-      const SingleActivator(LogicalKeyboardKey.delete): _unlessTyping(
-        () => _withSelected(
-          (t) => unawaited(deleteTaskWithUndo(context, ref, t)),
-        ),
-      ),
+      const SingleActivator(LogicalKeyboardKey.space): _unlessTyping(_toggle),
+      const SingleActivator(LogicalKeyboardKey.delete): _unlessTyping(_delete),
       const SingleActivator(LogicalKeyboardKey.backspace): _unlessTyping(
-        () => _withSelected(
-          (t) => unawaited(deleteTaskWithUndo(context, ref, t)),
-        ),
+        _delete,
       ),
-      const SingleActivator(LogicalKeyboardKey.escape): _unlessTyping(
-        () => ref.read(selectedTaskProvider.notifier).select(null),
-      ),
+      const SingleActivator(LogicalKeyboardKey.escape): _unlessTyping(_escape),
       const SingleActivator(LogicalKeyboardKey.slash, shift: true):
           _unlessTyping(() => unawaited(showShortcutsHelp(context))),
     };
@@ -154,6 +182,9 @@ Future<void> showShortcutsHelp(BuildContext context) {
     ('Space', l.shortcutToggle),
     ('Delete', l.shortcutDelete),
     ('Esc', l.shortcutClose),
+    ('Space', l.shortcutToggleSelected),
+    ('Delete', l.shortcutDeleteSelected),
+    ('Esc', l.shortcutEndSelection),
     (',', l.navSettings),
     ('?', l.shortcutHelp),
   ];

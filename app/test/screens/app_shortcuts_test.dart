@@ -6,6 +6,7 @@ import 'package:nemo/core/db/app_database.dart';
 import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
+import 'package:nemo/features/tasks/ui/task_selection.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -35,6 +36,14 @@ const _wide = Size(1400, 900);
 
 Future<void> _press(WidgetTester tester, LogicalKeyboardKey key) async {
   await tester.sendKeyEvent(key);
+  await tester.pumpAndSettle();
+}
+
+/// Taps [finder] with Ctrl held, which picks a task into the selection.
+Future<void> _ctrlTap(WidgetTester tester, Finder finder) async {
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+  await tester.tap(finder);
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
   await tester.pumpAndSettle();
 }
 
@@ -95,6 +104,44 @@ void main() {
     expect(selected(), isNull);
   });
 
+  appTest('while selecting, Escape ends it and leaves the open task', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, size: _wide, seed: _seed);
+    await tester.tap(find.text('First errand'));
+    await tester.pumpAndSettle();
+    await _ctrlTap(tester, find.text('Second errand'));
+    expect(app.container.read(taskSelectionProvider), {'t2'});
+
+    await _press(tester, LogicalKeyboardKey.escape);
+    expect(app.container.read(taskSelectionProvider), isNull);
+    expect(app.container.read(selectedTaskProvider), 't1');
+    expect(await app.db.select(app.db.tasks).get(), hasLength(2));
+  });
+
+  appTest('while selecting, Space and Delete act on every picked task', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, size: _wide, seed: _seed);
+    Future<List<Task>> tasks() => app.db.select(app.db.tasks).get();
+
+    await _ctrlTap(tester, find.text('First errand'));
+    await _ctrlTap(tester, find.text('Second errand'));
+    await _press(tester, LogicalKeyboardKey.space);
+    expect((await tasks()).every((t) => t.done), isTrue);
+    expect(app.container.read(taskSelectionProvider), isNull);
+
+    await _press(tester, LogicalKeyboardKey.escape);
+    await tester.tap(find.text('2 completed'));
+    await tester.pumpAndSettle();
+    await _ctrlTap(tester, find.text('First errand'));
+    await _ctrlTap(tester, find.text('Second errand'));
+    await _press(tester, LogicalKeyboardKey.delete);
+    expect((await tasks()).where((t) => t.deletedAt == null), isEmpty);
+    expect(find.text('2 tasks deleted'), findsOneWidget);
+    expect(app.container.read(taskSelectionProvider), isNull);
+  });
+
   appTest('digits change destination and N starts a task', (tester) async {
     final app = await pumpApp(tester, size: _wide);
     await _press(tester, LogicalKeyboardKey.digit3);
@@ -122,5 +169,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Keyboard shortcuts'), findsOneWidget);
     expect(find.text('Previous or next task'), findsOneWidget);
+    expect(
+      find.text('Mark the selected tasks done or not done'),
+      findsOneWidget,
+    );
+    expect(find.text('Delete the selected tasks'), findsOneWidget);
+    expect(find.text('Stop selecting'), findsOneWidget);
   });
 }

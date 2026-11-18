@@ -10,6 +10,7 @@ import 'package:nemo/core/widgets/quick_add_bar.dart';
 import 'package:nemo/core/widgets/settings_action.dart';
 import 'package:nemo/core/widgets/style_scaffold.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
+import 'package:nemo/features/tasks/ui/selection_bar.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/task_search.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
@@ -34,11 +35,12 @@ class UpcomingScreen extends ConsumerWidget {
     final collapsed = ref.watch(noDateCollapsedProvider);
     final material = context.appStyle == AppStyle.material;
     return StyleScaffold(
+      taskSelection: true,
       title: l.navUpcoming,
       actions: const [TaskSearch.button(), AccountAction(), SettingsAction()],
       appBar: AppBar(
         title: Text(l.navUpcoming),
-        actions: const [AccountAction(), SettingsAction()],
+        actions: const [SelectTasksButton(), AccountAction(), SettingsAction()],
       ),
       body: AsyncBody(
         // Three independent streams over the same local database; combined

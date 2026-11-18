@@ -421,6 +421,16 @@ class LIt extends L {
   String get shortcutClose => 'Chiudi l’attività';
 
   @override
+  String get shortcutToggleSelected =>
+      'Segna le attività selezionate come fatte o da fare';
+
+  @override
+  String get shortcutDeleteSelected => 'Elimina le attività selezionate';
+
+  @override
+  String get shortcutEndSelection => 'Termina la selezione';
+
+  @override
   String get shortcutHelp => 'Mostra queste scorciatoie';
 
   @override

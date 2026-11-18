@@ -10,6 +10,7 @@ import 'package:nemo/core/widgets/max_width.dart';
 import 'package:nemo/core/widgets/nemo_mark.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_detail_screen.dart';
+import 'package:nemo/features/tasks/ui/task_selection.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/screens/app_shortcuts.dart';
@@ -95,8 +96,9 @@ class ShellScreen extends ConsumerWidget {
     void go(int i) {
       // The open task belongs to the list it was opened from, so changing
       // destination closes it rather than leaving it beside a list it has
-      // nothing to do with.
+      // nothing to do with. So does a selection of several.
       ref.read(selectedTaskProvider.notifier).select(null);
+      ref.read(taskSelectionProvider.notifier).end();
       context.go(items[i].path);
     }
 

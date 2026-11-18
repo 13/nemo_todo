@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
@@ -7,6 +9,7 @@ import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/features/tasks/ui/task_selection.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -23,7 +26,7 @@ TasksRepository _repo(AppDatabase db, {String ids = 't'}) => TasksRepository(
 );
 
 /// Three open tasks due today, t1 to t3, the third repeating weekly, and
-/// t4, done today: what Today lists.
+/// t4, done today: what Today lists. The first two are tagged errand.
 Future<void> _seed(AppDatabase db, TaskList inbox) async {
   final tasks = _repo(db);
   for (final title in ['First', 'Second']) {
@@ -31,6 +34,7 @@ Future<void> _seed(AppDatabase db, TaskList inbox) async {
       listId: inbox.id,
       title: title,
       dueAt: dayStartMs(testNow),
+      tags: const ['errand'],
     );
   }
   await tasks.create(
@@ -254,6 +258,80 @@ void main() {
     expect(app.container.read(taskSelectionProvider), isNull);
     expect(find.byKey(const Key('quick-add-field')), findsOneWidget);
   });
+
+  appTest('changing destination ends the selection', (tester) async {
+    final app = await pumpApp(tester, seed: _seed);
+    await _select(tester, ['First']);
+
+    await _tap(tester, find.text('Upcoming'));
+    expect(app.container.read(taskSelectionProvider), isNull);
+    expect(find.byKey(const Key('select-tasks')), findsOneWidget);
+  });
+
+  appTest("a list's page selects too, and leaving it ends the selection", (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: Routes.lists,
+      seed: _seed,
+    );
+    await _tap(tester, find.text('Inbox'));
+    expect(find.byKey(const Key('select-tasks')), findsOneWidget);
+
+    await _select(tester, ['First']);
+    expect(app.container.read(taskSelectionProvider), {'t1'});
+    await _tap(tester, find.byType(BackButton));
+    expect(app.router.state.matchedLocation, Routes.lists);
+    expect(app.container.read(taskSelectionProvider), isNull);
+  });
+
+  appTest("a page opened over Today does not take on Today's picks", (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+    await _select(tester, ['First']);
+
+    unawaited(app.router.push(Routes.list(app.inbox.id)));
+    await tester.pumpAndSettle();
+    expect(app.container.read(taskSelectionProvider), isNull);
+    expect(find.text('1 selected'), findsNothing);
+    expect(find.byKey(const Key('select-tasks')), findsOneWidget);
+  });
+
+  appTest('picks made on a new page outlast the page it replaced', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+    await _select(tester, ['First']);
+
+    // Going straight to a list, as the macOS sidebar does: Today stays
+    // until the new page has faded in, and goes after the picking began.
+    app.router.go(Routes.list(app.inbox.id));
+    await tester.pump();
+    await tester.pump();
+    app.container.read(taskSelectionProvider.notifier).toggle('t2');
+    await tester.pumpAndSettle();
+    expect(app.container.read(taskSelectionProvider), {'t2'});
+  });
+
+  for (final (name, location) in [
+    ('a tag', Routes.tag('errand')),
+    ('search', Routes.search),
+  ]) {
+    appTest('$name selects too', (tester) async {
+      final app = await pumpApp(tester, initialLocation: location, seed: _seed);
+      if (location == Routes.search) {
+        await tester.enterText(find.byKey(const Key('search-field')), 'Fi');
+        await tester.pumpAndSettle();
+      }
+      await _select(tester, ['First']);
+      expect(app.container.read(taskSelectionProvider), {'t1'});
+      expect(find.text('1 selected'), findsOneWidget);
+      await _tap(tester, find.byKey(const Key('selection-done')));
+      expect((await _task(app, 't1')).done, isTrue);
+    });
+  }
 
   for (final style in AppStyle.values) {
     for (final wide in [false, true]) {

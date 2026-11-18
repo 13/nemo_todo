@@ -420,6 +420,16 @@ class LDe extends L {
   String get shortcutClose => 'Aufgabe schließen';
 
   @override
+  String get shortcutToggleSelected =>
+      'Ausgewählte Aufgaben erledigt oder offen';
+
+  @override
+  String get shortcutDeleteSelected => 'Ausgewählte Aufgaben löschen';
+
+  @override
+  String get shortcutEndSelection => 'Auswahl beenden';
+
+  @override
   String get shortcutHelp => 'Diese Kürzel zeigen';
 
   @override

@@ -14,6 +14,14 @@ the version when it is tagged. A new version heading added beside it instead
 would ship without them, and nothing would say so. `tool/release.sh <version>`
 does the renaming, and tags only once CI has passed on the release commit.
 
+## Unreleased
+
+### Added
+
+- Select several tasks at once — Select in the top bar, or ⌘/Ctrl- and
+  Shift-click — and mark them done, move them to another day or delete
+  them together.
+
 ## 0.20.0 - 2026-09-29
 
 ### Added

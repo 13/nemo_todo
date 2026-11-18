@@ -420,6 +420,16 @@ class LEn extends L {
   String get shortcutClose => 'Close the task';
 
   @override
+  String get shortcutToggleSelected =>
+      'Mark the selected tasks done or not done';
+
+  @override
+  String get shortcutDeleteSelected => 'Delete the selected tasks';
+
+  @override
+  String get shortcutEndSelection => 'Stop selecting';
+
+  @override
   String get shortcutHelp => 'Show these shortcuts';
 
   @override

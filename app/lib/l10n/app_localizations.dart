@@ -837,6 +837,24 @@ abstract class L {
   /// **'Close the task'**
   String get shortcutClose;
 
+  /// The keyboard shortcuts help: what Space does while several tasks are selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the selected tasks done or not done'**
+  String get shortcutToggleSelected;
+
+  /// The keyboard shortcuts help: what Delete does while several tasks are selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the selected tasks'**
+  String get shortcutDeleteSelected;
+
+  /// The keyboard shortcuts help: what Esc does while several tasks are selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop selecting'**
+  String get shortcutEndSelection;
+
   /// No description provided for @shortcutHelp.
   ///
   /// In en, this message translates to:

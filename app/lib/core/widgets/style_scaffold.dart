@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/theme/app_style.dart';
 import 'package:nemo/features/tasks/ui/selection_bar.dart';
+import 'package:nemo/features/tasks/ui/selection_scaffold.dart';
 import 'package:nemo/features/tasks/ui/task_selection.dart';
 
 /// A main screen's frame, as its style draws one.
@@ -19,7 +20,8 @@ import 'package:nemo/features/tasks/ui/task_selection.dart';
 /// [SelectTasksButton] in its [appBar]'s actions; the Material bar gets
 /// one from here. While picking, the [SelectionBar] takes the foot of
 /// the screen on a phone -- in place of the bottom bar and the button --
-/// or the top bar's place on a wide window.
+/// or the top bar's place on a wide window, as [TaskSelectionScaffold]
+/// lays out; leaving the screen ends the selection.
 class StyleScaffold extends ConsumerWidget {
   const StyleScaffold({
     required this.appBar,
@@ -65,31 +67,18 @@ class StyleScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selecting = taskSelection && ref.watch(taskSelectionProvider) != null;
     final onTop = selecting && SelectionBar.onTop(context);
-    final atFoot = selecting && !onTop;
-    const selectionBar = SelectionBar();
-    final bottom = atFoot ? selectionBar : bottomNavigationBar;
-    final button = atFoot ? null : floatingActionButton;
     final actions = [
       ...this.actions,
       if (taskSelection) const SelectTasksButton(),
     ];
 
     if (context.appStyle != AppStyle.material) {
-      assert(
-        !taskSelection || _offersSelect(appBar),
-        'A screen with taskSelection puts a SelectTasksButton in its '
-        "AppBar's actions.",
-      );
-      return Scaffold(
-        appBar: onTop
-            ? const PreferredSize(
-                preferredSize: Size.fromHeight(kToolbarHeight),
-                child: selectionBar,
-              )
-            : appBar,
+      return TaskSelectionScaffold(
+        enabled: taskSelection,
+        appBar: appBar,
         body: body,
-        bottomNavigationBar: bottom,
-        floatingActionButton: button,
+        bottomNavigationBar: bottomNavigationBar,
+        floatingActionButton: floatingActionButton,
       );
     }
     final text = Theme.of(context).textTheme;
@@ -141,26 +130,14 @@ class StyleScaffold extends ConsumerWidget {
               ),
             ),
           ];
-    return Scaffold(
-      appBar: onTop
-          ? const PreferredSize(
-              preferredSize: Size.fromHeight(kToolbarHeight),
-              child: selectionBar,
-            )
-          : null,
+    return TaskSelectionScaffold(
+      enabled: taskSelection,
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => header,
         body: body,
       ),
-      bottomNavigationBar: bottom,
-      floatingActionButton: button,
+      bottomNavigationBar: bottomNavigationBar,
+      floatingActionButton: floatingActionButton,
     );
   }
-
-  /// Whether [bar] has the button that starts picking tasks. The screen
-  /// puts it there itself: an [AppBar] cannot be copied with one more
-  /// action without losing whatever else was set on it.
-  static bool _offersSelect(PreferredSizeWidget bar) =>
-      bar is! AppBar ||
-      (bar.actions?.any((a) => a is SelectTasksButton) ?? false);
 }

@@ -15,6 +15,7 @@ import 'package:nemo/features/lists/ui/lists_providers.dart';
 import 'package:nemo/features/lists/ui/lists_screen.dart';
 import 'package:nemo/features/lists/ui/task_order_picker.dart';
 import 'package:nemo/features/sync/ui/sync_refresh.dart';
+import 'package:nemo/features/tasks/ui/selection_bar.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
@@ -80,6 +81,7 @@ class ListDetailScreen extends ConsumerWidget {
     final name = list.isInbox ? l.listsInbox : list.name;
     final material = context.appStyle == AppStyle.material;
     return StyleScaffold(
+      taskSelection: true,
       title: name,
       leading: BackButton(
         onPressed: () =>
@@ -118,7 +120,7 @@ class ListDetailScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-        actions: actions,
+        actions: [const SelectTasksButton(), ...actions],
       ),
       body: AsyncBody(
         value: tasks,

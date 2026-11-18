@@ -62,7 +62,10 @@ class TaskTile extends ConsumerWidget {
     // Null unless several tasks are being picked at once.
     final picking = ref.watch(taskSelectionProvider);
     final picked = picking?.contains(task.id) ?? false;
-    final highlighted = selected || picked;
+    // While picking, only the picks are drawn as chosen, the open task
+    // among them only if it is picked too: a row that looked chosen but was
+    // left out would be skipped by whatever is done to the picks.
+    final highlighted = picking != null ? picked : selected;
     final mac = context.appStyle == AppStyle.macos;
     if (!mac) {
       return _TileBody(
@@ -301,6 +304,9 @@ class _TileBody extends ConsumerWidget {
       container: true,
       button: true,
       selected: selectedKey,
+      // While picking, the row's tap picks it, so the row says whether it
+      // is picked and the ring beside the title stays quiet.
+      checked: picking ? picked : null,
       label: _describe(l, Localizations.localeOf(context).toString(), now, (
         list: list,
         progress: progress,
@@ -347,7 +353,6 @@ class _TileBody extends ConsumerWidget {
                           picked: picked,
                           size: checkSize,
                           target: checkExtent,
-                          label: task.title,
                         )
                       : DoneCheck(
                           done: task.done,
@@ -542,7 +547,6 @@ class _PickRing extends StatelessWidget {
     required this.picked,
     required this.size,
     required this.target,
-    required this.label,
     super.key,
   });
 
@@ -552,15 +556,12 @@ class _PickRing extends StatelessWidget {
   /// so the row does not shift as picking starts.
   final double size;
   final double target;
-  final String label;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Semantics(
-      container: true,
-      checked: picked,
-      label: label,
+    // Said by the row, whose tap is what picks it.
+    return ExcludeSemantics(
       child: Padding(
         padding: EdgeInsets.all(max(size / 3, (target - size) / 2)),
         child: Container(

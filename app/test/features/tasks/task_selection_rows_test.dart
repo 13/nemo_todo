@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nemo/core/db/app_database.dart';
@@ -8,6 +9,7 @@ import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_detail_screen.dart';
 import 'package:nemo/features/tasks/ui/task_selection.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
+import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -46,6 +48,19 @@ Future<void> _tapWith(
   await tester.pumpAndSettle();
 }
 
+/// The custom actions a screen reader offers on [title]'s row.
+List<String> _actions(WidgetTester tester, String title) {
+  final node = find.semantics
+      .byLabel(RegExp('^${RegExp.escape(title)}(\\. |\$)'))
+      .evaluate()
+      .single;
+  return [
+    for (final id
+        in node.getSemanticsData().customSemanticsActionIds ?? const <int>[])
+      CustomSemanticsAction.getAction(id)!.label ?? '',
+  ];
+}
+
 void main() {
   appTest('while selecting, a tap picks the task instead of opening it', (
     tester,
@@ -60,13 +75,14 @@ void main() {
 
     expect(app.container.read(taskSelectionProvider), {'t1'});
     expect(find.byType(TaskDetailScreen), findsNothing);
+    // The ring is quiet; the row, whose tap picks it, says it is picked.
     expect(
       tester.getSemantics(find.byKey(const Key('select-task-t1'))),
-      isSemantics(hasCheckedState: true, isChecked: true),
+      isSemantics(isButton: true, hasCheckedState: true, isChecked: true),
     );
     expect(
       tester.getSemantics(find.byKey(const Key('select-task-t2'))),
-      isSemantics(hasCheckedState: true, isChecked: false),
+      isSemantics(isButton: true, hasCheckedState: true, isChecked: false),
     );
 
     // A second tap drops it again.
@@ -106,6 +122,31 @@ void main() {
     expect(app.container.read(selectedTaskProvider), isNull);
   });
 
+  appTest('while selecting, the open task looks chosen only if picked', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, size: _wide, seed: _seed);
+    await tester.tap(find.text('First'));
+    await tester.pumpAndSettle();
+    expect(app.container.read(selectedTaskProvider), 't1');
+    Color openRow() => tester
+        .widget<Material>(find.byKey(const Key('selected-task-t1')))
+        .color!;
+    expect(openRow(), isNot(Colors.transparent));
+
+    await _tapWith(tester, LogicalKeyboardKey.controlLeft, find.text('Second'));
+
+    expect(app.container.read(taskSelectionProvider), {'t2'});
+    expect(app.container.read(selectedTaskProvider), 't1');
+    expect(openRow(), Colors.transparent);
+    final picked = tester.widget<Material>(
+      find
+          .ancestor(of: find.text('Second'), matching: find.byType(Material))
+          .first,
+    );
+    expect(picked.color, isNot(Colors.transparent));
+  });
+
   appTest('not selecting, a plain tap still opens the task', (tester) async {
     final app = await pumpApp(tester, seed: _seed);
 
@@ -134,5 +175,24 @@ void main() {
 
     expect(app.container.read(taskSelectionProvider), {'t2'});
     selection.end();
+  });
+
+  appTest('while selecting, a screen reader cannot move a row either', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final app = await pumpApp(tester, seed: _seed);
+    app.router.go(Routes.list(app.inbox.id));
+    await tester.pumpAndSettle();
+    expect(_actions(tester, 'Second'), containsAll(['Move up', 'Move down']));
+
+    app.container.read(taskSelectionProvider.notifier).start();
+    await tester.pumpAndSettle();
+
+    expect(
+      _actions(tester, 'Second'),
+      isNot(anyOf(contains('Move up'), contains('Move down'))),
+    );
+    handle.dispose();
   });
 }

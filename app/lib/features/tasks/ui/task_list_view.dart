@@ -220,9 +220,10 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
           task: tasks[i],
           showList: widget.showList,
           // The drag, for someone whose screen reader has taken the
-          // long press over. `_reorder` takes the index after removal.
-          onMoveUp: i == 0 ? null : () => _reorder(tasks, i, i - 1),
-          onMoveDown: i == tasks.length - 1
+          // long press over, and gone with the drag while picking.
+          // `_reorder` takes the index after removal.
+          onMoveUp: _picking || i == 0 ? null : () => _reorder(tasks, i, i - 1),
+          onMoveDown: _picking || i == tasks.length - 1
               ? null
               : () => _reorder(tasks, i, i + 1),
         );
@@ -249,7 +250,10 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
   }
 
   Widget _dismissible(Task task, Widget child) {
-    if (_picking) return child;
+    // Keyed still, since a reorderable list needs every row keyed.
+    if (_picking) {
+      return KeyedSubtree(key: ValueKey('task-${task.id}'), child: child);
+    }
     final scheme = Theme.of(context).colorScheme;
     final mac = context.appStyle == AppStyle.macos;
     final l = L.of(context);

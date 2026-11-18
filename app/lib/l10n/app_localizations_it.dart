@@ -428,6 +428,9 @@ class LIt extends L {
   String get shortcutDeleteSelected => 'Elimina le attività selezionate';
 
   @override
+  String get shortcutsWhileSelecting => 'Durante la selezione';
+
+  @override
   String get shortcutEndSelection => 'Termina la selezione';
 
   @override

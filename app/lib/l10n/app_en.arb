@@ -183,6 +183,10 @@
   "@shortcutDeleteSelected": {
     "description": "The keyboard shortcuts help: what Delete does while several tasks are selected."
   },
+  "shortcutsWhileSelecting": "While selecting",
+  "@shortcutsWhileSelecting": {
+    "description": "The keyboard shortcuts help: the heading over what Space, Delete and Esc do while several tasks are selected."
+  },
   "shortcutEndSelection": "Stop selecting",
   "@shortcutEndSelection": {
     "description": "The keyboard shortcuts help: what Esc does while several tasks are selected."

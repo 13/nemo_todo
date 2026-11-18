@@ -427,6 +427,9 @@ class LDe extends L {
   String get shortcutDeleteSelected => 'Ausgewählte Aufgaben löschen';
 
   @override
+  String get shortcutsWhileSelecting => 'Beim Auswählen';
+
+  @override
   String get shortcutEndSelection => 'Auswahl beenden';
 
   @override

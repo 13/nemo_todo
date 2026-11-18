@@ -30,17 +30,21 @@ class TaskSelection extends _$TaskSelection {
   /// Picks every task from the anchor to [id], inclusive, in the order of
   /// [visibleIds]. What was picked before stays picked.
   ///
-  /// With no anchor, or an anchor that is no longer listed, there is no
-  /// range to draw, so this is a plain [toggle].
-  void extendTo(String id, List<String> visibleIds) {
-    final from = _anchor == null ? -1 : visibleIds.indexOf(_anchor!);
+  /// With no anchor, [from] stands in for it and becomes the anchor, as the
+  /// task open beside the list does for a shift-click before any picking.
+  /// With neither, or one that is no longer listed, there is no range to
+  /// draw, so this is a plain [toggle].
+  void extendTo(String id, List<String> visibleIds, {String? from}) {
+    final anchor = _anchor ?? from;
+    final start = anchor == null ? -1 : visibleIds.indexOf(anchor);
     final to = visibleIds.indexOf(id);
-    if (from < 0 || to < 0) {
+    if (start < 0 || to < 0) {
       toggle(id);
       return;
     }
-    final low = from < to ? from : to;
-    final high = from < to ? to : from;
+    _anchor = anchor;
+    final low = start < to ? start : to;
+    final high = start < to ? to : start;
     state = {...?state, ...visibleIds.sublist(low, high + 1)};
   }
 

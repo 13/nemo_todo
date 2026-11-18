@@ -182,43 +182,63 @@ Future<void> showShortcutsHelp(BuildContext context) {
     ('Space', l.shortcutToggle),
     ('Delete', l.shortcutDelete),
     ('Esc', l.shortcutClose),
+    (',', l.navSettings),
+    ('?', l.shortcutHelp),
+  ];
+  // Space, Delete and Esc again, under a heading that says when they do
+  // this instead.
+  final selectingRows = [
     ('Space', l.shortcutToggleSelected),
     ('Delete', l.shortcutDeleteSelected),
     ('Esc', l.shortcutEndSelection),
-    (',', l.navSettings),
-    ('?', l.shortcutHelp),
   ];
   return showDialog<void>(
     context: context,
     builder: (context) {
       final scheme = Theme.of(context).colorScheme;
       final text = Theme.of(context).textTheme;
+      Widget row((String, String) shortcut) {
+        final (keys, what) = shortcut;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 104,
+                child: Text(
+                  keys,
+                  style: text.labelLarge?.copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color: scheme.primary,
+                  ),
+                ),
+              ),
+              Expanded(child: Text(what, style: text.bodyMedium)),
+            ],
+          ),
+        );
+      }
+
       return AlertDialog(
         title: Text(l.shortcutsTitle),
         content: SizedBox(
           width: 360,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final (keys, what) in rows)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 104,
-                        child: Text(
-                          keys,
-                          style: text.labelLarge?.copyWith(
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                            color: scheme.primary,
-                          ),
-                        ),
-                      ),
-                      Expanded(child: Text(what, style: text.bodyMedium)),
-                    ],
+              for (final shortcut in rows) row(shortcut),
+              Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 5),
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    l.shortcutsWhileSelecting,
+                    style: text.titleSmall,
                   ),
                 ),
+              ),
+              for (final shortcut in selectingRows) row(shortcut),
             ],
           ),
         ),

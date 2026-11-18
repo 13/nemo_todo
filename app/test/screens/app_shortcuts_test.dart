@@ -175,5 +175,19 @@ void main() {
     );
     expect(find.text('Delete the selected tasks'), findsOneWidget);
     expect(find.text('Stop selecting'), findsOneWidget);
+    // Space, Delete and Esc are listed twice, the second time under a
+    // heading that says when.
+    expect(find.text('While selecting'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('While selecting')).dy,
+      allOf(
+        greaterThan(tester.getTopLeft(find.text('Close the task')).dy),
+        lessThan(
+          tester
+              .getTopLeft(find.text('Mark the selected tasks done or not done'))
+              .dy,
+        ),
+      ),
+    );
   });
 }

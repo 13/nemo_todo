@@ -118,9 +118,14 @@ Future<void> rescheduleTasks(
   if (picked == null) return;
   selection.end();
 
+  // The tasks as they are now rather than as the bar saw them before the
+  // sheet went up: a change that arrived meanwhile, as from another
+  // device, is kept, and a task deleted meanwhile stays deleted.
+  final current = [for (final task in tasks) ?await repo.find(task.id)];
+  if (current.isEmpty) return;
   final day = picked.day;
   final moved = [
-    for (final task in tasks)
+    for (final task in current)
       if (day == null)
         task.copyWith(dueAt: null, dueHasTime: false, remind: false)
       else
@@ -135,9 +140,9 @@ Future<void> rescheduleTasks(
       SnackBar(
         content: Text(
           day == null
-              ? l.rescheduleClearedMany(tasks.length)
+              ? l.rescheduleClearedMany(moved.length)
               : l.rescheduleMovedMany(
-                  tasks.length,
+                  moved.length,
                   dueLabel(
                     l,
                     locale,
@@ -152,12 +157,16 @@ Future<void> rescheduleTasks(
         action: SnackBarAction(
           label: l.commonUndo,
           onPressed: () async {
-            for (final (i, task) in tasks.indexed) {
+            // Only the dates go back, onto each task as it is by then, and
+            // one deleted since is left deleted.
+            for (final before in current) {
+              final latest = await repo.find(before.id);
+              if (latest == null) continue;
               await repo.save(
-                moved[i].copyWith(
-                  dueAt: task.dueAt,
-                  dueHasTime: task.dueHasTime,
-                  remind: task.remind,
+                latest.copyWith(
+                  dueAt: before.dueAt,
+                  dueHasTime: before.dueHasTime,
+                  remind: before.remind,
                 ),
               );
             }

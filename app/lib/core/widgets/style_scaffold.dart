@@ -67,9 +67,10 @@ class StyleScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selecting = taskSelection && ref.watch(taskSelectionProvider) != null;
     final onTop = selecting && SelectionBar.onTop(context);
+    // Select comes first, as nemo's and macOS's bars put it.
     final actions = [
-      ...this.actions,
       if (taskSelection) const SelectTasksButton(),
+      ...this.actions,
     ];
 
     if (context.appStyle != AppStyle.material) {

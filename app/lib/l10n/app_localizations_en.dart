@@ -427,6 +427,9 @@ class LEn extends L {
   String get shortcutDeleteSelected => 'Delete the selected tasks';
 
   @override
+  String get shortcutsWhileSelecting => 'While selecting';
+
+  @override
   String get shortcutEndSelection => 'Stop selecting';
 
   @override

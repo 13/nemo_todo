@@ -125,6 +125,7 @@
   "shortcutClose": "Chiudi l’attività",
   "shortcutToggleSelected": "Segna le attività selezionate come fatte o da fare",
   "shortcutDeleteSelected": "Elimina le attività selezionate",
+  "shortcutsWhileSelecting": "Durante la selezione",
   "shortcutEndSelection": "Termina la selezione",
   "shortcutHelp": "Mostra queste scorciatoie",
   "settingsAccount": "Account",

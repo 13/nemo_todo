@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +17,8 @@ import 'package:nemo_core/nemo_core.dart';
 import '../../support/pump_app.dart';
 import '../../support/test_db.dart';
 
-/// Three tasks due today, t1 to t3, in the Inbox: what Today lists.
+/// Three tasks due today, t1 to t3, in the Inbox: what Today lists. The
+/// first is tagged errand.
 Future<void> _seed(AppDatabase db, TaskList inbox) async {
   final tasks = TasksRepository(
     db,
@@ -30,6 +32,7 @@ Future<void> _seed(AppDatabase db, TaskList inbox) async {
       listId: inbox.id,
       title: title,
       dueAt: dayStartMs(testNow),
+      tags: title == 'First' ? const ['errand'] : const [],
     );
   }
 }
@@ -193,6 +196,57 @@ void main() {
       _actions(tester, 'Second'),
       isNot(anyOf(contains('Move up'), contains('Move down'))),
     );
+    handle.dispose();
+  });
+
+  appTest('shift-click after opening a task picks the run from it', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, size: _wide, seed: _seed);
+    await tester.tap(find.text('First'));
+    await tester.pumpAndSettle();
+    expect(app.container.read(selectedTaskProvider), 't1');
+
+    await _tapWith(tester, LogicalKeyboardKey.shiftLeft, find.text('Third'));
+    expect(app.container.read(taskSelectionProvider), {'t1', 't2', 't3'});
+  });
+
+  appTest('while selecting, a tap on a tag picks the row and stays put', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+    app.container.read(taskSelectionProvider.notifier).start();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('tile-tag-t1-errand')));
+    await tester.pumpAndSettle();
+
+    expect(app.router.state.matchedLocation, Routes.today);
+    expect(app.container.read(taskSelectionProvider), {'t1'});
+  });
+
+  appTest("while selecting, a row's own actions are not offered", (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final app = await pumpApp(tester, size: _wide, seed: _seed);
+    expect(
+      _actions(tester, 'First'),
+      containsAll(['Mark as done', 'Move to…', 'Delete', 'Show #errand']),
+    );
+
+    app.container.read(taskSelectionProvider.notifier).start();
+    await tester.pumpAndSettle();
+    final actions = _actions(tester, 'First');
+    for (final gone in ['Mark as done', 'Move to…', 'Delete']) {
+      expect(actions, isNot(contains(gone)));
+    }
+    expect(actions.where((a) => a.contains('errand')), isEmpty);
+
+    await tester.tap(find.text('First'), buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Move to…'), findsNothing);
+    expect(app.container.read(taskSelectionProvider), <String>{});
     handle.dispose();
   });
 }

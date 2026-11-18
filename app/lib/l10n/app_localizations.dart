@@ -849,6 +849,12 @@ abstract class L {
   /// **'Delete the selected tasks'**
   String get shortcutDeleteSelected;
 
+  /// The keyboard shortcuts help: the heading over what Space, Delete and Esc do while several tasks are selected.
+  ///
+  /// In en, this message translates to:
+  /// **'While selecting'**
+  String get shortcutsWhileSelecting;
+
   /// The keyboard shortcuts help: what Esc does while several tasks are selected.
   ///
   /// In en, this message translates to:

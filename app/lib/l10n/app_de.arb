@@ -125,6 +125,7 @@
   "shortcutClose": "Aufgabe schließen",
   "shortcutToggleSelected": "Ausgewählte Aufgaben erledigt oder offen",
   "shortcutDeleteSelected": "Ausgewählte Aufgaben löschen",
+  "shortcutsWhileSelecting": "Beim Auswählen",
   "shortcutEndSelection": "Auswahl beenden",
   "shortcutHelp": "Diese Kürzel zeigen",
   "settingsAccount": "Konto",

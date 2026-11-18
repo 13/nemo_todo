@@ -166,13 +166,20 @@ class _VisibleTasksState extends ConsumerState<_VisibleTasks> {
 
 /// The top bar's button that starts picking several tasks at once.
 class SelectTasksButton extends ConsumerWidget {
-  const SelectTasksButton({super.key});
+  const SelectTasksButton({this.offered = true, super.key});
+
+  /// Whether there is anything to pick: without it the button takes no
+  /// room, though it stays among the bar's actions, which is how the
+  /// screen's scaffold knows the screen picks tasks at all.
+  final bool offered;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton(
-    key: const Key('select-tasks'),
-    tooltip: L.of(context).selectTasks,
-    onPressed: () => ref.read(taskSelectionProvider.notifier).start(),
-    icon: const AppIcon(Icons.checklist_rounded),
-  );
+  Widget build(BuildContext context, WidgetRef ref) => !offered
+      ? const SizedBox.shrink()
+      : IconButton(
+          key: const Key('select-tasks'),
+          tooltip: L.of(context).selectTasks,
+          onPressed: () => ref.read(taskSelectionProvider.notifier).start(),
+          icon: const AppIcon(Icons.checklist_rounded),
+        );
 }

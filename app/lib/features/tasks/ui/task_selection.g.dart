@@ -56,7 +56,7 @@ final class TaskSelectionProvider
   }
 }
 
-String _$taskSelectionHash() => r'541bf05a9db94e2e6007e773b07ff30f09e87971';
+String _$taskSelectionHash() => r'e7c92025a5e0088c615fe058c20d4cdf8711f3c5';
 
 /// The tasks picked while selecting several at once.
 ///

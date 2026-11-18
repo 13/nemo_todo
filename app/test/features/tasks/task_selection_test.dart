@@ -57,6 +57,26 @@ void main() {
     expect(state(), {'z', 'c'});
   });
 
+  test('extendTo with no anchor draws the range from the fallback', () {
+    selection.extendTo('d', ids, from: 'b');
+    expect(state(), {'b', 'c', 'd'});
+    // The fallback is the anchor from then on.
+    selection.extendTo('a', ids);
+    expect(state(), {'a', 'b', 'c', 'd'});
+  });
+
+  test('extendTo prefers the anchor to the fallback', () {
+    selection
+      ..toggle('a')
+      ..extendTo('c', ids, from: 'e');
+    expect(state(), {'a', 'b', 'c'});
+  });
+
+  test('extendTo with a fallback that is not listed behaves as toggle', () {
+    selection.extendTo('c', ids, from: 'z');
+    expect(state(), {'c'});
+  });
+
   test('end clears the anchor', () {
     selection
       ..toggle('b')

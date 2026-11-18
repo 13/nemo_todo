@@ -14,6 +14,7 @@ import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/selection_bar.dart';
 import 'package:nemo/features/tasks/ui/selection_scaffold.dart';
 import 'package:nemo/features/tasks/ui/task_list_view.dart';
+import 'package:nemo/features/tasks/ui/task_selection.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -38,6 +39,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
+  /// Searches for [value]. Emptied, the query lists nothing, so picks
+  /// made among the last results go with them.
+  void _search(String value) {
+    setState(() => _query = value.trim());
+    if (_query.isEmpty) ref.read(taskSelectionProvider.notifier).end();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -60,7 +68,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           key: const Key('search-field'),
           controller: _controller,
           autofocus: true,
-          onChanged: (value) => setState(() => _query = value.trim()),
+          onChanged: _search,
           decoration: InputDecoration(
             hintText: l.searchHint,
             prefixIcon: const AppIcon(Icons.search_rounded),
@@ -71,12 +79,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     icon: const AppIcon(Icons.clear_rounded),
                     onPressed: () {
                       _controller.clear();
-                      setState(() => _query = '');
+                      _search('');
                     },
                   ),
           ),
         ),
-        actions: const [SelectTasksButton(), AccountAction(), SettingsAction()],
+        actions: [
+          // With no query there are no tasks listed to pick.
+          SelectTasksButton(offered: _query.isNotEmpty),
+          const AccountAction(),
+          const SettingsAction(),
+        ],
       ),
       body: _query.isEmpty
           ? EmptyState(icon: Icons.search_rounded, message: l.searchEmpty)

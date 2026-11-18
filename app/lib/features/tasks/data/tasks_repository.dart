@@ -162,6 +162,12 @@ class TasksRepository {
 
   Future<void> save(Task task) => _write(task);
 
+  /// The task as it is stored now, or null if it is not there or deleted.
+  Future<Task?> find(String id) async {
+    final task = await _db.taskById(id);
+    return task == null || task.deletedAt != null ? null : task;
+  }
+
   Future<void> setDone(String id, {required bool done}) async {
     final task = await _db.taskById(id);
     if (task == null) return;

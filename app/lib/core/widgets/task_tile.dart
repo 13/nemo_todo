@@ -265,13 +265,22 @@ class _TileBody extends ConsumerWidget {
           icon: Icons.checklist_rounded,
           label: '${progress.done}/${progress.total}',
         ),
+      // While picking, a tag is part of the row, whose tap picks it: going
+      // to the tag's page would end the selection.
       for (final tag in task.tags)
-        InkWell(
-          key: Key('tile-tag-${task.id}-$tag'),
-          borderRadius: BorderRadius.circular(6),
-          onTap: () => context.push(Routes.tag(tag)),
-          child: MetaChip(icon: Icons.tag_rounded, label: tag),
-        ),
+        if (picking)
+          MetaChip(
+            key: Key('tile-tag-${task.id}-$tag'),
+            icon: Icons.tag_rounded,
+            label: tag,
+          )
+        else
+          InkWell(
+            key: Key('tile-tag-${task.id}-$tag'),
+            borderRadius: BorderRadius.circular(6),
+            onTap: () => context.push(Routes.tag(tag)),
+            child: MetaChip(icon: Icons.tag_rounded, label: tag),
+          ),
     ];
     final titleStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
       decoration: task.done ? TextDecoration.lineThrough : null,
@@ -314,18 +323,23 @@ class _TileBody extends ConsumerWidget {
       )),
       // What a swipe, a long press, a right click or a tag's own tap does,
       // for someone whose screen reader has taken those gestures over.
+      // While picking, the bar acts on the picks, and none of these is on
+      // offer: one task's own action, or a tag's page, would leave the
+      // others behind.
       customSemanticsActions: {
-        CustomSemanticsAction(
-          label: task.done ? l.taskMenuUndone : l.taskMenuDone,
-        ): () =>
-            unawaited(completeTask(ref, task, done: !task.done)),
-        CustomSemanticsAction(label: l.taskMenuMove): () =>
-            unawaited(showRescheduleSheet(context, ref, task)),
-        CustomSemanticsAction(label: l.commonDelete): () =>
-            unawaited(deleteTaskWithUndo(context, ref, task)),
-        for (final tag in task.tags)
-          CustomSemanticsAction(label: l.a11yShowTag(tag)): () =>
-              unawaited(context.push(Routes.tag(tag))),
+        if (!picking) ...{
+          CustomSemanticsAction(
+            label: task.done ? l.taskMenuUndone : l.taskMenuDone,
+          ): () =>
+              unawaited(completeTask(ref, task, done: !task.done)),
+          CustomSemanticsAction(label: l.taskMenuMove): () =>
+              unawaited(showRescheduleSheet(context, ref, task)),
+          CustomSemanticsAction(label: l.commonDelete): () =>
+              unawaited(deleteTaskWithUndo(context, ref, task)),
+          for (final tag in task.tags)
+            CustomSemanticsAction(label: l.a11yShowTag(tag)): () =>
+                unawaited(context.push(Routes.tag(tag))),
+        },
         CustomSemanticsAction(label: l.a11yMoveUp): ?onMoveUp,
         CustomSemanticsAction(label: l.a11yMoveDown): ?onMoveDown,
       },
@@ -336,8 +350,10 @@ class _TileBody extends ConsumerWidget {
         child: InkWell(
           onTap: () => _tap(context, ref),
           onLongPress: onLongPress,
-          onSecondaryTapUp: (d) =>
-              showTaskMenu(context, ref, task, d.globalPosition),
+          // The menu acts on this task alone, which the picks would not.
+          onSecondaryTapUp: picking
+              ? null
+              : (d) => showTaskMenu(context, ref, task, d.globalPosition),
           mouseCursor: context.clickCursor,
           borderRadius: BorderRadius.circular(radius),
           child: Padding(
@@ -397,7 +413,9 @@ class _TileBody extends ConsumerWidget {
   /// Opens the task, or picks it while picking several. Outside that, a
   /// click with the platform's own modifier (⌘ on Apple's, Ctrl elsewhere)
   /// starts picking with this task, and Shift picks the run of rows from
-  /// the last one picked to here, as in a file manager.
+  /// the last one picked to here, as in a file manager. Before anything is
+  /// picked, that run starts at the task open beside the list, the one a
+  /// plain click went to.
   void _tap(BuildContext context, WidgetRef ref) {
     final keys = HardwareKeyboard.instance;
     final apple =
@@ -407,7 +425,7 @@ class _TileBody extends ConsumerWidget {
     if (keys.isShiftPressed) {
       selection.extendTo(task.id, [
         for (final t in ref.read(visibleTasksProvider).value) t.id,
-      ]);
+      ], from: picking ? null : ref.read(selectedTaskProvider));
     } else if (picking ||
         (apple ? keys.isMetaPressed : keys.isControlPressed)) {
       selection.toggle(task.id);

@@ -169,6 +169,47 @@ void main() {
     expect((await _task(app, 't2')).dueAt, dayStartMs(testNow));
   });
 
+  appTest('Move leaves alone a picked task deleted while the sheet is up', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+
+    await _select(tester, ['First', 'Second']);
+    await _tap(tester, find.byKey(const Key('selection-move')));
+    // As another device's change would arrive through sync.
+    await _repo(app.db).delete('t1');
+    await tester.pumpAndSettle();
+    await _tap(tester, find.byKey(const Key('reschedule-tomorrow')));
+
+    final first = await _task(app, 't1');
+    expect(first.deletedAt, isNotNull);
+    expect(first.dueAt, dayStartMs(testNow));
+    expect((await _task(app, 't2')).dueAt, dayStartMsFrom(testNow, 1));
+    expect(find.text('Moved 1 task to Tomorrow.'), findsOneWidget);
+
+    await _tap(tester, find.text('Undo'));
+    expect((await _task(app, 't1')).deletedAt, isNotNull);
+    expect((await _task(app, 't2')).dueAt, dayStartMs(testNow));
+  });
+
+  appTest('Move keeps what changed elsewhere while the sheet was up', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+
+    await _select(tester, ['First', 'Second']);
+    await _tap(tester, find.byKey(const Key('selection-move')));
+    final repo = _repo(app.db);
+    await repo.save((await _task(app, 't2')).copyWith(title: 'Renamed'));
+    await tester.pumpAndSettle();
+    await _tap(tester, find.byKey(const Key('reschedule-tomorrow')));
+
+    expect((await _task(app, 't2')).title, 'Renamed');
+    await _tap(tester, find.text('Undo'));
+    expect((await _task(app, 't2')).title, 'Renamed');
+    expect((await _task(app, 't2')).dueAt, dayStartMs(testNow));
+  });
+
   appTest('Move keeps the time of day a task has', (tester) async {
     final app = await pumpApp(
       tester,
@@ -332,6 +373,46 @@ void main() {
       expect((await _task(app, 't1')).done, isTrue);
     });
   }
+
+  appTest('in the Material style, Select comes first among the actions', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      initialLocation: Routes.upcoming,
+      seed: (db, inbox) async {
+        await KvStore(db).set(KvKeys.appStyle, AppStyle.material.name);
+        await _seed(db, inbox);
+      },
+    );
+    final select = tester.getCenter(find.byKey(const Key('select-tasks'))).dx;
+    for (final other in ['Search', 'Settings']) {
+      expect(select, lessThan(tester.getCenter(find.byTooltip(other)).dx));
+    }
+  });
+
+  appTest('search offers Select only once there is something to find', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      initialLocation: Routes.search,
+      seed: _seed,
+    );
+    expect(find.byKey(const Key('select-tasks')), findsNothing);
+
+    final field = find.byKey(const Key('search-field'));
+    await tester.enterText(field, 'Fi');
+    await tester.pumpAndSettle();
+    await _select(tester, ['First']);
+    expect(app.container.read(taskSelectionProvider), {'t1'});
+
+    // Emptying the query takes the results, and the picks, away.
+    await tester.enterText(field, '');
+    await tester.pumpAndSettle();
+    expect(app.container.read(taskSelectionProvider), isNull);
+    expect(find.byKey(const Key('select-tasks')), findsNothing);
+  });
 
   for (final style in AppStyle.values) {
     for (final wide in [false, true]) {

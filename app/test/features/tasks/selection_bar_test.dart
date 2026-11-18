@@ -102,6 +102,24 @@ void main() {
     expect(weekly.where((t) => !t.done), hasLength(1));
   });
 
+  appTest('Undo takes back the next occurrence Done put on the list', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+
+    await _select(tester, ['First', 'Weekly']);
+    await _tap(tester, find.byKey(const Key('selection-done')));
+    await _tap(tester, find.text('Undo'));
+
+    final live = (await app.db.select(app.db.tasks).get())
+        .where((t) => t.title == 'Weekly' && t.deletedAt == null)
+        .toList();
+    expect(live, hasLength(1));
+    expect(live.single.done, isFalse);
+    expect((await _task(app, 't1')).done, isFalse);
+    expect(find.text('Weekly'), findsOneWidget);
+  });
+
   appTest('a second tap on Done before the bar goes does nothing more', (
     tester,
   ) async {

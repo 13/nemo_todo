@@ -283,7 +283,7 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
           // Read before the write: the ticked row can leave this screen.
           final celebrate = ref.read(celebrationsEnabledProvider);
           // The snackbar carries the message, so no pill on top of it.
-          final cheer = await completeTask(
+          final (:cheer, :spawned) = await completeTask(
             ref,
             task,
             done: !task.done,
@@ -304,7 +304,11 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
                   // The SnackBar outlives this screen, and this `ref` is
                   // unusable once the list is gone; unticking never
                   // celebrates, so the repository captured above will do.
-                  onPressed: () => repo.setDone(task.id, done: false),
+                  // A repeating task's next occurrence goes with it.
+                  onPressed: () async {
+                    await repo.setDone(task.id, done: false);
+                    if (spawned != null) await repo.delete(spawned);
+                  },
                 ),
               ),
             );

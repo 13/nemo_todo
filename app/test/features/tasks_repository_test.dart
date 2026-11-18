@@ -48,6 +48,29 @@ void main() {
   });
   tearDown(() => db.close());
 
+  test('setDone says which task the completion put on the list', () async {
+    final weekly = await tasks.create(
+      listId: inbox,
+      title: 'Weekly',
+      dueAt: dayStartMs(testNow),
+      repeat: Repeats.weekly,
+    );
+    final once = await tasks.create(
+      listId: inbox,
+      title: 'Once',
+      dueAt: dayStartMs(testNow),
+    );
+
+    final spawned = await tasks.setDone(weekly.id, done: true);
+    expect(spawned, isNotNull);
+    final next = await tasks.find(spawned!);
+    expect(next?.title, 'Weekly');
+    expect(next?.done, isFalse);
+
+    expect(await tasks.setDone(once.id, done: true), isNull);
+    expect(await tasks.setDone(weekly.id, done: false), isNull);
+  });
+
   test('create appends in order and setDone records doneAt', () async {
     final a = await tasks.create(listId: inbox, title: 'A');
     final b = await tasks.create(listId: inbox, title: 'B');

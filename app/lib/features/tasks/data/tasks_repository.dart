@@ -168,16 +168,19 @@ class TasksRepository {
     return task == null || task.deletedAt != null ? null : task;
   }
 
-  Future<void> setDone(String id, {required bool done}) async {
+  /// Ticks the task on or off. Ticking a repeating one on puts its next
+  /// occurrence on the list; the new task's id is returned, so an Undo can
+  /// take it back. Null when nothing was added.
+  Future<String?> setDone(String id, {required bool done}) async {
     final task = await _db.taskById(id);
-    if (task == null) return;
+    if (task == null) return null;
     await _write(
       task.copyWith(
         done: done,
         doneAt: done ? _now().millisecondsSinceEpoch : null,
       ),
     );
-    if (done) await _spawnRepeat(task);
+    return done ? await _spawnRepeat(task) : null;
   }
 
   /// Puts the next occurrence of a repeating task on the list.
@@ -190,10 +193,12 @@ class TasksRepository {
   ///
   /// A rule needs a due date to count from, and a rule this version does
   /// not recognise is left alone rather than guessed at.
-  Future<void> _spawnRepeat(Task task) async {
+  ///
+  /// Returns the new task's id, or null when there is none.
+  Future<String?> _spawnRepeat(Task task) async {
     final rule = task.repeatRule;
     final dueAt = task.dueAt;
-    if (rule == null || dueAt == null) return;
+    if (rule == null || dueAt == null) return null;
 
     final next = task.copyWith(
       id: _newId(),
@@ -227,6 +232,7 @@ class TasksRepository {
         ),
       );
     }
+    return next.id;
   }
 
   Future<void> delete(String id) async {

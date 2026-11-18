@@ -5,12 +5,13 @@ import 'package:nemo/core/notifications/reminder_scheduler.dart';
 import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/router.dart';
 import 'package:nemo/utils/dates.dart';
+import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
 import '../../support/snack_bar.dart';
 import '../../support/test_db.dart';
 
-/// Three tasks due today, with celebrations on unless [kv] says otherwise.
+/// Four tasks due today, the last repeating weekly, with celebrations on unless [kv] says otherwise.
 Future<TestApp> pumpToday(
   WidgetTester tester, {
   Map<String, String> kv = const {},
@@ -35,6 +36,12 @@ Future<TestApp> pumpToday(
         dueAt: dayStartMs(testNow),
       );
     }
+    await tasks.create(
+      listId: inbox.id,
+      title: 'Weekly',
+      dueAt: dayStartMs(testNow),
+      repeat: Repeats.weekly,
+    );
   },
 );
 
@@ -100,6 +107,26 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(await isDone(app, 'Second'), isFalse);
     expect(find.byKey(const Key('achievement-banner')), findsNothing);
+  });
+
+  appTest('undo of a repeating task takes back its next occurrence', (
+    tester,
+  ) async {
+    final app = await pumpToday(tester, kv: {KvKeys.celebrations: 'false'});
+    await tester.drag(find.text('Weekly'), const Offset(500, 0));
+    await pumpFrames(tester);
+    final rows = app.db.select(app.db.tasks).get;
+    expect((await rows()).where((t) => t.title == 'Weekly'), hasLength(2));
+
+    await tester.tap(find.text('Undo'));
+    await pumpFrames(tester);
+
+    final weekly = (await rows()).where((t) => t.title == 'Weekly');
+    final live = weekly.where((t) => t.deletedAt == null).toList();
+    expect(live, hasLength(1));
+    expect(live.single.done, isFalse);
+    expect(weekly.where((t) => t.deletedAt != null && !t.done), hasLength(1));
+    expect(find.text('Weekly'), findsOneWidget);
   });
 
   appTest('a swipe completion says its message in the snackbar', (

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,7 @@ import 'package:nemo/features/settings/ui/settings_controller.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_menu.dart';
+import 'package:nemo/features/tasks/ui/task_selection.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo/router.dart';
@@ -57,6 +59,10 @@ class TaskTile extends ConsumerWidget {
     ref.listen(selectedTaskProvider, (_, next) {
       if (next == task.id) _keepInView(context);
     });
+    // Null unless several tasks are being picked at once.
+    final picking = ref.watch(taskSelectionProvider);
+    final picked = picking?.contains(task.id) ?? false;
+    final highlighted = selected || picked;
     final mac = context.appStyle == AppStyle.macos;
     if (!mac) {
       return _TileBody(
@@ -65,15 +71,18 @@ class TaskTile extends ConsumerWidget {
         onLongPress: onLongPress,
         onMoveUp: onMoveUp,
         onMoveDown: onMoveDown,
-        highlight: selected ? context.nemoColors.selection : null,
+        highlight: highlighted ? context.nemoColors.selection : null,
         radius: 12,
         selectedKey: selected,
+        picking: picking != null,
+        picked: picked,
       );
     }
     // macOS: the selection is the accent with white on it while the list
     // has the keyboard, and grey once typing has moved elsewhere, as in
-    // Finder and Mail; rows between are parted by inset hairlines.
-    final body = !selected
+    // Finder and Mail; rows between are parted by inset hairlines. A task
+    // picked among several is drawn the same way as the one open.
+    final body = !highlighted
         ? _TileBody(
             task: task,
             showList: showList,
@@ -81,6 +90,7 @@ class TaskTile extends ConsumerWidget {
             onMoveUp: onMoveUp,
             onMoveDown: onMoveDown,
             radius: 8,
+            picking: picking != null,
           )
         : ListenableBuilder(
             listenable: FocusManager.instance,
@@ -105,7 +115,9 @@ class TaskTile extends ConsumerWidget {
                           theme.colorScheme.onPrimary,
                         ]),
                   radius: 8,
-                  selectedKey: true,
+                  selectedKey: selected,
+                  picking: picking != null,
+                  picked: picked,
                 ),
               );
             },
@@ -113,7 +125,7 @@ class TaskTile extends ConsumerWidget {
     return Stack(
       children: [
         body,
-        if (!selected)
+        if (!highlighted)
           Positioned(
             left: StyleAdaptation.isPhone(context) ? 46 : 38,
             right: 0,
@@ -190,6 +202,8 @@ class _TileBody extends ConsumerWidget {
     this.onMoveDown,
     this.highlight,
     this.selectedKey = false,
+    this.picking = false,
+    this.picked = false,
   });
 
   final Task task;
@@ -200,6 +214,12 @@ class _TileBody extends ConsumerWidget {
   final Color? highlight;
   final double radius;
   final bool selectedKey;
+
+  /// Whether several tasks are being picked at once: a tap then picks
+  /// this one, and a ring that says whether it is picked stands in for
+  /// the check.
+  final bool picking;
+  final bool picked;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -308,7 +328,7 @@ class _TileBody extends ConsumerWidget {
         color: highlight ?? Colors.transparent,
         borderRadius: BorderRadius.circular(radius),
         child: InkWell(
-          onTap: () => openTask(context, ref, task.id),
+          onTap: () => _tap(context, ref),
           onLongPress: onLongPress,
           onSecondaryTapUp: (d) =>
               showTaskMenu(context, ref, task, d.globalPosition),
@@ -321,15 +341,24 @@ class _TileBody extends ConsumerWidget {
               children: [
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: checkTop),
-                  child: DoneCheck(
-                    done: task.done,
-                    size: checkSize,
-                    target: checkExtent,
-                    label: l.a11yDoneCheck(task.title),
-                    color: nemo.priority(task.priority),
-                    onChanged: (done) => completeTask(ref, task, done: done),
-                    celebrate: ref.watch(celebrationsEnabledProvider),
-                  ),
+                  child: picking
+                      ? _PickRing(
+                          key: Key('select-task-${task.id}'),
+                          picked: picked,
+                          size: checkSize,
+                          target: checkExtent,
+                          label: task.title,
+                        )
+                      : DoneCheck(
+                          done: task.done,
+                          size: checkSize,
+                          target: checkExtent,
+                          label: l.a11yDoneCheck(task.title),
+                          color: nemo.priority(task.priority),
+                          onChanged: (done) =>
+                              completeTask(ref, task, done: done),
+                          celebrate: ref.watch(celebrationsEnabledProvider),
+                        ),
                 ),
                 SizedBox(width: checkGap),
                 // Said once, in the row's own description above.
@@ -358,6 +387,28 @@ class _TileBody extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Opens the task, or picks it while picking several. Outside that, a
+  /// click with the platform's own modifier (⌘ on Apple's, Ctrl elsewhere)
+  /// starts picking with this task, and Shift picks the run of rows from
+  /// the last one picked to here, as in a file manager.
+  void _tap(BuildContext context, WidgetRef ref) {
+    final keys = HardwareKeyboard.instance;
+    final apple =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final selection = ref.read(taskSelectionProvider.notifier);
+    if (keys.isShiftPressed) {
+      selection.extendTo(task.id, [
+        for (final t in ref.read(visibleTasksProvider).value) t.id,
+      ]);
+    } else if (picking ||
+        (apple ? keys.isMetaPressed : keys.isControlPressed)) {
+      selection.toggle(task.id);
+    } else {
+      openTask(context, ref, task.id);
+    }
   }
 
   /// The row as a screen reader says it: the title, then when it is due,
@@ -479,6 +530,59 @@ class _TileBody extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Where the check sits while picking several tasks: a ring, filled with
+/// the accent and ticked once this task is picked. The row's own tap does
+/// the picking, so the ring only shows it.
+class _PickRing extends StatelessWidget {
+  const _PickRing({
+    required this.picked,
+    required this.size,
+    required this.target,
+    required this.label,
+    super.key,
+  });
+
+  final bool picked;
+
+  /// Across the ring, and across its target, as [DoneCheck] takes them,
+  /// so the row does not shift as picking starts.
+  final double size;
+  final double target;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      container: true,
+      checked: picked,
+      label: label,
+      child: Padding(
+        padding: EdgeInsets.all(max(size / 3, (target - size) / 2)),
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: picked ? scheme.primary : Colors.transparent,
+            border: Border.all(
+              color: picked ? scheme.primary : scheme.outline,
+              width: 2,
+            ),
+          ),
+          child: picked
+              ? AppIcon(
+                  Icons.check_rounded,
+                  size: size * 2 / 3,
+                  color: scheme.onPrimary,
+                )
+              : null,
+        ),
+      ),
     );
   }
 }

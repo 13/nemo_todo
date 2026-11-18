@@ -14,6 +14,7 @@ import 'package:nemo/features/sync/ui/sync_refresh.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/selected_task.dart';
 import 'package:nemo/features/tasks/ui/task_menu.dart';
+import 'package:nemo/features/tasks/ui/task_selection.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo/l10n/app_localizations.dart';
 import 'package:nemo_core/nemo_core.dart';
@@ -114,6 +115,10 @@ class TaskListSlivers extends ConsumerStatefulWidget {
 class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
   var _showCompleted = false;
 
+  /// Whether several tasks are being picked at once, when a row's swipe,
+  /// drag and long press would get in the way of the tap that picks it.
+  var _picking = false;
+
   /// What this list last told the keyboard it shows.
   List<Task>? _published;
 
@@ -132,11 +137,21 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    _visible.value = _published = [
+    _picking = ref.watch(taskSelectionProvider) != null;
+    final listed = _visible.value = _published = [
       for (final section in widget.sections)
         if (!(section.collapsible && section.collapsed)) ...section.tasks,
       if (_showCompleted) ...widget.completed,
     ];
+    // A picked task that is no longer listed, done or filtered away, is
+    // dropped from the picks. After the frame, since a provider cannot
+    // change while widgets build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(taskSelectionProvider.notifier)
+          .retainVisible(listed.map((t) => t.id));
+    });
     final slivers = <Widget>[
       if (widget.header != null) SliverToBoxAdapter(child: widget.header),
     ];
@@ -186,7 +201,9 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
           task: tasks[i],
           showList: widget.showList,
           // In a reorderable list a long press picks the row up instead.
-          onLongPress: () => showRescheduleSheet(context, ref, tasks[i]),
+          onLongPress: _picking
+              ? null
+              : () => showRescheduleSheet(context, ref, tasks[i]),
         ),
       ),
     ),
@@ -198,22 +215,24 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
       itemCount: tasks.length,
       onReorderItem: (oldIndex, newIndex) =>
           _reorder(tasks, oldIndex, newIndex),
-      itemBuilder: (context, i) => _dismissible(
-        tasks[i],
-        ReorderableDelayedDragStartListener(
-          index: i,
-          child: TaskTile(
-            task: tasks[i],
-            showList: widget.showList,
-            // The drag, for someone whose screen reader has taken the
-            // long press over. `_reorder` takes the index after removal.
-            onMoveUp: i == 0 ? null : () => _reorder(tasks, i, i - 1),
-            onMoveDown: i == tasks.length - 1
-                ? null
-                : () => _reorder(tasks, i, i + 1),
-          ),
-        ),
-      ),
+      itemBuilder: (context, i) {
+        final tile = TaskTile(
+          task: tasks[i],
+          showList: widget.showList,
+          // The drag, for someone whose screen reader has taken the
+          // long press over. `_reorder` takes the index after removal.
+          onMoveUp: i == 0 ? null : () => _reorder(tasks, i, i - 1),
+          onMoveDown: i == tasks.length - 1
+              ? null
+              : () => _reorder(tasks, i, i + 1),
+        );
+        return _dismissible(
+          tasks[i],
+          _picking
+              ? tile
+              : ReorderableDelayedDragStartListener(index: i, child: tile),
+        );
+      },
     ),
   );
 
@@ -230,6 +249,7 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
   }
 
   Widget _dismissible(Task task, Widget child) {
+    if (_picking) return child;
     final scheme = Theme.of(context).colorScheme;
     final mac = context.appStyle == AppStyle.macos;
     final l = L.of(context);

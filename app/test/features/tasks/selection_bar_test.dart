@@ -115,6 +115,7 @@ void main() {
         .where((t) => t.title == 'Weekly' && t.deletedAt == null)
         .toList();
     expect(live, hasLength(1));
+    expect(live.single.id, 't3', reason: 'the original, reopened');
     expect(live.single.done, isFalse);
     expect((await _task(app, 't1')).done, isFalse);
     expect(find.text('Weekly'), findsOneWidget);
@@ -178,6 +179,20 @@ void main() {
     expect(find.byType(SnackBar), findsNothing);
     await _tap(tester, find.byKey(const Key('selection-done')));
     expect((await _task(app, 't2')).done, isTrue);
+  });
+
+  appTest('on a wide window the snackbar stays as selecting starts', (
+    tester,
+  ) async {
+    await pumpApp(tester, size: const Size(1400, 900), seed: _seed);
+
+    await _select(tester, ['First']);
+    await _tap(tester, find.byKey(const Key('selection-delete')));
+    expect(find.byType(SnackBar), findsOneWidget);
+
+    // The bar is at the top, clear of it, so its Undo stays on offer.
+    await _select(tester, ['Second']);
+    expect(find.byType(SnackBar), findsOneWidget);
   });
 
   appTest('Move puts the picked tasks on another day, and Undo back', (
@@ -451,6 +466,36 @@ void main() {
       expect(find.text('1 selected'), findsOneWidget);
     });
   }
+
+  appTest('in the Material style, on a wide window, Today scrolled down '
+      'stays put as selecting starts', (tester) async {
+    final app = await pumpApp(
+      tester,
+      size: const Size(1400, 900),
+      seed: (db, inbox) async {
+        await KvStore(db).set(KvKeys.appStyle, AppStyle.material.name);
+        await _seed(db, inbox);
+        final more = _repo(db, ids: 'm');
+        for (var i = 1; i <= 30; i++) {
+          await more.create(
+            listId: inbox.id,
+            title: 'More $i',
+            dueAt: dayStartMs(testNow),
+          );
+        }
+      },
+    );
+    await tester.drag(find.text('More 1'), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    // The search bar, and its Select, have scrolled away.
+    expect(find.byKey(const Key('select-tasks')), findsNothing);
+    final row = find.text('More 10');
+    final before = tester.getTopLeft(row).dy;
+
+    app.container.read(taskSelectionProvider.notifier).start();
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(row).dy, moreOrLessEquals(before, epsilon: 1));
+  });
 
   appTest('search offers Select only once there is something to find', (
     tester,

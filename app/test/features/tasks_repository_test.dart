@@ -71,6 +71,36 @@ void main() {
     expect(await tasks.setDone(weekly.id, done: false), isNull);
   });
 
+  test('deleteUnchanged deletes a task only as it was given', () async {
+    final weekly = await tasks.create(
+      listId: inbox,
+      title: 'Weekly',
+      dueAt: dayStartMs(testNow),
+      repeat: Repeats.weekly,
+    );
+    final untouched = (await tasks.find(
+      (await tasks.setDone(weekly.id, done: true))!,
+    ))!;
+    await tasks.deleteUnchanged(untouched);
+    expect(await tasks.find(untouched.id), isNull);
+
+    await tasks.setDone(weekly.id, done: false);
+    final ticked = (await tasks.find(
+      (await tasks.setDone(weekly.id, done: true))!,
+    ))!;
+    // Ticked off in the meantime: it is the person's now, not the spawn's.
+    await tasks.setDone(ticked.id, done: true);
+    await tasks.deleteUnchanged(ticked);
+    expect((await tasks.find(ticked.id))?.done, isTrue);
+
+    final renamed = (await tasks.find(
+      (await tasks.setDone(ticked.id, done: true))!,
+    ))!;
+    await tasks.save(renamed.copyWith(title: 'Renamed'));
+    await tasks.deleteUnchanged(renamed);
+    expect((await tasks.find(renamed.id))?.title, 'Renamed');
+  });
+
   test('create appends in order and setDone records doneAt', () async {
     final a = await tasks.create(listId: inbox, title: 'A');
     final b = await tasks.create(listId: inbox, title: 'B');

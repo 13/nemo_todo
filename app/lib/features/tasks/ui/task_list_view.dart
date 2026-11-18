@@ -290,6 +290,9 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
             showPill: false,
           );
           if (!task.done) {
+            // The next occurrence as it is now, so Undo can tell whether
+            // it has been touched since.
+            final next = spawned == null ? null : await repo.find(spawned);
             messenger.showSnackBar(
               SnackBar(
                 content: Text(
@@ -304,10 +307,11 @@ class _TaskListSliversState extends ConsumerState<TaskListSlivers> {
                   // The SnackBar outlives this screen, and this `ref` is
                   // unusable once the list is gone; unticking never
                   // celebrates, so the repository captured above will do.
-                  // A repeating task's next occurrence goes with it.
+                  // A repeating task's next occurrence goes with it,
+                  // unless it has been ticked or edited since.
                   onPressed: () async {
                     await repo.setDone(task.id, done: false);
-                    if (spawned != null) await repo.delete(spawned);
+                    if (next != null) await repo.deleteUnchanged(next);
                   },
                 ),
               ),

@@ -11,7 +11,8 @@ import '../../support/pump_app.dart';
 import '../../support/snack_bar.dart';
 import '../../support/test_db.dart';
 
-/// Four tasks due today, the last repeating weekly, with celebrations on unless [kv] says otherwise.
+/// Four tasks due today, the last repeating weekly, with celebrations on
+/// unless [kv] says otherwise.
 Future<TestApp> pumpToday(
   WidgetTester tester, {
   Map<String, String> kv = const {},
@@ -113,9 +114,10 @@ void main() {
     tester,
   ) async {
     final app = await pumpToday(tester, kv: {KvKeys.celebrations: 'false'});
+    final rows = app.db.select(app.db.tasks).get;
+    final original = (await rows()).singleWhere((t) => t.title == 'Weekly');
     await tester.drag(find.text('Weekly'), const Offset(500, 0));
     await pumpFrames(tester);
-    final rows = app.db.select(app.db.tasks).get;
     expect((await rows()).where((t) => t.title == 'Weekly'), hasLength(2));
 
     await tester.tap(find.text('Undo'));
@@ -124,6 +126,7 @@ void main() {
     final weekly = (await rows()).where((t) => t.title == 'Weekly');
     final live = weekly.where((t) => t.deletedAt == null).toList();
     expect(live, hasLength(1));
+    expect(live.single.id, original.id, reason: 'the original, reopened');
     expect(live.single.done, isFalse);
     expect(weekly.where((t) => t.deletedAt != null && !t.done), hasLength(1));
     expect(find.text('Weekly'), findsOneWidget);

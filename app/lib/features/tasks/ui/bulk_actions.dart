@@ -41,16 +41,20 @@ Future<void> completeTasks(
   final reopen = tasks.every((t) => t.done);
   final changed = reopen ? tasks : tasks.where((t) => !t.done).toList();
   // The next occurrences of repeating tasks the completions put on the
-  // list, which Undo takes back.
-  final spawned = <String>[];
+  // list, as they were then: Undo takes back the ones still that way.
+  final spawned = <Task>[];
+  Future<void> keep(String? id) async {
+    if (id == null) return;
+    if (await repo.find(id) case final next?) spawned.add(next);
+  }
+
   if (reopen) {
     for (final task in changed) {
       await repo.setDone(task.id, done: false);
     }
   } else {
     for (final task in changed.take(changed.length - 1)) {
-      final next = await repo.setDone(task.id, done: true);
-      if (next != null) spawned.add(next);
+      await keep(await repo.setDone(task.id, done: true));
     }
     // The snackbar carries the message, so no pill on top of it.
     final last = await completeTaskWith(
@@ -60,7 +64,7 @@ Future<void> completeTasks(
       done: true,
       showPill: false,
     );
-    if (last.spawned case final next?) spawned.add(next);
+    await keep(last.spawned);
   }
   messenger
     ..removeCurrentSnackBar()
@@ -83,8 +87,8 @@ Future<void> completeTasks(
                   ? repo.save(task)
                   : repo.setDone(task.id, done: false));
             }
-            for (final id in spawned) {
-              await repo.delete(id);
+            for (final next in spawned) {
+              await repo.deleteUnchanged(next);
             }
           },
         ),

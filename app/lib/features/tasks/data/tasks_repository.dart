@@ -235,6 +235,16 @@ class TasksRepository {
     return next.id;
   }
 
+  /// Deletes [task] only if it is still exactly as given: not deleted, and
+  /// not written since, which a tick or an edit, here or synced from
+  /// elsewhere, would have done. An Undo uses it to take back the next
+  /// occurrence a completion added without losing what a person did to it.
+  Future<void> deleteUnchanged(Task task) async {
+    final current = await find(task.id);
+    if (current == null || current.updatedAt != task.updatedAt) return;
+    await delete(task.id);
+  }
+
   Future<void> delete(String id) async {
     final task = await _db.taskById(id);
     if (task == null) return;

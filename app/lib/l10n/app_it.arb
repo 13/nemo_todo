@@ -447,5 +447,12 @@
   "recentlyDeletedTasksHeader": "Attività",
   "recentlyDeletedListTasks": "{count, plural, =0{Nessuna attività} =1{1 attività} other{{count} attività}}",
   "recentlyDeletedListRestored": "Lista ripristinata",
-  "recentlyDeletedEraseListConfirm": "Eliminare definitivamente «{name}» e tutto ciò che contiene? Non si potrà più recuperare."
+  "recentlyDeletedEraseListConfirm": "Eliminare definitivamente «{name}» e tutto ciò che contiene? Non si potrà più recuperare.",
+  "selectTasks": "Seleziona",
+  "selectionCount": "{count, plural, =1{1 selezionata} other{{count} selezionate}}",
+  "tasksCompletedMany": "{count, plural, =1{1 attività completata} other{{count} attività completate}}",
+  "tasksUndoneMany": "{count, plural, =1{1 attività riaperta} other{{count} attività riaperte}}",
+  "tasksDeletedMany": "{count, plural, =1{1 attività eliminata} other{{count} attività eliminate}}",
+  "rescheduleMovedMany": "{count, plural, =1{1 attività spostata a {when}.} other{{count} attività spostate a {when}.}}",
+  "rescheduleClearedMany": "{count, plural, =1{Data rimossa da 1 attività.} other{Data rimossa da {count} attività.}}"
 }

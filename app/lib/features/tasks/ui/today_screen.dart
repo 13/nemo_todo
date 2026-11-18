@@ -32,6 +32,7 @@ class TodayScreen extends ConsumerWidget {
     final tasks = ref.watch(todayTasksProvider);
     final material = context.appStyle == AppStyle.material;
     return StyleScaffold(
+      taskSelection: true,
       title: l.navToday,
       belowTitle: Text(
         longDate(locale, now),

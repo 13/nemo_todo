@@ -1719,4 +1719,67 @@ class LDe extends L {
   String recentlyDeletedEraseListConfirm(String name) {
     return '„$name“ mit allem, was darin ist, endgültig löschen? Das lässt sich nicht rückgängig machen.';
   }
+
+  @override
+  String get selectTasks => 'Auswählen';
+
+  @override
+  String selectionCount(int count) {
+    return '$count ausgewählt';
+  }
+
+  @override
+  String tasksCompletedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben erledigt',
+      one: '1 Aufgabe erledigt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tasksUndoneMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben wieder offen',
+      one: '1 Aufgabe wieder offen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tasksDeletedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben gelöscht',
+      one: '1 Aufgabe gelöscht',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rescheduleMovedMany(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben auf $when verschoben.',
+      one: '1 Aufgabe auf $when verschoben.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rescheduleClearedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Datum von $count Aufgaben entfernt.',
+      one: 'Datum von 1 Aufgabe entfernt.',
+    );
+    return '$_temp0';
+  }
 }

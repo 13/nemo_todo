@@ -1737,4 +1737,73 @@ class LIt extends L {
   String recentlyDeletedEraseListConfirm(String name) {
     return 'Eliminare definitivamente «$name» e tutto ciò che contiene? Non si potrà più recuperare.';
   }
+
+  @override
+  String get selectTasks => 'Seleziona';
+
+  @override
+  String selectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selezionate',
+      one: '1 selezionata',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tasksCompletedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività completate',
+      one: '1 attività completata',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tasksUndoneMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività riaperte',
+      one: '1 attività riaperta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tasksDeletedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività eliminate',
+      one: '1 attività eliminata',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rescheduleMovedMany(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività spostate a $when.',
+      one: '1 attività spostata a $when.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rescheduleClearedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Data rimossa da $count attività.',
+      one: 'Data rimossa da 1 attività.',
+    );
+    return '$_temp0';
+  }
 }

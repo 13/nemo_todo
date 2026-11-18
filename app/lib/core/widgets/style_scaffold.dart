@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SelectAction;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/theme/app_style.dart';
+import 'package:nemo/features/tasks/ui/selection_bar.dart';
+import 'package:nemo/features/tasks/ui/task_selection.dart';
 
 /// A main screen's frame, as its style draws one.
 ///
@@ -11,7 +14,12 @@ import 'package:nemo/core/theme/app_style.dart';
 ///
 /// [body] keeps its own scroll view; a [NestedScrollView] ties its scrolling
 /// to the bar's, so no screen has to be rebuilt out of slivers.
-class StyleScaffold extends StatelessWidget {
+///
+/// A screen listing tasks sets [taskSelection]: its top bar then offers to
+/// pick several, and while picking, the [SelectionBar] takes the foot of
+/// the screen on a phone -- in place of the bottom bar and the button --
+/// or the top bar's place on a wide window.
+class StyleScaffold extends ConsumerWidget {
   const StyleScaffold({
     required this.appBar,
     required this.title,
@@ -23,6 +31,7 @@ class StyleScaffold extends StatelessWidget {
     this.searchBar,
     this.bottomNavigationBar,
     this.floatingActionButton,
+    this.taskSelection = false,
     super.key,
   });
 
@@ -48,26 +57,47 @@ class StyleScaffold extends StatelessWidget {
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
 
+  /// Whether this screen's tasks can be picked several at once.
+  final bool taskSelection;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selecting = taskSelection && ref.watch(taskSelectionProvider) != null;
+    final onTop = selecting && SelectionBar.onTop(context);
+    final atFoot = selecting && !onTop;
+    const selectionBar = SelectionBar();
+    final bottom = atFoot ? selectionBar : bottomNavigationBar;
+    final button = atFoot ? null : floatingActionButton;
+    final actions = [...this.actions, if (taskSelection) const SelectAction()];
+
     if (context.appStyle != AppStyle.material) {
       return Scaffold(
-        appBar: appBar,
+        appBar: onTop
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(kToolbarHeight),
+                child: selectionBar,
+              )
+            : taskSelection
+            ? _withSelectAction(appBar)
+            : appBar,
         body: body,
-        bottomNavigationBar: bottomNavigationBar,
-        floatingActionButton: floatingActionButton,
+        bottomNavigationBar: bottom,
+        floatingActionButton: button,
       );
     }
     final text = Theme.of(context).textTheme;
     final search = searchBar;
+    // On a wide window the selection bar stands in for the top bar; the
+    // title and what is under it stay, and so does the list's scroll.
     final header = search == null
         ? <Widget>[
-            SliverAppBar.large(
-              key: const Key('large-app-bar'),
-              leading: leading,
-              title: Text(title, style: TextStyle(color: titleColor)),
-              actions: actions,
-            ),
+            if (!onTop)
+              SliverAppBar.large(
+                key: const Key('large-app-bar'),
+                leading: leading,
+                title: Text(title, style: TextStyle(color: titleColor)),
+                actions: actions,
+              ),
             if (belowTitle != null)
               SliverToBoxAdapter(
                 child: Padding(
@@ -77,14 +107,16 @@ class StyleScaffold extends StatelessWidget {
               ),
           ]
         : <Widget>[
-            SliverAppBar(
-              floating: true,
-              snap: true,
-              toolbarHeight: 72,
-              titleSpacing: 16,
-              automaticallyImplyLeading: false,
-              title: search,
-            ),
+            if (!onTop)
+              SliverAppBar(
+                floating: true,
+                snap: true,
+                toolbarHeight: 72,
+                titleSpacing: 16,
+                automaticallyImplyLeading: false,
+                title: search,
+                actions: actions,
+              ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -103,12 +135,41 @@ class StyleScaffold extends StatelessWidget {
             ),
           ];
     return Scaffold(
+      appBar: onTop
+          ? const PreferredSize(
+              preferredSize: Size.fromHeight(kToolbarHeight),
+              child: selectionBar,
+            )
+          : null,
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => header,
         body: body,
       ),
-      bottomNavigationBar: bottomNavigationBar,
-      floatingActionButton: floatingActionButton,
+      bottomNavigationBar: bottom,
+      floatingActionButton: button,
+    );
+  }
+
+  /// [bar] with the button that starts picking tasks after its actions.
+  ///
+  /// An [AppBar] cannot be copied with a change, so it is built again from
+  /// what the screens set on theirs; another kind of bar is left alone.
+  static PreferredSizeWidget _withSelectAction(PreferredSizeWidget bar) {
+    if (bar is! AppBar) return bar;
+    return AppBar(
+      key: bar.key,
+      leading: bar.leading,
+      automaticallyImplyLeading: bar.automaticallyImplyLeading,
+      title: bar.title,
+      actions: [...?bar.actions, const SelectAction()],
+      flexibleSpace: bar.flexibleSpace,
+      bottom: bar.bottom,
+      backgroundColor: bar.backgroundColor,
+      foregroundColor: bar.foregroundColor,
+      centerTitle: bar.centerTitle,
+      titleSpacing: bar.titleSpacing,
+      toolbarHeight: bar.toolbarHeight,
+      leadingWidth: bar.leadingWidth,
     );
   }
 }

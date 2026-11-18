@@ -2786,6 +2786,48 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Delete \"{name}\" and everything in it for good? It cannot be brought back.'**
   String recentlyDeletedEraseListConfirm(String name);
+
+  /// Tooltip of the top bar's button that starts picking several tasks at once.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get selectTasks;
+
+  /// How many tasks are picked, on the selection bar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectionCount(int count);
+
+  /// Shown after the selection bar marked several tasks done.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task done} other{{count} tasks done}}'**
+  String tasksCompletedMany(int count);
+
+  /// Shown after the selection bar marked several done tasks not done again.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task not done} other{{count} tasks not done}}'**
+  String tasksUndoneMany(int count);
+
+  /// Shown after the selection bar deleted several tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task deleted} other{{count} tasks deleted}}'**
+  String tasksDeletedMany(int count);
+
+  /// Shown after the selection bar moved several tasks to another day; when is that day, like Tomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Moved 1 task to {when}.} other{Moved {count} tasks to {when}.}}'**
+  String rescheduleMovedMany(int count, String when);
+
+  /// Shown after the selection bar removed the date from several tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Removed the date from 1 task.} other{Removed the date from {count} tasks.}}'**
+  String rescheduleClearedMany(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

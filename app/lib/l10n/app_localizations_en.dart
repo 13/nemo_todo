@@ -1703,4 +1703,67 @@ class LEn extends L {
   String recentlyDeletedEraseListConfirm(String name) {
     return 'Delete \"$name\" and everything in it for good? It cannot be brought back.';
   }
+
+  @override
+  String get selectTasks => 'Select';
+
+  @override
+  String selectionCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String tasksCompletedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks done',
+      one: '1 task done',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tasksUndoneMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks not done',
+      one: '1 task not done',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tasksDeletedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks deleted',
+      one: '1 task deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rescheduleMovedMany(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Moved $count tasks to $when.',
+      one: 'Moved 1 task to $when.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rescheduleClearedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Removed the date from $count tasks.',
+      one: 'Removed the date from 1 task.',
+    );
+    return '$_temp0';
+  }
 }

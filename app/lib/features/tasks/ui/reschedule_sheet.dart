@@ -29,12 +29,72 @@ Future<void> showRescheduleSheet(
   int dueOn(DateTime day) => task.dueHasTime && current != null
       ? composeDue(day, hour: current.hour, minute: current.minute)
       : dayStartMs(day);
+
+  final picked = await pickRescheduleDay(
+    context,
+    ref,
+    current: current,
+    canClear: task.dueAt != null,
+  );
+  if (picked == null) return;
+
+  final day = picked.day;
+  final moved = day == null
+      ? task.copyWith(dueAt: null, dueHasTime: false, remind: false)
+      : task.copyWith(dueAt: dueOn(day));
+  await repo.save(moved);
+  final dueAt = moved.dueAt;
+  messenger
+    ..removeCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(
+          dueAt == null
+              ? l.rescheduleCleared
+              : l.rescheduleMoved(
+                  dueLabel(
+                    l,
+                    locale,
+                    dueAt: dueAt,
+                    hasTime: moved.dueHasTime,
+                    now: now,
+                  ),
+                ),
+        ),
+        // An action would keep it up until tapped.
+        persist: false,
+        action: SnackBarAction(
+          label: l.commonUndo,
+          onPressed: () => repo.save(
+            moved.copyWith(
+              dueAt: task.dueAt,
+              dueHasTime: task.dueHasTime,
+              remind: task.remind,
+            ),
+          ),
+        ),
+      ),
+    );
+}
+
+/// Asks for the day to move tasks to: today, tomorrow, a week from today, a
+/// picked date, or -- when [canClear] -- none. [current] is where the date
+/// picker opens, today when null.
+///
+/// A null day means "clear the date"; a null answer means the sheet was
+/// dismissed.
+Future<({DateTime? day})?> pickRescheduleDay(
+  BuildContext context,
+  WidgetRef ref, {
+  required bool canClear,
+  DateTime? current,
+}) {
+  final l = L.of(context);
+  final now = ref.read(nowProvider)();
   DateTime inDays(int days) =>
       DateTime.fromMillisecondsSinceEpoch(dayStartMsFrom(now, days));
 
-  // null means "clear the date"; a missing answer means the sheet was
-  // dismissed.
-  final picked = await showAppSheet<({DateTime? day})>(
+  return showAppSheet<({DateTime? day})>(
     context: context,
     showDragHandle: true,
     builder: (sheet) => SafeArea(
@@ -76,7 +136,7 @@ Future<void> showRescheduleSheet(
               }
             },
           ),
-          if (task.dueAt != null)
+          if (canClear)
             ListTile(
               key: const Key('reschedule-clear'),
               leading: const AppIcon(Icons.event_busy_rounded),
@@ -87,43 +147,4 @@ Future<void> showRescheduleSheet(
       ),
     ),
   );
-  if (picked == null) return;
-
-  final day = picked.day;
-  final moved = day == null
-      ? task.copyWith(dueAt: null, dueHasTime: false, remind: false)
-      : task.copyWith(dueAt: dueOn(day));
-  await repo.save(moved);
-  final dueAt = moved.dueAt;
-  messenger
-    ..removeCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(
-          dueAt == null
-              ? l.rescheduleCleared
-              : l.rescheduleMoved(
-                  dueLabel(
-                    l,
-                    locale,
-                    dueAt: dueAt,
-                    hasTime: moved.dueHasTime,
-                    now: now,
-                  ),
-                ),
-        ),
-        // An action would keep it up until tapped.
-        persist: false,
-        action: SnackBarAction(
-          label: l.commonUndo,
-          onPressed: () => repo.save(
-            moved.copyWith(
-              dueAt: task.dueAt,
-              dueHasTime: task.dueHasTime,
-              remind: task.remind,
-            ),
-          ),
-        ),
-      ),
-    );
 }

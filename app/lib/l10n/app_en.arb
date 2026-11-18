@@ -1228,5 +1228,66 @@
         "type": "String"
       }
     }
+  },
+  "selectTasks": "Select",
+  "@selectTasks": {
+    "description": "Tooltip of the top bar's button that starts picking several tasks at once."
+  },
+  "selectionCount": "{count} selected",
+  "@selectionCount": {
+    "description": "How many tasks are picked, on the selection bar.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksCompletedMany": "{count, plural, =1{1 task done} other{{count} tasks done}}",
+  "@tasksCompletedMany": {
+    "description": "Shown after the selection bar marked several tasks done.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksUndoneMany": "{count, plural, =1{1 task not done} other{{count} tasks not done}}",
+  "@tasksUndoneMany": {
+    "description": "Shown after the selection bar marked several done tasks not done again.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksDeletedMany": "{count, plural, =1{1 task deleted} other{{count} tasks deleted}}",
+  "@tasksDeletedMany": {
+    "description": "Shown after the selection bar deleted several tasks.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rescheduleMovedMany": "{count, plural, =1{Moved 1 task to {when}.} other{Moved {count} tasks to {when}.}}",
+  "@rescheduleMovedMany": {
+    "description": "Shown after the selection bar moved several tasks to another day; when is that day, like Tomorrow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "rescheduleClearedMany": "{count, plural, =1{Removed the date from 1 task.} other{Removed the date from {count} tasks.}}",
+  "@rescheduleClearedMany": {
+    "description": "Shown after the selection bar removed the date from several tasks.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

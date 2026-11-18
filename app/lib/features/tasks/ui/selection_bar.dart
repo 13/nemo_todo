@@ -17,7 +17,14 @@ import 'package:nemo_core/nemo_core.dart';
 /// It acts on the picked tasks the screen lists, in the order it lists
 /// them; a pick that has left the screen is not acted on.
 class SelectionBar extends ConsumerWidget {
-  const SelectionBar({super.key});
+  const SelectionBar({this.topBar, super.key});
+
+  /// Builds the bar at the top from its parts -- the cancel button, the
+  /// count and the actions -- in place of a plain [AppBar]. The Material
+  /// style puts them into the header the page already has, so the page
+  /// under it does not move.
+  final Widget Function(Widget leading, Widget title, List<Widget> actions)?
+  topBar;
 
   /// Whether the bar takes the top of the screen, as on a wide window, or
   /// the foot of it, within a thumb's reach, as on a phone.
@@ -76,12 +83,13 @@ class SelectionBar extends ConsumerWidget {
 
     // At the top it is a top bar, in each style's own look.
     if (onTop(context)) {
-      return AppBar(
-        automaticallyImplyLeading: false,
-        leading: cancel,
-        title: count,
-        actions: actions,
-      );
+      return topBar?.call(cancel, count, actions) ??
+          AppBar(
+            automaticallyImplyLeading: false,
+            leading: cancel,
+            title: count,
+            actions: actions,
+          );
     }
     final row = Row(
       children: [

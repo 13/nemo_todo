@@ -23,6 +23,7 @@ class TaskSelectionScaffold extends ConsumerStatefulWidget {
     this.bottomNavigationBar,
     this.floatingActionButton,
     this.enabled = true,
+    this.bodyHasTopBar = false,
     super.key,
   });
 
@@ -34,6 +35,10 @@ class TaskSelectionScaffold extends ConsumerStatefulWidget {
   /// Whether this screen picks tasks at all; without it this is a plain
   /// [Scaffold].
   final bool enabled;
+
+  /// Whether [body] puts the selection bar at its own top, as the Material
+  /// style's header does, rather than this scaffold above it.
+  final bool bodyHasTopBar;
 
   @override
   ConsumerState<TaskSelectionScaffold> createState() =>
@@ -113,7 +118,7 @@ class _TaskSelectionScaffoldState extends ConsumerState<TaskSelectionScaffold> {
     final atFoot = selecting && !onTop;
     const selectionBar = SelectionBar();
     return Scaffold(
-      appBar: onTop
+      appBar: onTop && !widget.bodyHasTopBar
           ? const PreferredSize(
               preferredSize: Size.fromHeight(kToolbarHeight),
               child: selectionBar,

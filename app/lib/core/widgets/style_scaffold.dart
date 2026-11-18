@@ -21,7 +21,9 @@ import 'package:nemo/features/tasks/ui/task_selection.dart';
 /// one from here. While picking, the [SelectionBar] takes the foot of
 /// the screen on a phone -- in place of the bottom bar and the button --
 /// or the top bar's place on a wide window, as [TaskSelectionScaffold]
-/// lays out; leaving the screen ends the selection.
+/// lays out; leaving the screen ends the selection. The Material bar on a
+/// wide window keeps its height and takes the selection bar's parts, so
+/// the page under it does not jump.
 class StyleScaffold extends ConsumerWidget {
   const StyleScaffold({
     required this.appBar,
@@ -84,11 +86,27 @@ class StyleScaffold extends ConsumerWidget {
     }
     final text = Theme.of(context).textTheme;
     final search = searchBar;
-    // On a wide window the selection bar stands in for the top bar; the
-    // title and what is under it stay, and so does the list's scroll.
+    // On a wide window the selection bar stands in for the top bar: its
+    // parts go into the same bar, the same height, so the page under it
+    // stays where it was.
     final header = search == null
         ? <Widget>[
-            if (!onTop)
+            if (onTop)
+              SelectionBar(
+                // The large title stays: the count joins the actions, as
+                // the bar's own title would be drawn twice, large and small.
+                topBar: (cancel, count, actions) => SliverAppBar.large(
+                  key: const Key('large-app-bar'),
+                  leading: cancel,
+                  title: Text(title, style: TextStyle(color: titleColor)),
+                  actions: [
+                    Center(child: count),
+                    const SizedBox(width: 8),
+                    ...actions,
+                  ],
+                ),
+              )
+            else
               SliverAppBar.large(
                 key: const Key('large-app-bar'),
                 leading: leading,
@@ -104,7 +122,22 @@ class StyleScaffold extends ConsumerWidget {
               ),
           ]
         : <Widget>[
-            if (!onTop)
+            if (onTop)
+              SelectionBar(
+                // Pinned, so the count and actions stay in reach once the
+                // page is scrolled; at the top that changes nothing.
+                topBar: (cancel, count, actions) => SliverAppBar(
+                  pinned: true,
+                  floating: true,
+                  snap: true,
+                  toolbarHeight: 72,
+                  automaticallyImplyLeading: false,
+                  leading: cancel,
+                  title: count,
+                  actions: actions,
+                ),
+              )
+            else
               SliverAppBar(
                 floating: true,
                 snap: true,
@@ -133,6 +166,7 @@ class StyleScaffold extends ConsumerWidget {
           ];
     return TaskSelectionScaffold(
       enabled: taskSelection,
+      bodyHasTopBar: true,
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => header,
         body: body,

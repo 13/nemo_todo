@@ -404,6 +404,36 @@ void main() {
     }
   });
 
+  // Today has the search bar on top, a list's page the large title.
+  for (final name in ['Today', "a list's page"]) {
+    appTest('in the Material style, on a wide window, $name stays put as '
+        'selecting starts', (tester) async {
+      final app = await pumpApp(
+        tester,
+        size: const Size(1400, 900),
+        seed: (db, inbox) async {
+          await KvStore(db).set(KvKeys.appStyle, AppStyle.material.name);
+          await _seed(db, inbox);
+        },
+      );
+      if (name != 'Today') {
+        app.router.go(Routes.list(app.inbox.id));
+        await tester.pumpAndSettle();
+      }
+      final first = find.text('First');
+      final before = tester.getTopLeft(first).dy;
+
+      await _tap(tester, find.byKey(const Key('select-tasks')));
+      expect(tester.getTopLeft(first).dy, moreOrLessEquals(before, epsilon: 1));
+      expect(find.byKey(const Key('selection-done')), findsOneWidget);
+      expect(find.text('0 selected'), findsOneWidget);
+
+      await _tap(tester, first);
+      expect(tester.getTopLeft(first).dy, moreOrLessEquals(before, epsilon: 1));
+      expect(find.text('1 selected'), findsOneWidget);
+    });
+  }
+
   appTest('search offers Select only once there is something to find', (
     tester,
   ) async {

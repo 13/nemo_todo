@@ -14,7 +14,6 @@ import 'package:nemo/utils/dates.dart';
 import 'package:nemo_core/nemo_core.dart';
 
 import '../../support/pump_app.dart';
-import '../../support/snack_bar.dart';
 import '../../support/test_db.dart';
 
 TasksRepository _repo(AppDatabase db, {String ids = 't'}) => TasksRepository(
@@ -131,8 +130,6 @@ void main() {
     await _tap(tester, find.byKey(const Key('selection-done')));
     expect((await _task(app, 't1')).done, isTrue);
     expect((await _task(app, 't4')).done, isTrue);
-    // The first snackbar would sit over the bar.
-    await expectSnackBarTimesOut(tester);
 
     await _select(tester, ['First', 'Finished']);
     // Every picked one is done, so the button undoes.
@@ -147,6 +144,22 @@ void main() {
     expect((await _task(app, 't1')).done, isFalse);
     expect((await _task(app, 't4')).done, isFalse);
     expect(find.text('2 tasks not done'), findsOneWidget);
+  });
+
+  appTest("starting to select puts away the last action's snackbar", (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+
+    await _select(tester, ['First']);
+    await _tap(tester, find.byKey(const Key('selection-delete')));
+    expect(find.byType(SnackBar), findsOneWidget);
+
+    // On a phone the snackbar would sit over the bar at the foot.
+    await _select(tester, ['Second']);
+    expect(find.byType(SnackBar), findsNothing);
+    await _tap(tester, find.byKey(const Key('selection-done')));
+    expect((await _task(app, 't2')).done, isTrue);
   });
 
   appTest('Move puts the picked tasks on another day, and Undo back', (

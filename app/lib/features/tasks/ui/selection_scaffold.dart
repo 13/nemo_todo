@@ -7,8 +7,10 @@ import 'package:nemo/features/tasks/ui/task_selection.dart';
 ///
 /// While picking, the [SelectionBar] takes the foot of the screen on a
 /// phone -- in place of [bottomNavigationBar] and [floatingActionButton] --
-/// or [appBar]'s place on a wide window. An [AppBar] given here carries a
-/// [SelectTasksButton] among its actions, put there by the screen.
+/// or [appBar]'s place on a wide window. Starting to pick at the foot puts
+/// away the snackbar on show, which would otherwise cover the bar. An
+/// [AppBar] given here carries a [SelectTasksButton] among its actions, put
+/// there by the screen.
 ///
 /// A selection belongs to the screen it was made on, the newest of these
 /// on show. One coming up over another, as a list's page pushed over
@@ -93,6 +95,19 @@ class _TaskSelectionScaffoldState extends ConsumerState<TaskSelectionScaffold> {
       'A screen with taskSelection puts a SelectTasksButton in its '
       "AppBar's actions.",
     );
+    if (enabled) {
+      ref.listen(taskSelectionProvider, (before, now) {
+        // The last action's snackbar, with its Undo, would sit over the
+        // bar at the foot for its last few seconds; picking anew is
+        // moving on from it.
+        if (before == null &&
+            now != null &&
+            _owns &&
+            !SelectionBar.onTop(context)) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        }
+      });
+    }
     final selecting = enabled && ref.watch(taskSelectionProvider) != null;
     final onTop = selecting && SelectionBar.onTop(context);
     final atFoot = selecting && !onTop;

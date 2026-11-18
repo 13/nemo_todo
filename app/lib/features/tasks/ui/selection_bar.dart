@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide SelectAction;
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/theme/app_style.dart';
@@ -165,8 +165,8 @@ class _VisibleTasksState extends ConsumerState<_VisibleTasks> {
 }
 
 /// The top bar's button that starts picking several tasks at once.
-class SelectAction extends ConsumerWidget {
-  const SelectAction({super.key});
+class SelectTasksButton extends ConsumerWidget {
+  const SelectTasksButton({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => IconButton(

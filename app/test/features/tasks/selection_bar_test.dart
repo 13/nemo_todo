@@ -14,10 +14,10 @@ import '../../support/pump_app.dart';
 import '../../support/snack_bar.dart';
 import '../../support/test_db.dart';
 
-TasksRepository _repo(AppDatabase db) => TasksRepository(
+TasksRepository _repo(AppDatabase db, {String ids = 't'}) => TasksRepository(
   db,
   testClock('s'),
-  sequentialIds('t'),
+  sequentialIds(ids),
   reminders: const NoopReminderScheduler(),
   now: () => testNow,
 );
@@ -99,6 +99,24 @@ void main() {
     expect(weekly.where((t) => !t.done), hasLength(1));
   });
 
+  appTest('a second tap on Done before the bar goes does nothing more', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+
+    await _select(tester, ['Weekly']);
+    final done = find.byKey(const Key('selection-done'));
+    await tester.tap(done);
+    await tester.tap(done);
+    await tester.pumpAndSettle();
+
+    final weekly = (await app.db.select(app.db.tasks).get())
+        .where((t) => t.title == 'Weekly')
+        .toList();
+    expect(weekly, hasLength(2));
+    expect(find.text('1 task done'), findsOneWidget);
+  });
+
   appTest('Done leaves done ones done unless every picked one is done', (
     tester,
   ) async {
@@ -145,6 +163,48 @@ void main() {
     await _tap(tester, find.text('Undo'));
     expect((await _task(app, 't1')).dueAt, dayStartMs(testNow));
     expect((await _task(app, 't2')).dueAt, dayStartMs(testNow));
+  });
+
+  appTest('Move keeps the time of day a task has', (tester) async {
+    final app = await pumpApp(
+      tester,
+      seed: (db, inbox) async {
+        await _seed(db, inbox);
+        await _repo(db, ids: 'x').create(
+          listId: inbox.id,
+          title: 'Timed',
+          dueAt: composeDue(testNow, hour: 15, minute: 0),
+          dueHasTime: true,
+        );
+      },
+    );
+
+    await _select(tester, ['Timed', 'First']);
+    await _tap(tester, find.byKey(const Key('selection-move')));
+    await _tap(tester, find.byKey(const Key('reschedule-tomorrow')));
+
+    final timed = await _task(app, 'x1');
+    final tomorrow = DateTime.fromMillisecondsSinceEpoch(
+      dayStartMsFrom(testNow, 1),
+    );
+    expect(timed.dueAt, composeDue(tomorrow, hour: 15, minute: 0));
+    expect(timed.dueHasTime, isTrue);
+    expect((await _task(app, 't1')).dueAt, tomorrow.millisecondsSinceEpoch);
+  });
+
+  appTest('a dismissed Move sheet leaves the selection as it was', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester, seed: _seed);
+
+    await _select(tester, ['First', 'Second']);
+    await _tap(tester, find.byKey(const Key('selection-move')));
+    await tester.tapAt(const Offset(200, 20));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('reschedule-tomorrow')), findsNothing);
+    expect(app.container.read(taskSelectionProvider), {'t1', 't2'});
+    expect((await _task(app, 't1')).dueAt, dayStartMs(testNow));
   });
 
   appTest('Delete removes the picked tasks; Undo works from elsewhere', (

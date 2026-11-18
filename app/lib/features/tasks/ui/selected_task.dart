@@ -40,8 +40,10 @@ void openTask(BuildContext context, WidgetRef ref, String taskId) {
 }
 
 /// The tasks the current screen lists, top to bottom as shown, for the
-/// keyboard to move through. Written by the task list as it builds; read
-/// only when a key is pressed, so nothing listens to it.
+/// keyboard to move through and the selection bar to act on. Written by
+/// the task list as it builds. The keyboard reads it only when a key is
+/// pressed; the selection bar listens, and rebuilds after the frame a
+/// change arrives in, since the list writes it in the middle of building.
 final visibleTasksProvider = Provider<ValueNotifier<List<Task>>>((ref) {
   final tasks = ValueNotifier<List<Task>>(const []);
   ref.onDispose(tasks.dispose);

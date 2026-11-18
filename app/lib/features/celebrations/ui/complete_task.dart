@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/features/celebrations/ui/celebration_controller.dart';
+import 'package:nemo/features/tasks/data/tasks_repository.dart';
 import 'package:nemo/features/tasks/ui/tasks_providers.dart';
 import 'package:nemo_core/nemo_core.dart';
 
@@ -17,9 +18,24 @@ Future<CelebrationCheer?> completeTask(
   Task task, {
   required bool done,
   bool showPill = true,
+}) => completeTaskWith(
+  ref.read(tasksRepositoryProvider),
+  ref.read(celebrationControllerProvider),
+  task,
+  done: done,
+  showPill: showPill,
+);
+
+/// [completeTask] with its providers already read, for a caller that
+/// writes other tasks first, by which time its widget, and so its `ref`,
+/// may be gone.
+Future<CelebrationCheer?> completeTaskWith(
+  TasksRepository tasks,
+  CelebrationController celebrations,
+  Task task, {
+  required bool done,
+  bool showPill = true,
 }) async {
-  final tasks = ref.read(tasksRepositoryProvider);
-  final celebrations = ref.read(celebrationControllerProvider);
   if (!done) {
     await tasks.setDone(task.id, done: false);
     return null;

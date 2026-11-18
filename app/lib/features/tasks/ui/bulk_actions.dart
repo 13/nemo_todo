@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nemo/core/providers.dart';
+import 'package:nemo/features/celebrations/ui/celebration_controller.dart';
 import 'package:nemo/features/celebrations/ui/complete_task.dart';
 import 'package:nemo/features/tasks/ui/reschedule_sheet.dart';
 import 'package:nemo/features/tasks/ui/task_selection.dart';
@@ -14,6 +15,11 @@ import 'package:nemo_core/nemo_core.dart';
 // repository and the ScaffoldMessenger before its first write: the tasks
 // can leave the screen as they change, and the Undo can be tapped after
 // the screen itself is gone, when its `ref` and `context` are unusable.
+//
+// Each also ends the selection before it writes, which takes the bar away,
+// and does nothing when the selection has already ended: a second tap that
+// lands before the bar is gone then finds nothing left to do, rather than
+// completing, moving or deleting the same tasks twice.
 
 /// Marks [tasks] done, or, when every one of them is done already, not
 /// done. Done ones among open ones stay done; a mixed pick means "finish
@@ -26,11 +32,12 @@ Future<void> completeTasks(
   WidgetRef ref,
   List<Task> tasks,
 ) async {
-  if (tasks.isEmpty) return;
+  if (tasks.isEmpty || ref.read(taskSelectionProvider) == null) return;
   final l = L.of(context);
   final repo = ref.read(tasksRepositoryProvider);
+  final celebrations = ref.read(celebrationControllerProvider);
   final messenger = ScaffoldMessenger.of(context);
-  final selection = ref.read(taskSelectionProvider.notifier);
+  ref.read(taskSelectionProvider.notifier).end();
   final reopen = tasks.every((t) => t.done);
   final changed = reopen ? tasks : tasks.where((t) => !t.done).toList();
   if (reopen) {
@@ -42,9 +49,14 @@ Future<void> completeTasks(
       await repo.setDone(task.id, done: true);
     }
     // The snackbar carries the message, so no pill on top of it.
-    await completeTask(ref, changed.last, done: true, showPill: false);
+    await completeTaskWith(
+      repo,
+      celebrations,
+      changed.last,
+      done: true,
+      showPill: false,
+    );
   }
-  selection.end();
   messenger
     ..removeCurrentSnackBar()
     ..showSnackBar(
@@ -81,19 +93,30 @@ Future<void> rescheduleTasks(
   WidgetRef ref,
   List<Task> tasks,
 ) async {
-  if (tasks.isEmpty) return;
+  if (tasks.isEmpty || _picking || ref.read(taskSelectionProvider) == null) {
+    return;
+  }
   final l = L.of(context);
   final now = ref.read(nowProvider)();
   final locale = Localizations.localeOf(context).toString();
   final repo = ref.read(tasksRepositoryProvider);
   final messenger = ScaffoldMessenger.of(context);
   final selection = ref.read(taskSelectionProvider.notifier);
-  final picked = await pickRescheduleDay(
-    context,
-    ref,
-    canClear: tasks.any((t) => t.dueAt != null),
-  );
+  // The selection stays while the sheet is up, so a dismissed sheet leaves
+  // it as it was; this keeps a second tap from opening a second sheet.
+  _picking = true;
+  final ({DateTime? day})? picked;
+  try {
+    picked = await pickRescheduleDay(
+      context,
+      ref,
+      canClear: tasks.any((t) => t.dueAt != null),
+    );
+  } finally {
+    _picking = false;
+  }
   if (picked == null) return;
+  selection.end();
 
   final day = picked.day;
   final moved = [
@@ -106,7 +129,6 @@ Future<void> rescheduleTasks(
   for (final task in moved) {
     await repo.save(task);
   }
-  selection.end();
   messenger
     ..removeCurrentSnackBar()
     ..showSnackBar(
@@ -145,6 +167,9 @@ Future<void> rescheduleTasks(
     );
 }
 
+/// Whether a Move's sheet is up.
+var _picking = false;
+
 /// [day], at the time of day [task] is due if it has one.
 int _dueOn(Task task, DateTime day) {
   final dueAt = task.dueAt;
@@ -159,15 +184,14 @@ Future<void> deleteTasksWithUndo(
   WidgetRef ref,
   List<Task> tasks,
 ) async {
-  if (tasks.isEmpty) return;
+  if (tasks.isEmpty || ref.read(taskSelectionProvider) == null) return;
   final l = L.of(context);
   final repo = ref.read(tasksRepositoryProvider);
   final messenger = ScaffoldMessenger.of(context);
-  final selection = ref.read(taskSelectionProvider.notifier);
+  ref.read(taskSelectionProvider.notifier).end();
   for (final task in tasks) {
     await repo.delete(task.id);
   }
-  selection.end();
   messenger
     ..removeCurrentSnackBar()
     ..showSnackBar(
